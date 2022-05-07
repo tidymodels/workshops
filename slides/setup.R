@@ -10,3 +10,7 @@ hexes <- function(..., size = 64) {
 
   paste0(res, collapse = " ")
 }
+
+library(countdown)
+library(ggplot2)
+theme_set(theme_minimal())
