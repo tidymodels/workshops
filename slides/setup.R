@@ -14,3 +14,4 @@ hexes <- function(..., size = 64) {
 library(countdown)
 library(ggplot2)
 theme_set(theme_minimal())
+options(cli.width = 70)
