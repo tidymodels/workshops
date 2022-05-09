@@ -319,7 +319,7 @@
     "href": "slides/01-introduction.html#plan-for-this-workshop",
     "title": "1 - Introduction",
     "section": "Plan for this workshop",
-    "text": "Plan for this workshop\n\nToday: your data budget, what makes a model, evaluating your model\nTomorrow: tuning hyperparameters, feature engineering, case studies\nLog in to RStudio Cloud 💻 (or use your own computer)\nIntroduce yourself to your neighbors 👋"
+    "text": "Plan for this workshop\n\nToday: what makes a model, your data budget, evaluating models\nTomorrow: tuning hyperparameters, feature engineering, case studies\nLog in to RStudio Cloud 💻 (or use your own computer)\nIntroduce yourself to your neighbors 👋"
   },
   {
     "objectID": "slides/01-introduction.html#the-whole-game",
@@ -361,7 +361,7 @@
     "href": "slides/01-introduction.html#what-is-tidymodels",
     "title": "1 - Introduction",
     "section": "What is tidymodels? ",
-    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n\n── Attaching packages ──────────────────────────── tidymodels 0.2.0 ──\n\n\n✔ broom        0.8.0          ✔ rsample      0.1.1     \n✔ dials        0.1.1          ✔ tibble       3.1.7     \n✔ dplyr        1.0.9          ✔ tidyr        1.2.0     \n✔ infer        1.0.0          ✔ tune         0.2.0     \n✔ modeldata    0.1.1          ✔ workflows    0.2.6     \n✔ parsnip      0.2.1          ✔ workflowsets 0.2.1     \n✔ purrr        0.3.4          ✔ yardstick    0.0.9     \n✔ recipes      0.2.0.9000     \n\n\n── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n✖ purrr::discard() masks scales::discard()\n✖ dplyr::filter()  masks stats::filter()\n✖ dplyr::lag()     masks stats::lag()\n✖ recipes::step()  masks stats::step()\n• Dig deeper into tidy modeling with R at https://www.tmwr.org"
+    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n\n── Attaching packages ──────────────────────────── tidymodels 0.2.0 ──\n\n\n✔ broom        0.8.0          ✔ rsample      0.1.1     \n✔ dials        0.1.1          ✔ tibble       3.1.7     \n✔ dplyr        1.0.9          ✔ tidyr        1.2.0     \n✔ infer        1.0.0          ✔ tune         0.2.0     \n✔ modeldata    0.1.1          ✔ workflows    0.2.6     \n✔ parsnip      0.2.1          ✔ workflowsets 0.2.1     \n✔ purrr        0.3.4          ✔ yardstick    0.0.9     \n✔ recipes      0.2.0.9000     \n\n\n── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n✖ purrr::discard() masks scales::discard()\n✖ dplyr::filter()  masks stats::filter()\n✖ dplyr::lag()     masks stats::lag()\n✖ recipes::step()  masks stats::step()\n• Use suppressPackageStartupMessages() to eliminate package startup messages"
   },
   {
     "objectID": "slides/01-introduction.html#what-is-machine-learning",
@@ -537,5 +537,208 @@
     "title": "1 - Introduction",
     "section": "Think pair share",
     "text": "Think pair share\n\n\nHow are statistics and machine learning related?\nHow are they similar? Different?\n\n\n\n03:00\n\n\n\n\nthe “two cultures”\nmodel first vs. data first\ninference vs. prediction"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#data-on-flights-out-of-dca",
+    "href": "slides/02-what-makes-a-model.html#data-on-flights-out-of-dca",
+    "title": "2 - What makes a model?",
+    "section": "Data on flights out of DCA",
+    "text": "Data on flights out of DCA\n\n## devtools::install_github(\"simonpcouch/dcflights21\")\nlibrary(tidyverse)\nlibrary(tidymodels)\nlibrary(dcflights21)\ndata(dcflights)\n\nType ?dcflights to learn more about this dataset."
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#data-on-flights-out-of-dca-1",
+    "href": "slides/02-what-makes-a-model.html#data-on-flights-out-of-dca-1",
+    "title": "2 - What makes a model?",
+    "section": "Data on flights out of DCA",
+    "text": "Data on flights out of DCA\n\nglimpse(dcflights)\n\nRows: 2,653\nColumns: 8\n$ airline     <chr> \"American Airlines Inc.\", \"American Airlines Inc.\", \"Ameri…\n$ flight      <fct> 348, 557, 564, 421, 323, 135, 372, 224, 62, 665, 344, 1127…\n$ destination <fct> CLT, DFW, ORD, ATL, ATL, BNA, DTW, MIA, CLT, ORD, DFW, BOS…\n$ date        <date> 2021-07-01, 2021-07-01, 2021-07-01, 2021-07-01, 2021-07-0…\n$ hour        <dbl> 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8…\n$ visibility  <dbl> 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10…\n$ duration    <dbl> 57, 158, 105, 74, 76, 89, 62, 141, 58, 107, 151, 58, 166, …\n$ dep_delay   <dbl> -4, -5, -4, -4, 0, 0, -5, -3, -6, -4, -6, -3, -2, 0, -6, 1…"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#data-on-flights-out-of-dca-2",
+    "href": "slides/02-what-makes-a-model.html#data-on-flights-out-of-dca-2",
+    "title": "2 - What makes a model?",
+    "section": "Data on flights out of DCA",
+    "text": "Data on flights out of DCA\n\nN = 2702\na numeric outcome dep_delay\n7 other variables, including destination, hour, and others"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#section-1",
+    "href": "slides/02-what-makes-a-model.html#section-1",
+    "title": "2 - What makes a model?",
+    "section": "",
+    "text": "ggplot(dcflights, aes(dep_delay)) +\n  geom_histogram(bins = 20)"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#section-2",
+    "href": "slides/02-what-makes-a-model.html#section-2",
+    "title": "2 - What makes a model?",
+    "section": "",
+    "text": "ggplot(dcflights, aes(dep_delay)) +\n  geom_histogram(bins = 20) +\n  scale_x_continuous(trans = scales::pseudo_log_trans(base = 10))"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#section-3",
+    "href": "slides/02-what-makes-a-model.html#section-3",
+    "title": "2 - What makes a model?",
+    "section": "",
+    "text": "ggplot(dcflights, aes(dep_delay, destination, fill = destination)) +\n  geom_boxplot(alpha = 0.3, show.legend = FALSE)"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#section-4",
+    "href": "slides/02-what-makes-a-model.html#section-4",
+    "title": "2 - What makes a model?",
+    "section": "",
+    "text": "dcflights %>%\n  mutate(destination = fct_reorder(destination, dep_delay)) %>%\n  ggplot(aes(dep_delay, destination, fill = destination)) +\n  geom_boxplot(alpha = 0.3, show.legend = FALSE) +\n  scale_x_continuous(trans = scales::pseudo_log_trans(base = 10))"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#section-5",
+    "href": "slides/02-what-makes-a-model.html#section-5",
+    "title": "2 - What makes a model?",
+    "section": "",
+    "text": "ggplot(dcflights, aes(hour, duration)) +\n  stat_summary_hex(aes(z = dep_delay), alpha = 0.7, bins = 12) +\n  scale_fill_viridis_c() +\n  labs(fill = \"mean delay\")"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#think-pair-share",
+    "href": "slides/02-what-makes-a-model.html#think-pair-share",
+    "title": "2 - What makes a model?",
+    "section": "Think pair share",
+    "text": "Think pair share\n\nExplore the dcflights data on your own!\n\n\n\n05:00\n\n\n\n\nMake a plot or summary and then share with neighbor"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#section-6",
+    "href": "slides/02-what-makes-a-model.html#section-6",
+    "title": "2 - What makes a model?",
+    "section": "",
+    "text": "https://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#your-turn",
+    "href": "slides/02-what-makes-a-model.html#your-turn",
+    "title": "2 - What makes a model?",
+    "section": "Your turn",
+    "text": "Your turn\n\nExplore the dcflights data on your own!\n\n\n\n05:00\n\n\n\n\nMake a plot or summary and then share with neighbor"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#your-turn-1",
+    "href": "slides/02-what-makes-a-model.html#your-turn-1",
+    "title": "2 - What makes a model?",
+    "section": "Your turn",
+    "text": "Your turn\n\nHow do you fit a linear model in R?\nHow many different ways can you think of?\n\n\n\n03:00\n\n\n\n\n\nlm for generalized linear model\nglmnet for regularized regression\nkeras for regression using TensorFlow\nstan for Bayesian regression\nspark for large data sets"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#to-specify-a-model-with-parsnip",
+    "href": "slides/02-what-makes-a-model.html#to-specify-a-model-with-parsnip",
+    "title": "2 - What makes a model?",
+    "section": "To specify a model with parsnip ",
+    "text": "To specify a model with parsnip \n\n\nChoose a model\nSpecify an engine\nSet the mode"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#to-specify-a-model-with-parsnip-1",
+    "href": "slides/02-what-makes-a-model.html#to-specify-a-model-with-parsnip-1",
+    "title": "2 - What makes a model?",
+    "section": "To specify a model with parsnip ",
+    "text": "To specify a model with parsnip \n\nlinear_reg()\n\nLinear Regression Model Specification (regression)\n\nComputational engine: lm"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#to-specify-a-model-with-parsnip-2",
+    "href": "slides/02-what-makes-a-model.html#to-specify-a-model-with-parsnip-2",
+    "title": "2 - What makes a model?",
+    "section": "To specify a model with parsnip ",
+    "text": "To specify a model with parsnip \n\nlinear_reg() %>%\n  set_engine(\"glmnet\")\n\nLinear Regression Model Specification (regression)\n\nComputational engine: glmnet"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#to-specify-a-model-with-parsnip-3",
+    "href": "slides/02-what-makes-a-model.html#to-specify-a-model-with-parsnip-3",
+    "title": "2 - What makes a model?",
+    "section": "To specify a model with parsnip ",
+    "text": "To specify a model with parsnip \n\nlinear_reg() %>%\n  set_engine(\"stan\")\n\nLinear Regression Model Specification (regression)\n\nComputational engine: stan"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#to-specify-a-model-with-parsnip-4",
+    "href": "slides/02-what-makes-a-model.html#to-specify-a-model-with-parsnip-4",
+    "title": "2 - What makes a model?",
+    "section": "To specify a model with parsnip ",
+    "text": "To specify a model with parsnip \n\ndecision_tree()\n\nDecision Tree Model Specification (unknown)\n\nComputational engine: rpart"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#to-specify-a-model-with-parsnip-5",
+    "href": "slides/02-what-makes-a-model.html#to-specify-a-model-with-parsnip-5",
+    "title": "2 - What makes a model?",
+    "section": "To specify a model with parsnip ",
+    "text": "To specify a model with parsnip \n\ndecision_tree() %>% \n  set_mode(\"regression\")\n\nDecision Tree Model Specification (regression)\n\nComputational engine: rpart \n\n\n\n\nAll available models are listed at https://www.tidymodels.org/find/parsnip/"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#pick-a-model",
+    "href": "slides/02-what-makes-a-model.html#pick-a-model",
+    "title": "2 - What makes a model?",
+    "section": "Pick a model",
+    "text": "Pick a model\n\n\nhttps://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#your-turn-2",
+    "href": "slides/02-what-makes-a-model.html#your-turn-2",
+    "title": "2 - What makes a model?",
+    "section": "Your turn",
+    "text": "Your turn\n\nRun the tree_spec chunk in your .Rmd.\nEdit this code so it fits a different model.\n\n\n\n05:00\n\n\n\n\nAll available models are listed at https://www.tidymodels.org/find/parsnip/"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#section-8",
+    "href": "slides/02-what-makes-a-model.html#section-8",
+    "title": "2 - What makes a model?",
+    "section": "",
+    "text": "tree_spec <-\n  decision_tree() %>% \n  set_mode(\"regression\")\n\ntree_spec %>% \n  fit(dep_delay ~ duration + hour, \n      data = dcflights) \n\nparsnip model object\n\nn= 2653 \n\nnode), split, n, deviance, yval\n      * denotes terminal node\n\n1) root 2653 9584520.0  16.398790  \n  2) hour< 14.5 1630 2264517.0   6.890184 *\n  3) hour>=14.5 1023 6937809.0  31.549360  \n    6) duration>=38.5 1009 5955587.0  30.393460 *\n    7) duration< 38.5 14  883711.7 114.857100 *"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#section-9",
+    "href": "slides/02-what-makes-a-model.html#section-9",
+    "title": "2 - What makes a model?",
+    "section": "",
+    "text": "tree_spec <-\n  decision_tree() %>% \n  set_mode(\"regression\")\n\nworkflow() %>%\n  add_model(tree_spec) %>%\n  add_formula(dep_delay ~ duration + hour) %>%\n  fit(data = dcflights) \n\n══ Workflow [trained] ════════════════════════════════════════════════\nPreprocessor: Formula\nModel: decision_tree()\n\n── Preprocessor ──────────────────────────────────────────────────────\ndep_delay ~ duration + hour\n\n── Model ─────────────────────────────────────────────────────────────\nn= 2653 \n\nnode), split, n, deviance, yval\n      * denotes terminal node\n\n1) root 2653 9584520.0  16.398790  \n  2) hour< 14.5 1630 2264517.0   6.890184 *\n  3) hour>=14.5 1023 6937809.0  31.549360  \n    6) duration>=38.5 1009 5955587.0  30.393460 *\n    7) duration< 38.5 14  883711.7 114.857100 *"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#section-10",
+    "href": "slides/02-what-makes-a-model.html#section-10",
+    "title": "2 - What makes a model?",
+    "section": "",
+    "text": "tree_spec <-\n  decision_tree() %>% \n  set_mode(\"regression\")\n\nworkflow() %>%\n  add_model(tree_spec) %>%\n  add_variables(outcomes = dep_delay, predictors = c(duration, hour)) %>%\n  fit(data = dcflights) \n\n══ Workflow [trained] ════════════════════════════════════════════════\nPreprocessor: Variables\nModel: decision_tree()\n\n── Preprocessor ──────────────────────────────────────────────────────\nOutcomes: dep_delay\nPredictors: c(duration, hour)\n\n── Model ─────────────────────────────────────────────────────────────\nn= 2653 \n\nnode), split, n, deviance, yval\n      * denotes terminal node\n\n1) root 2653 9584520.0  16.398790  \n  2) hour< 14.5 1630 2264517.0   6.890184 *\n  3) hour>=14.5 1023 6937809.0  31.549360  \n    6) duration>=38.5 1009 5955587.0  30.393460 *\n    7) duration< 38.5 14  883711.7 114.857100 *"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#section-11",
+    "href": "slides/02-what-makes-a-model.html#section-11",
+    "title": "2 - What makes a model?",
+    "section": "",
+    "text": "tree_spec <-\n  decision_tree() %>% \n  set_mode(\"regression\")\n\nworkflow(dep_delay ~ duration + hour, tree_spec) %>% \n  fit(data = dcflights) \n\n══ Workflow [trained] ════════════════════════════════════════════════\nPreprocessor: Formula\nModel: decision_tree()\n\n── Preprocessor ──────────────────────────────────────────────────────\ndep_delay ~ duration + hour\n\n── Model ─────────────────────────────────────────────────────────────\nn= 2653 \n\nnode), split, n, deviance, yval\n      * denotes terminal node\n\n1) root 2653 9584520.0  16.398790  \n  2) hour< 14.5 1630 2264517.0   6.890184 *\n  3) hour>=14.5 1023 6937809.0  31.549360  \n    6) duration>=38.5 1009 5955587.0  30.393460 *\n    7) duration< 38.5 14  883711.7 114.857100 *\n\n\n\n\nhttps://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/02-what-makes-a-model.html#section-12",
+    "href": "slides/02-what-makes-a-model.html#section-12",
+    "title": "2 - What makes a model?",
+    "section": "",
+    "text": "https://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/03-data-budget.html#data-splitting-and-spending",
+    "href": "slides/03-data-budget.html#data-splitting-and-spending",
+    "title": "3 - Your data budget",
+    "section": "Data splitting and spending",
+    "text": "Data splitting and spending\nFor machine learning, we typically split data into training and test sets:\n\n\nThe training set is used to estimate model parameters.\nThe test set is used to find an independent assessment of model performance.\n\n\n\nDo not 🚫 use the test set during training."
+  },
+  {
+    "objectID": "slides/03-data-budget.html#section",
+    "href": "slides/03-data-budget.html#section",
+    "title": "3 - Your data budget",
+    "section": "",
+    "text": "The more data we spend 🤑\n\n\nthe better estimates we’ll get."
+  },
+  {
+    "objectID": "slides/03-data-budget.html#data-splitting-and-spending-1",
+    "href": "slides/03-data-budget.html#data-splitting-and-spending-1",
+    "title": "3 - Your data budget",
+    "section": "Data splitting and spending",
+    "text": "Data splitting and spending\n\nSpending too much data in training prevents us from a good assessment of predictive performance.\nSpending too much in testing keeps us from finding a good estimate of model parameters.\n\n\n\nhttps://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/01-introduction.html#your-turn",
+    "href": "slides/01-introduction.html#your-turn",
+    "title": "1 - Introduction",
+    "section": "Your turn",
+    "text": "Your turn\n\n\nHow are statistics and machine learning related?\nHow are they similar? Different?\n\n\n\n03:00\n\n\n\n\nthe “two cultures”\nmodel first vs. data first\ninference vs. prediction"
   }
 ]
