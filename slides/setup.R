@@ -15,3 +15,9 @@ library(countdown)
 library(ggplot2)
 theme_set(theme_minimal())
 options(cli.width = 70)
+
+train_color <- "#1a162d"
+test_color  <- "#cd4173"
+data_color  <- "#767381"
+assess_color <- "#84cae1"
+splits_pal <- c(data_color, train_color, test_color)
