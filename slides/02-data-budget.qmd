@@ -1,5 +1,5 @@
 ---
-title: "3 - Your data budget"
+title: "2 - Your data budget"
 subtitle: "Machine learning with tidymodels"
 format:
   revealjs: 
@@ -17,31 +17,36 @@ knitr:
 #| file: setup.R
 ```
 
-##  {background-image="https://media.giphy.com/media/13otmMzoPMnRYY/giphy-downsized-large.gif" background-size="800px"}
+##  {background-image="https://media.giphy.com/media/Lr3UeH9tYu3qJtsSUg/giphy.gif" background-size="600px"}
 
-## Data on flights out of DCA
+## Data on tree frog hatching
 
 ```{r}
-## devtools::install_github("simonpcouch/dcflights21")
 library(tidyverse)
 library(tidymodels)
-library(dcflights21)
-data(dcflights)
+
+data("tree_frogs", package = "stacks")
+tree_frogs <- tree_frogs %>%
+  filter(!is.na(latency)) %>%
+  select(-c(clutch, hatched))
 ```
 
-Type `?dcflights` to learn more about this dataset.
+-   Red-eyed tree frog embryos can hatch earlier than their normal \~7 days if they detect potential predator threat!
+-   Type `?stacks::tree_frogs` to learn more about this dataset, including references.
 
-## Data on flights out of DCA
+## Data on tree frog hatching
 
 ```{r}
-glimpse(dcflights)
+glimpse(tree_frogs)
 ```
 
-## Data on flights out of DCA
+## Data on tree frog hatching
 
--   N = 2702
--   a numeric outcome `dep_delay`
--   7 other variables, including `destination`, `hour`, and others
+-   N = 572
+-   a numeric outcome `latency`
+-   4 other variables
+    -   `treatment`, `reflex`, and `t_o_d` are **nominal** predictors
+    -   `age` is a **numeric** predictor
 
 ## Data splitting and spending
 
@@ -64,7 +69,7 @@ Do not 🚫 use the test set during training.
 #| fig.height: 3
 #| 
 set.seed(123)
-one_split <- slice(dcflights, 1:30) %>% 
+one_split <- slice(tree_frogs, 1:30) %>% 
   initial_split() %>% 
   tidy() %>% 
   add_row(Row = 1:30, Data = "Original") %>% 
@@ -128,27 +133,27 @@ countdown(minutes = 3)
 library(tidymodels)
 
 set.seed(123)
-flights_split <- initial_split(dcflights, strata = dep_delay)
-flights_split
+frog_split <- initial_split(tree_frogs, strata = latency)
+frog_split
 ```
 
 ## Data splitting and spending `r hexes("rsample")`
 
 ```{r}
-flights_train <- training(flights_split)
-flights_test <- testing(flights_split)
+frog_train <- training(frog_split)
+frog_test <- testing(frog_split)
 ```
 
 ## Data splitting and spending `r hexes("rsample")`
 
 ```{r}
-glimpse(flights_train)
+glimpse(frog_train)
 ```
 
 ## Data splitting and spending `r hexes("rsample")`
 
 ```{r}
-glimpse(flights_test)
+glimpse(frog_test)
 ```
 
 ## Your turn {transition="slide-in"}
@@ -165,15 +170,13 @@ countdown(minutes = 5)
 ## Data splitting and spending `r hexes("rsample")`
 
 ```{r}
-library(tidymodels)
-
 set.seed(123)
-flights_split <- initial_split(dcflights, prop = 0.8, strata = dep_delay)
-flights_train <- training(flights_split)
-flights_test <- testing(flights_split)
+frog_split <- initial_split(tree_frogs, prop = 0.8, strata = latency)
+frog_train <- training(frog_split)
+frog_test <- testing(frog_split)
 
-nrow(flights_train)
-nrow(flights_test)
+nrow(frog_train)
+nrow(frog_test)
 ```
 
 # Exploratory data analysis for ML 🧐
@@ -181,51 +184,58 @@ nrow(flights_test)
 ## 
 
 ```{r}
-ggplot(flights_train, aes(dep_delay)) +
+ggplot(frog_train, aes(latency)) +
   geom_histogram(bins = 20)
 ```
 
+. . .
+
+Remember how we used `strata = latency`?
+
 ## 
 
 ```{r}
-ggplot(flights_train, aes(dep_delay)) +
+quartiles <- quantile(frog_train$latency, probs = c(1:3)/4)
+ggplot(frog_train, aes(latency)) +
   geom_histogram(bins = 20) +
-  scale_x_continuous(trans = scales::pseudo_log_trans(base = 10))
+  geom_vline(xintercept = quartiles, color = train_color, 
+             size = 1.5, lty = 2)
+```
+
+. . .
+
+Stratification often helps, with very little downside
+
+## 
+
+```{r}
+ggplot(frog_train, aes(latency, treatment, fill = treatment)) +
+  geom_boxplot(alpha = 0.5, show.legend = FALSE)
 ```
 
 ## 
 
 ```{r}
-ggplot(flights_train, aes(dep_delay, destination, fill = destination)) +
+frog_train %>%
+  ggplot(aes(latency, reflex, fill = reflex)) +
   geom_boxplot(alpha = 0.3, show.legend = FALSE)
 ```
 
 ## 
 
 ```{r}
-flights_train %>%
-  mutate(destination = fct_reorder(destination, dep_delay)) %>%
-  ggplot(aes(dep_delay, destination, fill = destination)) +
-  geom_boxplot(alpha = 0.3, show.legend = FALSE) +
-  scale_x_continuous(trans = scales::pseudo_log_trans(base = 10))
-```
-
-## 
-
-```{r}
-#| fig.width: 6.8
-#| fig.height: 5 
-ggplot(flights_train, aes(hour, duration)) +
-  stat_summary_hex(aes(z = dep_delay), alpha = 0.7, bins = 12) +
+ggplot(frog_train, aes(reflex, age)) +
+  stat_summary_2d(aes(z = latency), 
+                  alpha = 0.7, binwidth = c(1, 5e3)) +
   scale_fill_viridis_c() +
-  labs(fill = "mean delay")
+  labs(fill = "mean latency")
 ```
 
 ## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Explore the `dcflights` data on your own!*
+*Explore the `frog_train` data on your own!*
 
 ```{r}
 #| echo: false

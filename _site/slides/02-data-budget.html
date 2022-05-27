@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en"><head>
   <meta charset="utf-8">
-  <meta name="generator" content="quarto-0.9.397">
+  <meta name="generator" content="quarto-0.9.442">
 
-  <title>tidymodels workshops - 3 - Your data budget</title>
+  <title>tidymodels workshops - 2 - Your data budget</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -385,48 +385,54 @@
     <div class="slides">
 
 <section id="title-slide" class="center">
-  <h1 class="title">3 - Your data budget</h1>
+  <h1 class="title">2 - Your data budget</h1>
   <p class="subtitle">Machine learning with tidymodels</p>
 </section>
 
-<section id="section" class="slide level2" data-background-image="https://media.giphy.com/media/13otmMzoPMnRYY/giphy-downsized-large.gif" data-background-size="800px">
+<section id="section" class="slide level2" data-background-image="https://media.giphy.com/media/Lr3UeH9tYu3qJtsSUg/giphy.gif" data-background-size="600px">
 <h2></h2>
 </section>
-<section id="data-on-flights-out-of-dca" class="slide level2">
-<h2>Data on flights out of DCA</h2>
+<section id="data-on-tree-frog-hatching" class="slide level2">
+<h2>Data on tree frog hatching</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="do">## devtools::install_github("simonpcouch/dcflights21")</span></span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="fu">library</span>(tidyverse)</span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="fu">library</span>(tidymodels)</span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="fu">library</span>(dcflights21)</span>
-<span id="cb1-5"><a href="#cb1-5"></a><span class="fu">data</span>(dcflights)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb1-3"><a href="#cb1-3"></a></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="fu">data</span>(<span class="st">"tree_frogs"</span>, <span class="at">package =</span> <span class="st">"stacks"</span>)</span>
+<span id="cb1-5"><a href="#cb1-5"></a>tree_frogs <span class="ot">&lt;-</span> tree_frogs <span class="sc">%&gt;%</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(latency)) <span class="sc">%&gt;%</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(clutch, hatched))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Type <code>?dcflights</code> to learn more about this dataset.</p>
-</section>
-<section id="data-on-flights-out-of-dca-1" class="slide level2">
-<h2>Data on flights out of DCA</h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">glimpse</span>(dcflights)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Rows: 2,653
-Columns: 8
-$ airline     &lt;chr&gt; "American Airlines Inc.", "American Airlines Inc.", "Ameri…
-$ flight      &lt;fct&gt; 348, 557, 564, 421, 323, 135, 372, 224, 62, 665, 344, 1127…
-$ destination &lt;fct&gt; CLT, DFW, ORD, ATL, ATL, BNA, DTW, MIA, CLT, ORD, DFW, BOS…
-$ date        &lt;date&gt; 2021-07-01, 2021-07-01, 2021-07-01, 2021-07-01, 2021-07-0…
-$ hour        &lt;dbl&gt; 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8…
-$ visibility  &lt;dbl&gt; 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10…
-$ duration    &lt;dbl&gt; 57, 158, 105, 74, 76, 89, 62, 141, 58, 107, 151, 58, 166, …
-$ dep_delay   &lt;dbl&gt; -4, -5, -4, -4, 0, 0, -5, -3, -6, -4, -6, -3, -2, 0, -6, 1…</code></pre>
-</div>
-</div>
-</section>
-<section id="data-on-flights-out-of-dca-2" class="slide level2">
-<h2>Data on flights out of DCA</h2>
 <ul>
-<li>N = 2702</li>
-<li>a numeric outcome <code>dep_delay</code></li>
-<li>7 other variables, including <code>destination</code>, <code>hour</code>, and others</li>
+<li>Red-eyed tree frog embryos can hatch earlier than their normal ~7 days if they detect potential predator threat!</li>
+<li>Type <code>?stacks::tree_frogs</code> to learn more about this dataset, including references.</li>
+</ul>
+</section>
+<section id="data-on-tree-frog-hatching-1" class="slide level2">
+<h2>Data on tree frog hatching</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">glimpse</span>(tree_frogs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 572
+Columns: 5
+$ treatment &lt;chr&gt; "control", "control", "control", "control", "control", "gent…
+$ reflex    &lt;fct&gt; full, low, full, mid, full, full, full, full, full, full, fu…
+$ age       &lt;dbl&gt; 466965, 361180, 401595, 357810, 397440, 463230, 393900, 4690…
+$ t_o_d     &lt;chr&gt; "morning", "night", "afternoon", "night", "afternoon", "morn…
+$ latency   &lt;dbl&gt; 22, 360, 106, 180, 60, 39, 214, 50, 224, 63, 33, 94, 19, 25,…</code></pre>
+</div>
+</div>
+</section>
+<section id="data-on-tree-frog-hatching-2" class="slide level2">
+<h2>Data on tree frog hatching</h2>
+<ul>
+<li>N = 572</li>
+<li>a numeric outcome <code>latency</code></li>
+<li>4 other variables
+<ul>
+<li><code>treatment</code>, <code>reflex</code>, and <code>t_o_d</code> are <strong>nominal</strong> predictors</li>
+<li><code>age</code> is a <strong>numeric</strong> predictor</li>
+</ul></li>
 </ul>
 </section>
 <section id="data-splitting-and-spending" class="slide level2">
@@ -442,7 +448,10 @@ $ dep_delay   &lt;dbl&gt; -4, -5, -4, -4, 0, 0, -5, -3, -6, -4, -6, -3, -2, 0, -
 <p>Do not 🚫 use the test set during training.</p>
 </div>
 </section>
+<section id="section-1" class="slide level2">
+<h2></h2>
 
+<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-4-1.png" width="1152" class="r-stretch"></section>
 <section id="section-2" class="slide level2">
 <h2></h2>
 <div class="r-fit-text">
@@ -465,7 +474,7 @@ $ dep_delay   &lt;dbl&gt; -4, -5, -4, -4, 0, 0, -5, -3, -6, -4, -6, -3, -2, 0, -
 <p><em>When is a good time to split your data?</em></p>
 <div class="cell">
 <div class="cell-output-display">
-<div class="countdown" id="timer_628194c1" style="right:0;bottom:0;" data-warnwhen="0">
+<div class="countdown" id="timer_62910f13" style="right:0;bottom:0;" data-warnwhen="0">
 <code class="countdown-time"><span class="countdown-digits minutes">03</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
 </div>
 </div>
@@ -483,54 +492,48 @@ $ dep_delay   &lt;dbl&gt; -4, -5, -4, -4, 0, 0, -5, -3, -6, -4, -6, -3, -2, 0, -
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="fu">library</span>(tidymodels)</span>
 <span id="cb4-2"><a href="#cb4-2"></a></span>
 <span id="cb4-3"><a href="#cb4-3"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb4-4"><a href="#cb4-4"></a>flights_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(dcflights, <span class="at">strata =</span> dep_delay)</span>
-<span id="cb4-5"><a href="#cb4-5"></a>flights_split</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-4"><a href="#cb4-4"></a>frog_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(tree_frogs, <span class="at">strata =</span> latency)</span>
+<span id="cb4-5"><a href="#cb4-5"></a>frog_split</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>&lt;Analysis/Assess/Total&gt;
-&lt;1989/664/2653&gt;</code></pre>
+&lt;428/144/572&gt;</code></pre>
 </div>
 </div>
 </section>
 <section id="data-splitting-and-spending-3" class="slide level2">
 <h2>Data splitting and spending <img data-src="hexes/rsample.png" class="absolute" style="top: 0px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>flights_train <span class="ot">&lt;-</span> <span class="fu">training</span>(flights_split)</span>
-<span id="cb6-2"><a href="#cb6-2"></a>flights_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(flights_split)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>frog_train <span class="ot">&lt;-</span> <span class="fu">training</span>(frog_split)</span>
+<span id="cb6-2"><a href="#cb6-2"></a>frog_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(frog_split)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="data-splitting-and-spending-4" class="slide level2">
 <h2>Data splitting and spending <img data-src="hexes/rsample.png" class="absolute" style="top: 0px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="fu">glimpse</span>(flights_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="fu">glimpse</span>(frog_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Rows: 1,989
-Columns: 8
-$ airline     &lt;chr&gt; "American Airlines Inc.", "American Airlines Inc.", "Repub…
-$ flight      &lt;fct&gt; 344, 439, 958, 920, 394, 186, 298, 132, 405, 254, 214, 86,…
-$ destination &lt;fct&gt; DFW, ORD, BNA, BOS, DFW, ORD, MCO, BOS, BOS, LGA, ORD, ATL…
-$ date        &lt;date&gt; 2021-07-01, 2021-07-01, 2021-07-01, 2021-07-01, 2021-07-0…
-$ hour        &lt;dbl&gt; 7, 7, 8, 9, 9, 12, 13, 9, 13, 14, 16, 16, 17, 18, 19, 22, …
-$ visibility  &lt;dbl&gt; 10, 10, 10, 10, 10, 10, 10, 9, 10, 10, 10, 10, 10, 10, 10,…
-$ duration    &lt;dbl&gt; 151, 100, 87, 60, 161, 97, 108, 55, 74, 42, 97, 81, 58, 95…
-$ dep_delay   &lt;dbl&gt; -6, -6, -9, -10, -6, -7, -5, -8, -7, -6, -5, -6, -7, -5, -…</code></pre>
+<pre><code>Rows: 428
+Columns: 5
+$ treatment &lt;chr&gt; "control", "control", "control", "control", "control", "cont…
+$ reflex    &lt;fct&gt; full, full, full, full, full, full, full, full, full, full, …
+$ age       &lt;dbl&gt; 467950, 464870, 464610, 469650, 467600, 410460, 427685, 4685…
+$ t_o_d     &lt;chr&gt; "morning", "morning", "morning", "morning", "morning", "afte…
+$ latency   &lt;dbl&gt; 33, 19, 2, 39, 42, 20, 31, 21, 30, 43, 23, 12, 46, 22, 21, 4…</code></pre>
 </div>
 </div>
 </section>
 <section id="data-splitting-and-spending-5" class="slide level2">
 <h2>Data splitting and spending <img data-src="hexes/rsample.png" class="absolute" style="top: 0px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="fu">glimpse</span>(flights_test)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="fu">glimpse</span>(frog_test)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Rows: 664
-Columns: 8
-$ airline     &lt;chr&gt; "American Airlines Inc.", "Southwest Airlines Co.", "South…
-$ flight      &lt;fct&gt; 557, 323, 135, 372, 62, 38, 84, 315, 156, 215, 310, 469, 5…
-$ destination &lt;fct&gt; DFW, ATL, BNA, DTW, CLT, BOS, ATL, MCO, CLT, ORD, BNA, ORD…
-$ date        &lt;date&gt; 2021-07-01, 2021-07-01, 2021-07-01, 2021-07-01, 2021-07-0…
-$ hour        &lt;dbl&gt; 5, 6, 6, 6, 6, 7, 7, 8, 8, 9, 10, 11, 12, 12, 14, 15, 15, …
-$ visibility  &lt;dbl&gt; 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10…
-$ duration    &lt;dbl&gt; 158, 76, 89, 62, 58, 56, 78, 109, 52, 97, 88, 100, 145, 11…
-$ dep_delay   &lt;dbl&gt; -5, 0, 0, -5, -6, 0, 137, -2, 73, 4, 6, -8, -3, -1, 15, 61…</code></pre>
+<pre><code>Rows: 144
+Columns: 5
+$ treatment &lt;chr&gt; "control", "control", "control", "control", "gentamicin", "c…
+$ reflex    &lt;fct&gt; full, low, full, mid, full, full, full, full, full, full, fu…
+$ age       &lt;dbl&gt; 466965, 361180, 401595, 357810, 463230, 469065, 466160, 4658…
+$ t_o_d     &lt;chr&gt; "morning", "night", "afternoon", "night", "morning", "mornin…
+$ latency   &lt;dbl&gt; 22, 360, 106, 180, 39, 50, 63, 25, 48, 126, 11, 56, 78, 79, …</code></pre>
 </div>
 </div>
 </section>
@@ -540,7 +543,7 @@ $ dep_delay   &lt;dbl&gt; -5, 0, 0, -5, -6, 0, 137, -2, 73, 4, 6, -8, -3, -1, 15
 <p><em>Split your data so 20% is held out for the test set.</em></p>
 <div class="cell">
 <div class="cell-output-display">
-<div class="countdown" id="timer_628191f8" style="right:0;bottom:0;" data-warnwhen="0">
+<div class="countdown" id="timer_62910e39" style="right:0;bottom:0;" data-warnwhen="0">
 <code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
 </div>
 </div>
@@ -549,20 +552,18 @@ $ dep_delay   &lt;dbl&gt; -5, 0, 0, -5, -6, 0, 137, -2, 73, 4, 6, -8, -3, -1, 15
 <section id="data-splitting-and-spending-6" class="slide level2">
 <h2>Data splitting and spending <img data-src="hexes/rsample.png" class="absolute" style="top: 0px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="fu">library</span>(tidymodels)</span>
-<span id="cb11-2"><a href="#cb11-2"></a></span>
-<span id="cb11-3"><a href="#cb11-3"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb11-4"><a href="#cb11-4"></a>flights_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(dcflights, <span class="at">prop =</span> <span class="fl">0.8</span>, <span class="at">strata =</span> dep_delay)</span>
-<span id="cb11-5"><a href="#cb11-5"></a>flights_train <span class="ot">&lt;-</span> <span class="fu">training</span>(flights_split)</span>
-<span id="cb11-6"><a href="#cb11-6"></a>flights_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(flights_split)</span>
-<span id="cb11-7"><a href="#cb11-7"></a></span>
-<span id="cb11-8"><a href="#cb11-8"></a><span class="fu">nrow</span>(flights_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb11-2"><a href="#cb11-2"></a>frog_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(tree_frogs, <span class="at">prop =</span> <span class="fl">0.8</span>, <span class="at">strata =</span> latency)</span>
+<span id="cb11-3"><a href="#cb11-3"></a>frog_train <span class="ot">&lt;-</span> <span class="fu">training</span>(frog_split)</span>
+<span id="cb11-4"><a href="#cb11-4"></a>frog_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(frog_split)</span>
+<span id="cb11-5"><a href="#cb11-5"></a></span>
+<span id="cb11-6"><a href="#cb11-6"></a><span class="fu">nrow</span>(frog_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 2120</code></pre>
+<pre><code>[1] 456</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="fu">nrow</span>(flights_test)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="fu">nrow</span>(frog_test)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 533</code></pre>
+<pre><code>[1] 116</code></pre>
 </div>
 </div>
 </section>
@@ -574,56 +575,63 @@ $ dep_delay   &lt;dbl&gt; -5, 0, 0, -5, -6, 0, 137, -2, 73, 4, 6, -8, -3, -1, 15
 <section id="section-4" class="slide level2">
 <h2></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="fu">ggplot</span>(flights_train, <span class="fu">aes</span>(dep_delay)) <span class="sc">+</span></span>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="fu">ggplot</span>(frog_train, <span class="fu">aes</span>(latency)) <span class="sc">+</span></span>
 <span id="cb15-2"><a href="#cb15-2"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">20</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
-<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-12-1.png" width="960" class="r-stretch"></section>
+<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-12-1.png" width="960" class="r-stretch"><div class="fragment">
+<p>Remember how we used <code>strata = latency</code>?</p>
+</div>
+</section>
 <section id="section-5" class="slide level2">
 <h2></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="fu">ggplot</span>(flights_train, <span class="fu">aes</span>(dep_delay)) <span class="sc">+</span></span>
-<span id="cb16-2"><a href="#cb16-2"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">20</span>) <span class="sc">+</span></span>
-<span id="cb16-3"><a href="#cb16-3"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">trans =</span> scales<span class="sc">::</span><span class="fu">pseudo_log_trans</span>(<span class="at">base =</span> <span class="dv">10</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a>quartiles <span class="ot">&lt;-</span> <span class="fu">quantile</span>(frog_train<span class="sc">$</span>latency, <span class="at">probs =</span> <span class="fu">c</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>)<span class="sc">/</span><span class="dv">4</span>)</span>
+<span id="cb16-2"><a href="#cb16-2"></a><span class="fu">ggplot</span>(frog_train, <span class="fu">aes</span>(latency)) <span class="sc">+</span></span>
+<span id="cb16-3"><a href="#cb16-3"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">20</span>) <span class="sc">+</span></span>
+<span id="cb16-4"><a href="#cb16-4"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> quartiles, <span class="at">color =</span> train_color, </span>
+<span id="cb16-5"><a href="#cb16-5"></a>             <span class="at">size =</span> <span class="fl">1.5</span>, <span class="at">lty =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
-<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-13-1.png" width="960" class="r-stretch"></section>
+<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-13-1.png" width="960" class="r-stretch"><div class="fragment">
+<p>Stratification often helps, with very little downside</p>
+</div>
+</section>
 <section id="section-6" class="slide level2">
 <h2></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="fu">ggplot</span>(flights_train, <span class="fu">aes</span>(dep_delay, destination, <span class="at">fill =</span> destination)) <span class="sc">+</span></span>
-<span id="cb17-2"><a href="#cb17-2"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">show.legend =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="fu">ggplot</span>(frog_train, <span class="fu">aes</span>(latency, treatment, <span class="at">fill =</span> treatment)) <span class="sc">+</span></span>
+<span id="cb17-2"><a href="#cb17-2"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>, <span class="at">show.legend =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
 <img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-14-1.png" width="960" class="r-stretch"></section>
 <section id="section-7" class="slide level2">
 <h2></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a>flights_train <span class="sc">%&gt;%</span></span>
-<span id="cb18-2"><a href="#cb18-2"></a>  <span class="fu">mutate</span>(<span class="at">destination =</span> <span class="fu">fct_reorder</span>(destination, dep_delay)) <span class="sc">%&gt;%</span></span>
-<span id="cb18-3"><a href="#cb18-3"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(dep_delay, destination, <span class="at">fill =</span> destination)) <span class="sc">+</span></span>
-<span id="cb18-4"><a href="#cb18-4"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
-<span id="cb18-5"><a href="#cb18-5"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">trans =</span> scales<span class="sc">::</span><span class="fu">pseudo_log_trans</span>(<span class="at">base =</span> <span class="dv">10</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a>frog_train <span class="sc">%&gt;%</span></span>
+<span id="cb18-2"><a href="#cb18-2"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(latency, reflex, <span class="at">fill =</span> reflex)) <span class="sc">+</span></span>
+<span id="cb18-3"><a href="#cb18-3"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">show.legend =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
 <img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-15-1.png" width="960" class="r-stretch"></section>
 <section id="section-8" class="slide level2">
 <h2></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a><span class="fu">ggplot</span>(flights_train, <span class="fu">aes</span>(hour, duration)) <span class="sc">+</span></span>
-<span id="cb19-2"><a href="#cb19-2"></a>  <span class="fu">stat_summary_hex</span>(<span class="fu">aes</span>(<span class="at">z =</span> dep_delay), <span class="at">alpha =</span> <span class="fl">0.7</span>, <span class="at">bins =</span> <span class="dv">12</span>) <span class="sc">+</span></span>
-<span id="cb19-3"><a href="#cb19-3"></a>  <span class="fu">scale_fill_viridis_c</span>() <span class="sc">+</span></span>
-<span id="cb19-4"><a href="#cb19-4"></a>  <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"mean delay"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a><span class="fu">ggplot</span>(frog_train, <span class="fu">aes</span>(reflex, age)) <span class="sc">+</span></span>
+<span id="cb19-2"><a href="#cb19-2"></a>  <span class="fu">stat_summary_2d</span>(<span class="fu">aes</span>(<span class="at">z =</span> latency), </span>
+<span id="cb19-3"><a href="#cb19-3"></a>                  <span class="at">alpha =</span> <span class="fl">0.7</span>, <span class="at">binwidth =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="fl">5e3</span>)) <span class="sc">+</span></span>
+<span id="cb19-4"><a href="#cb19-4"></a>  <span class="fu">scale_fill_viridis_c</span>() <span class="sc">+</span></span>
+<span id="cb19-5"><a href="#cb19-5"></a>  <span class="fu">labs</span>(<span class="at">fill =</span> <span class="st">"mean latency"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
-<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-16-1.png" width="652" class="r-stretch"></section>
+<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-16-1.png" width="960" class="r-stretch"></section>
 <section id="your-turn-2" class="slide level2" data-transition="slide-in">
 <h2>Your turn</h2>
 <p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
-<p><em>Explore the <code>dcflights</code> data on your own!</em></p>
+<p><em>Explore the <code>frog_train</code> data on your own!</em></p>
 <div class="cell">
 <div class="cell-output-display">
-<div class="countdown" id="timer_62819481" style="right:0;bottom:0;" data-warnwhen="0">
+<div class="countdown" id="timer_62910f82" style="right:0;bottom:0;" data-warnwhen="0">
 <code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
 </div>
 </div>

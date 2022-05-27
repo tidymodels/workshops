@@ -443,56 +443,56 @@
   {
     "objectID": "slides/02-data-budget.html#section-2",
     "href": "slides/02-data-budget.html#section-2",
-    "title": "3 - Your data budget",
+    "title": "2 - Your data budget",
     "section": "",
     "text": "The more data we spend 🤑\n\n\nthe better estimates we’ll get."
   },
   {
     "objectID": "slides/02-data-budget.html#section-3",
     "href": "slides/02-data-budget.html#section-3",
-    "title": "3 - Your data budget",
+    "title": "2 - Your data budget",
     "section": "",
     "text": "The test set is precious 💎"
   },
   {
     "objectID": "slides/02-data-budget.html#section-4",
     "href": "slides/02-data-budget.html#section-4",
-    "title": "3 - Your data budget",
+    "title": "2 - Your data budget",
     "section": "",
-    "text": "ggplot(flights_train, aes(dep_delay)) +\n  geom_histogram(bins = 20)"
+    "text": "ggplot(frog_train, aes(latency)) +\n  geom_histogram(bins = 20)\n\n\n\nRemember how we used strata = latency?"
   },
   {
     "objectID": "slides/02-data-budget.html#section-5",
     "href": "slides/02-data-budget.html#section-5",
-    "title": "3 - Your data budget",
+    "title": "2 - Your data budget",
     "section": "",
-    "text": "ggplot(flights_train, aes(dep_delay)) +\n  geom_histogram(bins = 20) +\n  scale_x_continuous(trans = scales::pseudo_log_trans(base = 10))"
+    "text": "quartiles <- quantile(frog_train$latency, probs = c(1:3)/4)\nggplot(frog_train, aes(latency)) +\n  geom_histogram(bins = 20) +\n  geom_vline(xintercept = quartiles, color = train_color, \n             size = 1.5, lty = 2)\n\n\n\nStratification often helps, with very little downside"
   },
   {
     "objectID": "slides/02-data-budget.html#section-6",
     "href": "slides/02-data-budget.html#section-6",
-    "title": "3 - Your data budget",
+    "title": "2 - Your data budget",
     "section": "",
-    "text": "ggplot(flights_train, aes(dep_delay, destination, fill = destination)) +\n  geom_boxplot(alpha = 0.3, show.legend = FALSE)"
+    "text": "ggplot(frog_train, aes(latency, treatment, fill = treatment)) +\n  geom_boxplot(alpha = 0.5, show.legend = FALSE)"
   },
   {
     "objectID": "slides/02-data-budget.html#data-splitting-and-spending",
     "href": "slides/02-data-budget.html#data-splitting-and-spending",
-    "title": "3 - Your data budget",
+    "title": "2 - Your data budget",
     "section": "Data splitting and spending",
     "text": "Data splitting and spending\nFor machine learning, we typically split data into training and test sets:\n\n\nThe training set is used to estimate model parameters.\nThe test set is used to find an independent assessment of model performance.\n\n\n\nDo not 🚫 use the test set during training."
   },
   {
     "objectID": "slides/02-data-budget.html#section-7",
     "href": "slides/02-data-budget.html#section-7",
-    "title": "3 - Your data budget",
+    "title": "2 - Your data budget",
     "section": "",
-    "text": "flights_train %>%\n  mutate(destination = fct_reorder(destination, dep_delay)) %>%\n  ggplot(aes(dep_delay, destination, fill = destination)) +\n  geom_boxplot(alpha = 0.3, show.legend = FALSE) +\n  scale_x_continuous(trans = scales::pseudo_log_trans(base = 10))"
+    "text": "frog_train %>%\n  ggplot(aes(latency, reflex, fill = reflex)) +\n  geom_boxplot(alpha = 0.3, show.legend = FALSE)"
   },
   {
     "objectID": "slides/02-data-budget.html#data-splitting-and-spending-1",
     "href": "slides/02-data-budget.html#data-splitting-and-spending-1",
-    "title": "3 - Your data budget",
+    "title": "2 - Your data budget",
     "section": "Data splitting and spending",
     "text": "Data splitting and spending\n\nSpending too much data in training prevents us from a good assessment of predictive performance.\nSpending too much in testing keeps us from finding a good estimate of model parameters."
   },
@@ -527,9 +527,9 @@
   {
     "objectID": "slides/02-data-budget.html#section-8",
     "href": "slides/02-data-budget.html#section-8",
-    "title": "3 - Your data budget",
+    "title": "2 - Your data budget",
     "section": "",
-    "text": "ggplot(flights_train, aes(hour, duration)) +\n  stat_summary_hex(aes(z = dep_delay), alpha = 0.7, bins = 12) +\n  scale_fill_viridis_c() +\n  labs(fill = \"mean delay\")"
+    "text": "ggplot(frog_train, aes(reflex, age)) +\n  stat_summary_2d(aes(z = latency), \n                  alpha = 0.7, binwidth = c(1, 5e3)) +\n  scale_fill_viridis_c() +\n  labs(fill = \"mean latency\")"
   },
   {
     "objectID": "slides/01-introduction.html#think-pair-share",
@@ -744,58 +744,58 @@
   {
     "objectID": "slides/02-data-budget.html#your-turn",
     "href": "slides/02-data-budget.html#your-turn",
-    "title": "3 - Your data budget",
+    "title": "2 - Your data budget",
     "section": "Your turn",
     "text": "Your turn\n\nWhen is a good time to split your data?\n\n\n\n03:00"
   },
   {
     "objectID": "slides/02-data-budget.html#data-splitting-and-spending-2",
     "href": "slides/02-data-budget.html#data-splitting-and-spending-2",
-    "title": "3 - Your data budget",
+    "title": "2 - Your data budget",
     "section": "Data splitting and spending ",
-    "text": "Data splitting and spending \n\nlibrary(tidymodels)\n\nset.seed(123)\nflights_split <- initial_split(dcflights, strata = dep_delay)\nflights_split\n\n<Analysis/Assess/Total>\n<1989/664/2653>"
+    "text": "Data splitting and spending \n\nlibrary(tidymodels)\n\nset.seed(123)\nfrog_split <- initial_split(tree_frogs, strata = latency)\nfrog_split\n\n<Analysis/Assess/Total>\n<428/144/572>"
   },
   {
     "objectID": "slides/02-data-budget.html#your-turn-1",
     "href": "slides/02-data-budget.html#your-turn-1",
-    "title": "3 - Your data budget",
+    "title": "2 - Your data budget",
     "section": "Your turn",
     "text": "Your turn\n\nSplit your data so 20% is held out for the test set.\n\n\n\n05:00"
   },
   {
     "objectID": "slides/02-data-budget.html#data-splitting-and-spending-3",
     "href": "slides/02-data-budget.html#data-splitting-and-spending-3",
-    "title": "3 - Your data budget",
+    "title": "2 - Your data budget",
     "section": "Data splitting and spending ",
-    "text": "Data splitting and spending \n\nflights_train <- training(flights_split)\nflights_test <- testing(flights_split)"
+    "text": "Data splitting and spending \n\nfrog_train <- training(frog_split)\nfrog_test <- testing(frog_split)"
   },
   {
     "objectID": "slides/02-data-budget.html#data-splitting-and-spending-4",
     "href": "slides/02-data-budget.html#data-splitting-and-spending-4",
-    "title": "3 - Your data budget",
+    "title": "2 - Your data budget",
     "section": "Data splitting and spending ",
-    "text": "Data splitting and spending \n\nglimpse(flights_train)\n\nRows: 1,989\nColumns: 8\n$ airline     <chr> \"American Airlines Inc.\", \"American Airlines Inc.\", \"Repub…\n$ flight      <fct> 344, 439, 958, 920, 394, 186, 298, 132, 405, 254, 214, 86,…\n$ destination <fct> DFW, ORD, BNA, BOS, DFW, ORD, MCO, BOS, BOS, LGA, ORD, ATL…\n$ date        <date> 2021-07-01, 2021-07-01, 2021-07-01, 2021-07-01, 2021-07-0…\n$ hour        <dbl> 7, 7, 8, 9, 9, 12, 13, 9, 13, 14, 16, 16, 17, 18, 19, 22, …\n$ visibility  <dbl> 10, 10, 10, 10, 10, 10, 10, 9, 10, 10, 10, 10, 10, 10, 10,…\n$ duration    <dbl> 151, 100, 87, 60, 161, 97, 108, 55, 74, 42, 97, 81, 58, 95…\n$ dep_delay   <dbl> -6, -6, -9, -10, -6, -7, -5, -8, -7, -6, -5, -6, -7, -5, -…"
+    "text": "Data splitting and spending \n\nglimpse(frog_train)\n\nRows: 428\nColumns: 5\n$ treatment <chr> \"control\", \"control\", \"control\", \"control\", \"control\", \"cont…\n$ reflex    <fct> full, full, full, full, full, full, full, full, full, full, …\n$ age       <dbl> 467950, 464870, 464610, 469650, 467600, 410460, 427685, 4685…\n$ t_o_d     <chr> \"morning\", \"morning\", \"morning\", \"morning\", \"morning\", \"afte…\n$ latency   <dbl> 33, 19, 2, 39, 42, 20, 31, 21, 30, 43, 23, 12, 46, 22, 21, 4…"
   },
   {
     "objectID": "slides/02-data-budget.html#data-splitting-and-spending-5",
     "href": "slides/02-data-budget.html#data-splitting-and-spending-5",
-    "title": "3 - Your data budget",
+    "title": "2 - Your data budget",
     "section": "Data splitting and spending ",
-    "text": "Data splitting and spending \n\nglimpse(flights_test)\n\nRows: 664\nColumns: 8\n$ airline     <chr> \"American Airlines Inc.\", \"Southwest Airlines Co.\", \"South…\n$ flight      <fct> 557, 323, 135, 372, 62, 38, 84, 315, 156, 215, 310, 469, 5…\n$ destination <fct> DFW, ATL, BNA, DTW, CLT, BOS, ATL, MCO, CLT, ORD, BNA, ORD…\n$ date        <date> 2021-07-01, 2021-07-01, 2021-07-01, 2021-07-01, 2021-07-0…\n$ hour        <dbl> 5, 6, 6, 6, 6, 7, 7, 8, 8, 9, 10, 11, 12, 12, 14, 15, 15, …\n$ visibility  <dbl> 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10…\n$ duration    <dbl> 158, 76, 89, 62, 58, 56, 78, 109, 52, 97, 88, 100, 145, 11…\n$ dep_delay   <dbl> -5, 0, 0, -5, -6, 0, 137, -2, 73, 4, 6, -8, -3, -1, 15, 61…"
+    "text": "Data splitting and spending \n\nglimpse(frog_test)\n\nRows: 144\nColumns: 5\n$ treatment <chr> \"control\", \"control\", \"control\", \"control\", \"gentamicin\", \"c…\n$ reflex    <fct> full, low, full, mid, full, full, full, full, full, full, fu…\n$ age       <dbl> 466965, 361180, 401595, 357810, 463230, 469065, 466160, 4658…\n$ t_o_d     <chr> \"morning\", \"night\", \"afternoon\", \"night\", \"morning\", \"mornin…\n$ latency   <dbl> 22, 360, 106, 180, 39, 50, 63, 25, 48, 126, 11, 56, 78, 79, …"
   },
   {
     "objectID": "slides/02-data-budget.html#data-splitting-and-spending-6",
     "href": "slides/02-data-budget.html#data-splitting-and-spending-6",
-    "title": "3 - Your data budget",
+    "title": "2 - Your data budget",
     "section": "Data splitting and spending ",
-    "text": "Data splitting and spending \n\nlibrary(tidymodels)\n\nset.seed(123)\nflights_split <- initial_split(dcflights, prop = 0.8, strata = dep_delay)\nflights_train <- training(flights_split)\nflights_test <- testing(flights_split)\n\nnrow(flights_train)\n\n[1] 2120\n\nnrow(flights_test)\n\n[1] 533"
+    "text": "Data splitting and spending \n\nset.seed(123)\nfrog_split <- initial_split(tree_frogs, prop = 0.8, strata = latency)\nfrog_train <- training(frog_split)\nfrog_test <- testing(frog_split)\n\nnrow(frog_train)\n\n[1] 456\n\nnrow(frog_test)\n\n[1] 116"
   },
   {
     "objectID": "slides/02-data-budget.html#your-turn-2",
     "href": "slides/02-data-budget.html#your-turn-2",
-    "title": "3 - Your data budget",
+    "title": "2 - Your data budget",
     "section": "Your turn",
-    "text": "Your turn\n\nExplore the dcflights data on your own!\n\n\n\n05:00\n\n\n\n\nMake a plot or summary and then share with neighbor\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Your turn\n\nExplore the frog_train data on your own!\n\n\n\n05:00\n\n\n\n\nMake a plot or summary and then share with neighbor\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
     "objectID": "slides/02-data-budget.html#exploratory-data-analysis-for-ml",
@@ -887,5 +887,26 @@
     "title": "2 - What makes a model?",
     "section": "",
     "text": "tree_spec <-\n  decision_tree() %>% \n  set_mode(\"regression\")\n\nworkflow(dep_delay ~ duration + hour, tree_spec) %>% \n  fit(data = flights_train) \n\n══ Workflow [trained] ════════════════════════════════════════════════\nPreprocessor: Formula\nModel: decision_tree()\n\n── Preprocessor ──────────────────────────────────────────────────────\ndep_delay ~ duration + hour\n\n── Model ─────────────────────────────────────────────────────────────\nn= 2120 \n\nnode), split, n, deviance, yval\n      * denotes terminal node\n\n1) root 2120 7114286.0  15.970750  \n  2) hour< 14.5 1280 1787749.0   6.572656 *\n  3) hour>=14.5 840 5041208.0  30.291670  \n    6) duration>=38.5 829 4069511.0  28.998790 *\n    7) duration< 38.5 11  865880.2 127.727300 *\n\n\n\n\nhttps://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/02-data-budget.html#data-on-tree-frog-hatching",
+    "href": "slides/02-data-budget.html#data-on-tree-frog-hatching",
+    "title": "2 - Your data budget",
+    "section": "Data on tree frog hatching",
+    "text": "Data on tree frog hatching\n\nlibrary(tidyverse)\nlibrary(tidymodels)\n\ndata(\"tree_frogs\", package = \"stacks\")\ntree_frogs <- tree_frogs %>%\n  filter(!is.na(latency)) %>%\n  select(-c(clutch, hatched))\n\n\nRed-eyed tree frog embryos can hatch earlier than their normal ~7 days if they detect potential predator threat!\nType ?stacks::tree_frogs to learn more about this dataset, including references."
+  },
+  {
+    "objectID": "slides/02-data-budget.html#data-on-tree-frog-hatching-1",
+    "href": "slides/02-data-budget.html#data-on-tree-frog-hatching-1",
+    "title": "2 - Your data budget",
+    "section": "Data on tree frog hatching",
+    "text": "Data on tree frog hatching\n\nglimpse(tree_frogs)\n\nRows: 572\nColumns: 5\n$ treatment <chr> \"control\", \"control\", \"control\", \"control\", \"control\", \"gent…\n$ reflex    <fct> full, low, full, mid, full, full, full, full, full, full, fu…\n$ age       <dbl> 466965, 361180, 401595, 357810, 397440, 463230, 393900, 4690…\n$ t_o_d     <chr> \"morning\", \"night\", \"afternoon\", \"night\", \"afternoon\", \"morn…\n$ latency   <dbl> 22, 360, 106, 180, 60, 39, 214, 50, 224, 63, 33, 94, 19, 25,…"
+  },
+  {
+    "objectID": "slides/02-data-budget.html#data-on-tree-frog-hatching-2",
+    "href": "slides/02-data-budget.html#data-on-tree-frog-hatching-2",
+    "title": "2 - Your data budget",
+    "section": "Data on tree frog hatching",
+    "text": "Data on tree frog hatching\n\nN = 572\na numeric outcome latency\n4 other variables\n\ntreatment, reflex, and t_o_d are nominal predictors\nage is a numeric predictor"
   }
 ]
