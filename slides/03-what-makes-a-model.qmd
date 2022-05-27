@@ -17,7 +17,6 @@ knitr:
 #| file: setup.R
 ```
 
-
 ## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
@@ -43,13 +42,13 @@ countdown(minutes = 3)
 
 -   `spark` for large data sets
 
-## To specify a model with parsnip `r hexes("parsnip")`
+## To specify a model with parsnip `r hexes("parsnip")` {background-color="#f7dde0"}
 
 . . .
 
--   Choose a **model**
--   Specify an **engine**
--   Set the **mode**
+-   Choose a model
+-   Specify an engine
+-   Set the mode
 
 ## To specify a model with parsnip `r hexes("parsnip")`
 
@@ -57,19 +56,26 @@ countdown(minutes = 3)
 #| echo: false
 library(tidyverse)
 library(tidymodels)
-library(dcflights21)
-data(dcflights)
+data("tree_frogs", package = "stacks")
+tree_frogs <- tree_frogs %>%
+  filter(!is.na(latency)) %>%
+  select(-c(clutch, hatched))
 
 set.seed(123)
-flights_split <- initial_split(dcflights, prop = 0.8, strata = dep_delay)
-flights_train <- training(flights_split)
-flights_test <- testing(flights_split)
+frog_split <- initial_split(tree_frogs, prop = 0.8, strata = latency)
+frog_train <- training(frog_split)
+frog_test <- testing(frog_split)
 ```
-
 
 ```{r}
 linear_reg()
 ```
+
+## To specify a model with parsnip `r hexes("parsnip")` {background-color="#f7dde0"}
+
+-   Choose a model
+-   Specify an **engine**
+-   Set the mode
 
 ## To specify a model with parsnip `r hexes("parsnip")`
 
@@ -84,6 +90,12 @@ linear_reg() %>%
 linear_reg() %>%
   set_engine("stan")
 ```
+
+## To specify a model with parsnip `r hexes("parsnip")` {background-color="#f7dde0"}
+
+-   Choose a model
+-   Specify an engine
+-   Set the **mode**
 
 ## To specify a model with parsnip `r hexes("parsnip")`
 
@@ -106,13 +118,22 @@ All available models are listed at <https://www.tidymodels.org/find/parsnip/>
 
 ##  {background-iframe="https://www.tidymodels.org/find/parsnip/"}
 
+::: footer
+:::
+
+## To specify a model with parsnip `r hexes("parsnip")` {background-color="#f7dde0"}
+
+-   Choose a **model**
+-   Specify an **engine**
+-   Set the **mode**
+
 ## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
 *Run the `tree_spec` chunk in your `.Rmd`.*
 
-*Edit this code so it fits a different model.*
+*Edit this code so it creates a different model.*
 
 ```{r}
 #| echo: false
@@ -123,11 +144,87 @@ countdown(minutes = 5)
 All available models are listed at <https://www.tidymodels.org/find/parsnip/>
 :::
 
+# A machine learning model *learns* from data
+
+## All models are wrong but...
+
+```{r}
+#| echo: false
+#| fig.width: 7
+ggplot(frog_test, aes(age, latency)) +
+  geom_point(color = test_color, size = 2.5)
+```
+
+## All models are wrong but...
+
+```{r}
+#| echo: false
+#| fig.width: 7
+linear_preds <- 
+  linear_reg() %>%
+  fit(latency ~ age, data = frog_train) %>%
+  augment(new_data = frog_test)
+
+ggplot(data = NULL, aes(age, latency)) +
+  geom_segment(data = linear_preds,
+               aes(x = age, xend = age, 
+                   y = latency, yend = .pred), 
+               colour = train_color, alpha = 0.8) +
+  geom_smooth(data = frog_train, method = "lm", 
+              se = FALSE, fullrange = TRUE,
+              alpha = 0.8, size = 2, color = data_color) +
+  geom_point(data = linear_preds, color = test_color, size = 2.5)
+```
+
+## All models are wrong but...
+
+```{r}
+#| echo: false
+#| fig.width: 7
+tree_preds <- 
+  decision_tree(cost_complexity = 0.015, mode = "regression") %>%
+  fit(latency ~ age, data = frog_train) %>%
+  augment(new_data = frog_test)
+
+ggplot(data = tree_preds, aes(age, latency)) +
+  geom_segment(aes(x = age, xend = age, 
+                   y = latency, yend = .pred), 
+               colour = train_color, alpha = 0.8) +
+  geom_line(aes(x = age, y = .pred), size = 2, alpha = 0.8, color = data_color) +
+  geom_point(data = tree_preds, color = test_color, size = 2.5)
+```
+
+# ...some are useful!
+
 # A model workflow
 
 ##  {background-image="https://media.giphy.com/media/xUA7b0Klw8Wfor7FWo/giphy.gif" background-size="800px"}
 
-## 
+# Placeholder for workflow diagrams from TMwR
+
+## Why a `workflow()`? `r hexes("workflows")`
+
+. . .
+
+-   Workflows are smarter with new data than `model.matrix()` in terms of new factor levels
+
+. . .
+
+-   You can use other preprocessors (more on feature engineering tomorrow!)
+
+. . .
+
+-   A workflow captures the entire modeling process
+
+. . .
+
+-   `fit()` and `predict()` apply to all the estimation steps
+
+. . .
+
+-   They can help organize your work when working with multiple models
+
+## A model workflow `r hexes("parsnip", "workflows")`
 
 ```{r}
 tree_spec <-
@@ -135,11 +232,11 @@ tree_spec <-
   set_mode("regression")
 
 tree_spec %>% 
-  fit(dep_delay ~ duration + hour, 
-      data = flights_train) 
+  fit(latency ~ ., 
+      data = frog_train) 
 ```
 
-## 
+## A model workflow `r hexes("parsnip", "workflows")`
 
 ```{r}
 tree_spec <-
@@ -148,11 +245,11 @@ tree_spec <-
 
 workflow() %>%
   add_model(tree_spec) %>%
-  add_formula(dep_delay ~ duration + hour) %>%
-  fit(data = flights_train) 
+  add_formula(latency ~ .) %>%
+  fit(data = frog_train) 
 ```
 
-## 
+## A model workflow `r hexes("parsnip", "workflows")`
 
 ```{r}
 tree_spec <-
@@ -161,17 +258,85 @@ tree_spec <-
 
 workflow() %>%
   add_model(tree_spec) %>%
-  add_variables(outcomes = dep_delay, predictors = c(duration, hour)) %>%
-  fit(data = flights_train) 
+  add_variables(outcomes = latency, predictors = everything()) %>%
+  fit(data = frog_train) 
 ```
 
-## 
+## A model workflow `r hexes("parsnip", "workflows")`
 
 ```{r}
 tree_spec <-
   decision_tree() %>% 
   set_mode("regression")
 
-workflow(dep_delay ~ duration + hour, tree_spec) %>% 
-  fit(data = flights_train) 
+workflow(latency ~ ., tree_spec) %>% 
+  fit(data = frog_train) 
 ```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Run the `tree_wf` chunk in your `.Rmd`.*
+
+*Edit this code so it:*
+
+-   *creates a different model*
+-   *uses one of the other `workflow()` interfaces*
+
+```{r}
+#| echo: false
+countdown(minutes = 5)
+```
+
+## Predict with your model `r hexes("parsnip", "workflows")`
+
+How do you use your new model `tree_fit`?
+
+```{r}
+tree_spec <-
+  decision_tree() %>% 
+  set_mode("regression")
+
+tree_fit <-
+  workflow(latency ~ ., tree_spec) %>% 
+  fit(data = frog_train) 
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Run:*
+
+`predict(tree_fit, new_data = frog_test)`
+
+*What do you get?*
+
+```{r}
+#| echo: false
+countdown(minutes = 3)
+```
+
+## Your turn
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Run:*
+
+`augment(tree_fit, new_data = frog_test)`
+
+*What do you get?*
+
+```{r}
+#| echo: false
+countdown(minutes = 3)
+```
+
+# The tidymodels prediction guarantee! `r hexes("parsnip", "workflows")`
+
+. . .
+
+-   The predictions will always be inside a **tibble**
+-   The column names and types are **unsurprising**
+-   The number of rows in `new_data` and the output **are the same**
