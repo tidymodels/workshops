@@ -1,0 +1,116 @@
+---
+title: "3 - Evaluating models"
+subtitle: "Machine learning with tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    theme: [default, tidymodels.scss]
+knitr:
+  opts_chunk: 
+    echo: true
+---
+
+```{r}
+#| include: false
+#| file: setup.R
+```
+
+## Metrics for model performance `r hexes("yardstick")`
+
+```{r}
+#| echo: false
+library(tidyverse)
+library(tidymodels)
+data("tree_frogs", package = "stacks")
+tree_frogs <- tree_frogs %>%
+  filter(!is.na(latency)) %>%
+  select(-c(clutch, hatched))
+
+set.seed(123)
+frog_split <- initial_split(tree_frogs, prop = 0.8, strata = latency)
+frog_train <- training(frog_split)
+frog_test <- testing(frog_split)
+tree_spec <- decision_tree(cost_complexity = 0.001, mode = "regression")
+tree_wf <- workflow(latency ~ ., tree_spec)
+tree_fit <- fit(tree_wf, frog_train)
+```
+
+```{r}
+augment(tree_fit, new_data = frog_test) %>%
+  metrics(latency, .pred)
+```
+
+. . .
+
+-   RMSE: measure of the difference between the predicted and observed values ⬇️
+-   $R^2$: squared correlation between the predicted and observed values ⬆️
+-   MAE: mean absolute error ⬇️
+
+## Metrics for model performance `r hexes("yardstick")`
+
+```{r}
+augment(tree_fit, new_data = frog_test) %>%
+  rmse(latency, .pred)
+```
+
+## Metrics for model performance `r hexes("yardstick")`
+
+```{r}
+augment(tree_fit, new_data = frog_test) %>%
+  group_by(reflex) %>%
+  rmse(latency, .pred)
+```
+
+## Metrics for model performance `r hexes("yardstick")`
+
+```{r}
+frog_metrics <- metric_set(rmse, msd)
+augment(tree_fit, new_data = frog_test) %>%
+  frog_metrics(latency, .pred)
+```
+
+##  {background-iframe="https://yardstick.tidymodels.org/reference/index.html"}
+
+::: footer
+:::
+
+# We'll talk about classification metrics tomorrow!
+
+## Which data set should we use? `r hexes("yardstick")`
+
+::: columns
+::: {.column width="50%"}
+```{r}
+tree_fit %>%
+  augment(frog_train) %>%
+  rmse(latency, .pred)
+```
+:::
+
+::: {.column width="50%"}
+
+:::
+:::
+
+
+## Which data set should we use? `r hexes("yardstick")`
+
+::: columns
+::: {.column width="50%"}
+```{r}
+tree_fit %>%
+  augment(frog_train) %>%
+  rmse(latency, .pred)
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+tree_fit %>%
+  augment(frog_test) %>%
+  rmse(latency, .pred)
+```
+:::
+:::
