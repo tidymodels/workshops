@@ -406,9 +406,9 @@
 </div>
 <div class="fragment">
 <ul>
-<li>RMSE: measure of the difference between the predicted and observed values ⬇️</li>
+<li>RMSE: difference between the predicted and observed values ⬇️</li>
 <li><span class="math inline">\(R^2\)</span>: squared correlation between the predicted and observed values ⬆️</li>
-<li>MAE: mean absolute error ⬇️</li>
+<li>MAE: similar to RMSE, but mean absolute error ⬇️</li>
 </ul>
 </div>
 </section>
@@ -515,6 +515,74 @@
 </div>
 </div>
 </div>
+</div>
+</section>
+<section id="which-data-set-should-we-use-2" class="slide level2">
+<h2>Which data set should we use? <img data-src="hexes/yardstick.png" class="absolute" style="top: 0px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+
+</div><div class="column" style="width:50%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>tree_fit <span class="sc">%&gt;%</span></span>
+<span id="cb15-2"><a href="#cb15-2"></a>  <span class="fu">augment</span>(frog_test) <span class="sc">%&gt;%</span></span>
+<span id="cb15-3"><a href="#cb15-3"></a>  <span class="fu">rmse</span>(latency, .pred)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  .metric .estimator .estimate
+  &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+1 rmse    standard        59.2</code></pre>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="which-data-set-should-we-use-3" class="slide level2">
+<h2>Which data set should we use? <img data-src="hexes/yardstick.png" class="absolute" style="top: 0px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a>tree_fit <span class="sc">%&gt;%</span></span>
+<span id="cb17-2"><a href="#cb17-2"></a>  <span class="fu">augment</span>(frog_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 456 × 6
+   treatment  reflex    age t_o_d     latency .pred
+   &lt;chr&gt;      &lt;fct&gt;   &lt;dbl&gt; &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt;
+ 1 control    full   467950 morning        33  39.8
+ 2 control    full   464870 morning        19  66.7
+ 3 control    full   464610 morning         2  66.7
+ 4 control    full   469650 morning        39  39.8
+ 5 control    full   467600 morning        42  39.8
+ 6 control    full   410460 afternoon      20  59.8
+ 7 control    full   427685 night          31  83.1
+ 8 control    full   468530 morning        21  39.8
+ 9 gentamicin full   465800 morning        30  64.6
+10 control    full   393475 afternoon      43 174. 
+# … with 446 more rows</code></pre>
+</div>
+</div>
+<p>We call this “resubstition” or “repredicting the training set”</p>
+</section>
+<section id="which-data-set-should-we-use-4" class="slide level2">
+<h2>Which data set should we use? <img data-src="hexes/yardstick.png" class="absolute" style="top: 0px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a>tree_fit <span class="sc">%&gt;%</span></span>
+<span id="cb19-2"><a href="#cb19-2"></a>  <span class="fu">augment</span>(frog_train) <span class="sc">%&gt;%</span></span>
+<span id="cb19-3"><a href="#cb19-3"></a>  <span class="fu">rmse</span>(latency, .pred)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 3
+  .metric .estimator .estimate
+  &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+1 rmse    standard        49.4</code></pre>
+</div>
+</div>
+<p>We call this a “resubstition metric”</p>
+</section>
+<section id="section-1" class="slide level2" data-background-image="https://media.giphy.com/media/55itGuoAJiZEEen9gg/giphy.gif" data-background-size="800px">
+<h2></h2>
+</section>
+<section id="section-2" class="slide level2">
+<h2></h2>
+<div class="r-fit-text">
+<p><strong>The test set is precious</strong> 💎</p>
 </div>
 
 <div class="footer footer-default">
