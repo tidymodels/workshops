@@ -376,6 +376,8 @@
       margin-right: 0; 
     }
   </style>
+  <link href="../site_libs/countdown-0.3.5/countdown.css" rel="stylesheet">
+  <script src="../site_libs/countdown-0.3.5/countdown.js"></script>
 </head>
 <body>
 <script src="https://use.fontawesome.com/5235085b15.js"></script>
@@ -578,14 +580,159 @@
 </section>
 <section id="section-1" class="slide level2" data-background-image="https://media.giphy.com/media/55itGuoAJiZEEen9gg/giphy.gif" data-background-size="800px">
 <h2></h2>
+</section></section>
+<section id="decision-tree" class="title-slide slide level1 center">
+<h1>Decision tree 🌳</h1>
+
 </section>
-<section id="section-2" class="slide level2">
-<h2></h2>
-<div class="r-fit-text">
-<p><strong>The test set is precious</strong> 💎</p>
+
+<section>
+<section id="random-forest" class="title-slide slide level1 center">
+<h1>Random forest 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌳</h1>
+
+</section>
+<section id="create-a-random-forest-model" class="slide level2">
+<h2>Create a random forest model <img data-src="hexes/parsnip.png" class="absolute" style="top: 0px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a>rf_spec <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(<span class="at">trees =</span> <span class="dv">1000</span>, <span class="at">mode =</span> <span class="st">"regression"</span>)</span>
+<span id="cb21-2"><a href="#cb21-2"></a>rf_spec</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Random Forest Model Specification (regression)
+
+Main Arguments:
+  trees = 1000
+
+Computational engine: ranger </code></pre>
+</div>
 </div>
 </section>
-<section id="section-3" class="slide level2" data-background-color="white" data-background-image="https://www.tmwr.org/premade/resampling.svg" data-background-size="900px">
+<section id="create-a-random-forest-model-1" class="slide level2">
+<h2>Create a random forest model <img data-src="hexes/workflows.png" class="absolute" style="top: 0px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a>rf_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>(latency <span class="sc">~</span> ., rf_spec)</span>
+<span id="cb23-2"><a href="#cb23-2"></a>rf_wf</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>══ Workflow ══════════════════════════════════════════════════════════
+Preprocessor: Formula
+Model: rand_forest()
+
+── Preprocessor ──────────────────────────────────────────────────────
+latency ~ .
+
+── Model ─────────────────────────────────────────────────────────────
+Random Forest Model Specification (regression)
+
+Main Arguments:
+  trees = 1000
+
+Computational engine: ranger </code></pre>
+</div>
+</div>
+</section>
+<section id="your-turn" class="slide level2" data-transition="slide-in">
+<h2>Your turn</h2>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
+<p><em>Fit <code>rf_wf</code> to the training data.</em></p>
+<p><em>Use <code>augment()</code> and <code>metrics()</code> to compute metrics for both training and testing data.</em></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="timer_6293d04b" style="right:0;bottom:0;" data-warnwhen="0">
+<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
+<div class="cell">
+
+</div>
+</section>
+<section id="random-forest-metrics" class="slide level2">
+<h2>Random forest metrics <img data-src="hexes/yardstick.png" class="absolute" style="top: 0px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a>rf_fit <span class="sc">%&gt;%</span></span>
+<span id="cb25-2"><a href="#cb25-2"></a>  <span class="fu">augment</span>(frog_train) <span class="sc">%&gt;%</span></span>
+<span id="cb25-3"><a href="#cb25-3"></a>  <span class="fu">metrics</span>(latency, .pred)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  .metric .estimator .estimate
+  &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+1 rmse    standard      46.1  
+2 rsq     standard       0.574
+3 mae     standard      31.8  </code></pre>
+</div>
+</div>
+</div><div class="column" style="width:50%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1"></a>rf_fit <span class="sc">%&gt;%</span></span>
+<span id="cb27-2"><a href="#cb27-2"></a>  <span class="fu">augment</span>(frog_test) <span class="sc">%&gt;%</span></span>
+<span id="cb27-3"><a href="#cb27-3"></a>  <span class="fu">metrics</span>(latency, .pred)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  .metric .estimator .estimate
+  &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+1 rmse    standard      57.0  
+2 rsq     standard       0.421
+3 mae     standard      37.7  </code></pre>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="comparing-metrics" class="slide level2">
+<h2>Comparing metrics <img data-src="hexes/yardstick.png" class="absolute" style="top: 0px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1"></a>tree_fit <span class="sc">%&gt;%</span></span>
+<span id="cb29-2"><a href="#cb29-2"></a>  <span class="fu">augment</span>(frog_test) <span class="sc">%&gt;%</span></span>
+<span id="cb29-3"><a href="#cb29-3"></a>  <span class="fu">metrics</span>(latency, .pred)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  .metric .estimator .estimate
+  &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+1 rmse    standard      59.2  
+2 rsq     standard       0.380
+3 mae     standard      40.2  </code></pre>
+</div>
+</div>
+</div><div class="column" style="width:50%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1"></a>rf_fit <span class="sc">%&gt;%</span></span>
+<span id="cb31-2"><a href="#cb31-2"></a>  <span class="fu">augment</span>(frog_test) <span class="sc">%&gt;%</span></span>
+<span id="cb31-3"><a href="#cb31-3"></a>  <span class="fu">metrics</span>(latency, .pred)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  .metric .estimator .estimate
+  &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;
+1 rmse    standard      57.0  
+2 rsq     standard       0.421
+3 mae     standard      37.7  </code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="fragment">
+<p>What if we want to compare more models?</p>
+</div>
+<div class="fragment">
+<p>And/or more model configurations?</p>
+</div>
+<div class="fragment">
+<p>And we want to understand if these are important differences?</p>
+</div>
+</section></section>
+<section id="the-testing-data-is-precious" class="title-slide slide level1 center">
+<h1>The testing data is precious 💎</h1>
+
+</section>
+
+<section>
+<section id="how-can-we-use-the-training-data-to-compare-and-evaluate-different-models" class="title-slide slide level1 center">
+<h1>How can we use the <em>training</em> data to compare and evaluate different models? 🤔</h1>
+
+</section>
+<section id="section-2" class="slide level2" data-background-color="white" data-background-image="https://www.tmwr.org/premade/resampling.svg" data-background-size="1000px">
 <h2></h2>
 
 <div class="footer footer-default">

@@ -466,14 +466,14 @@
     "href": "slides/02-data-budget.html#section-5",
     "title": "2 - Your data budget",
     "section": "",
-    "text": "quartiles <- quantile(frog_train$latency, probs = c(1:3)/4)\nggplot(frog_train, aes(latency)) +\n  geom_histogram(bins = 20) +\n  geom_vline(xintercept = quartiles, color = train_color, \n             size = 1.5, lty = 2)\n\n\n\nStratification often helps, with very little downside"
+    "text": "ggplot(frog_train, aes(latency)) +\n  geom_histogram(bins = 20)\n\n\n\nRemember how we used strata = latency?"
   },
   {
     "objectID": "slides/02-data-budget.html#section-6",
     "href": "slides/02-data-budget.html#section-6",
     "title": "2 - Your data budget",
     "section": "",
-    "text": "ggplot(frog_train, aes(latency)) +\n  geom_histogram(bins = 20)\n\n\n\nRemember how we used strata = latency?"
+    "text": "quartiles <- quantile(frog_train$latency, probs = c(1:3)/4)\nggplot(frog_train, aes(latency)) +\n  geom_histogram(bins = 20) +\n  geom_vline(xintercept = quartiles, color = train_color, \n             size = 1.5, lty = 2)\n\n\n\nStratification often helps, with very little downside"
   },
   {
     "objectID": "slides/02-data-budget.html#data-splitting-and-spending",
@@ -487,7 +487,7 @@
     "href": "slides/02-data-budget.html#section-7",
     "title": "2 - Your data budget",
     "section": "",
-    "text": "quartiles <- quantile(frog_train$latency, probs = c(1:3)/4)\nggplot(frog_train, aes(latency)) +\n  geom_histogram(bins = 20) +\n  geom_vline(xintercept = quartiles, color = train_color, \n             size = 1.5, lty = 2)\n\n\n\nStratification often helps, with very little downside"
+    "text": "ggplot(frog_train, aes(latency, treatment, fill = treatment)) +\n  geom_boxplot(alpha = 0.5, show.legend = FALSE)"
   },
   {
     "objectID": "slides/02-data-budget.html#data-splitting-and-spending-1",
@@ -529,7 +529,7 @@
     "href": "slides/02-data-budget.html#section-8",
     "title": "2 - Your data budget",
     "section": "",
-    "text": "ggplot(frog_train, aes(latency, treatment, fill = treatment)) +\n  geom_boxplot(alpha = 0.5, show.legend = FALSE)"
+    "text": "frog_train %>%\n  ggplot(aes(latency, reflex, fill = reflex)) +\n  geom_boxplot(alpha = 0.3, show.legend = FALSE)"
   },
   {
     "objectID": "slides/01-introduction.html#think-pair-share",
@@ -1152,14 +1152,14 @@
     "href": "slides/04-evaluating-models.html#section-2",
     "title": "3 - Evaluating models",
     "section": "",
-    "text": "The test set is precious 💎"
+    "text": "https://workshops.tidymodels.org"
   },
   {
     "objectID": "slides/02-data-budget.html#section-9",
     "href": "slides/02-data-budget.html#section-9",
     "title": "2 - Your data budget",
     "section": "",
-    "text": "frog_train %>%\n  ggplot(aes(latency, reflex, fill = reflex)) +\n  geom_boxplot(alpha = 0.3, show.legend = FALSE)"
+    "text": "ggplot(frog_train, aes(reflex, age)) +\n  stat_summary_2d(aes(z = latency), \n                  alpha = 0.7, binwidth = c(1, 5e3)) +\n  scale_fill_viridis_c() +\n  labs(fill = \"mean latency\")"
   },
   {
     "objectID": "slides/02-data-budget.html#section-10",
@@ -1209,5 +1209,54 @@
     "title": "2 - What makes a model?",
     "section": "Understand your model  ",
     "text": "Understand your model  \nHow do you understand your new model tree_fit?\n\nlibrary(rpart.plot)\ntree_fit %>%\n  extract_fit_engine() %>%\n  rpart.plot()\n\nYou can extract_*() several components of your fitted workflow."
+  },
+  {
+    "objectID": "slides/04-evaluating-models.html#create-a-random-forest-specification",
+    "href": "slides/04-evaluating-models.html#create-a-random-forest-specification",
+    "title": "3 - Evaluating models",
+    "section": "Create a random forest specification ",
+    "text": "Create a random forest specification \n\nrf_spec <- rand_forest(mode = \"regression\")\nrf_spec\n\nRandom Forest Model Specification (regression)\n\nComputational engine: ranger"
+  },
+  {
+    "objectID": "slides/04-evaluating-models.html#create-a-random-forest-workflow",
+    "href": "slides/04-evaluating-models.html#create-a-random-forest-workflow",
+    "title": "3 - Evaluating models",
+    "section": "Create a random forest workflow ",
+    "text": "Create a random forest workflow \n\nrf_wf <- workflow(latency ~ ., rf_spec)\nrf_wf\n\n══ Workflow ══════════════════════════════════════════════════════════\nPreprocessor: Formula\nModel: rand_forest()\n\n── Preprocessor ──────────────────────────────────────────────────────\nlatency ~ .\n\n── Model ─────────────────────────────────────────────────────────────\nRandom Forest Model Specification (regression)\n\nComputational engine: ranger"
+  },
+  {
+    "objectID": "slides/04-evaluating-models.html#your-turn",
+    "href": "slides/04-evaluating-models.html#your-turn",
+    "title": "3 - Evaluating models",
+    "section": "Your turn",
+    "text": "Your turn\n\nFit rf_wf to the training data.\nUse augment() and metrics() to compute metrics for both training and testing data.\n\n\n\n05:00"
+  },
+  {
+    "objectID": "slides/04-evaluating-models.html#random-forest-metrics",
+    "href": "slides/04-evaluating-models.html#random-forest-metrics",
+    "title": "3 - Evaluating models",
+    "section": "Random forest metrics ",
+    "text": "Random forest metrics \n\n\n\nrf_fit %>%\n  augment(frog_train) %>%\n  metrics(latency, .pred)\n\n# A tibble: 3 × 3\n  .metric .estimator .estimate\n  <chr>   <chr>          <dbl>\n1 rmse    standard      46.1  \n2 rsq     standard       0.574\n3 mae     standard      31.8  \n\n\n\n\nrf_fit %>%\n  augment(frog_test) %>%\n  metrics(latency, .pred)\n\n# A tibble: 3 × 3\n  .metric .estimator .estimate\n  <chr>   <chr>          <dbl>\n1 rmse    standard      57.0  \n2 rsq     standard       0.421\n3 mae     standard      37.7"
+  },
+  {
+    "objectID": "slides/04-evaluating-models.html#create-a-random-forest-model",
+    "href": "slides/04-evaluating-models.html#create-a-random-forest-model",
+    "title": "3 - Evaluating models",
+    "section": "Create a random forest model ",
+    "text": "Create a random forest model \n\nrf_spec <- rand_forest(trees = 1000, mode = \"regression\")\nrf_spec\n\nRandom Forest Model Specification (regression)\n\nMain Arguments:\n  trees = 1000\n\nComputational engine: ranger"
+  },
+  {
+    "objectID": "slides/04-evaluating-models.html#create-a-random-forest-model-1",
+    "href": "slides/04-evaluating-models.html#create-a-random-forest-model-1",
+    "title": "3 - Evaluating models",
+    "section": "Create a random forest model ",
+    "text": "Create a random forest model \n\nrf_wf <- workflow(latency ~ ., rf_spec)\nrf_wf\n\n══ Workflow ══════════════════════════════════════════════════════════\nPreprocessor: Formula\nModel: rand_forest()\n\n── Preprocessor ──────────────────────────────────────────────────────\nlatency ~ .\n\n── Model ─────────────────────────────────────────────────────────────\nRandom Forest Model Specification (regression)\n\nMain Arguments:\n  trees = 1000\n\nComputational engine: ranger"
+  },
+  {
+    "objectID": "slides/04-evaluating-models.html#comparing-metrics",
+    "href": "slides/04-evaluating-models.html#comparing-metrics",
+    "title": "3 - Evaluating models",
+    "section": "Comparing metrics ",
+    "text": "Comparing metrics \n\n\n\ntree_fit %>%\n  augment(frog_test) %>%\n  metrics(latency, .pred)\n\n# A tibble: 3 × 3\n  .metric .estimator .estimate\n  <chr>   <chr>          <dbl>\n1 rmse    standard      59.2  \n2 rsq     standard       0.380\n3 mae     standard      40.2  \n\n\n\n\nrf_fit %>%\n  augment(frog_test) %>%\n  metrics(latency, .pred)\n\n# A tibble: 3 × 3\n  .metric .estimator .estimate\n  <chr>   <chr>          <dbl>\n1 rmse    standard      57.0  \n2 rsq     standard       0.421\n3 mae     standard      37.7  \n\n\n\n\n\nWhat if we want to compare more models?\n\n\nAnd/or more model configurations?\n\n\nAnd we want to understand if these are important differences?"
   }
 ]

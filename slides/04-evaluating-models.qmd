@@ -90,10 +90,8 @@ tree_fit %>%
 :::
 
 ::: {.column width="50%"}
-
 :::
 :::
-
 
 ## Which data set should we use? `r hexes("yardstick")`
 
@@ -119,7 +117,6 @@ tree_fit %>%
 
 ::: columns
 ::: {.column width="50%"}
-
 :::
 
 ::: {.column width="50%"}
@@ -152,11 +149,96 @@ We call this a "resubstition metric"
 
 ##  {background-image="https://media.giphy.com/media/55itGuoAJiZEEen9gg/giphy.gif" background-size="800px"}
 
-## 
+# Decision tree 🌳
 
-::: r-fit-text
-**The test set is precious** 💎
+# Random forest 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌳
+
+## Create a random forest model `r hexes("parsnip")`
+
+```{r}
+rf_spec <- rand_forest(trees = 1000, mode = "regression")
+rf_spec
+```
+
+## Create a random forest model `r hexes("workflows")`
+
+```{r}
+rf_wf <- workflow(latency ~ ., rf_spec)
+rf_wf
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Fit `rf_wf` to the training data.*
+
+*Use `augment()` and `metrics()` to compute metrics for both training and testing data.*
+
+```{r}
+#| echo: false
+countdown(minutes = 5)
+```
+
+```{r}
+#| echo: false
+rf_fit <- fit(rf_wf, data = frog_train)
+```
+
+## Random forest metrics `r hexes("yardstick")`
+
+::: columns
+::: {.column width="50%"}
+```{r}
+rf_fit %>%
+  augment(frog_train) %>%
+  metrics(latency, .pred)
+```
 :::
 
-## {background-color="white" background-image="https://www.tmwr.org/premade/resampling.svg" background-size="900px"}
+::: {.column width="50%"}
+```{r}
+rf_fit %>%
+  augment(frog_test) %>%
+  metrics(latency, .pred)
+```
+:::
+:::
 
+## Comparing metrics `r hexes("yardstick")`
+
+::: columns
+::: {.column width="50%"}
+```{r}
+tree_fit %>%
+  augment(frog_test) %>%
+  metrics(latency, .pred)
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+rf_fit %>%
+  augment(frog_test) %>%
+  metrics(latency, .pred)
+```
+:::
+:::
+
+. . .
+
+What if we want to compare more models? 
+
+. . .
+
+And/or more model configurations?
+
+. . .
+
+And we want to understand if these are important differences?
+
+# The testing data is precious 💎
+
+# How can we use the *training* data to compare and evaluate different models? 🤔
+
+##  {background-color="white" background-image="https://www.tmwr.org/premade/resampling.svg" background-size="1000px"}
