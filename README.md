@@ -1,15 +1,16 @@
 # workshops
 
-This repository is for tidymodels workshops. The format is a quarto website.
+This repo contains tutorial materials for machine learning with [tidymodels](https://www.tidymodels.org/).
 
 ## Organization
 
-The major directories of interest:
+This repo is organized into directories:
 
--   `materials` contains the cmd files and code needed for the *latest* workshop.
--   `_slides` has the html versions of the slides for the latest workshop.
--   `_archive` is the location for previous workshops containing the code and the html files.
+-   `slides/` has Quarto files for the latest version of our slides.
+-   `sources/` contains Quarto files prepared for you to work along with the slides.
+-   `archive/` is the location for older versions of this workshop.
 
 ## Code of Conduct
 
-Please note that the workshops project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/1/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.
+Please note that the workshops project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/1/CODE_OF_CONDUCT.html).
+By contributing to this project, you agree to abide by its terms.
