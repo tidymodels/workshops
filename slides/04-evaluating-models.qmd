@@ -93,6 +93,10 @@ tree_fit %>%
 :::
 :::
 
+::: footer
+⚠️ DANGERS OF OVERFITTING ⚠️
+:::
+
 ## Which data set should we use? `r hexes("yardstick")`
 
 ::: columns
@@ -113,6 +117,10 @@ tree_fit %>%
 :::
 :::
 
+::: footer
+⚠️ DANGERS OF OVERFITTING ⚠️
+:::
+
 ## Which data set should we use? `r hexes("yardstick")`
 
 ::: columns
@@ -126,6 +134,10 @@ tree_fit %>%
   rmse(latency, .pred)
 ```
 :::
+:::
+
+::: footer
+⚠️ DANGERS OF OVERFITTING ⚠️
 :::
 
 ## Which data set should we use? `r hexes("yardstick")`
@@ -137,6 +149,10 @@ tree_fit %>%
 
 We call this "resubstition" or "repredicting the training set"
 
+::: footer
+⚠️ DANGERS OF OVERFITTING ⚠️
+:::
+
 ## Which data set should we use? `r hexes("yardstick")`
 
 ```{r}
@@ -147,7 +163,15 @@ tree_fit %>%
 
 We call this a "resubstition metric"
 
+::: footer
+⚠️ DANGERS OF OVERFITTING ⚠️
+:::
+
 ##  {background-image="https://media.giphy.com/media/55itGuoAJiZEEen9gg/giphy.gif" background-size="800px"}
+
+::: footer
+⚠️ DANGERS OF OVERFITTING ⚠️
+:::
 
 # Decision tree 🌳
 
@@ -185,6 +209,10 @@ countdown(minutes = 5)
 rf_fit <- fit(rf_wf, data = frog_train)
 ```
 
+::: footer
+⚠️ DANGERS OF OVERFITTING ⚠️
+:::
+
 ## Random forest metrics `r hexes("yardstick")`
 
 ::: columns
@@ -203,6 +231,10 @@ rf_fit %>%
   metrics(latency, .pred)
 ```
 :::
+:::
+
+::: footer
+⚠️ DANGERS OF OVERFITTING ⚠️
 :::
 
 ## Comparing metrics `r hexes("yardstick")`
@@ -227,7 +259,7 @@ rf_fit %>%
 
 . . .
 
-What if we want to compare more models? 
+What if we want to compare more models?
 
 . . .
 
@@ -237,8 +269,470 @@ And/or more model configurations?
 
 And we want to understand if these are important differences?
 
+::: footer
+⚠️ DANGERS OF OVERFITTING ⚠️
+:::
+
 # The testing data is precious 💎
 
 # How can we use the *training* data to compare and evaluate different models? 🤔
 
 ##  {background-color="white" background-image="https://www.tmwr.org/premade/resampling.svg" background-size="1000px"}
+
+## Cross-validation
+
+![](https://www.tmwr.org/premade/three-CV.svg)
+
+## Cross-validation
+
+![](https://www.tmwr.org/premade/three-CV-iter.svg)
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*If we use 10 folds, what percent of the training data*
+
+-   *ends up in analysis*
+-   *ends up in assessment*
+
+*for* **each** *fold?*
+
+```{r}
+#| echo: false
+countdown(minutes = 3)
+```
+
+## Resampling `r hexes("rsample")`
+
+```{r}
+vfold_cv(frog_train) ## v = 10 is default
+```
+
+## Resampling `r hexes("rsample")`
+
+```{r}
+vfold_cv(frog_train, v = 5)
+```
+
+## Resampling `r hexes("rsample")`
+
+What is in this?
+
+```{r}
+frog_folds <- vfold_cv(frog_train, v = 5)
+frog_folds$splits
+```
+
+## Bootstrapping
+
+![](https://www.tmwr.org/premade/bootstraps.svg)
+
+## Resampling `r hexes("rsample")`
+
+```{r}
+bootstraps(frog_train)
+```
+
+##  {background-iframe="https://rsample.tidymodels.org/reference/index.html"}
+
+::: footer
+:::
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Create:*
+
+-   *cross-validation folds with stratification*
+-   *bootstrap folds (change `times` from the default)*
+-   *validation resample*
+
+```{r}
+#| echo: false
+countdown(minutes = 5)
+```
+
+## Resampling `r hexes("rsample")`
+
+```{r}
+vfold_cv(frog_train, strata = latency)
+```
+
+. . .
+
+Stratification often helps, with very little downside
+
+## Resampling `r hexes("rsample")`
+
+```{r}
+bootstraps(frog_train, times = 10)
+```
+
+## Resampling `r hexes("rsample")`
+
+```{r}
+validation_split(frog_train, strata = latency)
+```
+
+. . .
+
+A validation split is just another type of resample
+
+## Evaluating model performance `r hexes("rsample")`
+
+```{r}
+set.seed(123)
+frog_folds <- vfold_cv(frog_train, v = 5, strata = latency)
+frog_folds
+```
+
+. . .
+
+Set the seed when creating resamples (we skipped this earlier)
+
+## Evaluating model performance `r hexes("tune")`
+
+```{r}
+fit_resamples(tree_wf, frog_folds)
+```
+
+. . .
+
+Where are the fitted models??!??
+
+## Evaluating model performance `r hexes("tune")`
+
+```{r}
+fit_resamples(tree_wf, frog_folds)
+```
+
+Where are the fitted models??!??
+🗑️
+
+. . .
+
+For more advanced use cases, you can extract and save them: <https://www.tmwr.org/resampling.html#extract>
+
+## Evaluating model performance `r hexes("tune")`
+
+```{r}
+fit_resamples(tree_wf, frog_folds) %>%
+  collect_metrics()
+```
+
+## Evaluating model performance `r hexes("yardstick")`
+
+::: columns
+::: {.column width="50%"}
+```{r}
+tree_fit %>%
+  augment(frog_train) %>%
+  metrics(latency, .pred)
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+tree_fit %>%
+  augment(frog_test) %>%
+  metrics(latency, .pred)
+```
+:::
+:::
+
+::: footer
+⚠️ DANGERS OF OVERFITTING ⚠️
+:::
+
+## Evaluating model performance `r hexes("tune")`
+
+```{r}
+fit_resamples(tree_wf, frog_folds) %>%
+  collect_metrics()
+```
+
+. . .
+
+We can reliably measure performance using only the **training** data 🎉
+
+## Embarrassingly parallel `r hexes("tune")`
+
+```{r}
+doParallel::registerDoParallel()
+
+fit_resamples(tree_wf, frog_folds) %>%
+  collect_metrics()
+```
+
+. . .
+
+Each fit is independent of the others
+
+## Evaluating model performance `r hexes("tune")`
+
+```{r}
+ctrl_frog <- control_resamples(save_pred = TRUE)
+
+tree_preds <- 
+  fit_resamples(tree_wf, frog_folds, control = ctrl_frog) %>%
+  collect_predictions()
+
+tree_preds
+```
+
+## 
+
+```{r}
+tree_preds %>% 
+  ggplot(aes(latency, .pred, color = id)) + 
+  geom_abline(lty = 2, col = "gray", size = 1.5) +
+  geom_point(alpha = 0.5) +
+  coord_obs_pred()
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Use `fit_resamples()` and `rf_wf` to:*
+
+-   *keep predictions*
+-   *compute metrics*
+-   *plot true vs. predicted values*
+
+```{r}
+#| echo: false
+countdown(minutes = 5)
+```
+
+# Can we compare multiple model workflows at once?
+
+## Evaluate a workflow set
+
+```{r}
+workflow_set(list(latency ~ .), list(tree_spec, rf_spec))
+```
+
+## Evaluate a workflow set
+
+```{r}
+workflow_set(list(latency ~ .), list(tree_spec, rf_spec)) %>%
+  workflow_map("fit_resamples", resamples = frog_folds)
+```
+
+## Evaluate a workflow set
+
+```{r}
+workflow_set(list(latency ~ .), list(tree_spec, rf_spec)) %>%
+  workflow_map("fit_resamples", resamples = frog_folds) %>%
+  collect_metrics()
+```
+
+. . .
+
+Lots more available with workflow sets!
+
+##  {background-iframe="https://workflowsets.tidymodels.org/reference/index.html"}
+
+::: footer
+:::
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*When do you think a workflow set would be useful?*
+
+```{r}
+#| echo: false
+countdown(minutes = 3)
+```
+
+# Can our random forest model be optimized?
+
+##  {background-iframe="https://parsnip.tidymodels.org/reference/details_rand_forest_ranger.html#tuning-parameters"}
+
+::: footer
+:::
+
+# Tuning hyperparameters
+
+## Optimize the random forest `r hexes("parsnip")`
+
+```{r}
+tunable_spec <- rand_forest(trees = 1000, mtry = tune(), min_n = tune()) %>%
+  set_mode("regression")
+tunable_spec
+```
+
+## Optimize the random forest `r hexes("workflows")`
+
+```{r}
+tunable_wf <- workflow(latency ~ ., tunable_spec)
+tunable_wf
+```
+
+## Optimize the random forest `r hexes("tune")`
+
+We can't **fit** this workflow to our resamples!
+😩
+
+```{r, error = TRUE}
+fit_resamples(tunable_wf, frog_folds)
+```
+
+## Optimize the random forest `r hexes("tune")`
+
+Instead we can **tune** this workflow: 😌
+
+```{r}
+tune_grid(tunable_wf, frog_folds)
+```
+
+## Optimize the random forest `r hexes("tune")`
+
+```{r}
+tune_res <- tune_grid(tunable_wf, frog_folds)
+collect_metrics(tune_res)
+```
+
+## Optimize the random forest `r hexes("tune")`
+
+```{r}
+#| echo: false
+theme_set(theme_light())
+```
+
+```{r}
+autoplot(tune_res)
+```
+
+## Optimize the random forest `r hexes("tune")`
+
+```{r}
+select_best(tune_res, metric = "rmse")
+```
+
+## Optimize the random forest `r hexes("tune")`
+
+```{r}
+tunable_wf %>%
+  finalize_workflow(select_best(tune_res, metric = "rmse"))
+```
+
+# Time to finally use the testing data! 💎
+
+## Optimize the random forest `r hexes("tune")`
+
+```{r}
+final_fit <-
+  tunable_wf %>%
+  finalize_workflow(select_best(tune_res, metric = "rmse")) %>%
+  last_fit(frog_split)
+
+final_fit
+```
+
+. . .
+
+Notice we used the initial **split** here: training + testing
+
+## Our tuned random forest `r hexes("tune")`
+
+What is in this `final_fit` object?
+
+```{r}
+collect_metrics(final_fit)
+```
+
+. . .
+
+These are metrics computed with the **test** set
+
+## Our tuned random forest `r hexes("tune")`
+
+What is in this `final_fit` object?
+
+```{r}
+collect_predictions(final_fit)
+```
+
+. . .
+
+These are predictions for the **test** set
+
+## 
+
+```{r}
+collect_predictions(final_fit) %>%
+  ggplot(aes(latency, .pred)) + 
+  geom_abline(lty = 2, col = "deeppink4", size = 1.5) +
+  geom_point(alpha = 0.5) +
+  coord_obs_pred()
+```
+
+
+## Our tuned random forest `r hexes("tune")`
+
+What is in this `final_fit` object?
+
+```{r}
+extract_workflow(final_fit)
+```
+
+. . .
+
+Use this for **prediction** on new data
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Tune the decision tree model we started with.*
+
+*(Use the skeleton in the `tune_tree` chunk.)*
+
+```{r}
+#| echo: false
+countdown(minutes = 7)
+```
+
+## Optimize the decision tree `r hexes("tune")`
+
+```{r}
+tree_spec <- decision_tree(
+  cost_complexity = tune(), 
+  tree_depth = tune(),
+  min_n = tune()
+) %>%
+  set_mode("regression")
+
+tree_wf <- workflow(latency ~ ., tree_spec)
+tree_res <- tune_grid(tree_wf, frog_folds)
+show_best(tree_res, metric = "rmse")
+```
+
+## Optimize the decision tree `r hexes("tune")`
+
+```{r}
+autoplot(tree_res)
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*End of the day discussion!*
+
+*Which model do you think you would decide to use?*
+
+*What surprised you the most?*
+
+*What is one thing you are looking forward to for tomorrow?*
+
+```{r}
+#| echo: false
+countdown(minutes = 5)
+```
