@@ -78,67 +78,9 @@ augment(tree_fit, new_data = frog_test) %>%
 
 # We'll talk about classification metrics tomorrow!
 
-## Which data set should we use? `r hexes("yardstick")`
+# ⚠️ DANGERS OF OVERFITTING ⚠️
 
-::: columns
-::: {.column width="50%"}
-```{r}
-tree_fit %>%
-  augment(frog_train) %>%
-  rmse(latency, .pred)
-```
-:::
-
-::: {.column width="50%"}
-:::
-:::
-
-::: footer
-⚠️ DANGERS OF OVERFITTING ⚠️
-:::
-
-## Which data set should we use? `r hexes("yardstick")`
-
-::: columns
-::: {.column width="50%"}
-```{r}
-tree_fit %>%
-  augment(frog_train) %>%
-  rmse(latency, .pred)
-```
-:::
-
-::: {.column width="50%"}
-```{r}
-tree_fit %>%
-  augment(frog_test) %>%
-  rmse(latency, .pred)
-```
-:::
-:::
-
-::: footer
-⚠️ DANGERS OF OVERFITTING ⚠️
-:::
-
-## Which data set should we use? `r hexes("yardstick")`
-
-::: columns
-::: {.column width="50%"}
-:::
-
-::: {.column width="50%"}
-```{r}
-tree_fit %>%
-  augment(frog_test) %>%
-  rmse(latency, .pred)
-```
-:::
-:::
-
-::: footer
-⚠️ DANGERS OF OVERFITTING ⚠️
-:::
+# Placeholder for overfitting example plots from Max
 
 ## Which data set should we use? `r hexes("yardstick")`
 
@@ -149,9 +91,6 @@ tree_fit %>%
 
 We call this "resubstition" or "repredicting the training set"
 
-::: footer
-⚠️ DANGERS OF OVERFITTING ⚠️
-:::
 
 ## Which data set should we use? `r hexes("yardstick")`
 
@@ -163,62 +102,78 @@ tree_fit %>%
 
 We call this a "resubstition metric"
 
-::: footer
-⚠️ DANGERS OF OVERFITTING ⚠️
+## Which data set should we use? `r hexes("yardstick")`
+
+::: columns
+::: {.column width="50%"}
+```{r}
+tree_fit %>%
+  augment(frog_train) %>%
+  rmse(latency, .pred)
+```
+:::
+
+::: {.column width="50%"}
+:::
+:::
+
+## Which data set should we use? `r hexes("yardstick")`
+
+::: columns
+::: {.column width="50%"}
+```{r}
+tree_fit %>%
+  augment(frog_train) %>%
+  rmse(latency, .pred)
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+tree_fit %>%
+  augment(frog_test) %>%
+  rmse(latency, .pred)
+```
+:::
+:::
+
+## Which data set should we use? `r hexes("yardstick")`
+
+::: columns
+::: {.column width="50%"}
+:::
+
+::: {.column width="50%"}
+```{r}
+tree_fit %>%
+  augment(frog_test) %>%
+  rmse(latency, .pred)
+```
+:::
 :::
 
 ##  {background-image="https://media.giphy.com/media/55itGuoAJiZEEen9gg/giphy.gif" background-size="800px"}
-
-::: footer
-⚠️ DANGERS OF OVERFITTING ⚠️
-:::
-
-# Decision tree 🌳
-
-# Random forest 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌳
-
-## Create a random forest model `r hexes("parsnip")`
-
-```{r}
-rf_spec <- rand_forest(trees = 1000, mode = "regression")
-rf_spec
-```
-
-## Create a random forest model `r hexes("workflows")`
-
-```{r}
-rf_wf <- workflow(latency ~ ., rf_spec)
-rf_wf
-```
 
 ## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Fit `rf_wf` to the training data.*
-
 *Use `augment()` and `metrics()` to compute metrics for both training and testing data.*
+
+*Notice the evidence of overfitting.*
 
 ```{r}
 #| echo: false
 countdown(minutes = 5)
 ```
 
-```{r}
-#| echo: false
-rf_fit <- fit(rf_wf, data = frog_train)
-```
 
-::: footer
-⚠️ DANGERS OF OVERFITTING ⚠️
-:::
-
-## Random forest metrics `r hexes("yardstick")`
+## Which data set should we use? `r hexes("yardstick")`
 
 ::: columns
 ::: {.column width="50%"}
 ```{r}
-rf_fit %>%
+tree_fit %>%
   augment(frog_train) %>%
   metrics(latency, .pred)
 ```
@@ -226,36 +181,13 @@ rf_fit %>%
 
 ::: {.column width="50%"}
 ```{r}
-rf_fit %>%
-  augment(frog_test) %>%
-  metrics(latency, .pred)
-```
-:::
-:::
-
-::: footer
-⚠️ DANGERS OF OVERFITTING ⚠️
-:::
-
-## Comparing metrics `r hexes("yardstick")`
-
-::: columns
-::: {.column width="50%"}
-```{r}
 tree_fit %>%
   augment(frog_test) %>%
   metrics(latency, .pred)
 ```
 :::
+:::
 
-::: {.column width="50%"}
-```{r}
-rf_fit %>%
-  augment(frog_test) %>%
-  metrics(latency, .pred)
-```
-:::
-:::
 
 . . .
 
@@ -268,10 +200,6 @@ And/or more model configurations?
 . . .
 
 And we want to understand if these are important differences?
-
-::: footer
-⚠️ DANGERS OF OVERFITTING ⚠️
-:::
 
 # The testing data is precious 💎
 
@@ -390,7 +318,7 @@ frog_folds
 
 . . .
 
-Set the seed when creating resamples (we skipped this earlier)
+Set the seed when creating resamples 
 
 ## Evaluating model performance `r hexes("tune")`
 
@@ -422,7 +350,26 @@ fit_resamples(tree_wf, frog_folds) %>%
   collect_metrics()
 ```
 
-## Evaluating model performance `r hexes("yardstick")`
+. . .
+
+We can reliably measure performance using only the **training** data 🎉
+
+## Embarrassingly parallel `r hexes("tune")`
+
+```{r}
+doParallel::registerDoParallel()
+
+fit_resamples(tree_wf, frog_folds) %>%
+  collect_metrics()
+```
+
+. . .
+
+Each fit is independent of the others
+
+## Comparing metrics `r hexes("yardstick")`
+
+How do the metrics from resampling compare to the metrics from training and testing?
 
 ::: columns
 ::: {.column width="50%"}
@@ -441,34 +388,14 @@ tree_fit %>%
 ```
 :::
 :::
-
-::: footer
-⚠️ DANGERS OF OVERFITTING ⚠️
-:::
-
-## Evaluating model performance `r hexes("tune")`
-
-```{r}
-fit_resamples(tree_wf, frog_folds) %>%
-  collect_metrics()
-```
-
 . . .
 
-We can reliably measure performance using only the **training** data 🎉
+When looking at the results on this slide, remember that:
 
-## Embarrassingly parallel `r hexes("tune")`
+⚠️ the training set gives you overly optimistic metrics
 
-```{r}
-doParallel::registerDoParallel()
+⚠️ we cannot use the test to compare, tune, choose
 
-fit_resamples(tree_wf, frog_folds) %>%
-  collect_metrics()
-```
-
-. . .
-
-Each fit is independent of the others
 
 ## Evaluating model performance `r hexes("tune")`
 
@@ -492,6 +419,25 @@ tree_preds %>%
   coord_obs_pred()
 ```
 
+# Decision tree 🌳
+
+# Random forest 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌳
+
+## Create a random forest model `r hexes("parsnip")`
+
+```{r}
+rf_spec <- rand_forest(trees = 1000, mode = "regression")
+rf_spec
+```
+
+## Create a random forest model `r hexes("workflows")`
+
+```{r}
+rf_wf <- workflow(latency ~ ., rf_spec)
+rf_wf
+```
+
+
 ## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
@@ -506,6 +452,25 @@ tree_preds %>%
 #| echo: false
 countdown(minutes = 5)
 ```
+
+## Evaluating model performance `r hexes("tune")`
+
+```{r}
+ctrl_frog <- control_resamples(save_pred = TRUE)
+rf_res <- fit_resamples(rf_wf, frog_folds, control = ctrl_frog)
+collect_metrics(rf_res)
+```
+
+##
+
+```{r}
+collect_predictions(rf_res) %>% 
+  ggplot(aes(latency, .pred, color = id)) + 
+  geom_abline(lty = 2, col = "gray", size = 1.5) +
+  geom_point(alpha = 0.5) +
+  coord_obs_pred()
+```
+
 
 # Can we compare multiple model workflows at once?
 
@@ -545,6 +510,70 @@ Lots more available with workflow sets, like `collect_metrics()`, `autoplot()` m
 #| echo: false
 countdown(minutes = 3)
 ```
+
+## The final fit `r hexes("tune")`
+
+We've shown you `fit()` and `predict()` (+ `augment()`) but there is a shortcut:
+
+```{r}
+final_fit <- last_fit(rf_wf, frog_split)
+
+final_fit
+```
+
+. . .
+
+- Notice we used the initial **split** here: training + testing
+- Time to finally use the testing data for its intended purpose! 💎
+
+
+## The final fit `r hexes("tune")`
+
+What is in this `final_fit` object?
+
+```{r}
+collect_metrics(final_fit)
+```
+
+. . .
+
+These are metrics computed with the **test** set
+
+## The final fit `r hexes("tune")`
+
+What is in this `final_fit` object?
+
+```{r}
+collect_predictions(final_fit)
+```
+
+. . .
+
+These are predictions for the **test** set
+
+## 
+
+```{r}
+collect_predictions(final_fit) %>%
+  ggplot(aes(latency, .pred)) + 
+  geom_abline(lty = 2, col = "deeppink4", size = 1.5) +
+  geom_point(alpha = 0.5) +
+  coord_obs_pred()
+```
+
+
+## The final fit `r hexes("tune")`
+
+What is in this `final_fit` object?
+
+```{r}
+extract_workflow(final_fit)
+```
+
+. . .
+
+Use this for **prediction** on new data, like for deploying
+
 
 # Can our random forest model be optimized?
 
@@ -612,79 +641,8 @@ autoplot(tune_res)
 ## Optimize the random forest `r hexes("tune")`
 
 ```{r}
-select_best(tune_res, metric = "rmse")
+show_best(tune_res, metric = "rmse")
 ```
-
-## Optimize the random forest `r hexes("tune")`
-
-```{r}
-tunable_wf %>%
-  finalize_workflow(select_best(tune_res, metric = "rmse"))
-```
-
-# Time to finally use the testing data! 💎
-
-## Optimize the random forest `r hexes("tune")`
-
-```{r}
-final_fit <-
-  tunable_wf %>%
-  finalize_workflow(select_best(tune_res, metric = "rmse")) %>%
-  last_fit(frog_split)
-
-final_fit
-```
-
-. . .
-
-Notice we used the initial **split** here: training + testing
-
-## Our tuned random forest `r hexes("tune")`
-
-What is in this `final_fit` object?
-
-```{r}
-collect_metrics(final_fit)
-```
-
-. . .
-
-These are metrics computed with the **test** set
-
-## Our tuned random forest `r hexes("tune")`
-
-What is in this `final_fit` object?
-
-```{r}
-collect_predictions(final_fit)
-```
-
-. . .
-
-These are predictions for the **test** set
-
-## 
-
-```{r}
-collect_predictions(final_fit) %>%
-  ggplot(aes(latency, .pred)) + 
-  geom_abline(lty = 2, col = "deeppink4", size = 1.5) +
-  geom_point(alpha = 0.5) +
-  coord_obs_pred()
-```
-
-
-## Our tuned random forest `r hexes("tune")`
-
-What is in this `final_fit` object?
-
-```{r}
-extract_workflow(final_fit)
-```
-
-. . .
-
-Use this for **prediction** on new data
 
 ## Your turn {transition="slide-in"}
 
