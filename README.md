@@ -7,7 +7,7 @@ This repo contains tutorial materials for machine learning with [tidymodels](htt
 This repo is organized into directories:
 
 -   `slides/` has Quarto files for the latest version of our slides.
--   `sources/` contains Quarto files prepared for you to work along with the slides.
+-   `classwork/` contains Quarto files prepared for you to work along with the slides.
 -   `archive/` is the location for older versions of this workshop.
 
 ## Code of Conduct
