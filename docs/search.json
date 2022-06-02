@@ -137,7 +137,7 @@
     "href": "slides/01-introduction.html#what-is-tidymodels",
     "title": "1 - Introduction",
     "section": "What is tidymodels? ",
-    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n\n#> ── Attaching packages ──────────────────────────── tidymodels 0.2.0 ──\n\n\n#> ✔ broom        0.8.0          ✔ rsample      0.1.1     \n#> ✔ dials        0.1.1          ✔ tibble       3.1.7     \n#> ✔ dplyr        1.0.9          ✔ tidyr        1.2.0     \n#> ✔ infer        1.0.0          ✔ tune         0.2.0     \n#> ✔ modeldata    0.1.1          ✔ workflows    0.2.6     \n#> ✔ parsnip      0.2.1.9002     ✔ workflowsets 0.2.1     \n#> ✔ purrr        0.3.4          ✔ yardstick    0.0.9     \n#> ✔ recipes      0.2.0\n\n\n#> ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#> ✖ purrr::discard() masks scales::discard()\n#> ✖ dplyr::filter()  masks stats::filter()\n#> ✖ dplyr::lag()     masks stats::lag()\n#> ✖ recipes::step()  masks stats::step()\n#> • Use suppressPackageStartupMessages() to eliminate package startup messages"
+    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n\n#> ── Attaching packages ──────────────────────────── tidymodels 0.2.0 ──\n\n\n#> ✔ broom        0.8.0          ✔ rsample      0.1.1     \n#> ✔ dials        0.1.1          ✔ tibble       3.1.7     \n#> ✔ dplyr        1.0.9          ✔ tidyr        1.2.0     \n#> ✔ infer        1.0.0          ✔ tune         0.2.0     \n#> ✔ modeldata    0.1.1          ✔ workflows    0.2.6     \n#> ✔ parsnip      0.2.1.9002     ✔ workflowsets 0.2.1     \n#> ✔ purrr        0.3.4          ✔ yardstick    0.0.9     \n#> ✔ recipes      0.2.0\n\n\n#> ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#> ✖ purrr::discard() masks scales::discard()\n#> ✖ dplyr::filter()  masks stats::filter()\n#> ✖ dplyr::lag()     masks stats::lag()\n#> ✖ recipes::step()  masks stats::step()\n#> • Learn how to get started at https://www.tidymodels.org/start/"
   },
   {
     "objectID": "slides/01-introduction.html#the-whole-game",
@@ -473,7 +473,7 @@
     "href": "slides/03-what-makes-a-model.html#your-turn-5",
     "title": "2 - What makes a model?",
     "section": "Your turn",
-    "text": "Your turn\n\nRead the documentation for object extraction.\nTry out some extraction methods on your trained workflow.\n\n\n\n05:00"
+    "text": "Your turn\n\nRead the documentation for object extraction.\nTry out some extraction methods on your trained workflow.\n⚠️ Never predict() with any extracted components!\n\n\n\n05:00"
   },
   {
     "objectID": "slides/03-what-makes-a-model.html#deploy-your-model",
@@ -774,7 +774,7 @@
     "href": "slides/04-evaluating-models.html#evaluate-a-workflow-set-2",
     "title": "4 - Evaluating models",
     "section": "Evaluate a workflow set",
-    "text": "Evaluate a workflow set\n\nworkflow_set(list(latency ~ .), list(tree_spec, rf_spec)) %>%\n  workflow_map(\"fit_resamples\", resamples = frog_folds) %>%\n  collect_metrics()\n\n#> # A tibble: 4 × 9\n#>   wflow_id         .config preproc model .metric .estimator   mean     n std_err\n#>   <chr>            <chr>   <chr>   <chr> <chr>   <chr>       <dbl> <int>   <dbl>\n#> 1 formula_decisio… Prepro… formula deci… rmse    standard   58.9       5  2.23  \n#> 2 formula_decisio… Prepro… formula deci… rsq     standard    0.319     5  0.0217\n#> 3 formula_rand_fo… Prepro… formula rand… rmse    standard   55.8       5  1.76  \n#> 4 formula_rand_fo… Prepro… formula rand… rsq     standard    0.374     5  0.0297\n\n\n\nLots more available with workflow sets!"
+    "text": "Evaluate a workflow set\n\nworkflow_set(list(latency ~ .), list(tree_spec, rf_spec)) %>%\n  workflow_map(\"fit_resamples\", resamples = frog_folds) %>%\n  rank_results()\n\n#> # A tibble: 4 × 9\n#>   wflow_id         .config .metric   mean std_err     n preprocessor model  rank\n#>   <chr>            <chr>   <chr>    <dbl>   <dbl> <int> <chr>        <chr> <int>\n#> 1 formula_rand_fo… Prepro… rmse    55.8    1.76       5 formula      rand…     1\n#> 2 formula_rand_fo… Prepro… rsq      0.374  0.0297     5 formula      rand…     1\n#> 3 formula_decisio… Prepro… rmse    58.9    2.23       5 formula      deci…     2\n#> 4 formula_decisio… Prepro… rsq      0.319  0.0217     5 formula      deci…     2\n\n\n\nLots more available with workflow sets, like collect_metrics(), autoplot() methods, and more!"
   },
   {
     "objectID": "slides/04-evaluating-models.html#your-turn-4",
@@ -861,8 +861,8 @@
     "text": "Our tuned random forest \nWhat is in this final_fit object?\n\ncollect_predictions(final_fit)\n\n#> # A tibble: 116 × 5\n#>    id               .pred  .row latency .config             \n#>    <chr>            <dbl> <int>   <dbl> <chr>               \n#>  1 train/test split  42.8     1      22 Preprocessor1_Model1\n#>  2 train/test split 102.      3     106 Preprocessor1_Model1\n#>  3 train/test split  76.4     6      39 Preprocessor1_Model1\n#>  4 train/test split  42.2     8      50 Preprocessor1_Model1\n#>  5 train/test split  42.7    10      63 Preprocessor1_Model1\n#>  6 train/test split  42.9    14      25 Preprocessor1_Model1\n#>  7 train/test split  51.2    16      48 Preprocessor1_Model1\n#>  8 train/test split 165.     17      91 Preprocessor1_Model1\n#>  9 train/test split  50.5    32      11 Preprocessor1_Model1\n#> 10 train/test split 173.     33     109 Preprocessor1_Model1\n#> # … with 106 more rows\n\n\n\nThese are predictions for the test set"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#section-7",
-    "href": "slides/04-evaluating-models.html#section-7",
+    "objectID": "slides/04-evaluating-models.html#section-6",
+    "href": "slides/04-evaluating-models.html#section-6",
     "title": "4 - Evaluating models",
     "section": "",
     "text": "collect_predictions(final_fit) %>%\n  ggplot(aes(latency, .pred)) + \n  geom_abline(lty = 2, col = \"deeppink4\", size = 1.5) +\n  geom_point(alpha = 0.5) +\n  coord_obs_pred()"
