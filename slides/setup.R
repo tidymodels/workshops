@@ -11,6 +11,12 @@ hexes <- function(..., size = 64) {
   paste0(res, collapse = " ")
 }
 
+knitr::opts_chunk$set(
+  digits = 3,
+  comment = "#>",
+  dev = 'svglite'
+)
+
 library(countdown)
 library(ggplot2)
 theme_set(theme_minimal())
