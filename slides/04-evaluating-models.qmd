@@ -34,8 +34,8 @@ frog_split <- initial_split(tree_frogs, prop = 0.8, strata = latency)
 frog_train <- training(frog_split)
 frog_test <- testing(frog_split)
 tree_spec <- decision_tree(cost_complexity = 0.001, mode = "regression")
-tree_wf <- workflow(latency ~ ., tree_spec)
-tree_fit <- fit(tree_wf, frog_train)
+tree_wflow <- workflow(latency ~ ., tree_spec)
+tree_fit <- fit(tree_wflow, frog_train)
 ```
 
 ```{r}
@@ -333,7 +333,7 @@ Set the seed when creating resamples
 ## Evaluating model performance `r hexes("tune")`
 
 ```{r}
-fit_resamples(tree_wf, frog_folds)
+fit_resamples(tree_wflow, frog_folds)
 ```
 
 . . .
@@ -343,7 +343,7 @@ Where are the fitted models??!??
 ## Evaluating model performance `r hexes("tune")`
 
 ```{r}
-fit_resamples(tree_wf, frog_folds)
+fit_resamples(tree_wflow, frog_folds)
 ```
 
 Where are the fitted models??!?? 🗑️
@@ -355,7 +355,7 @@ For more advanced use cases, you can extract and save them: <https://www.tmwr.or
 ## Evaluating model performance `r hexes("tune")`
 
 ```{r}
-fit_resamples(tree_wf, frog_folds) %>%
+fit_resamples(tree_wflow, frog_folds) %>%
   collect_metrics()
 ```
 
@@ -368,7 +368,7 @@ We can reliably measure performance using only the **training** data 🎉
 ```{r}
 doParallel::registerDoParallel()
 
-fit_resamples(tree_wf, frog_folds) %>%
+fit_resamples(tree_wflow, frog_folds) %>%
   collect_metrics()
 ```
 
@@ -391,7 +391,7 @@ tree_fit %>%
 
 ::: {.column width="50%"}
 ```{r}
-fit_resamples(tree_wf, frog_folds) %>%
+fit_resamples(tree_wflow, frog_folds) %>%
   collect_metrics()
 ```
 :::
@@ -411,7 +411,7 @@ When looking at the results on this slide, remember that:
 ctrl_frog <- control_resamples(save_pred = TRUE)
 
 tree_preds <- 
-  fit_resamples(tree_wf, frog_folds, control = ctrl_frog) %>%
+  fit_resamples(tree_wflow, frog_folds, control = ctrl_frog) %>%
   collect_predictions()
 
 tree_preds
@@ -441,15 +441,15 @@ rf_spec
 ## Create a random forest model `r hexes("workflows")`
 
 ```{r}
-rf_wf <- workflow(latency ~ ., rf_spec)
-rf_wf
+rf_wflow <- workflow(latency ~ ., rf_spec)
+rf_wflow
 ```
 
 ## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Use `fit_resamples()` and `rf_wf` to:*
+*Use `fit_resamples()` and `rf_wflow` to:*
 
 -   *keep predictions*
 -   *compute metrics*
@@ -464,7 +464,7 @@ countdown(minutes = 5)
 
 ```{r}
 ctrl_frog <- control_resamples(save_pred = TRUE)
-rf_res <- fit_resamples(rf_wf, frog_folds, control = ctrl_frog)
+rf_res <- fit_resamples(rf_wflow, frog_folds, control = ctrl_frog)
 collect_metrics(rf_res)
 ```
 
@@ -541,8 +541,8 @@ tunable_spec
 ## Optimize the random forest `r hexes("workflows")`
 
 ```{r}
-tunable_wf <- workflow(latency ~ ., tunable_spec)
-tunable_wf
+tunable_wflow <- workflow(latency ~ ., tunable_spec)
+tunable_wflow
 ```
 
 ## Optimize the random forest `r hexes("tune")`
@@ -550,7 +550,7 @@ tunable_wf
 We can't **fit** this workflow to our resamples! 😩
 
 ```{r, error = TRUE}
-fit_resamples(tunable_wf, frog_folds)
+fit_resamples(tunable_wflow, frog_folds)
 ```
 
 ## Optimize the random forest `r hexes("tune")`
@@ -559,14 +559,14 @@ Instead we can **tune** this workflow: 😌
 
 ```{r}
 set.seed(1)
-tune_grid(tunable_wf, frog_folds)
+tune_grid(tunable_wflow, frog_folds)
 ```
 
 ## Optimize the random forest `r hexes("tune")`
 
 ```{r}
 set.seed(1)
-tune_res <- tune_grid(tunable_wf, frog_folds)
+tune_res <- tune_grid(tunable_wflow, frog_folds)
 show_best(tune_res, metric = "rmse")
 ```
 
@@ -611,9 +611,9 @@ tree_spec <-
   ) %>%
   set_mode("regression")
 
-tree_wf <- workflow(latency ~ ., tree_spec)
+tree_wflow <- workflow(latency ~ ., tree_spec)
 set.seed(1)
-tree_res <- tune_grid(tree_wf, frog_folds)
+tree_res <- tune_grid(tree_wflow, frog_folds)
 show_best(tree_res, metric = "rmse")
 ```
 
