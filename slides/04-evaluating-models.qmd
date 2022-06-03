@@ -528,21 +528,21 @@ countdown(minutes = 3)
 ## Optimize the random forest `r hexes("parsnip")`
 
 ```{r}
-tunable_spec <- 
+rf_tune_spec <- 
   rand_forest(
     trees = 1000, 
     mtry = tune(), 
     min_n = tune()
   ) %>%
   set_mode("regression")
-tunable_spec
+rf_tune_spec
 ```
 
 ## Optimize the random forest `r hexes("workflows")`
 
 ```{r}
-tunable_wflow <- workflow(latency ~ ., tunable_spec)
-tunable_wflow
+rf_tune_wflow <- workflow(latency ~ ., rf_tune_spec)
+rf_tune_wflow
 ```
 
 ## Optimize the random forest `r hexes("tune")`
@@ -550,7 +550,7 @@ tunable_wflow
 We can't **fit** this workflow to our resamples! 😩
 
 ```{r, error = TRUE}
-fit_resamples(tunable_wflow, frog_folds)
+fit_resamples(rf_tune_wflow, frog_folds)
 ```
 
 ## Optimize the random forest `r hexes("tune")`
@@ -559,15 +559,15 @@ Instead we can **tune** this workflow: 😌
 
 ```{r}
 set.seed(1)
-tune_grid(tunable_wflow, frog_folds)
+tune_grid(rf_tune_wflow, frog_folds)
 ```
 
 ## Optimize the random forest `r hexes("tune")`
 
 ```{r}
 set.seed(1)
-tune_res <- tune_grid(tunable_wflow, frog_folds)
-show_best(tune_res, metric = "rmse")
+rf_tune_res <- tune_grid(rf_tune_wflow, frog_folds)
+show_best(rf_tune_res, metric = "rmse")
 ```
 
 ## Optimize the random forest `r hexes("tune")`
@@ -578,13 +578,13 @@ theme_set(theme_light())
 ```
 
 ```{r}
-autoplot(tune_res)
+autoplot(rf_tune_res)
 ```
 
 ## Optimize the random forest `r hexes("tune")`
 
 ```{r}
-select_best(tune_res, metric = "rmse")
+select_best(rf_tune_res, metric = "rmse")
 ```
 
 ## Your turn {transition="slide-in"}
