@@ -470,6 +470,10 @@ countdown(minutes = 5)
 
 ```{r}
 ctrl_frog <- control_resamples(save_pred = TRUE)
+
+# Random forest uses random numbers so set the seed first
+
+set.seed(2)
 rf_res <- fit_resamples(rf_wflow, frog_folds, control = ctrl_frog)
 collect_metrics(rf_res)
 ```
@@ -483,6 +487,68 @@ collect_predictions(rf_res) %>%
   geom_point(alpha = 0.5) +
   coord_obs_pred()
 ```
+
+
+
+
+## The final fit `r hexes("tune")`
+
+Suppose that we are happy with our random forest model. 
+
+Let's verify our performance using the test set. 
+
+We've shown you `fit()` and `predict()` (+ `augment()`) but there is a shortcut:
+
+```{r}
+# frog_split has train + test info
+final_fit <- last_fit(rf_wflow, frog_split) 
+
+final_fit
+```
+
+
+## What is in this `final_fit` object? `r hexes("tune")`
+
+```{r}
+collect_metrics(final_fit)
+```
+
+. . .
+
+These are metrics computed with the **test** set
+
+## What is in this `final_fit` object? `r hexes("tune")`
+
+```{r}
+collect_predictions(final_fit)
+```
+
+. . .
+
+These are predictions for the **test** set
+
+## 
+
+```{r}
+collect_predictions(final_fit) %>%
+  ggplot(aes(latency, .pred)) + 
+  geom_abline(lty = 2, col = "deeppink4", size = 1.5) +
+  geom_point(alpha = 0.5) +
+  coord_obs_pred()
+```
+
+
+## What is in this `final_fit` object? `r hexes("tune")`
+
+```{r}
+extract_workflow(final_fit)
+```
+
+. . .
+
+Use this for **prediction** on new data, like for deploying
+
+
 
 ## Your turn {transition="slide-in"}
 
