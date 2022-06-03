@@ -22,8 +22,10 @@ knitr:
 ```{r}
 #| echo: false
 library(tidymodels)
+library(countdown)
 data("tree_frogs", package = "stacks")
 tree_frogs <- tree_frogs %>%
+  mutate(t_o_d = factor(t_o_d)) %>% 
   filter(!is.na(latency)) %>%
   select(-c(clutch, hatched))
 
@@ -87,7 +89,6 @@ augment(tree_fit, new_data = frog_test) %>%
 
 ![](https://raw.githubusercontent.com/topepo/2022-nyr-workshop/main/images/tuning-overfitting-test-1.svg)
 
-
 ## Dangers of overfitting ⚠️ `r hexes("yardstick")`
 
 ```{r}
@@ -96,7 +97,6 @@ tree_fit %>%
 ```
 
 We call this "resubstition" or "repredicting the training set"
-
 
 ## Dangers of overfitting ⚠️ `r hexes("yardstick")`
 
@@ -158,6 +158,10 @@ tree_fit %>%
 :::
 :::
 
+Really though... don't use the test set until the *very* end of modeling.
+
+We're just demonstrating overfitting here.
+
 ##  {background-image="https://media.giphy.com/media/55itGuoAJiZEEen9gg/giphy.gif" background-size="800px"}
 
 ## Your turn {transition="slide-in"}
@@ -172,7 +176,6 @@ tree_fit %>%
 #| echo: false
 countdown(minutes = 5)
 ```
-
 
 ## Dangers of overfitting ⚠️ `r hexes("yardstick")`
 
@@ -193,7 +196,6 @@ tree_fit %>%
 ```
 :::
 :::
-
 
 . . .
 
@@ -256,8 +258,8 @@ vfold_cv(frog_train, v = 5)
 What is in this?
 
 ```{r}
-frog_folds <- vfold_cv(frog_train, v = 5)
-frog_folds$splits
+frog_folds <- vfold_cv(frog_train, v = 10)
+frog_folds$splits[1:5]
 ```
 
 ## Bootstrapping
@@ -320,13 +322,13 @@ A validation split is just another type of resample
 
 ```{r}
 set.seed(123)
-frog_folds <- vfold_cv(frog_train, v = 5, strata = latency)
+frog_folds <- vfold_cv(frog_train, v = 10, strata = latency)
 frog_folds
 ```
 
 . . .
 
-Set the seed when creating resamples 
+Set the seed when creating resamples
 
 ## Evaluating model performance `r hexes("tune")`
 
@@ -344,8 +346,7 @@ Where are the fitted models??!??
 fit_resamples(tree_wf, frog_folds)
 ```
 
-Where are the fitted models??!??
-🗑️
+Where are the fitted models??!?? 🗑️
 
 . . .
 
@@ -377,7 +378,7 @@ Each fit is independent of the others
 
 ## Comparing metrics `r hexes("yardstick")`
 
-How do the metrics from resampling compare to the metrics from training and testing?
+How do the metrics from resampling compare to the metrics from the training set?
 
 ::: columns
 ::: {.column width="50%"}
@@ -390,20 +391,19 @@ tree_fit %>%
 
 ::: {.column width="50%"}
 ```{r}
-tree_fit %>%
-  augment(frog_test) %>%
-  metrics(latency, .pred)
+fit_resamples(tree_wf, frog_folds) %>%
+  collect_metrics()
 ```
 :::
 :::
+
 . . .
 
 When looking at the results on this slide, remember that:
 
 ⚠️ the training set gives you overly optimistic metrics
 
-⚠️ we cannot use the test set to compare, tune, choose
-
+⚠️ we don't want to use the test set until the end
 
 ## Evaluating model performance `r hexes("tune")`
 
@@ -445,7 +445,6 @@ rf_wf <- workflow(latency ~ ., rf_spec)
 rf_wf
 ```
 
-
 ## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
@@ -469,7 +468,7 @@ rf_res <- fit_resamples(rf_wf, frog_folds, control = ctrl_frog)
 collect_metrics(rf_res)
 ```
 
-##
+## 
 
 ```{r}
 collect_predictions(rf_res) %>% 
@@ -479,9 +478,7 @@ collect_predictions(rf_res) %>%
   coord_obs_pred()
 ```
 
-
 ## How can we compare multiple model workflows at once? {background-image="images/Hatching-process.jpg"}
-
 
 ## Evaluate a workflow set
 
@@ -508,7 +505,6 @@ workflow_set(list(latency ~ .), list(tree_spec, rf_spec)) %>%
 
 Lots more available with workflow sets, like `collect_metrics()`, `autoplot()` methods, and more!
 
-
 ## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
@@ -519,70 +515,6 @@ Lots more available with workflow sets, like `collect_metrics()`, `autoplot()` m
 #| echo: false
 countdown(minutes = 3)
 ```
-
-## The final fit `r hexes("tune")`
-
-We've shown you `fit()` and `predict()` (+ `augment()`) but there is a shortcut:
-
-```{r}
-final_fit <- last_fit(rf_wf, frog_split)
-
-final_fit
-```
-
-. . .
-
-- Notice we used the initial **split** here: training + testing
-- Time to finally use the testing data for its intended purpose! 💎
-
-
-## The final fit `r hexes("tune")`
-
-What is in this `final_fit` object?
-
-```{r}
-collect_metrics(final_fit)
-```
-
-. . .
-
-These are metrics computed with the **test** set
-
-## The final fit `r hexes("tune")`
-
-What is in this `final_fit` object?
-
-```{r}
-collect_predictions(final_fit)
-```
-
-. . .
-
-These are predictions for the **test** set
-
-## 
-
-```{r}
-collect_predictions(final_fit) %>%
-  ggplot(aes(latency, .pred)) + 
-  geom_abline(lty = 2, col = "deeppink4", size = 1.5) +
-  geom_point(alpha = 0.5) +
-  coord_obs_pred()
-```
-
-
-## The final fit `r hexes("tune")`
-
-What is in this `final_fit` object?
-
-```{r}
-extract_workflow(final_fit)
-```
-
-. . .
-
-Use this for **prediction** on new data, like for deploying
-
 
 # Can our random forest model be optimized?
 
@@ -626,14 +558,16 @@ fit_resamples(tunable_wf, frog_folds)
 Instead we can **tune** this workflow: 😌
 
 ```{r}
+set.seed(1)
 tune_grid(tunable_wf, frog_folds)
 ```
 
 ## Optimize the random forest `r hexes("tune")`
 
 ```{r}
+set.seed(1)
 tune_res <- tune_grid(tunable_wf, frog_folds)
-collect_metrics(tune_res)
+show_best(tune_res, metric = "rmse")
 ```
 
 ## Optimize the random forest `r hexes("tune")`
@@ -650,7 +584,7 @@ autoplot(tune_res)
 ## Optimize the random forest `r hexes("tune")`
 
 ```{r}
-show_best(tune_res, metric = "rmse")
+select_best(tune_res, metric = "rmse")
 ```
 
 ## Your turn {transition="slide-in"}
@@ -678,6 +612,7 @@ tree_spec <-
   set_mode("regression")
 
 tree_wf <- workflow(latency ~ ., tree_spec)
+set.seed(1)
 tree_res <- tune_grid(tree_wf, frog_folds)
 show_best(tree_res, metric = "rmse")
 ```
