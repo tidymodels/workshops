@@ -368,8 +368,11 @@ We can reliably measure performance using only the **training** data 🎉
 ```{r}
 doParallel::registerDoParallel()
 
-fit_resamples(tree_wflow, frog_folds) %>%
+set.seed(1)
+tree_res <- fit_resamples(tree_wflow, frog_folds) %>%
   collect_metrics()
+
+tree_res
 ```
 
 . . .
@@ -391,7 +394,7 @@ tree_fit %>%
 
 ::: {.column width="50%"}
 ```{r}
-fit_resamples(tree_wflow, frog_folds) %>%
+tree_res %>%
   collect_metrics() %>% 
   select(.metric, mean, n)
 ```
@@ -412,7 +415,7 @@ When looking at the results on this slide, remember that:
 ctrl_frog <- control_resamples(save_pred = TRUE)
 
 tree_preds <- 
-  fit_resamples(tree_wflow, frog_folds, control = ctrl_frog) %>%
+  tree_res %>%
   collect_predictions()
 
 tree_preds
@@ -477,167 +480,6 @@ collect_predictions(rf_res) %>%
   geom_abline(lty = 2, col = "gray", size = 1.5) +
   geom_point(alpha = 0.5) +
   coord_obs_pred()
-```
-
-## How can we compare multiple model workflows at once? {background-image="images/Hatching-process.jpg"}
-
-## Evaluate a workflow set
-
-```{r}
-workflow_set(list(latency ~ .), list(tree_spec, rf_spec))
-```
-
-## Evaluate a workflow set
-
-```{r}
-workflow_set(list(latency ~ .), list(tree_spec, rf_spec)) %>%
-  workflow_map("fit_resamples", resamples = frog_folds)
-```
-
-## Evaluate a workflow set
-
-```{r}
-workflow_set(list(latency ~ .), list(tree_spec, rf_spec)) %>%
-  workflow_map("fit_resamples", resamples = frog_folds) %>%
-  rank_results() %>% 
-  select(model, preprocessor, .metric, mean, std_err, n)
-```
-
-. . .
-
-Lots more available with workflow sets, like `collect_metrics()`, `autoplot()` methods, and more!
-
-## Your turn {transition="slide-in"}
-
-![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
-
-*When do you think a workflow set would be useful?*
-
-```{r}
-#| echo: false
-countdown(minutes = 3)
-```
-
-# Can our random forest model be optimized?
-
-##  {background-iframe="https://parsnip.tidymodels.org/reference/details_rand_forest_ranger.html#tuning-parameters"}
-
-::: footer
-:::
-
-# Tuning hyperparameters
-
-## Optimize the random forest `r hexes("parsnip")`
-
-```{r}
-rf_tune_spec <- 
-  rand_forest(
-    trees = 1000, 
-    mtry = tune(), 
-    min_n = tune()
-  ) %>%
-  set_mode("regression")
-rf_tune_spec
-```
-
-## Optimize the random forest `r hexes("workflows")`
-
-```{r}
-rf_tune_wflow <- workflow(latency ~ ., rf_tune_spec)
-rf_tune_wflow
-```
-
-## Optimize the random forest `r hexes("tune")`
-
-We can't **fit** this workflow to our resamples! 😩
-
-```{r, error = TRUE}
-fit_resamples(rf_tune_wflow, frog_folds)
-```
-
-## Optimize the random forest `r hexes("tune")`
-
-Instead we can **tune** this workflow: 😌
-
-```{r}
-# The bare minimum syntax
-tune_grid(rf_tune_wflow, frog_folds)
-```
-
-## Optimize the random forest `r hexes("tune")`
-
-```{r}
-# Save some values in the object
-ctrl <- control_grid(save_workflow = TRUE, save_pred = TRUE)
-
-# Control randomness of the grid
-set.seed(1)
-
-rf_tune_res <- tune_grid(rf_tune_wflow, frog_folds, control = ctrl)
-show_best(rf_tune_res, metric = "rmse")
-```
-
-## Optimize the random forest `r hexes("tune")`
-
-```{r}
-#| echo: false
-theme_set(theme_light())
-```
-
-```{r}
-autoplot(rf_tune_res)
-```
-
-## Optimize the random forest `r hexes("tune")`
-
-```{r}
-select_best(rf_tune_res, metric = "rmse")
-```
-
-## Your turn {transition="slide-in"}
-
-![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
-
-*Tune the decision tree model we started with.*
-
-*(Use the skeleton in the `tune_tree` chunk.)*
-
-```{r}
-#| echo: false
-countdown(minutes = 7)
-```
-
-## Optimize the decision tree `r hexes("tune")`
-
-```{r}
-tree_spec <- 
-  decision_tree(
-    cost_complexity = tune(), 
-    tree_depth = tune(),
-    min_n = tune()
-  ) %>%
-  set_mode("regression")
-
-tree_wflow <- workflow(latency ~ ., tree_spec)
-
-set.seed(1)
-tree_tune_res <- tune_grid(tree_wflow, frog_folds, control = ctrl)
-show_best(tree_tune_res, metric = "rmse")
-```
-
-## Optimize the decision tree `r hexes("tune")`
-
-```{r}
-autoplot(tree_tune_res)
-```
-
-## Selecting a model
-
-Let's make a workflow set on-the-fly to compare models: 
-
-```{r wflow-set}
-frog_res <- as_workflow_set(rf = rf_tune_res, cart = tree_tune_res)
-autoplot(frog_res, metric = "rmse")
 ```
 
 ## Your turn {transition="slide-in"}
