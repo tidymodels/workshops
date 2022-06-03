@@ -621,19 +621,29 @@ tree_spec <-
 tree_wflow <- workflow(latency ~ ., tree_spec)
 
 set.seed(1)
-tree_res <- tune_grid(tree_wflow, frog_folds, control = ctrl)
-show_best(tree_res, metric = "rmse")
+tree_tune_res <- tune_grid(tree_wflow, frog_folds, control = ctrl)
+show_best(tree_tune_res, metric = "rmse")
 ```
 
 ## Optimize the decision tree `r hexes("tune")`
 
 ```{r}
-autoplot(tree_res)
+autoplot(tree_tune_res)
+```
+
+## Selecting a model
+
+Let's make a workflow set on-the-fly to compare models: 
+
+```{r wflow-set}
+frog_res <- as_workflow_set(rf = rf_tune_res, cart = tree_tune_res)
+autoplot(frog_res, metric = "rmse")
 ```
 
 ## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
 
 *End of the day discussion!*
 
