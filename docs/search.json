@@ -137,7 +137,7 @@
     "href": "slides/01-introduction.html#what-is-tidymodels",
     "title": "1 - Introduction",
     "section": "What is tidymodels? ",
-    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n\n#> ── Attaching packages ──────────────────────────── tidymodels 0.2.0 ──\n\n\n#> ✔ broom        0.8.0          ✔ rsample      0.1.1     \n#> ✔ dials        0.1.1          ✔ tibble       3.1.7     \n#> ✔ dplyr        1.0.9          ✔ tidyr        1.2.0     \n#> ✔ infer        1.0.0          ✔ tune         0.2.0     \n#> ✔ modeldata    0.1.1          ✔ workflows    0.2.6     \n#> ✔ parsnip      0.2.1.9002     ✔ workflowsets 0.2.1     \n#> ✔ purrr        0.3.4          ✔ yardstick    0.0.9     \n#> ✔ recipes      0.2.0\n\n\n#> ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#> ✖ purrr::discard() masks scales::discard()\n#> ✖ dplyr::filter()  masks stats::filter()\n#> ✖ dplyr::lag()     masks stats::lag()\n#> ✖ recipes::step()  masks stats::step()\n#> • Dig deeper into tidy modeling with R at https://www.tmwr.org"
+    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n\n#> ── Attaching packages ──────────────────────────── tidymodels 0.2.0 ──\n\n\n#> ✔ broom        0.8.0     ✔ rsample      0.1.1\n#> ✔ dials        0.1.1     ✔ tibble       3.1.7\n#> ✔ dplyr        1.0.9     ✔ tidyr        1.2.0\n#> ✔ infer        1.0.0     ✔ tune         0.2.0\n#> ✔ modeldata    0.1.1     ✔ workflows    0.2.6\n#> ✔ parsnip      0.2.1     ✔ workflowsets 0.2.1\n#> ✔ purrr        0.3.4     ✔ yardstick    0.0.9\n#> ✔ recipes      0.2.0\n\n\n#> ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#> ✖ purrr::discard() masks scales::discard()\n#> ✖ dplyr::filter()  masks stats::filter()\n#> ✖ dplyr::lag()     masks stats::lag()\n#> ✖ recipes::step()  masks stats::step()\n#> • Use suppressPackageStartupMessages() to eliminate package startup messages"
   },
   {
     "objectID": "slides/01-introduction.html#the-whole-game",
@@ -165,14 +165,21 @@
     "href": "slides/02-data-budget.html#data-on-tree-frog-hatching-1",
     "title": "2 - Your data budget",
     "section": "Data on tree frog hatching",
-    "text": "Data on tree frog hatching\n\nlibrary(tidymodels)\n\ndata(\"tree_frogs\", package = \"stacks\")\ntree_frogs <- tree_frogs %>%\n  filter(!is.na(latency)) %>%\n  select(-c(clutch, hatched))\n\n\nRed-eyed tree frog embryos can hatch earlier than their normal ~7 days if they detect potential predator threat!\nType ?stacks::tree_frogs to learn more about this dataset, including references."
+    "text": "Data on tree frog hatching\n\nlibrary(tidymodels)\n\ndata(\"tree_frogs\", package = \"stacks\")\ntree_frogs <- tree_frogs %>%\n  mutate(t_o_d = factor(t_o_d)) %>%\n  filter(!is.na(latency)) %>%\n  select(-c(clutch, hatched))\n\n\nRed-eyed tree frog embryos can hatch earlier than their normal ~7 days if they detect potential predator threat!\nType ?stacks::tree_frogs to learn more about this dataset, including references."
   },
   {
     "objectID": "slides/02-data-budget.html#data-on-tree-frog-hatching-2",
     "href": "slides/02-data-budget.html#data-on-tree-frog-hatching-2",
     "title": "2 - Your data budget",
     "section": "Data on tree frog hatching",
-    "text": "Data on tree frog hatching\n\nglimpse(tree_frogs)\n\n#> Rows: 572\n#> Columns: 5\n#> $ treatment <chr> \"control\", \"control\", \"control\", \"control\", \"control\", \"gent…\n#> $ reflex    <fct> full, low, full, mid, full, full, full, full, full, full, fu…\n#> $ age       <dbl> 466965, 361180, 401595, 357810, 397440, 463230, 393900, 4690…\n#> $ t_o_d     <chr> \"morning\", \"night\", \"afternoon\", \"night\", \"afternoon\", \"morn…\n#> $ latency   <dbl> 22, 360, 106, 180, 60, 39, 214, 50, 224, 63, 33, 94, 19, 25,…"
+    "text": "Data on tree frog hatching\n\nglimpse(tree_frogs)\n\n#> Rows: 572\n#> Columns: 5\n#> $ treatment <chr> \"control\", \"control\", \"control\", \"control\", \"control\", \"gent…\n#> $ reflex    <fct> full, low, full, mid, full, full, full, full, full, full, fu…\n#> $ age       <dbl> 466965, 361180, 401595, 357810, 397440, 463230, 393900, 4690…\n#> $ t_o_d     <fct> morning, night, afternoon, night, afternoon, morning, aftern…\n#> $ latency   <dbl> 22, 360, 106, 180, 60, 39, 214, 50, 224, 63, 33, 94, 19, 25,…"
+  },
+  {
+    "objectID": "slides/02-data-budget.html#data-on-tree-frog-hatching-3",
+    "href": "slides/02-data-budget.html#data-on-tree-frog-hatching-3",
+    "title": "2 - Your data budget",
+    "section": "Data on tree frog hatching",
+    "text": "Data on tree frog hatching\n\n\n\nN = 572\na numeric outcome latency\n4 other variables\n\ntreatment, reflex, and t_o_d are nominal predictors\nage is a numeric predictor"
   },
   {
     "objectID": "slides/02-data-budget.html#data-splitting-and-spending",
@@ -221,14 +228,14 @@
     "href": "slides/02-data-budget.html#data-splitting-and-spending-4",
     "title": "2 - Your data budget",
     "section": "Data splitting and spending ",
-    "text": "Data splitting and spending \n\nglimpse(frog_train)\n\n#> Rows: 428\n#> Columns: 5\n#> $ treatment <chr> \"control\", \"control\", \"control\", \"control\", \"control\", \"cont…\n#> $ reflex    <fct> full, full, full, full, full, full, full, full, full, full, …\n#> $ age       <dbl> 467950, 464870, 464610, 469650, 467600, 410460, 427685, 4685…\n#> $ t_o_d     <chr> \"morning\", \"morning\", \"morning\", \"morning\", \"morning\", \"afte…\n#> $ latency   <dbl> 33, 19, 2, 39, 42, 20, 31, 21, 30, 43, 23, 12, 46, 22, 21, 4…"
+    "text": "Data splitting and spending \n\nglimpse(frog_train)\n\n#> Rows: 428\n#> Columns: 5\n#> $ treatment <chr> \"control\", \"control\", \"control\", \"control\", \"control\", \"cont…\n#> $ reflex    <fct> full, full, full, full, full, full, full, full, full, full, …\n#> $ age       <dbl> 467950, 464870, 464610, 469650, 467600, 410460, 427685, 4685…\n#> $ t_o_d     <fct> morning, morning, morning, morning, morning, afternoon, nigh…\n#> $ latency   <dbl> 33, 19, 2, 39, 42, 20, 31, 21, 30, 43, 23, 12, 46, 22, 21, 4…"
   },
   {
     "objectID": "slides/02-data-budget.html#data-splitting-and-spending-5",
     "href": "slides/02-data-budget.html#data-splitting-and-spending-5",
     "title": "2 - Your data budget",
     "section": "Data splitting and spending ",
-    "text": "Data splitting and spending \n\nglimpse(frog_test)\n\n#> Rows: 144\n#> Columns: 5\n#> $ treatment <chr> \"control\", \"control\", \"control\", \"control\", \"gentamicin\", \"c…\n#> $ reflex    <fct> full, low, full, mid, full, full, full, full, full, full, fu…\n#> $ age       <dbl> 466965, 361180, 401595, 357810, 463230, 469065, 466160, 4658…\n#> $ t_o_d     <chr> \"morning\", \"night\", \"afternoon\", \"night\", \"morning\", \"mornin…\n#> $ latency   <dbl> 22, 360, 106, 180, 39, 50, 63, 25, 48, 126, 11, 56, 78, 79, …"
+    "text": "Data splitting and spending \n\nglimpse(frog_test)\n\n#> Rows: 144\n#> Columns: 5\n#> $ treatment <chr> \"control\", \"control\", \"control\", \"control\", \"gentamicin\", \"c…\n#> $ reflex    <fct> full, low, full, mid, full, full, full, full, full, full, fu…\n#> $ age       <dbl> 466965, 361180, 401595, 357810, 463230, 469065, 466160, 4658…\n#> $ t_o_d     <fct> morning, night, afternoon, night, morning, morning, morning,…\n#> $ latency   <dbl> 22, 360, 106, 180, 39, 50, 63, 25, 48, 126, 11, 56, 78, 79, …"
   },
   {
     "objectID": "slides/02-data-budget.html#your-turn-1",
@@ -361,7 +368,7 @@
     "href": "slides/03-what-makes-a-model.html#your-turn-1",
     "title": "2 - What makes a model?",
     "section": "Your turn",
-    "text": "Your turn\n\nRun the tree_spec chunk in your .Rmd.\nEdit this code so it creates a different model.\n\n\n\n05:00\n\n\n\n\nAll available models are listed at https://www.tidymodels.org/find/parsnip/"
+    "text": "Your turn\n\nRun the tree_spec chunk in your .qmd.\nEdit this code so it creates a different model.\n\n\n\n05:00\n\n\n\n\nAll available models are listed at https://www.tidymodels.org/find/parsnip/"
   },
   {
     "objectID": "slides/03-what-makes-a-model.html#all-models-are-wrong-but",
@@ -424,7 +431,7 @@
     "href": "slides/03-what-makes-a-model.html#your-turn-2",
     "title": "2 - What makes a model?",
     "section": "Your turn",
-    "text": "Your turn\n\nRun the tree_wf chunk in your .Rmd.\nEdit this code so it:\n\ncreates a different model\nuses one of the other workflow() interfaces\n\n\n\n\n05:00"
+    "text": "Your turn\n\nRun the tree_wflow chunk in your .qmd.\nEdit this code so it:\n\ncreates a different model\nuses one of the other workflow() interfaces\n\n\n\n\n05:00"
   },
   {
     "objectID": "slides/03-what-makes-a-model.html#predict-with-your-model",
@@ -487,14 +494,14 @@
     "href": "slides/03-what-makes-a-model.html#deploy-your-model-1",
     "title": "2 - What makes a model?",
     "section": "Deploy your model ",
-    "text": "Deploy your model \nHow do you use your new model tree_fit in production?\n\nlibrary(plumber)\npr() %>%\n  vetiver_api(v)\n\n#> # Plumber router with 2 endpoints, 4 filters, and 1 sub-router.\n#> # Use `pr_run()` on this object to start the API.\n#> ├──[queryString]\n#> ├──[body]\n#> ├──[cookieParser]\n#> ├──[sharedSecret]\n#> ├──/logo\n#> │  │ # Plumber static router serving from directory: /Library/Frameworks/R.framework/Versions/4.2-arm64/Resources/library/vetiver\n#> ├──/ping (GET)\n#> └──/predict (POST)\n\n\nLearn more at https://vetiver.rstudio.com"
+    "text": "Deploy your model \nHow do you use your new model tree_fit in production?\n\nlibrary(plumber)\npr() %>%\n  vetiver_api(v)\n\n#> # Plumber router with 2 endpoints, 4 filters, and 1 sub-router.\n#> # Use `pr_run()` on this object to start the API.\n#> ├──[queryString]\n#> ├──[body]\n#> ├──[cookieParser]\n#> ├──[sharedSecret]\n#> ├──/logo\n#> │  │ # Plumber static router serving from directory: /Library/Frameworks/R.framework/Versions/4.2/Resources/library/vetiver\n#> ├──/ping (GET)\n#> └──/predict (POST)\n\n\nLearn more at https://vetiver.rstudio.com"
   },
   {
     "objectID": "slides/03-what-makes-a-model.html#your-turn-6",
     "href": "slides/03-what-makes-a-model.html#your-turn-6",
     "title": "2 - What makes a model?",
     "section": "Your turn",
-    "text": "Your turn\n\nRun the vetiver chunk in your .Rmd.\nCheck out the automated visual documentation.\n\n\n\n05:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Your turn\n\nRun the vetiver chunk in your .qmd.\nCheck out the automated visual documentation.\n\n\n\n05:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
     "objectID": "slides/04-evaluating-models.html#metrics-for-model-performance",
@@ -525,60 +532,53 @@
     "text": "Metrics for model performance \n\nfrog_metrics <- metric_set(rmse, msd)\naugment(tree_fit, new_data = frog_test) %>%\n  frog_metrics(latency, .pred)\n\n#> # A tibble: 2 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard      59.2  \n#> 2 msd     standard      -0.908"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#which-data-set-should-we-use",
-    "href": "slides/04-evaluating-models.html#which-data-set-should-we-use",
+    "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-1",
+    "href": "slides/04-evaluating-models.html#dangers-of-overfitting-1",
     "title": "4 - Evaluating models",
-    "section": "Which data set should we use? ⚠️ ",
-    "text": "Which data set should we use? ⚠️ \n\ntree_fit %>%\n  augment(frog_train)\n\n#> # A tibble: 456 × 6\n#>    treatment  reflex    age t_o_d     latency .pred\n#>    <chr>      <fct>   <dbl> <chr>       <dbl> <dbl>\n#>  1 control    full   467950 morning        33  39.8\n#>  2 control    full   464870 morning        19  66.7\n#>  3 control    full   464610 morning         2  66.7\n#>  4 control    full   469650 morning        39  39.8\n#>  5 control    full   467600 morning        42  39.8\n#>  6 control    full   410460 afternoon      20  59.8\n#>  7 control    full   427685 night          31  83.1\n#>  8 control    full   468530 morning        21  39.8\n#>  9 gentamicin full   465800 morning        30  64.6\n#> 10 control    full   393475 afternoon      43 174. \n#> # … with 446 more rows\n\n\nWe call this “resubstition” or “repredicting the training set”"
+    "section": "Dangers of overfitting ⚠️",
+    "text": "Dangers of overfitting ⚠️"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#which-data-set-should-we-use-1",
-    "href": "slides/04-evaluating-models.html#which-data-set-should-we-use-1",
+    "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-2",
+    "href": "slides/04-evaluating-models.html#dangers-of-overfitting-2",
     "title": "4 - Evaluating models",
-    "section": "Which data set should we use? ⚠️ ",
-    "text": "Which data set should we use? ⚠️ \n\ntree_fit %>%\n  augment(frog_train) %>%\n  rmse(latency, .pred)\n\n#> # A tibble: 1 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard        49.4\n\n\nWe call this a “resubstition metric”"
+    "section": "Dangers of overfitting ⚠️",
+    "text": "Dangers of overfitting ⚠️"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#which-data-set-should-we-use-2",
-    "href": "slides/04-evaluating-models.html#which-data-set-should-we-use-2",
+    "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-3",
+    "href": "slides/04-evaluating-models.html#dangers-of-overfitting-3",
     "title": "4 - Evaluating models",
-    "section": "Which data set should we use? ⚠️ ",
-    "text": "Which data set should we use? ⚠️ \n\n\n\ntree_fit %>%\n  augment(frog_train) %>%\n  rmse(latency, .pred)\n\n#> # A tibble: 1 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard        49.4"
+    "section": "Dangers of overfitting ⚠️ ",
+    "text": "Dangers of overfitting ⚠️ \n\ntree_fit %>%\n  augment(frog_train)\n\n#> # A tibble: 456 × 6\n#>    treatment  reflex    age t_o_d     latency .pred\n#>    <chr>      <fct>   <dbl> <fct>       <dbl> <dbl>\n#>  1 control    full   467950 morning        33  39.8\n#>  2 control    full   464870 morning        19  66.7\n#>  3 control    full   464610 morning         2  66.7\n#>  4 control    full   469650 morning        39  39.8\n#>  5 control    full   467600 morning        42  39.8\n#>  6 control    full   410460 afternoon      20  59.8\n#>  7 control    full   427685 night          31  83.1\n#>  8 control    full   468530 morning        21  39.8\n#>  9 gentamicin full   465800 morning        30  64.6\n#> 10 control    full   393475 afternoon      43 174. \n#> # … with 446 more rows\n\n\nWe call this “resubstition” or “repredicting the training set”"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#which-data-set-should-we-use-3",
-    "href": "slides/04-evaluating-models.html#which-data-set-should-we-use-3",
+    "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-4",
+    "href": "slides/04-evaluating-models.html#dangers-of-overfitting-4",
     "title": "4 - Evaluating models",
-    "section": "Which data set should we use? ⚠️ ",
-    "text": "Which data set should we use? ⚠️ \n\n\n\ntree_fit %>%\n  augment(frog_train) %>%\n  rmse(latency, .pred)\n\n#> # A tibble: 1 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard        49.4\n\n\n\n\ntree_fit %>%\n  augment(frog_test) %>%\n  rmse(latency, .pred)\n\n#> # A tibble: 1 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard        59.2"
+    "section": "Dangers of overfitting ⚠️ ",
+    "text": "Dangers of overfitting ⚠️ \n\ntree_fit %>%\n  augment(frog_train) %>%\n  rmse(latency, .pred)\n\n#> # A tibble: 1 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard        49.4\n\n\nWe call this a “resubstition metric”"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#which-data-set-should-we-use-4",
-    "href": "slides/04-evaluating-models.html#which-data-set-should-we-use-4",
+    "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-5",
+    "href": "slides/04-evaluating-models.html#dangers-of-overfitting-5",
     "title": "4 - Evaluating models",
-    "section": "Which data set should we use? ⚠️ ",
-    "text": "Which data set should we use? ⚠️ \n\n\n\n\n\ntree_fit %>%\n  augment(frog_test) %>%\n  rmse(latency, .pred)\n\n#> # A tibble: 1 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard        59.2"
+    "section": "Dangers of overfitting ⚠️ ",
+    "text": "Dangers of overfitting ⚠️ \n\n\n\ntree_fit %>%\n  augment(frog_train) %>%\n  rmse(latency, .pred)\n\n#> # A tibble: 1 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard        49.4"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#section-1",
-    "href": "slides/04-evaluating-models.html#section-1",
+    "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-6",
+    "href": "slides/04-evaluating-models.html#dangers-of-overfitting-6",
     "title": "4 - Evaluating models",
-    "section": "",
-    "text": "⚠️ DANGERS OF OVERFITTING ⚠️"
+    "section": "Dangers of overfitting ⚠️ ",
+    "text": "Dangers of overfitting ⚠️ \n\n\n\ntree_fit %>%\n  augment(frog_train) %>%\n  rmse(latency, .pred)\n\n#> # A tibble: 1 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard        49.4\n\n\n\n\ntree_fit %>%\n  augment(frog_test) %>%\n  rmse(latency, .pred)\n\n#> # A tibble: 1 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard        59.2"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#create-a-random-forest-model",
-    "href": "slides/04-evaluating-models.html#create-a-random-forest-model",
+    "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-7",
+    "href": "slides/04-evaluating-models.html#dangers-of-overfitting-7",
     "title": "4 - Evaluating models",
-    "section": "Create a random forest model ",
-    "text": "Create a random forest model \n\nrf_spec <- rand_forest(trees = 1000, mode = \"regression\")\nrf_spec\n\n#> Random Forest Model Specification (regression)\n#> \n#> Main Arguments:\n#>   trees = 1000\n#> \n#> Computational engine: ranger"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#create-a-random-forest-model-1",
-    "href": "slides/04-evaluating-models.html#create-a-random-forest-model-1",
-    "title": "4 - Evaluating models",
-    "section": "Create a random forest model ",
-    "text": "Create a random forest model \n\nrf_wf <- workflow(latency ~ ., rf_spec)\nrf_wf\n\n#> ══ Workflow ══════════════════════════════════════════════════════════\n#> Preprocessor: Formula\n#> Model: rand_forest()\n#> \n#> ── Preprocessor ──────────────────────────────────────────────────────\n#> latency ~ .\n#> \n#> ── Model ─────────────────────────────────────────────────────────────\n#> Random Forest Model Specification (regression)\n#> \n#> Main Arguments:\n#>   trees = 1000\n#> \n#> Computational engine: ranger"
+    "section": "Dangers of overfitting ⚠️ ",
+    "text": "Dangers of overfitting ⚠️ \n\n\n\n\n\ntree_fit %>%\n  augment(frog_test) %>%\n  rmse(latency, .pred)\n\n#> # A tibble: 1 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard        59.2\n\n\n\n\nReally though… don’t use the test set until the very end of modeling.\nWe’re just demonstrating overfitting here."
   },
   {
     "objectID": "slides/04-evaluating-models.html#your-turn",
@@ -588,18 +588,11 @@
     "text": "Your turn\n\nUse augment() and metrics() to compute metrics for both training and testing data.\nNotice the evidence of overfitting! ⚠️\n\n\n\n05:00"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#random-forest-metrics",
-    "href": "slides/04-evaluating-models.html#random-forest-metrics",
+    "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-8",
+    "href": "slides/04-evaluating-models.html#dangers-of-overfitting-8",
     "title": "4 - Evaluating models",
-    "section": "Random forest metrics ",
-    "text": "Random forest metrics \n\n\n\nrf_fit %>%\n  augment(frog_train) %>%\n  metrics(latency, .pred)\n\n#> # A tibble: 3 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard      46.1  \n#> 2 rsq     standard       0.574\n#> 3 mae     standard      31.8\n\n\n\n\nrf_fit %>%\n  augment(frog_test) %>%\n  metrics(latency, .pred)\n\n#> # A tibble: 3 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard      57.0  \n#> 2 rsq     standard       0.421\n#> 3 mae     standard      37.7\n\n\n\n\n\n⚠️ DANGERS OF OVERFITTING ⚠️"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#comparing-metrics",
-    "href": "slides/04-evaluating-models.html#comparing-metrics",
-    "title": "4 - Evaluating models",
-    "section": "Comparing metrics ",
-    "text": "Comparing metrics \nHow do the metrics from resampling compare to the metrics from training and testing?\n\n\n\ntree_fit %>%\n  augment(frog_train) %>%\n  metrics(latency, .pred)\n\n#> # A tibble: 3 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard      49.4  \n#> 2 rsq     standard       0.494\n#> 3 mae     standard      33.4\n\n\n\n\ntree_fit %>%\n  augment(frog_test) %>%\n  metrics(latency, .pred)\n\n#> # A tibble: 3 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard      59.2  \n#> 2 rsq     standard       0.380\n#> 3 mae     standard      40.2\n\n\n\n\n\nWhen looking at the results on this slide, remember that:\n⚠️ the training set gives you overly optimistic metrics\n⚠️ we cannot use the test set to compare, tune, choose"
+    "section": "Dangers of overfitting ⚠️ ",
+    "text": "Dangers of overfitting ⚠️ \n\n\n\ntree_fit %>%\n  augment(frog_train) %>%\n  metrics(latency, .pred)\n\n#> # A tibble: 3 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard      49.4  \n#> 2 rsq     standard       0.494\n#> 3 mae     standard      33.4\n\n\n\n\ntree_fit %>%\n  augment(frog_test) %>%\n  metrics(latency, .pred)\n\n#> # A tibble: 3 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard      59.2  \n#> 2 rsq     standard       0.380\n#> 3 mae     standard      40.2\n\n\n\n\n\nWhat if we want to compare more models?\n\n\nAnd/or more model configurations?\n\n\nAnd we want to understand if these are important differences?"
   },
   {
     "objectID": "slides/04-evaluating-models.html#cross-validation",
@@ -641,7 +634,7 @@
     "href": "slides/04-evaluating-models.html#resampling-2",
     "title": "4 - Evaluating models",
     "section": "Resampling ",
-    "text": "Resampling \nWhat is in this?\n\nfrog_folds <- vfold_cv(frog_train, v = 5)\nfrog_folds$splits\n\n#> [[1]]\n#> <Analysis/Assess/Total>\n#> <364/92/456>\n#> \n#> [[2]]\n#> <Analysis/Assess/Total>\n#> <365/91/456>\n#> \n#> [[3]]\n#> <Analysis/Assess/Total>\n#> <365/91/456>\n#> \n#> [[4]]\n#> <Analysis/Assess/Total>\n#> <365/91/456>\n#> \n#> [[5]]\n#> <Analysis/Assess/Total>\n#> <365/91/456>"
+    "text": "Resampling \nWhat is in this?\n\nfrog_folds <- vfold_cv(frog_train, v = 10)\nfrog_folds$splits[1:3]\n\n#> [[1]]\n#> <Analysis/Assess/Total>\n#> <410/46/456>\n#> \n#> [[2]]\n#> <Analysis/Assess/Total>\n#> <410/46/456>\n#> \n#> [[3]]\n#> <Analysis/Assess/Total>\n#> <410/46/456>"
   },
   {
     "objectID": "slides/04-evaluating-models.html#bootstrapping",
@@ -690,56 +683,49 @@
     "href": "slides/04-evaluating-models.html#evaluating-model-performance",
     "title": "4 - Evaluating models",
     "section": "Evaluating model performance ",
-    "text": "Evaluating model performance \n\nset.seed(123)\nfrog_folds <- vfold_cv(frog_train, v = 5, strata = latency)\nfrog_folds\n\n#> #  5-fold cross-validation using stratification \n#> # A tibble: 5 × 2\n#>   splits           id   \n#>   <list>           <chr>\n#> 1 <split [364/92]> Fold1\n#> 2 <split [364/92]> Fold2\n#> 3 <split [364/92]> Fold3\n#> 4 <split [365/91]> Fold4\n#> 5 <split [367/89]> Fold5\n\n\n\nSet the seed when creating resamples"
+    "text": "Evaluating model performance \n\nset.seed(123)\nfrog_folds <- vfold_cv(frog_train, v = 10, strata = latency)\nfrog_folds\n\n#> #  10-fold cross-validation using stratification \n#> # A tibble: 10 × 2\n#>    splits           id    \n#>    <list>           <chr> \n#>  1 <split [408/48]> Fold01\n#>  2 <split [408/48]> Fold02\n#>  3 <split [408/48]> Fold03\n#>  4 <split [409/47]> Fold04\n#>  5 <split [411/45]> Fold05\n#>  6 <split [412/44]> Fold06\n#>  7 <split [412/44]> Fold07\n#>  8 <split [412/44]> Fold08\n#>  9 <split [412/44]> Fold09\n#> 10 <split [412/44]> Fold10\n\n\n\nSet the seed when creating resamples"
   },
   {
     "objectID": "slides/04-evaluating-models.html#evaluating-model-performance-1",
     "href": "slides/04-evaluating-models.html#evaluating-model-performance-1",
     "title": "4 - Evaluating models",
     "section": "Evaluating model performance ",
-    "text": "Evaluating model performance \n\nfit_resamples(tree_wf, frog_folds)\n\n#> # Resampling results\n#> # 5-fold cross-validation using stratification \n#> # A tibble: 5 × 4\n#>   splits           id    .metrics         .notes          \n#>   <list>           <chr> <list>           <list>          \n#> 1 <split [364/92]> Fold1 <tibble [2 × 4]> <tibble [0 × 3]>\n#> 2 <split [364/92]> Fold2 <tibble [2 × 4]> <tibble [0 × 3]>\n#> 3 <split [364/92]> Fold3 <tibble [2 × 4]> <tibble [0 × 3]>\n#> 4 <split [365/91]> Fold4 <tibble [2 × 4]> <tibble [0 × 3]>\n#> 5 <split [367/89]> Fold5 <tibble [2 × 4]> <tibble [0 × 3]>\n\n\n\nWhere are the fitted models??!??"
+    "text": "Evaluating model performance \n\nfit_resamples(tree_wflow, frog_folds)\n\n#> # Resampling results\n#> # 10-fold cross-validation using stratification \n#> # A tibble: 10 × 4\n#>    splits           id     .metrics         .notes          \n#>    <list>           <chr>  <list>           <list>          \n#>  1 <split [408/48]> Fold01 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  2 <split [408/48]> Fold02 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  3 <split [408/48]> Fold03 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  4 <split [409/47]> Fold04 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  5 <split [411/45]> Fold05 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  6 <split [412/44]> Fold06 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  7 <split [412/44]> Fold07 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  8 <split [412/44]> Fold08 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  9 <split [412/44]> Fold09 <tibble [2 × 4]> <tibble [0 × 3]>\n#> 10 <split [412/44]> Fold10 <tibble [2 × 4]> <tibble [0 × 3]>\n\n\n\nWhere are the fitted models??!??"
   },
   {
     "objectID": "slides/04-evaluating-models.html#evaluating-model-performance-2",
     "href": "slides/04-evaluating-models.html#evaluating-model-performance-2",
     "title": "4 - Evaluating models",
     "section": "Evaluating model performance ",
-    "text": "Evaluating model performance \n\nfit_resamples(tree_wf, frog_folds)\n\n#> # Resampling results\n#> # 5-fold cross-validation using stratification \n#> # A tibble: 5 × 4\n#>   splits           id    .metrics         .notes          \n#>   <list>           <chr> <list>           <list>          \n#> 1 <split [364/92]> Fold1 <tibble [2 × 4]> <tibble [0 × 3]>\n#> 2 <split [364/92]> Fold2 <tibble [2 × 4]> <tibble [0 × 3]>\n#> 3 <split [364/92]> Fold3 <tibble [2 × 4]> <tibble [0 × 3]>\n#> 4 <split [365/91]> Fold4 <tibble [2 × 4]> <tibble [0 × 3]>\n#> 5 <split [367/89]> Fold5 <tibble [2 × 4]> <tibble [0 × 3]>\n\n\nWhere are the fitted models??!?? 🗑️\n\nFor more advanced use cases, you can extract and save them: https://www.tmwr.org/resampling.html#extract"
+    "text": "Evaluating model performance \n\nfit_resamples(tree_wflow, frog_folds)\n\n#> # Resampling results\n#> # 10-fold cross-validation using stratification \n#> # A tibble: 10 × 4\n#>    splits           id     .metrics         .notes          \n#>    <list>           <chr>  <list>           <list>          \n#>  1 <split [408/48]> Fold01 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  2 <split [408/48]> Fold02 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  3 <split [408/48]> Fold03 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  4 <split [409/47]> Fold04 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  5 <split [411/45]> Fold05 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  6 <split [412/44]> Fold06 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  7 <split [412/44]> Fold07 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  8 <split [412/44]> Fold08 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  9 <split [412/44]> Fold09 <tibble [2 × 4]> <tibble [0 × 3]>\n#> 10 <split [412/44]> Fold10 <tibble [2 × 4]> <tibble [0 × 3]>\n\n\nWhere are the fitted models??!?? 🗑️\n\nFor more advanced use cases, you can extract and save them: https://www.tmwr.org/resampling.html#extract"
   },
   {
     "objectID": "slides/04-evaluating-models.html#evaluating-model-performance-3",
     "href": "slides/04-evaluating-models.html#evaluating-model-performance-3",
     "title": "4 - Evaluating models",
     "section": "Evaluating model performance ",
-    "text": "Evaluating model performance \n\nfit_resamples(tree_wf, frog_folds) %>%\n  collect_metrics()\n\n#> # A tibble: 2 × 6\n#>   .metric .estimator   mean     n std_err .config             \n#>   <chr>   <chr>       <dbl> <int>   <dbl> <chr>               \n#> 1 rmse    standard   58.9       5  2.23   Preprocessor1_Model1\n#> 2 rsq     standard    0.319     5  0.0217 Preprocessor1_Model1\n\n\n\nWe can reliably measure performance using only the training data 🎉"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#evaluating-model-performance-4",
-    "href": "slides/04-evaluating-models.html#evaluating-model-performance-4",
-    "title": "4 - Evaluating models",
-    "section": "Evaluating model performance ",
-    "text": "Evaluating model performance \n\nctrl_frog <- control_resamples(save_pred = TRUE)\n\ntree_preds <- \n  fit_resamples(tree_wf, frog_folds, control = ctrl_frog) %>%\n  collect_predictions()\n\ntree_preds\n\n#> # A tibble: 456 × 5\n#>    id    .pred  .row latency .config             \n#>    <chr> <dbl> <int>   <dbl> <chr>               \n#>  1 Fold1  39.7     1      33 Preprocessor1_Model1\n#>  2 Fold1  74.1     3       2 Preprocessor1_Model1\n#>  3 Fold1  64.1     9      30 Preprocessor1_Model1\n#>  4 Fold1  74.1    13      46 Preprocessor1_Model1\n#>  5 Fold1  39.7    21      25 Preprocessor1_Model1\n#>  6 Fold1 117.     26      46 Preprocessor1_Model1\n#>  7 Fold1  51.4    28      11 Preprocessor1_Model1\n#>  8 Fold1  64.1    30      37 Preprocessor1_Model1\n#>  9 Fold1  68      35      41 Preprocessor1_Model1\n#> 10 Fold1  51.4    42       9 Preprocessor1_Model1\n#> # … with 446 more rows"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#evaluating-model-performance-5",
-    "href": "slides/04-evaluating-models.html#evaluating-model-performance-5",
-    "title": "4 - Evaluating models",
-    "section": "Evaluating model performance ",
-    "text": "Evaluating model performance \n\nctrl_frog <- control_resamples(save_pred = TRUE)\nrf_res <- fit_resamples(rf_wf, frog_folds, control = ctrl_frog)\ncollect_metrics(rf_res)\n\n#> # A tibble: 2 × 6\n#>   .metric .estimator   mean     n std_err .config             \n#>   <chr>   <chr>       <dbl> <int>   <dbl> <chr>               \n#> 1 rmse    standard   55.7       5  1.75   Preprocessor1_Model1\n#> 2 rsq     standard    0.378     5  0.0312 Preprocessor1_Model1"
+    "text": "Evaluating model performance \n\nfit_resamples(tree_wflow, frog_folds) %>%\n  collect_metrics()\n\n#> # A tibble: 2 × 6\n#>   .metric .estimator   mean     n std_err .config             \n#>   <chr>   <chr>       <dbl> <int>   <dbl> <chr>               \n#> 1 rmse    standard   59.6      10  2.31   Preprocessor1_Model1\n#> 2 rsq     standard    0.305    10  0.0342 Preprocessor1_Model1\n\n\n\nWe can reliably measure performance using only the training data 🎉"
   },
   {
     "objectID": "slides/04-evaluating-models.html#embarrassingly-parallel",
     "href": "slides/04-evaluating-models.html#embarrassingly-parallel",
     "title": "4 - Evaluating models",
     "section": "Embarrassingly parallel ",
-    "text": "Embarrassingly parallel \n\ndoParallel::registerDoParallel()\n\nfit_resamples(tree_wf, frog_folds) %>%\n  collect_metrics()\n\n#> # A tibble: 2 × 6\n#>   .metric .estimator   mean     n std_err .config             \n#>   <chr>   <chr>       <dbl> <int>   <dbl> <chr>               \n#> 1 rmse    standard   58.9       5  2.23   Preprocessor1_Model1\n#> 2 rsq     standard    0.319     5  0.0217 Preprocessor1_Model1\n\n\n\nEach fit is independent of the others"
+    "text": "Embarrassingly parallel \n\ndoParallel::registerDoParallel()\n\n# Save the assessment set results\nctrl_frog <- control_resamples(save_pred = TRUE)\n\nset.seed(1)\ntree_res <- fit_resamples(tree_wflow, frog_folds, control = ctrl_frog)\n\ntree_res %>% collect_metrics()\n\n#> # A tibble: 2 × 6\n#>   .metric .estimator   mean     n std_err .config             \n#>   <chr>   <chr>       <dbl> <int>   <dbl> <chr>               \n#> 1 rmse    standard   59.6      10  2.31   Preprocessor1_Model1\n#> 2 rsq     standard    0.305    10  0.0342 Preprocessor1_Model1\n\n\n\nEach fit is independent of the others"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#evaluating-model-performance-6",
-    "href": "slides/04-evaluating-models.html#evaluating-model-performance-6",
+    "objectID": "slides/04-evaluating-models.html#comparing-metrics",
+    "href": "slides/04-evaluating-models.html#comparing-metrics",
+    "title": "4 - Evaluating models",
+    "section": "Comparing metrics ",
+    "text": "Comparing metrics \nHow do the metrics from resampling compare to the metrics from the training set?\n\n\n\ntree_fit %>%\n  augment(frog_train) %>%\n  metrics(latency, .pred)\n\n#> # A tibble: 3 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard      49.4  \n#> 2 rsq     standard       0.494\n#> 3 mae     standard      33.4\n\n\n\n\ntree_res %>%\n  collect_metrics() %>% \n  select(.metric, mean, n)\n\n#> # A tibble: 2 × 3\n#>   .metric   mean     n\n#>   <chr>    <dbl> <int>\n#> 1 rmse    59.6      10\n#> 2 rsq      0.305    10\n\n\n\n\n\nWhen looking at the results on this slide, remember that:\n⚠️ the training set gives you overly optimistic metrics\n⚠️ we should use resampling instead of the test set"
+  },
+  {
+    "objectID": "slides/04-evaluating-models.html#evaluating-model-performance-4",
+    "href": "slides/04-evaluating-models.html#evaluating-model-performance-4",
     "title": "4 - Evaluating models",
     "section": "Evaluating model performance ",
-    "text": "Evaluating model performance \n\nctrl_frog <- control_resamples(save_pred = TRUE)\n\ntree_preds <- \n  fit_resamples(tree_wf, frog_folds, control = ctrl_frog) %>%\n  collect_predictions()\n\ntree_preds\n\n#> # A tibble: 456 × 5\n#>    id    .pred  .row latency .config             \n#>    <chr> <dbl> <int>   <dbl> <chr>               \n#>  1 Fold1  39.7     1      33 Preprocessor1_Model1\n#>  2 Fold1  74.1     3       2 Preprocessor1_Model1\n#>  3 Fold1  64.1     9      30 Preprocessor1_Model1\n#>  4 Fold1  74.1    13      46 Preprocessor1_Model1\n#>  5 Fold1  39.7    21      25 Preprocessor1_Model1\n#>  6 Fold1 117.     26      46 Preprocessor1_Model1\n#>  7 Fold1  51.4    28      11 Preprocessor1_Model1\n#>  8 Fold1  64.1    30      37 Preprocessor1_Model1\n#>  9 Fold1  68      35      41 Preprocessor1_Model1\n#> 10 Fold1  51.4    42       9 Preprocessor1_Model1\n#> # … with 446 more rows"
+    "text": "Evaluating model performance \n\nctrl_frog <- control_resamples(save_pred = TRUE)\n\ntree_preds <- \n  tree_res %>%\n  collect_predictions()\n\ntree_preds\n\n#> # A tibble: 456 × 5\n#>    id     .pred  .row latency .config             \n#>    <chr>  <dbl> <int>   <dbl> <chr>               \n#>  1 Fold01  39.6     1      33 Preprocessor1_Model1\n#>  2 Fold01  72.1     3       2 Preprocessor1_Model1\n#>  3 Fold01  63.8     9      30 Preprocessor1_Model1\n#>  4 Fold01  72.1    13      46 Preprocessor1_Model1\n#>  5 Fold01  43.3    28      11 Preprocessor1_Model1\n#>  6 Fold01  61.7    35      41 Preprocessor1_Model1\n#>  7 Fold01  39.6    51      43 Preprocessor1_Model1\n#>  8 Fold01 134.     70      20 Preprocessor1_Model1\n#>  9 Fold01  70.6    74      21 Preprocessor1_Model1\n#> 10 Fold01  39.6   106      14 Preprocessor1_Model1\n#> # … with 446 more rows"
   },
   {
     "objectID": "slides/04-evaluating-models.html#section-4",
@@ -749,158 +735,32 @@
     "text": "tree_preds %>% \n  ggplot(aes(latency, .pred, color = id)) + \n  geom_abline(lty = 2, col = \"gray\", size = 1.5) +\n  geom_point(alpha = 0.5) +\n  coord_obs_pred()"
   },
   {
+    "objectID": "slides/04-evaluating-models.html#create-a-random-forest-model",
+    "href": "slides/04-evaluating-models.html#create-a-random-forest-model",
+    "title": "4 - Evaluating models",
+    "section": "Create a random forest model ",
+    "text": "Create a random forest model \n\nrf_spec <- rand_forest(trees = 1000, mode = \"regression\")\nrf_spec\n\n#> Random Forest Model Specification (regression)\n#> \n#> Main Arguments:\n#>   trees = 1000\n#> \n#> Computational engine: ranger"
+  },
+  {
+    "objectID": "slides/04-evaluating-models.html#create-a-random-forest-model-1",
+    "href": "slides/04-evaluating-models.html#create-a-random-forest-model-1",
+    "title": "4 - Evaluating models",
+    "section": "Create a random forest model ",
+    "text": "Create a random forest model \n\nrf_wflow <- workflow(latency ~ ., rf_spec)\nrf_wflow\n\n#> ══ Workflow ══════════════════════════════════════════════════════════\n#> Preprocessor: Formula\n#> Model: rand_forest()\n#> \n#> ── Preprocessor ──────────────────────────────────────────────────────\n#> latency ~ .\n#> \n#> ── Model ─────────────────────────────────────────────────────────────\n#> Random Forest Model Specification (regression)\n#> \n#> Main Arguments:\n#>   trees = 1000\n#> \n#> Computational engine: ranger"
+  },
+  {
     "objectID": "slides/04-evaluating-models.html#your-turn-3",
     "href": "slides/04-evaluating-models.html#your-turn-3",
     "title": "4 - Evaluating models",
     "section": "Your turn",
-    "text": "Your turn\n\nUse fit_resamples() and rf_wf to:\n\nkeep predictions\ncompute metrics\nplot true vs. predicted values\n\n\n\n\n05:00"
+    "text": "Your turn\n\nUse fit_resamples() and rf_wflow to:\n\nkeep predictions\ncompute metrics\nplot true vs. predicted values\n\n\n\n\n05:00"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#evaluate-a-workflow-set",
-    "href": "slides/04-evaluating-models.html#evaluate-a-workflow-set",
+    "objectID": "slides/04-evaluating-models.html#evaluating-model-performance-5",
+    "href": "slides/04-evaluating-models.html#evaluating-model-performance-5",
     "title": "4 - Evaluating models",
-    "section": "Evaluate a workflow set",
-    "text": "Evaluate a workflow set\n\nworkflow_set(list(latency ~ .), list(tree_spec, rf_spec))\n\n#> # A workflow set/tibble: 2 × 4\n#>   wflow_id              info             option    result    \n#>   <chr>                 <list>           <list>    <list>    \n#> 1 formula_decision_tree <tibble [1 × 4]> <opts[0]> <list [0]>\n#> 2 formula_rand_forest   <tibble [1 × 4]> <opts[0]> <list [0]>"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#evaluate-a-workflow-set-1",
-    "href": "slides/04-evaluating-models.html#evaluate-a-workflow-set-1",
-    "title": "4 - Evaluating models",
-    "section": "Evaluate a workflow set",
-    "text": "Evaluate a workflow set\n\nworkflow_set(list(latency ~ .), list(tree_spec, rf_spec)) %>%\n  workflow_map(\"fit_resamples\", resamples = frog_folds)\n\n#> # A workflow set/tibble: 2 × 4\n#>   wflow_id              info             option    result   \n#>   <chr>                 <list>           <list>    <list>   \n#> 1 formula_decision_tree <tibble [1 × 4]> <opts[1]> <rsmp[+]>\n#> 2 formula_rand_forest   <tibble [1 × 4]> <opts[1]> <rsmp[+]>"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#evaluate-a-workflow-set-2",
-    "href": "slides/04-evaluating-models.html#evaluate-a-workflow-set-2",
-    "title": "4 - Evaluating models",
-    "section": "Evaluate a workflow set",
-    "text": "Evaluate a workflow set\n\nworkflow_set(list(latency ~ .), list(tree_spec, rf_spec)) %>%\n  workflow_map(\"fit_resamples\", resamples = frog_folds) %>%\n  rank_results()\n\n#> # A tibble: 4 × 9\n#>   wflow_id         .config .metric   mean std_err     n preprocessor model  rank\n#>   <chr>            <chr>   <chr>    <dbl>   <dbl> <int> <chr>        <chr> <int>\n#> 1 formula_rand_fo… Prepro… rmse    55.9    1.80       5 formula      rand…     1\n#> 2 formula_rand_fo… Prepro… rsq      0.373  0.0306     5 formula      rand…     1\n#> 3 formula_decisio… Prepro… rmse    58.9    2.23       5 formula      deci…     2\n#> 4 formula_decisio… Prepro… rsq      0.319  0.0217     5 formula      deci…     2\n\n\n\nLots more available with workflow sets, like collect_metrics(), autoplot() methods, and more!"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#your-turn-4",
-    "href": "slides/04-evaluating-models.html#your-turn-4",
-    "title": "4 - Evaluating models",
-    "section": "Your turn",
-    "text": "Your turn\n\nWhen do you think a workflow set would be useful?\n\n\n\n03:00"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#optimize-the-random-forest",
-    "href": "slides/04-evaluating-models.html#optimize-the-random-forest",
-    "title": "4 - Evaluating models",
-    "section": "Optimize the random forest ",
-    "text": "Optimize the random forest \n\ntunable_spec <- \n  rand_forest(\n    trees = 1000, \n    mtry = tune(), \n    min_n = tune()\n  ) %>%\n  set_mode(\"regression\")\ntunable_spec\n\n#> Random Forest Model Specification (regression)\n#> \n#> Main Arguments:\n#>   mtry = tune()\n#>   trees = 1000\n#>   min_n = tune()\n#> \n#> Computational engine: ranger"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#optimize-the-random-forest-1",
-    "href": "slides/04-evaluating-models.html#optimize-the-random-forest-1",
-    "title": "4 - Evaluating models",
-    "section": "Optimize the random forest ",
-    "text": "Optimize the random forest \n\ntunable_wf <- workflow(latency ~ ., tunable_spec)\ntunable_wf\n\n#> ══ Workflow ══════════════════════════════════════════════════════════\n#> Preprocessor: Formula\n#> Model: rand_forest()\n#> \n#> ── Preprocessor ──────────────────────────────────────────────────────\n#> latency ~ .\n#> \n#> ── Model ─────────────────────────────────────────────────────────────\n#> Random Forest Model Specification (regression)\n#> \n#> Main Arguments:\n#>   mtry = tune()\n#>   trees = 1000\n#>   min_n = tune()\n#> \n#> Computational engine: ranger"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#optimize-the-random-forest-2",
-    "href": "slides/04-evaluating-models.html#optimize-the-random-forest-2",
-    "title": "4 - Evaluating models",
-    "section": "Optimize the random forest ",
-    "text": "Optimize the random forest \nWe can’t fit this workflow to our resamples! 😩\n\nfit_resamples(tunable_wf, frog_folds)\n\n#> # Resampling results\n#> # 5-fold cross-validation using stratification \n#> # A tibble: 5 × 4\n#>   splits           id    .metrics .notes          \n#>   <list>           <chr> <list>   <list>          \n#> 1 <split [364/92]> Fold1 <NULL>   <tibble [1 × 3]>\n#> 2 <split [364/92]> Fold2 <NULL>   <tibble [1 × 3]>\n#> 3 <split [364/92]> Fold3 <NULL>   <tibble [1 × 3]>\n#> 4 <split [365/91]> Fold4 <NULL>   <tibble [1 × 3]>\n#> 5 <split [367/89]> Fold5 <NULL>   <tibble [1 × 3]>\n#> \n#> There were issues with some computations:\n#> \n#>   - Error(s) x5: Error in `chr_as_locations()`: ! Can't subset columns that don't ...\n#> \n#> Use `collect_notes(object)` for more information."
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#optimize-the-random-forest-3",
-    "href": "slides/04-evaluating-models.html#optimize-the-random-forest-3",
-    "title": "4 - Evaluating models",
-    "section": "Optimize the random forest ",
-    "text": "Optimize the random forest \nInstead we can tune this workflow: 😌\n\ntune_grid(tunable_wf, frog_folds)\n\n#> # Tuning results\n#> # 5-fold cross-validation using stratification \n#> # A tibble: 5 × 4\n#>   splits           id    .metrics          .notes          \n#>   <list>           <chr> <list>            <list>          \n#> 1 <split [364/92]> Fold1 <tibble [20 × 6]> <tibble [0 × 3]>\n#> 2 <split [364/92]> Fold2 <tibble [20 × 6]> <tibble [0 × 3]>\n#> 3 <split [364/92]> Fold3 <tibble [20 × 6]> <tibble [0 × 3]>\n#> 4 <split [365/91]> Fold4 <tibble [20 × 6]> <tibble [0 × 3]>\n#> 5 <split [367/89]> Fold5 <tibble [20 × 6]> <tibble [0 × 3]>"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#optimize-the-random-forest-4",
-    "href": "slides/04-evaluating-models.html#optimize-the-random-forest-4",
-    "title": "4 - Evaluating models",
-    "section": "Optimize the random forest ",
-    "text": "Optimize the random forest \n\ntune_res <- tune_grid(tunable_wf, frog_folds)\ncollect_metrics(tune_res)\n\n#> # A tibble: 18 × 8\n#>     mtry min_n .metric .estimator   mean     n std_err .config             \n#>    <int> <int> <chr>   <chr>       <dbl> <int>   <dbl> <chr>               \n#>  1     4    35 rmse    standard   57.3       5  1.51   Preprocessor1_Model1\n#>  2     4    35 rsq     standard    0.350     5  0.0320 Preprocessor1_Model1\n#>  3     3     3 rmse    standard   57.6       5  1.80   Preprocessor1_Model2\n#>  4     3     3 rsq     standard    0.346     5  0.0161 Preprocessor1_Model2\n#>  5     2    32 rmse    standard   56.0       5  1.73   Preprocessor1_Model3\n#>  6     2    32 rsq     standard    0.372     5  0.0400 Preprocessor1_Model3\n#>  7     1    16 rmse    standard   56.7       5  1.32   Preprocessor1_Model4\n#>  8     1    16 rsq     standard    0.373     5  0.0422 Preprocessor1_Model4\n#>  9     1    28 rmse    standard   57.0       5  1.31   Preprocessor1_Model5\n#> 10     1    28 rsq     standard    0.370     5  0.0430 Preprocessor1_Model5\n#> 11     2    10 rmse    standard   55.7       5  1.68   Preprocessor1_Model6\n#> 12     2    10 rsq     standard    0.376     5  0.0331 Preprocessor1_Model6\n#> 13     3    24 rmse    standard   56.6       5  1.61   Preprocessor1_Model7\n#> 14     3    24 rsq     standard    0.362     5  0.0337 Preprocessor1_Model7\n#> 15     3    40 rmse    standard   56.6       5  1.76   Preprocessor1_Model8\n#> 16     3    40 rsq     standard    0.360     5  0.0375 Preprocessor1_Model8\n#> 17     4    18 rmse    standard   57.6       5  1.28   Preprocessor1_Model9\n#> 18     4    18 rsq     standard    0.342     5  0.0205 Preprocessor1_Model9"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#optimize-the-random-forest-5",
-    "href": "slides/04-evaluating-models.html#optimize-the-random-forest-5",
-    "title": "4 - Evaluating models",
-    "section": "Optimize the random forest ",
-    "text": "Optimize the random forest \n\n\n\n\nautoplot(tune_res)"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#optimize-the-random-forest-6",
-    "href": "slides/04-evaluating-models.html#optimize-the-random-forest-6",
-    "title": "4 - Evaluating models",
-    "section": "Optimize the random forest ",
-    "text": "Optimize the random forest \n\nshow_best(tune_res, metric = \"rmse\")\n\n#> # A tibble: 5 × 8\n#>    mtry min_n .metric .estimator  mean     n std_err .config             \n#>   <int> <int> <chr>   <chr>      <dbl> <int>   <dbl> <chr>               \n#> 1     2    10 rmse    standard    55.7     5    1.68 Preprocessor1_Model6\n#> 2     2    32 rmse    standard    56.0     5    1.73 Preprocessor1_Model3\n#> 3     3    24 rmse    standard    56.6     5    1.61 Preprocessor1_Model7\n#> 4     3    40 rmse    standard    56.6     5    1.76 Preprocessor1_Model8\n#> 5     1    16 rmse    standard    56.7     5    1.32 Preprocessor1_Model4"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#optimize-the-random-forest-7",
-    "href": "slides/04-evaluating-models.html#optimize-the-random-forest-7",
-    "title": "4 - Evaluating models",
-    "section": "Optimize the random forest ",
-    "text": "Optimize the random forest \n\ntunable_wf %>%\n  finalize_workflow(select_best(tune_res, metric = \"rmse\"))\n\n#> ══ Workflow ══════════════════════════════════════════════════════════\n#> Preprocessor: Formula\n#> Model: rand_forest()\n#> \n#> ── Preprocessor ──────────────────────────────────────────────────────\n#> latency ~ .\n#> \n#> ── Model ─────────────────────────────────────────────────────────────\n#> Random Forest Model Specification (regression)\n#> \n#> Main Arguments:\n#>   mtry = 2\n#>   trees = 1000\n#>   min_n = 5\n#> \n#> Computational engine: ranger"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#optimize-the-random-forest-8",
-    "href": "slides/04-evaluating-models.html#optimize-the-random-forest-8",
-    "title": "4 - Evaluating models",
-    "section": "Optimize the random forest ",
-    "text": "Optimize the random forest \n\nfinal_fit <-\n  tunable_wf %>%\n  finalize_workflow(select_best(tune_res, metric = \"rmse\")) %>%\n  last_fit(frog_split)\n\nfinal_fit\n\n#> # Resampling results\n#> # Manual resampling \n#> # A tibble: 1 × 6\n#>   splits            id               .metrics .notes   .predictions .workflow \n#>   <list>            <chr>            <list>   <list>   <list>       <list>    \n#> 1 <split [456/116]> train/test split <tibble> <tibble> <tibble>     <workflow>\n\n\n\nNotice we used the initial split here: training + testing"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#our-tuned-random-forest",
-    "href": "slides/04-evaluating-models.html#our-tuned-random-forest",
-    "title": "4 - Evaluating models",
-    "section": "Our tuned random forest ",
-    "text": "Our tuned random forest \nWhat is in this final_fit object?\n\ncollect_metrics(final_fit)\n\n#> # A tibble: 2 × 4\n#>   .metric .estimator .estimate .config             \n#>   <chr>   <chr>          <dbl> <chr>               \n#> 1 rmse    standard      57.1   Preprocessor1_Model1\n#> 2 rsq     standard       0.419 Preprocessor1_Model1\n\n\n\nThese are metrics computed with the test set"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#our-tuned-random-forest-1",
-    "href": "slides/04-evaluating-models.html#our-tuned-random-forest-1",
-    "title": "4 - Evaluating models",
-    "section": "Our tuned random forest ",
-    "text": "Our tuned random forest \nWhat is in this final_fit object?\n\ncollect_predictions(final_fit)\n\n#> # A tibble: 116 × 5\n#>    id               .pred  .row latency .config             \n#>    <chr>            <dbl> <int>   <dbl> <chr>               \n#>  1 train/test split  42.8     1      22 Preprocessor1_Model1\n#>  2 train/test split 102.      3     106 Preprocessor1_Model1\n#>  3 train/test split  76.4     6      39 Preprocessor1_Model1\n#>  4 train/test split  42.2     8      50 Preprocessor1_Model1\n#>  5 train/test split  42.7    10      63 Preprocessor1_Model1\n#>  6 train/test split  42.9    14      25 Preprocessor1_Model1\n#>  7 train/test split  51.2    16      48 Preprocessor1_Model1\n#>  8 train/test split 165.     17      91 Preprocessor1_Model1\n#>  9 train/test split  50.5    32      11 Preprocessor1_Model1\n#> 10 train/test split 173.     33     109 Preprocessor1_Model1\n#> # … with 106 more rows\n\n\n\nThese are predictions for the test set"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#section-6",
-    "href": "slides/04-evaluating-models.html#section-6",
-    "title": "4 - Evaluating models",
-    "section": "",
-    "text": "collect_predictions(final_fit) %>%\n  ggplot(aes(latency, .pred)) + \n  geom_abline(lty = 2, col = \"deeppink4\", size = 1.5) +\n  geom_point(alpha = 0.5) +\n  coord_obs_pred()"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#our-tuned-random-forest-2",
-    "href": "slides/04-evaluating-models.html#our-tuned-random-forest-2",
-    "title": "4 - Evaluating models",
-    "section": "Our tuned random forest ",
-    "text": "Our tuned random forest \nWhat is in this final_fit object?\n\nextract_workflow(final_fit)\n\n#> ══ Workflow [trained] ════════════════════════════════════════════════\n#> Preprocessor: Formula\n#> Model: rand_forest()\n#> \n#> ── Preprocessor ──────────────────────────────────────────────────────\n#> latency ~ .\n#> \n#> ── Model ─────────────────────────────────────────────────────────────\n#> Ranger result\n#> \n#> Call:\n#>  ranger::ranger(x = maybe_data_frame(x), y = y, mtry = min_cols(~2L,      x), num.trees = ~1000, min.node.size = min_rows(~5L, x),      num.threads = 1, verbose = FALSE, seed = sample.int(10^5,          1)) \n#> \n#> Type:                             Regression \n#> Number of trees:                  1000 \n#> Sample size:                      456 \n#> Number of independent variables:  4 \n#> Mtry:                             2 \n#> Target node size:                 5 \n#> Variable importance mode:         none \n#> Splitrule:                        variance \n#> OOB prediction error (MSE):       3101.919 \n#> R squared (OOB):                  0.3578729\n\n\n\nUse this for prediction on new data"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#your-turn-5",
-    "href": "slides/04-evaluating-models.html#your-turn-5",
-    "title": "4 - Evaluating models",
-    "section": "Your turn",
-    "text": "Your turn\n\nTune the decision tree model we started with.\n(Use the skeleton in the tune_tree chunk.)\n\n\n\n07:00"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#optimize-the-decision-tree",
-    "href": "slides/04-evaluating-models.html#optimize-the-decision-tree",
-    "title": "4 - Evaluating models",
-    "section": "Optimize the decision tree ",
-    "text": "Optimize the decision tree \n\ntree_spec <- \n  decision_tree(\n    cost_complexity = tune(), \n    tree_depth = tune(),\n    min_n = tune()\n  ) %>%\n  set_mode(\"regression\")\n\ntree_wf <- workflow(latency ~ ., tree_spec)\ntree_res <- tune_grid(tree_wf, frog_folds)\nshow_best(tree_res, metric = \"rmse\")\n\n#> # A tibble: 5 × 9\n#>   cost_complexity tree_depth min_n .metric .estimator  mean     n std_err\n#>             <dbl>      <int> <int> <chr>   <chr>      <dbl> <int>   <dbl>\n#> 1        6.17e- 6          4    25 rmse    standard    58.3     5    2.15\n#> 2        7.48e- 8          4    30 rmse    standard    58.7     5    2.50\n#> 3        2.52e- 2          7     4 rmse    standard    59.2     5    1.95\n#> 4        2.42e- 3          6    20 rmse    standard    59.3     5    1.84\n#> 5        9.05e-10         11    33 rmse    standard    59.3     5    2.36\n#> # … with 1 more variable: .config <chr>"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#optimize-the-decision-tree-1",
-    "href": "slides/04-evaluating-models.html#optimize-the-decision-tree-1",
-    "title": "4 - Evaluating models",
-    "section": "Optimize the decision tree ",
-    "text": "Optimize the decision tree \n\nautoplot(tree_res)"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#your-turn-6",
-    "href": "slides/04-evaluating-models.html#your-turn-6",
-    "title": "4 - Evaluating models",
-    "section": "Your turn",
-    "text": "Your turn\n\nEnd of the day discussion!\nWhich model do you think you would decide to use?\nWhat surprised you the most?\nWhat is one thing you are looking forward to for tomorrow?\n\n\n\n05:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
+    "section": "Evaluating model performance ",
+    "text": "Evaluating model performance \n\nctrl_frog <- control_resamples(save_pred = TRUE)\nrf_res <- fit_resamples(rf_wflow, frog_folds, control = ctrl_frog)\ncollect_metrics(rf_res)\n\n#> # A tibble: 2 × 6\n#>   .metric .estimator   mean     n std_err .config             \n#>   <chr>   <chr>       <dbl> <int>   <dbl> <chr>               \n#> 1 rmse    standard   55.8      10  1.73   Preprocessor1_Model1\n#> 2 rsq     standard    0.373    10  0.0309 Preprocessor1_Model1"
   },
   {
     "objectID": "slides/04-evaluating-models.html#section-5",
@@ -910,115 +770,10 @@
     "text": "collect_predictions(rf_res) %>% \n  ggplot(aes(latency, .pred, color = id)) + \n  geom_abline(lty = 2, col = \"gray\", size = 1.5) +\n  geom_point(alpha = 0.5) +\n  coord_obs_pred()"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#the-final-fit",
-    "href": "slides/04-evaluating-models.html#the-final-fit",
+    "objectID": "slides/04-evaluating-models.html#your-turn-4",
+    "href": "slides/04-evaluating-models.html#your-turn-4",
     "title": "4 - Evaluating models",
-    "section": "The final fit ",
-    "text": "The final fit \nWe’ve shown you fit() and predict() (+ augment()) but there is a shortcut:\n\nfinal_fit <- last_fit(rf_wf, frog_split)\n\nfinal_fit\n\n#> # Resampling results\n#> # Manual resampling \n#> # A tibble: 1 × 6\n#>   splits            id               .metrics .notes   .predictions .workflow \n#>   <list>            <chr>            <list>   <list>   <list>       <list>    \n#> 1 <split [456/116]> train/test split <tibble> <tibble> <tibble>     <workflow>\n\n\n\n\nNotice we used the initial split here: training + testing\nTime to finally use the testing data for its intended purpose! 💎"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#the-final-fit-1",
-    "href": "slides/04-evaluating-models.html#the-final-fit-1",
-    "title": "4 - Evaluating models",
-    "section": "The final fit ",
-    "text": "The final fit \nWhat is in this final_fit object?\n\ncollect_metrics(final_fit)\n\n#> # A tibble: 2 × 4\n#>   .metric .estimator .estimate .config             \n#>   <chr>   <chr>          <dbl> <chr>               \n#> 1 rmse    standard      57.1   Preprocessor1_Model1\n#> 2 rsq     standard       0.421 Preprocessor1_Model1\n\n\n\nThese are metrics computed with the test set"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#the-final-fit-2",
-    "href": "slides/04-evaluating-models.html#the-final-fit-2",
-    "title": "4 - Evaluating models",
-    "section": "The final fit ",
-    "text": "The final fit \nWhat is in this final_fit object?\n\ncollect_predictions(final_fit)\n\n#> # A tibble: 116 × 5\n#>    id               .pred  .row latency .config             \n#>    <chr>            <dbl> <int>   <dbl> <chr>               \n#>  1 train/test split  42.9     1      22 Preprocessor1_Model1\n#>  2 train/test split 103.      3     106 Preprocessor1_Model1\n#>  3 train/test split  76.3     6      39 Preprocessor1_Model1\n#>  4 train/test split  42.5     8      50 Preprocessor1_Model1\n#>  5 train/test split  42.8    10      63 Preprocessor1_Model1\n#>  6 train/test split  42.8    14      25 Preprocessor1_Model1\n#>  7 train/test split  51.3    16      48 Preprocessor1_Model1\n#>  8 train/test split 163.     17      91 Preprocessor1_Model1\n#>  9 train/test split  50.8    32      11 Preprocessor1_Model1\n#> 10 train/test split 172.     33     109 Preprocessor1_Model1\n#> # … with 106 more rows\n\n\n\nThese are predictions for the test set"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#the-final-fit-3",
-    "href": "slides/04-evaluating-models.html#the-final-fit-3",
-    "title": "4 - Evaluating models",
-    "section": "The final fit ",
-    "text": "The final fit \nWhat is in this final_fit object?\n\nextract_workflow(final_fit)\n\n#> ══ Workflow [trained] ════════════════════════════════════════════════\n#> Preprocessor: Formula\n#> Model: rand_forest()\n#> \n#> ── Preprocessor ──────────────────────────────────────────────────────\n#> latency ~ .\n#> \n#> ── Model ─────────────────────────────────────────────────────────────\n#> Ranger result\n#> \n#> Call:\n#>  ranger::ranger(x = maybe_data_frame(x), y = y, num.trees = ~1000,      num.threads = 1, verbose = FALSE, seed = sample.int(10^5,          1)) \n#> \n#> Type:                             Regression \n#> Number of trees:                  1000 \n#> Sample size:                      456 \n#> Number of independent variables:  4 \n#> Mtry:                             2 \n#> Target node size:                 5 \n#> Variable importance mode:         none \n#> Splitrule:                        variance \n#> OOB prediction error (MSE):       3128.307 \n#> R squared (OOB):                  0.3524104\n\n\n\nUse this for prediction on new data, like for deploying"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#which-data-set-should-we-use-5",
-    "href": "slides/04-evaluating-models.html#which-data-set-should-we-use-5",
-    "title": "4 - Evaluating models",
-    "section": "Which data set should we use? ⚠️ ",
-    "text": "Which data set should we use? ⚠️ \n\n\n\ntree_fit %>%\n  augment(frog_train) %>%\n  metrics(latency, .pred)\n\n#> # A tibble: 3 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard      49.4  \n#> 2 rsq     standard       0.494\n#> 3 mae     standard      33.4\n\n\n\n\ntree_fit %>%\n  augment(frog_test) %>%\n  metrics(latency, .pred)\n\n#> # A tibble: 3 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard      59.2  \n#> 2 rsq     standard       0.380\n#> 3 mae     standard      40.2\n\n\n\n\n\nWhat if we want to compare more models?\n\n\nAnd/or more model configurations?\n\n\nAnd we want to understand if these are important differences?"
-  },
-  {
-    "objectID": "slides/02-data-budget.html#data-on-tree-frog-hatching-3",
-    "href": "slides/02-data-budget.html#data-on-tree-frog-hatching-3",
-    "title": "2 - Your data budget",
-    "section": "Data on tree frog hatching",
-    "text": "Data on tree frog hatching\n\n\n\nN = 572\na numeric outcome latency\n4 other variables\n\ntreatment, reflex, and t_o_d are nominal predictors\nage is a numeric predictor"
-  },
-  {
-    "objectID": "slides/03-what-makes-a-model.html#a-model-workflow",
-    "href": "slides/03-what-makes-a-model.html#a-model-workflow",
-    "title": "2 - What makes a model?",
-    "section": "A model workflow  ",
-    "text": "A model workflow  \n\ntree_spec <-\n  decision_tree() %>% \n  set_mode(\"regression\")\n\ntree_spec %>% \n  fit(latency ~ ., data = frog_train) \n\n#> parsnip model object\n#> \n#> n= 456 \n#> \n#> node), split, n, deviance, yval\n#>       * denotes terminal node\n#> \n#>  1) root 456 2197966.00  92.90351  \n#>    2) age>=427505 256  252347.40  60.89844  \n#>      4) treatment=control 131   91424.06  48.42748 *\n#>      5) treatment=gentamicin 125  119197.90  73.96800 *\n#>    3) age< 427505 200 1347741.00 133.87000  \n#>      6) treatment=control 140  986790.70 118.25710  \n#>       12) reflex=mid,full 129  754363.70 111.56590 *\n#>       13) reflex=low 11  158918.20 196.72730 *\n#>      7) treatment=gentamicin 60  247194.60 170.30000  \n#>       14) age< 403007.5 30  102190.20 147.83330  \n#>         28) age>=394557.5 22   53953.86 129.77270 *\n#>         29) age< 394557.5 8   21326.00 197.50000 *\n#>       15) age>=403007.5 30  114719.40 192.76670 *"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#how-can-we-compare-multiple-model-workflows-at-once",
-    "href": "slides/04-evaluating-models.html#how-can-we-compare-multiple-model-workflows-at-once",
-    "title": "4 - Evaluating models",
-    "section": "How can we compare multiple model workflows at once?",
-    "text": "How can we compare multiple model workflows at once?"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-1",
-    "href": "slides/04-evaluating-models.html#dangers-of-overfitting-1",
-    "title": "4 - Evaluating models",
-    "section": "Dangers of overfitting ⚠️",
-    "text": "Dangers of overfitting ⚠️"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-2",
-    "href": "slides/04-evaluating-models.html#dangers-of-overfitting-2",
-    "title": "4 - Evaluating models",
-    "section": "Dangers of overfitting ⚠️",
-    "text": "Dangers of overfitting ⚠️"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-3",
-    "href": "slides/04-evaluating-models.html#dangers-of-overfitting-3",
-    "title": "4 - Evaluating models",
-    "section": "Dangers of overfitting ⚠️ ",
-    "text": "Dangers of overfitting ⚠️ \n\ntree_fit %>%\n  augment(frog_train)\n\n#> # A tibble: 456 × 6\n#>    treatment  reflex    age t_o_d     latency .pred\n#>    <chr>      <fct>   <dbl> <chr>       <dbl> <dbl>\n#>  1 control    full   467950 morning        33  39.8\n#>  2 control    full   464870 morning        19  66.7\n#>  3 control    full   464610 morning         2  66.7\n#>  4 control    full   469650 morning        39  39.8\n#>  5 control    full   467600 morning        42  39.8\n#>  6 control    full   410460 afternoon      20  59.8\n#>  7 control    full   427685 night          31  83.1\n#>  8 control    full   468530 morning        21  39.8\n#>  9 gentamicin full   465800 morning        30  64.6\n#> 10 control    full   393475 afternoon      43 174. \n#> # … with 446 more rows\n\n\nWe call this “resubstition” or “repredicting the training set”"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-4",
-    "href": "slides/04-evaluating-models.html#dangers-of-overfitting-4",
-    "title": "4 - Evaluating models",
-    "section": "Dangers of overfitting ⚠️ ",
-    "text": "Dangers of overfitting ⚠️ \n\ntree_fit %>%\n  augment(frog_train) %>%\n  rmse(latency, .pred)\n\n#> # A tibble: 1 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard        49.4\n\n\nWe call this a “resubstition metric”"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-5",
-    "href": "slides/04-evaluating-models.html#dangers-of-overfitting-5",
-    "title": "4 - Evaluating models",
-    "section": "Dangers of overfitting ⚠️ ",
-    "text": "Dangers of overfitting ⚠️ \n\n\n\ntree_fit %>%\n  augment(frog_train) %>%\n  rmse(latency, .pred)\n\n#> # A tibble: 1 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard        49.4"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-6",
-    "href": "slides/04-evaluating-models.html#dangers-of-overfitting-6",
-    "title": "4 - Evaluating models",
-    "section": "Dangers of overfitting ⚠️ ",
-    "text": "Dangers of overfitting ⚠️ \n\n\n\ntree_fit %>%\n  augment(frog_train) %>%\n  rmse(latency, .pred)\n\n#> # A tibble: 1 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard        49.4\n\n\n\n\ntree_fit %>%\n  augment(frog_test) %>%\n  rmse(latency, .pred)\n\n#> # A tibble: 1 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard        59.2"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-7",
-    "href": "slides/04-evaluating-models.html#dangers-of-overfitting-7",
-    "title": "4 - Evaluating models",
-    "section": "Dangers of overfitting ⚠️ ",
-    "text": "Dangers of overfitting ⚠️ \n\n\n\n\n\ntree_fit %>%\n  augment(frog_test) %>%\n  rmse(latency, .pred)\n\n#> # A tibble: 1 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard        59.2"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-8",
-    "href": "slides/04-evaluating-models.html#dangers-of-overfitting-8",
-    "title": "4 - Evaluating models",
-    "section": "Dangers of overfitting ⚠️ ",
-    "text": "Dangers of overfitting ⚠️ \n\n\n\ntree_fit %>%\n  augment(frog_train) %>%\n  metrics(latency, .pred)\n\n#> # A tibble: 3 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard      49.4  \n#> 2 rsq     standard       0.494\n#> 3 mae     standard      33.4\n\n\n\n\ntree_fit %>%\n  augment(frog_test) %>%\n  metrics(latency, .pred)\n\n#> # A tibble: 3 × 3\n#>   .metric .estimator .estimate\n#>   <chr>   <chr>          <dbl>\n#> 1 rmse    standard      59.2  \n#> 2 rsq     standard       0.380\n#> 3 mae     standard      40.2\n\n\n\n\n\nWhat if we want to compare more models?\n\n\nAnd/or more model configurations?\n\n\nAnd we want to understand if these are important differences?"
+    "section": "Your turn",
+    "text": "Your turn\n\nEnd of the day discussion!\nWhich model do you think you would decide to use?\nWhat surprised you the most?\nWhat is one thing you are looking forward to for tomorrow?\n\n\n\n05:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   }
 ]

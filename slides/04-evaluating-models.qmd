@@ -368,11 +368,13 @@ We can reliably measure performance using only the **training** data 🎉
 ```{r}
 doParallel::registerDoParallel()
 
-set.seed(1)
-tree_res <- fit_resamples(tree_wflow, frog_folds) %>%
-  collect_metrics()
+# Save the assessment set results
+ctrl_frog <- control_resamples(save_pred = TRUE)
 
-tree_res
+set.seed(1)
+tree_res <- fit_resamples(tree_wflow, frog_folds, control = ctrl_frog)
+
+tree_res %>% collect_metrics()
 ```
 
 . . .
@@ -407,7 +409,7 @@ When looking at the results on this slide, remember that:
 
 ⚠️ the training set gives you overly optimistic metrics
 
-⚠️ use resampling instead of the test set
+⚠️ we should use resampling instead of the test set
 
 ## Evaluating model performance `r hexes("tune")`
 
