@@ -12,9 +12,11 @@ knitr:
     echo: true
 ---
 
-```{r}
+```{r setup}
 #| include: false
 #| file: setup.R
+
+library(emo)
 ```
 
 ## Loading the packages
@@ -165,7 +167,7 @@ nhl_rec <-
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
-  step_ns(angle, deg_free = 10) #<<
+  step_ns(coord_y, coord_x, deg_free = 10) #<<
 ```
 
 Nonlinear transforms like *natural splines* and so on.
@@ -222,14 +224,12 @@ library(embed)
 
 estimates <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_lencode_mixed(player, outcome = vars(on_goal)) %>%   #<<
+  step_lencode_mixed(player, outcome = vars(on_goal), id = "encoding") %>%   #<<
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
-  step_ns(angle, deg_free = 10) %>% 
-  step_ns(distance, deg_free = 10) %>% 
   step_normalize(all_numeric_predictors()) %>% 
   prep() %>% 
-  tidy(number = 4) %>% 
+  tidy(id = "encoding") %>% 
   select(player = level, estimate = value)
 
 inner_join(player_stats, estimates, by = "player") %>% 
@@ -248,13 +248,11 @@ inner_join(player_stats, estimates, by = "player") %>%
 ```{r}
 library(embed)
 
-nhl_rec <- 
+encoded_players <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
   step_lencode_mixed(player, outcome = vars(on_goal)) %>%   #<<
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
-  step_ns(angle, deg_free = 10) %>% 
-  step_ns(distance, deg_free = 10) %>% 
   step_normalize(all_numeric_predictors()) 
 ```
 
@@ -278,7 +276,7 @@ Once a recipe is added to a workflow, this occurs when `fit()` is called.
 
 90% of the time, you will want to use a workflow to estimate and apply a recipe.
 
-If you have an error, the original recipe object (e.g. `nhl_rec`) can be estimated manually with a function called `prep()`. It is analogous to `fit()`.
+If you have an error, the original recipe object (e.g. `encoded_players`) can be estimated manually with a function called `prep()`. It is analogous to `fit()`.
 
 This returns the fitted recipe. This can help debug any issues.
 
@@ -295,3 +293,19 @@ Another function (`bake()`) is analogous to `predict()` and gives you the proces
         -   Julia and Emil have written an amazing text processing book: [*Supervised Machine Learning for Text Analysis in R*](https://smltar.com/)
 -   There are a lot of ways to handle [categorical predictors](https://recipes.tidymodels.org/articles/Dummies.html), even those with novel levels.
 -   Several dplyr steps exist, such as `step_mutate()`.
+
+# Resampling and recipes
+
+```{r resample-encoding}
+encoded_players_wflow <-
+  workflow() %>%
+  add_recipe(encoded_players) %>%
+  add_model(spec_glm)
+
+ctrl <- control_resamples(save_pred = TRUE)
+encoded_players_res <- 
+  encoded_players_wflow %>% 
+  fit_resamples(nhl_split, control = ctrl)
+collect_metrics(encoded_players_res)
+```
+
