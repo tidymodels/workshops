@@ -17,8 +17,6 @@ knitr:
 #| file: setup.R
 ```
 
-
-
 ## Loading the packages
 
 ```{r hello-tidymodels}
@@ -27,7 +25,10 @@ library(ongoal)
 
 tidymodels_prefer()
 
-on_goal <- on_goal %>% filter(season == "20152016") %>% select(-season)
+on_goal <- 
+  on_goal %>% 
+  filter(season == "20152016") %>% 
+  select(-season, -date_time, -distance, -angle, -behind_goal_line)
 ```
 
 ## Splitting the NHL data `r I(hexes(c("rsample", "dplyr")))`
@@ -42,25 +43,24 @@ nhl_test  <- testing(nhl_split)
 c(training = nrow(nhl_train), testing = nrow(nhl_test))
 ```
 
-
 # Validation split
 
-```{r}
+```{r val}
 set.seed(234)
-val_set <- validation_split(nhl_train, prop = 0.80)
-val_set
+nhl_split <- validation_split(nhl_train, prop = 0.80)
+nhl_split
 ```
 
 # A first model
 
-```{r}
+```{r logistic-fit}
 spec_glm <- logistic_reg() %>% set_engine("glm")
 spec_glm
 ```
 
 # A first recipe `r I(hexes(c("recipes")))`
 
-```{r}
+```{r base-recipe}
 nhl_rec <- 
   recipe(on_goal ~ ., data = nhl_train)
 
@@ -72,102 +72,57 @@ Based on the formula, the function assigns columns to roles of "outcome" or "pre
 
 # A first recipe `r I(hexes(c("recipes")))`
 
-```{r}
+```{r rec-summary}
 summary(nhl_rec)
 ```
 
-# Work with dates `r I(hexes(c("recipes")))`
-
-```{r}
-nhl_rec <- 
-  recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_date(date_time, features = c("dow", "month", "year")) 
-```
-
-This creates three new columns in the data based on the date. Note that the day-of-the-week column is a factor.
-
-# Work with dates `r I(hexes(c("recipes")))`
-
-```{r}
-nhl_rec <- 
-  recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_date(date_time, features = c("dow", "month", "year")) %>% 
-  step_holiday(date_time) #<<
-```
-
-Add indicators for major holidays. Specific holidays, especially those ex-US, can also be generated. 
-
-# Work with dates `r I(hexes(c("recipes")))`
-
-```{r}
-#| highlight.col: "#ADD8E6"
-nhl_rec <- 
-  recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_date(date_time, features = c("dow", "month", "year")) %>% 
-  step_holiday(date_time) %>% 
-  step_rm(date_time) #<<
-```
-
-At this point, we don't need `date` anymore. We'll just delete it from the data but there are ways to change its role to an arbitrary value.  
 
 # Create indicator variables `r I(hexes(c("recipes")))`
 
 ```{r}
 nhl_rec <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_date(date_time, features = c("dow", "month", "year")) %>% 
-  step_holiday(date_time) %>% 
-  step_rm(date_time) %>% 
   step_dummy(all_nominal_predictors()) #<<
 ```
 
-For any factor or character predictors, make binary indicators. 
+For any factor or character predictors, make binary indicators.
 
-There are _many_ recipe steps that can convert categorical predictors to numeric columns. 
+There are *many* recipe steps that can convert categorical predictors to numeric columns.
 
 # Filter out constant columns `r I(hexes(c("recipes")))`
 
 ```{r}
 nhl_rec <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_date(date_time, features = c("dow", "month", "year")) %>% 
-  step_holiday(date_time) %>% 
-  step_rm(date_time) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) #<<
 ```
 
-In case there is a holiday that never was observed, we can delete any _zero-variance_ predictors that have a single unique value.
+In case there is factor level that never was observed in the trainnig data, we can delete any *zero-variance* predictors that have a single unique value.
 
 <!--Note that the selector chooses all columns with a role of "predictor".-->
 
 # Normalization `r I(hexes(c("recipes")))`
 
-```{r}
+```{r rec-norm, eval = FALSE}
 nhl_rec <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_date(date_time, features = c("dow", "month", "year")) %>% 
-  step_holiday(date_time) %>% 
-  step_rm(date_time) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) #<<
 ```
 
-This centers and scales the numeric predictors. 
+This centers and scales the numeric predictors.
 
-Note that this will use the training set to estimate the means and standard deviations of the data. 
+Note that this will use the training set to estimate the means and standard deviations of the data.
 
-All data put through the recipe will be normalized using those statistics (there is no re-estimation). 
+All data put through the recipe will be normalized using those statistics (there is no re-estimation).
 
 # Reduce correlation `r I(hexes(c("recipes")))`
 
 ```{r, eval = FALSE}
 nhl_rec <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_date(date_time, features = c("dow", "month", "year")) %>% 
-  step_holiday(date_time) %>% 
-  step_rm(date_time) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
@@ -181,9 +136,6 @@ To deal with highly correlated predictors, find the minimum predictor set to rem
 ```{r, eval = FALSE}
 nhl_rec <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_date(date_time, features = c("dow", "month", "year")) %>% 
-  step_holiday(date_time) %>% 
-  step_rm(date_time) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
@@ -197,9 +149,6 @@ PCA feature extraction...
 ```{r, eval = FALSE}
 nhl_rec <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_date(date_time, features = c("dow", "month", "year")) %>% 
-  step_holiday(date_time) %>% 
-  step_rm(date_time) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
@@ -213,31 +162,27 @@ A fancy machine learning supervised dimension reduction technique
 ```{r, eval = FALSE}
 nhl_rec <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_date(date_time, features = c("dow", "month", "year")) %>% 
-  step_holiday(date_time) %>% 
-  step_rm(date_time) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
   step_ns(angle, deg_free = 10) #<<
 ```
 
-Nonlinear transforms like _natural splines_ and so on. 
+Nonlinear transforms like *natural splines* and so on.
 
-# What do we do with the player data? 
+# What do we do with the player data?
 
-There are `r length(unique(nhl_train$player))` unique player values in our training set. 
+There are `r length(unique(nhl_train$player))` unique player values in our training set.
 
- * We _could_ make the full set of indicator variables...
- * Or using [feature hashing](https://www.tmwr.org/categorical.html#feature-hashing) to make a subset.
- 
-Instead, we will be using effect encoding to replace the `player` column with the estimated effect of that predictor. 
+-   We *could* make the full set of indicator variables...
+-   Or using [feature hashing](https://www.tmwr.org/categorical.html#feature-hashing) to make a subset.
+
+Instead, we will be using effect encoding to replace the `player` column with the estimated effect of that predictor.
 
 # Per-player statistics
 
 ::: columns
 ::: {.column width="50%"}
-
 ```{r effects, echo = FALSE, out.width = '100%', fig.width = 6, fig.height = 3, fig.align='center', dev = 'svg', dev.args = list(bg = "transparent")}
 player_stats <- 
   nhl_train %>%
@@ -262,11 +207,11 @@ player_stats %>%
 :::
 
 ::: {.column width="50%"}
-There are good statistical methods for estimating these rates that use _partial pooling_. 
+There are good statistical methods for estimating these rates that use *partial pooling*.
 
-This borrows strength across players and shrinks extreme values (e.g. zero or one) towards the mean for players with very few shots. 
+This borrows strength across players and shrinks extreme values (e.g. zero or one) towards the mean for players with very few shots.
 
-The embed package has recipes steps for effect encodings. 
+The embed package has recipes steps for effect encodings.
 :::
 :::
 
@@ -277,9 +222,6 @@ library(embed)
 
 estimates <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_date(date_time, features = c("dow", "month", "year")) %>% 
-  step_holiday(date_time) %>% 
-  step_rm(date_time) %>% 
   step_lencode_mixed(player, outcome = vars(on_goal)) %>%   #<<
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
@@ -301,16 +243,13 @@ inner_join(player_stats, estimates, by = "player") %>%
   labs(x = "Raw Rate", y = "Estimated via Effects Encoding")
 ```
 
-# The last recipe  `r I(hexes(c("recipes", "embed")))`
+# The last recipe `r I(hexes(c("recipes", "embed")))`
 
 ```{r}
 library(embed)
 
 nhl_rec <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_date(date_time, features = c("dow", "month", "year")) %>% 
-  step_holiday(date_time) %>% 
-  step_rm(date_time) %>% 
   step_lencode_mixed(player, outcome = vars(on_goal)) %>%   #<<
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
@@ -319,44 +258,40 @@ nhl_rec <-
   step_normalize(all_numeric_predictors()) 
 ```
 
-It is very important to appropriately validate the effect encoding step to make sure that we are not overfitting. 
+It is very important to appropriately validate the effect encoding step to make sure that we are not overfitting.
 
 # Recipes are estimated
 
-_Every_ preprocessing step in a recipe that involved calculations uses the _training set_. For example: 
+*Every* preprocessing step in a recipe that involved calculations uses the *training set*. For example:
 
- * Levels of a factor
- * Determination of zero-variance
- * Normalization
- * Feature extraction
- * Effect encodings
- 
-and so on. 
+-   Levels of a factor
+-   Determination of zero-variance
+-   Normalization
+-   Feature extraction
+-   Effect encodings
 
-Once a recipe is added to a workflow, this occurs when `fit()` is called. 
+and so on.
+
+Once a recipe is added to a workflow, this occurs when `fit()` is called.
 
 # Debugging a recipe
 
-90% of the time, you will want to use a workflow to estimate and apply a recipe. 
+90% of the time, you will want to use a workflow to estimate and apply a recipe.
 
-If you have an error, the original recipe object (e.g. `nhl_rec`) can be estimated manually with a function called `prep()`. It is analogous to `fit()`. 
+If you have an error, the original recipe object (e.g. `nhl_rec`) can be estimated manually with a function called `prep()`. It is analogous to `fit()`.
 
-This returns the fitted recipe. This can help debug any issues. 
+This returns the fitted recipe. This can help debug any issues.
 
-Another function (`bake()`) is analogous to `predict()` and gives you the processed data back. 
-
+Another function (`bake()`) is analogous to `predict()` and gives you the processed data back.
 
 # Fun facts about recipes
 
-* Once `fit()` is called on a workflow, changing the model does not re-fit the recipe. 
-* A list of all known steps is [here](https://www.tidymodels.org/find/recipes/). 
-* Some steps can be [skipped](https://recipes.tidymodels.org/articles/Skipping.html) when using `predict()`. 
-* The [order](https://recipes.tidymodels.org/articles/Ordering.html) of the steps matters. 
-* There are recipes-adjacent packages with more steps: embed, timetk, textrecipes, and others. 
-  * If you do any text processing, textrecipes is `r emo::ji("cool")`<sup>`r emo::ji("infinity")`</sup>.
-    * Julia and Emil have written an amazing text processing book: [_Supervised Machine Learning for Text Analysis in R_](https://smltar.com/)
-* There are a lot of ways to handle [categorical predictors](https://recipes.tidymodels.org/articles/Dummies.html), even those with novel levels. 
-* Several dplyr steps exist, such as `step_mutate()`. 
-
-
-
+-   Once `fit()` is called on a workflow, changing the model does not re-fit the recipe.
+-   A list of all known steps is [here](https://www.tidymodels.org/find/recipes/).
+-   Some steps can be [skipped](https://recipes.tidymodels.org/articles/Skipping.html) when using `predict()`.
+-   The [order](https://recipes.tidymodels.org/articles/Ordering.html) of the steps matters.
+-   There are recipes-adjacent packages with more steps: embed, timetk, textrecipes, and others.
+    -   If you do any text processing, textrecipes is `r emo::ji("cool")`<sup>`r emo::ji("infinity")`</sup>.
+        -   Julia and Emil have written an amazing text processing book: [*Supervised Machine Learning for Text Analysis in R*](https://smltar.com/)
+-   There are a lot of ways to handle [categorical predictors](https://recipes.tidymodels.org/articles/Dummies.html), even those with novel levels.
+-   Several dplyr steps exist, such as `step_mutate()`.
