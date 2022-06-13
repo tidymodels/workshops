@@ -4,7 +4,7 @@ hexes <- function(..., size = 64) {
   right <- (seq_along(x) - 1) * size
 
   res <- glue::glue(
-    '![](hexes/<x>.png){.absolute top=0 right=<right> width="<size>" height="<size * 1.16>"}',
+    '![](hexes/<x>.png){.absolute top=-20 right=<right> width="<size>" height="<size * 1.16>"}',
     .open = "<", .close = ">"
   )
 
