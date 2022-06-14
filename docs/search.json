@@ -18,7 +18,7 @@
     "href": "index.html#preparation",
     "title": "Machine learning with tidymodels",
     "section": "Preparation",
-    "text": "Preparation\nPlease join the workshop with a computer that has the following installed (all available for free):\n\nA recent version of R, available at https://cran.r-project.org/\nA recent version of RStudio Desktop (RStudio Desktop Open Source License), available at https://www.rstudio.com/download\nThe following R packages, which you can install from the R console:\n\n\ninstall.packages(c(\"tidymodels\", \"stacks\", \"rpart\", \n                   \"ranger\", \"vetiver\", \"rpart.plot\"))"
+    "text": "Preparation\nPlease join the workshop with a computer that has the following installed (all available for free):\n\nA recent version of R, available at https://cran.r-project.org/\nA recent version of RStudio Desktop (RStudio Desktop Open Source License, at least v2022.02), available at https://www.rstudio.com/download\nThe following R packages, which you can install from the R console:\n\n\ninstall.packages(c(\"tidymodels\", \"stacks\", \"rpart\", \n                   \"ranger\", \"vetiver\", \"rpart.plot\"))"
   },
   {
     "objectID": "index.html#slides",
@@ -137,7 +137,7 @@
     "href": "slides/01-introduction.html#what-is-tidymodels",
     "title": "1 - Introduction",
     "section": "What is tidymodels? ",
-    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n#> ── Attaching packages ──────────────────────────── tidymodels 0.2.0 ──\n#> ✔ broom        0.8.0     ✔ rsample      0.1.1\n#> ✔ dials        0.1.1     ✔ tibble       3.1.7\n#> ✔ dplyr        1.0.9     ✔ tidyr        1.2.0\n#> ✔ infer        1.0.2     ✔ tune         0.2.0\n#> ✔ modeldata    0.1.1     ✔ workflows    0.2.6\n#> ✔ parsnip      0.2.1     ✔ workflowsets 0.2.1\n#> ✔ purrr        0.3.4     ✔ yardstick    0.0.9\n#> ✔ recipes      0.2.0\n#> ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#> ✖ purrr::discard() masks scales::discard()\n#> ✖ dplyr::filter()  masks stats::filter()\n#> ✖ dplyr::lag()     masks stats::lag()\n#> ✖ recipes::step()  masks stats::step()\n#> • Dig deeper into tidy modeling with R at https://www.tmwr.org"
+    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n#> ── Attaching packages ──────────────────────────── tidymodels 0.2.0 ──\n#> ✔ broom        0.8.0          ✔ rsample      0.1.1     \n#> ✔ dials        0.1.1          ✔ tibble       3.1.7     \n#> ✔ dplyr        1.0.9          ✔ tidyr        1.2.0     \n#> ✔ infer        1.0.2          ✔ tune         0.2.0     \n#> ✔ modeldata    0.1.1          ✔ workflows    0.2.6     \n#> ✔ parsnip      0.2.1          ✔ workflowsets 0.2.1     \n#> ✔ purrr        0.3.4          ✔ yardstick    0.0.9     \n#> ✔ recipes      0.2.0.9001\n#> ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#> ✖ purrr::discard() masks scales::discard()\n#> ✖ dplyr::filter()  masks stats::filter()\n#> ✖ dplyr::lag()     masks stats::lag()\n#> ✖ recipes::step()  masks stats::step()\n#> • Use tidymodels_prefer() to resolve common conflicts."
   },
   {
     "objectID": "slides/01-introduction.html#the-whole-game",
@@ -187,13 +187,6 @@
     "title": "2 - Your data budget",
     "section": "Data splitting and spending",
     "text": "Data splitting and spending\nFor machine learning, we typically split data into training and test sets:\n\n\nThe training set is used to estimate model parameters.\nThe test set is used to find an independent assessment of model performance.\n\n\n\nDo not 🚫 use the test set during training."
-  },
-  {
-    "objectID": "slides/02-data-budget.html#section-2",
-    "href": "slides/02-data-budget.html#section-2",
-    "title": "2 - Your data budget",
-    "section": "",
-    "text": "The more data we spend 🤑\n\n\nthe better estimates we’ll get."
   },
   {
     "objectID": "slides/02-data-budget.html#data-splitting-and-spending-1",
@@ -252,6 +245,13 @@
     "text": "Data splitting and spending \n\nset.seed(123)\nfrog_split <- initial_split(tree_frogs, prop = 0.8, strata = latency)\nfrog_train <- training(frog_split)\nfrog_test <- testing(frog_split)\n\nnrow(frog_train)\n#> [1] 456\nnrow(frog_test)\n#> [1] 116"
   },
   {
+    "objectID": "slides/02-data-budget.html#section-4",
+    "href": "slides/02-data-budget.html#section-4",
+    "title": "2 - Your data budget",
+    "section": "",
+    "text": "ggplot(frog_train, aes(latency)) +\n  geom_histogram(bins = 20)\n\n\n\nRemember how we used strata = latency?"
+  },
+  {
     "objectID": "slides/02-data-budget.html#section-5",
     "href": "slides/02-data-budget.html#section-5",
     "title": "2 - Your data budget",
@@ -280,13 +280,6 @@
     "text": "ggplot(frog_train, aes(reflex, age)) +\n  stat_summary_2d(aes(z = latency), \n                  alpha = 0.7, binwidth = c(1, 5e3)) +\n  scale_fill_viridis_c() +\n  labs(fill = \"mean latency\")"
   },
   {
-    "objectID": "slides/02-data-budget.html#section-9",
-    "href": "slides/02-data-budget.html#section-9",
-    "title": "2 - Your data budget",
-    "section": "",
-    "text": "ggplot(frog_train, aes(reflex, age)) +\n  stat_summary_2d(aes(z = latency), \n                  alpha = 0.7, binwidth = c(1, 5e3)) +\n  scale_fill_viridis_c() +\n  labs(fill = \"mean latency\")"
-  },
-  {
     "objectID": "slides/02-data-budget.html#your-turn-2",
     "href": "slides/02-data-budget.html#your-turn-2",
     "title": "2 - Your data budget",
@@ -301,67 +294,67 @@
     "text": "Your turn\n\nHow do you fit a linear model in R?\nHow many different ways can you think of?\n\n\n\n03:00\n\n\n\n\n\nlm for generalized linear model\nglmnet for regularized regression\nkeras for regression using TensorFlow\nstan for Bayesian regression\nspark for large data sets"
   },
   {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip",
-    "title": "2 - What makes a model?",
-    "section": "To specify a model with parsnip ",
-    "text": "To specify a model with parsnip \n\n\n\n\nChoose a model\nSpecify an engine\nSet the mode"
+    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model",
+    "href": "slides/03-what-makes-a-model.html#to-specify-a-model",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\n\n\n\nChoose a model\nSpecify an engine\nSet the mode"
   },
   {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip-1",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip-1",
-    "title": "2 - What makes a model?",
-    "section": "To specify a model with parsnip ",
-    "text": "To specify a model with parsnip \n\n\n\n\nlinear_reg()\n#> Linear Regression Model Specification (regression)\n#> \n#> Computational engine: lm"
+    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-1",
+    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-1",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\n\n\n\nlinear_reg()\n#> Linear Regression Model Specification (regression)\n#> \n#> Computational engine: lm"
   },
   {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip-2",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip-2",
-    "title": "2 - What makes a model?",
-    "section": "To specify a model with parsnip ",
-    "text": "To specify a model with parsnip \n\n\n\nChoose a model\nSpecify an engine\nSet the mode"
+    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-2",
+    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-2",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\n\n\nChoose a model\nSpecify an engine\nSet the mode"
   },
   {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip-3",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip-3",
-    "title": "2 - What makes a model?",
-    "section": "To specify a model with parsnip ",
-    "text": "To specify a model with parsnip \n\nlinear_reg() %>%\n  set_engine(\"glmnet\")\n#> Linear Regression Model Specification (regression)\n#> \n#> Computational engine: glmnet"
+    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-3",
+    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-3",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\nlinear_reg() %>%\n  set_engine(\"glmnet\")\n#> Linear Regression Model Specification (regression)\n#> \n#> Computational engine: glmnet"
   },
   {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip-4",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip-4",
-    "title": "2 - What makes a model?",
-    "section": "To specify a model with parsnip ",
-    "text": "To specify a model with parsnip \n\nlinear_reg() %>%\n  set_engine(\"stan\")\n#> Linear Regression Model Specification (regression)\n#> \n#> Computational engine: stan"
+    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-4",
+    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-4",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\nlinear_reg() %>%\n  set_engine(\"stan\")\n#> Linear Regression Model Specification (regression)\n#> \n#> Computational engine: stan"
   },
   {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip-5",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip-5",
-    "title": "2 - What makes a model?",
-    "section": "To specify a model with parsnip ",
-    "text": "To specify a model with parsnip \n\n\n\nChoose a model\nSpecify an engine\nSet the mode"
+    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-5",
+    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-5",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\n\n\nChoose a model\nSpecify an engine\nSet the mode"
   },
   {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip-6",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip-6",
-    "title": "2 - What makes a model?",
-    "section": "To specify a model with parsnip ",
-    "text": "To specify a model with parsnip \n\ndecision_tree()\n#> Decision Tree Model Specification (unknown)\n#> \n#> Computational engine: rpart"
+    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-6",
+    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-6",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\ndecision_tree()\n#> Decision Tree Model Specification (unknown)\n#> \n#> Computational engine: rpart"
   },
   {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip-7",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip-7",
-    "title": "2 - What makes a model?",
-    "section": "To specify a model with parsnip ",
-    "text": "To specify a model with parsnip \n\ndecision_tree() %>% \n  set_mode(\"regression\")\n#> Decision Tree Model Specification (regression)\n#> \n#> Computational engine: rpart\n\n\n\nAll available models are listed at https://www.tidymodels.org/find/parsnip/"
+    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-7",
+    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-7",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\ndecision_tree() %>% \n  set_mode(\"regression\")\n#> Decision Tree Model Specification (regression)\n#> \n#> Computational engine: rpart\n\n\n\n\nAll available models are listed at https://www.tidymodels.org/find/parsnip/"
   },
   {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip-8",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-with-parsnip-8",
-    "title": "2 - What makes a model?",
-    "section": "To specify a model with parsnip ",
-    "text": "To specify a model with parsnip \n\n\n\nChoose a model\nSpecify an engine\nSet the mode"
+    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-8",
+    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-8",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\n\n\nChoose a model\nSpecify an engine\nSet the mode"
   },
   {
     "objectID": "slides/03-what-makes-a-model.html#your-turn-1",
@@ -648,7 +641,7 @@
     "href": "slides/04-evaluating-models.html#resampling-3",
     "title": "4 - Evaluating models",
     "section": "Resampling ",
-    "text": "Resampling \n\nbootstraps(frog_train)\n#> # Bootstrap sampling \n#> # A tibble: 25 × 2\n#>    splits            id         \n#>    <list>            <chr>      \n#>  1 <split [456/156]> Bootstrap01\n#>  2 <split [456/167]> Bootstrap02\n#>  3 <split [456/172]> Bootstrap03\n#>  4 <split [456/170]> Bootstrap04\n#>  5 <split [456/157]> Bootstrap05\n#>  6 <split [456/172]> Bootstrap06\n#>  7 <split [456/162]> Bootstrap07\n#>  8 <split [456/171]> Bootstrap08\n#>  9 <split [456/170]> Bootstrap09\n#> 10 <split [456/180]> Bootstrap10\n#> # … with 15 more rows"
+    "text": "Resampling \n\nbootstraps(frog_train)\n#> # Bootstrap sampling \n#> # A tibble: 25 × 2\n#>    splits            id         \n#>    <list>            <chr>      \n#>  1 <split [456/159]> Bootstrap01\n#>  2 <split [456/168]> Bootstrap02\n#>  3 <split [456/175]> Bootstrap03\n#>  4 <split [456/176]> Bootstrap04\n#>  5 <split [456/162]> Bootstrap05\n#>  6 <split [456/169]> Bootstrap06\n#>  7 <split [456/161]> Bootstrap07\n#>  8 <split [456/169]> Bootstrap08\n#>  9 <split [456/177]> Bootstrap09\n#> 10 <split [456/174]> Bootstrap10\n#> # … with 15 more rows"
   },
   {
     "objectID": "slides/04-evaluating-models.html#your-turn-2",
@@ -669,7 +662,7 @@
     "href": "slides/04-evaluating-models.html#resampling-5",
     "title": "4 - Evaluating models",
     "section": "Resampling ",
-    "text": "Resampling \n\nbootstraps(frog_train, times = 10)\n#> # Bootstrap sampling \n#> # A tibble: 10 × 2\n#>    splits            id         \n#>    <list>            <chr>      \n#>  1 <split [456/164]> Bootstrap01\n#>  2 <split [456/168]> Bootstrap02\n#>  3 <split [456/158]> Bootstrap03\n#>  4 <split [456/170]> Bootstrap04\n#>  5 <split [456/166]> Bootstrap05\n#>  6 <split [456/167]> Bootstrap06\n#>  7 <split [456/174]> Bootstrap07\n#>  8 <split [456/164]> Bootstrap08\n#>  9 <split [456/159]> Bootstrap09\n#> 10 <split [456/159]> Bootstrap10"
+    "text": "Resampling \n\nbootstraps(frog_train, times = 10)\n#> # Bootstrap sampling \n#> # A tibble: 10 × 2\n#>    splits            id         \n#>    <list>            <chr>      \n#>  1 <split [456/162]> Bootstrap01\n#>  2 <split [456/165]> Bootstrap02\n#>  3 <split [456/159]> Bootstrap03\n#>  4 <split [456/169]> Bootstrap04\n#>  5 <split [456/168]> Bootstrap05\n#>  6 <split [456/171]> Bootstrap06\n#>  7 <split [456/175]> Bootstrap07\n#>  8 <split [456/168]> Bootstrap08\n#>  9 <split [456/166]> Bootstrap09\n#> 10 <split [456/156]> Bootstrap10"
   },
   {
     "objectID": "slides/04-evaluating-models.html#resampling-6",
@@ -823,7 +816,7 @@
     "href": "slides/04-evaluating-models.html#what-is-in-final_fit-1",
     "title": "4 - Evaluating models",
     "section": "What is in final_fit? ",
-    "text": "What is in final_fit? \n\ncollect_predictions(final_fit)\n#> # A tibble: 116 × 5\n#>    id               .pred  .row latency .config             \n#>    <chr>            <dbl> <int>   <dbl> <chr>               \n#>  1 train/test split  43.5     1      22 Preprocessor1_Model1\n#>  2 train/test split 102.      3     106 Preprocessor1_Model1\n#>  3 train/test split  77.1     6      39 Preprocessor1_Model1\n#>  4 train/test split  42.7     8      50 Preprocessor1_Model1\n#>  5 train/test split  42.5    10      63 Preprocessor1_Model1\n#>  6 train/test split  42.8    14      25 Preprocessor1_Model1\n#>  7 train/test split  51.3    16      48 Preprocessor1_Model1\n#>  8 train/test split 160.     17      91 Preprocessor1_Model1\n#>  9 train/test split  50.4    32      11 Preprocessor1_Model1\n#> 10 train/test split 172.     33     109 Preprocessor1_Model1\n#> # … with 106 more rows\n\n\nThese are predictions for the test set"
+    "text": "What is in final_fit? \n\ncollect_predictions(final_fit)\n#> # A tibble: 116 × 5\n#>    id               .pred  .row latency .config             \n#>    <chr>            <dbl> <int>   <dbl> <chr>               \n#>  1 train/test split  43.3     1      22 Preprocessor1_Model1\n#>  2 train/test split 103.      3     106 Preprocessor1_Model1\n#>  3 train/test split  76.6     6      39 Preprocessor1_Model1\n#>  4 train/test split  43.0     8      50 Preprocessor1_Model1\n#>  5 train/test split  43.0    10      63 Preprocessor1_Model1\n#>  6 train/test split  42.8    14      25 Preprocessor1_Model1\n#>  7 train/test split  51.1    16      48 Preprocessor1_Model1\n#>  8 train/test split 163.     17      91 Preprocessor1_Model1\n#>  9 train/test split  50.7    32      11 Preprocessor1_Model1\n#> 10 train/test split 171.     33     109 Preprocessor1_Model1\n#> # … with 106 more rows\n\n\nThese are predictions for the test set"
   },
   {
     "objectID": "slides/04-evaluating-models.html#section-6",
@@ -837,7 +830,7 @@
     "href": "slides/04-evaluating-models.html#what-is-in-final_fit-2",
     "title": "4 - Evaluating models",
     "section": "What is in final_fit? ",
-    "text": "What is in final_fit? \n\nextract_workflow(final_fit)\n#> ══ Workflow [trained] ════════════════════════════════════════════════\n#> Preprocessor: Formula\n#> Model: rand_forest()\n#> \n#> ── Preprocessor ──────────────────────────────────────────────────────\n#> latency ~ .\n#> \n#> ── Model ─────────────────────────────────────────────────────────────\n#> Ranger result\n#> \n#> Call:\n#>  ranger::ranger(x = maybe_data_frame(x), y = y, num.trees = ~1000,      num.threads = 1, verbose = FALSE, seed = sample.int(10^5,          1)) \n#> \n#> Type:                             Regression \n#> Number of trees:                  1000 \n#> Sample size:                      456 \n#> Number of independent variables:  4 \n#> Mtry:                             2 \n#> Target node size:                 5 \n#> Variable importance mode:         none \n#> Splitrule:                        variance \n#> OOB prediction error (MSE):       3127.682 \n#> R squared (OOB):                  0.3525398\n\n\nUse this for prediction on new data, like for deploying"
+    "text": "What is in final_fit? \n\nextract_workflow(final_fit)\n#> ══ Workflow [trained] ════════════════════════════════════════════════\n#> Preprocessor: Formula\n#> Model: rand_forest()\n#> \n#> ── Preprocessor ──────────────────────────────────────────────────────\n#> latency ~ .\n#> \n#> ── Model ─────────────────────────────────────────────────────────────\n#> Ranger result\n#> \n#> Call:\n#>  ranger::ranger(x = maybe_data_frame(x), y = y, num.trees = ~1000,      num.threads = 1, verbose = FALSE, seed = sample.int(10^5,          1)) \n#> \n#> Type:                             Regression \n#> Number of trees:                  1000 \n#> Sample size:                      456 \n#> Number of independent variables:  4 \n#> Mtry:                             2 \n#> Target node size:                 5 \n#> Variable importance mode:         none \n#> Splitrule:                        variance \n#> OOB prediction error (MSE):       3128.496 \n#> R squared (OOB):                  0.3523713\n\n\nUse this for prediction on new data, like for deploying"
   },
   {
     "objectID": "slides/04-evaluating-models.html#your-turn-5",
@@ -845,75 +838,5 @@
     "title": "4 - Evaluating models",
     "section": "Your turn",
     "text": "Your turn\n\nEnd of the day discussion!\nWhich model do you think you would decide to use?\nWhat surprised you the most?\nWhat is one thing you are looking forward to for tomorrow?\n\n\n\n05:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
-  },
-  {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model",
-    "title": "3 - What makes a model?",
-    "section": "To specify a model ",
-    "text": "To specify a model \n\n\n\n\nChoose a model\nSpecify an engine\nSet the mode"
-  },
-  {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-1",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-1",
-    "title": "3 - What makes a model?",
-    "section": "To specify a model ",
-    "text": "To specify a model \n\n\n\n\nlinear_reg()\n#> Linear Regression Model Specification (regression)\n#> \n#> Computational engine: lm"
-  },
-  {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-2",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-2",
-    "title": "3 - What makes a model?",
-    "section": "To specify a model ",
-    "text": "To specify a model \n\n\n\nChoose a model\nSpecify an engine\nSet the mode"
-  },
-  {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-3",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-3",
-    "title": "3 - What makes a model?",
-    "section": "To specify a model ",
-    "text": "To specify a model \n\nlinear_reg() %>%\n  set_engine(\"glmnet\")\n#> Linear Regression Model Specification (regression)\n#> \n#> Computational engine: glmnet"
-  },
-  {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-4",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-4",
-    "title": "3 - What makes a model?",
-    "section": "To specify a model ",
-    "text": "To specify a model \n\nlinear_reg() %>%\n  set_engine(\"stan\")\n#> Linear Regression Model Specification (regression)\n#> \n#> Computational engine: stan"
-  },
-  {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-5",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-5",
-    "title": "3 - What makes a model?",
-    "section": "To specify a model ",
-    "text": "To specify a model \n\n\n\nChoose a model\nSpecify an engine\nSet the mode"
-  },
-  {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-6",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-6",
-    "title": "3 - What makes a model?",
-    "section": "To specify a model ",
-    "text": "To specify a model \n\ndecision_tree()\n#> Decision Tree Model Specification (unknown)\n#> \n#> Computational engine: rpart"
-  },
-  {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-7",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-7",
-    "title": "3 - What makes a model?",
-    "section": "To specify a model ",
-    "text": "To specify a model \n\ndecision_tree() %>% \n  set_mode(\"regression\")\n#> Decision Tree Model Specification (regression)\n#> \n#> Computational engine: rpart\n\n\n\n\nAll available models are listed at https://www.tidymodels.org/find/parsnip/"
-  },
-  {
-    "objectID": "slides/03-what-makes-a-model.html#to-specify-a-model-8",
-    "href": "slides/03-what-makes-a-model.html#to-specify-a-model-8",
-    "title": "3 - What makes a model?",
-    "section": "To specify a model ",
-    "text": "To specify a model \n\n\n\nChoose a model\nSpecify an engine\nSet the mode"
-  },
-  {
-    "objectID": "slides/02-data-budget.html#section-4",
-    "href": "slides/02-data-budget.html#section-4",
-    "title": "2 - Your data budget",
-    "section": "",
-    "text": "ggplot(frog_train, aes(latency)) +\n  geom_histogram(bins = 20)\n\n\n\nRemember how we used strata = latency?"
   }
 ]
