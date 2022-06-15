@@ -1,5 +1,5 @@
 ---
-title: "5 - Case Study"
+title: "5 - Feature engineering"
 subtitle: "Machine learning with tidymodels"
 format:
   revealjs: 
@@ -19,7 +19,86 @@ knitr:
 library(emo)
 ```
 
-## Loading the packages
+
+# What is feature engineering?
+
+First thing's first: what's a feature? 
+
+I tend to think of a feature as some representation of a predictor that will be used in a model. 
+
+Old-school features: 
+
+ * Interactions
+ * Polynomial expansions/splines
+ * PCA feature extraction
+ 
+"Feature engineering" sounds pretty cool, but let's take a minute to talk about _preprocessing_ data.  
+
+
+# Two types of preprocessing
+
+```{r venn-titles, echo = FALSE, out.width="75%", fig.align='center'}
+knitr::include_graphics("images/fe_venn.svg")
+```
+
+
+# Two types of preprocessing
+
+```{r venn-info, echo = FALSE, out.width="75%", fig.align='center'}
+knitr::include_graphics("images/fe_venn_info.svg")
+```
+
+
+# Easy examples
+
+For example, centering and scaling are definitely not feature engineering.
+
+Consider the `date` field in the data. If given as a raw predictor, it is converted to an integer. 
+
+It can be re-encoded as:
+
+* Days since a reference date 
+* Day of the week
+* Month
+* Year
+* Indicators for holidays
+
+
+
+# Original column
+
+```{r before-fe, echo = FALSE, out.width="35%", fig.align='center'}
+knitr::include_graphics("images/steve.gif")
+```
+
+# Features
+
+```{r after-fe, echo = FALSE, out.width="75%", fig.align='center'}
+knitr::include_graphics("images/cap.png")
+```
+
+(At least that's what we hope the difference looks like.)
+
+
+# General definitions
+
+* _Data preprocessing_ are the steps that you take to make your model successful. 
+
+* _Feature engineering_ are what you do to the original predictors to make the model do the least work to predict the outcome as well as possible. 
+
+We'll demonstrate the recipes package for all of your data needs. 
+
+
+# Recipes prepare your data for modeling
+
+The package is an extensible framework for pipeable sequences of feature engineering steps that provide preprocessing tools to be applied to data. 
+    
+Statistical parameters for the steps can be estimated from an initial data set and then applied to other data sets. 
+    
+The resulting processed output can then be used as inputs for statistical or machine learning models.
+
+
+## Case study
 
 ```{r hello-tidymodels}
 library(tidymodels)
@@ -29,13 +108,15 @@ tidymodels_prefer()
 
 on_goal <- 
   on_goal %>% 
+  # TODO add a version to ongoal for the workshop without these rows/columns
   filter(season == "20152016") %>% 
   select(-season, -date_time, -distance, -angle, -behind_goal_line)
 ```
 
-## Splitting the NHL data `r I(hexes(c("rsample", "dplyr")))`
+## Splitting the NHL data `r I(hexes(c("rsample")))`
 
 ```{r split}
+set.seed(23)
 nhl_split <- initial_split(on_goal, prop = 3/4)
 nhl_split
 
@@ -49,15 +130,8 @@ c(training = nrow(nhl_train), testing = nrow(nhl_test))
 
 ```{r val}
 set.seed(234)
-nhl_split <- validation_split(nhl_train, prop = 0.80)
-nhl_split
-```
-
-# A first model
-
-```{r logistic-fit}
-spec_glm <- logistic_reg() %>% set_engine("glm")
-spec_glm
+nhl_val <- validation_split(nhl_train, prop = 0.80)
+nhl_val
 ```
 
 # A first recipe `r I(hexes(c("recipes")))`
@@ -78,13 +152,13 @@ Based on the formula, the function assigns columns to roles of "outcome" or "pre
 summary(nhl_rec)
 ```
 
-
 # Create indicator variables `r I(hexes(c("recipes")))`
 
 ```{r}
+#| code-line-numbers: "3"
 nhl_rec <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_dummy(all_nominal_predictors()) #<<
+  step_dummy(all_nominal_predictors())
 ```
 
 For any factor or character predictors, make binary indicators.
@@ -94,10 +168,11 @@ There are *many* recipe steps that can convert categorical predictors to numeric
 # Filter out constant columns `r I(hexes(c("recipes")))`
 
 ```{r}
+#| code-line-numbers: "4"
 nhl_rec <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
   step_dummy(all_nominal_predictors()) %>% 
-  step_zv(all_predictors()) #<<
+  step_zv(all_predictors())
 ```
 
 In case there is factor level that never was observed in the trainnig data, we can delete any *zero-variance* predictors that have a single unique value.
@@ -107,11 +182,12 @@ In case there is factor level that never was observed in the trainnig data, we c
 # Normalization `r I(hexes(c("recipes")))`
 
 ```{r rec-norm, eval = FALSE}
+#| code-line-numbers: "5"
 nhl_rec <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
-  step_normalize(all_numeric_predictors()) #<<
+  step_normalize(all_numeric_predictors())
 ```
 
 This centers and scales the numeric predictors.
@@ -123,12 +199,13 @@ All data put through the recipe will be normalized using those statistics (there
 # Reduce correlation `r I(hexes(c("recipes")))`
 
 ```{r, eval = FALSE}
+#| code-line-numbers: "6"
 nhl_rec <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
-  step_corr(all_numeric_predictors(), threshold = 0.9) #<<
+  step_corr(all_numeric_predictors(), threshold = 0.9)
 ```
 
 To deal with highly correlated predictors, find the minimum predictor set to remove to make the pairwise correlations less than 0.9.
@@ -136,12 +213,13 @@ To deal with highly correlated predictors, find the minimum predictor set to rem
 # Other possible steps `r I(hexes(c("recipes")))`
 
 ```{r, eval = FALSE}
+#| code-line-numbers: "6"
 nhl_rec <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
-  step_pca(all_numeric_predictors()) #<<
+  step_pca(all_numeric_predictors())
 ```
 
 PCA feature extraction...
@@ -149,12 +227,14 @@ PCA feature extraction...
 # Other possible steps `r I(hexes(c("recipes", "embed")))`
 
 ```{r, eval = FALSE}
+#| code-line-numbers: "6"
+library(embed)
 nhl_rec <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
-  step_umap(all_numeric_predictors(), outcome = on_goal) #<<
+  step_umap(all_numeric_predictors(), outcome = on_goal)
 ```
 
 A fancy machine learning supervised dimension reduction technique
@@ -162,15 +242,54 @@ A fancy machine learning supervised dimension reduction technique
 # Other possible steps `r I(hexes(c("recipes")))`
 
 ```{r, eval = FALSE}
+#| code-line-numbers: "6"
 nhl_rec <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
-  step_ns(coord_y, coord_x, deg_free = 10) #<<
+  step_ns(coord_y, coord_x, deg_free = 10)
 ```
 
 Nonlinear transforms like *natural splines* and so on.
+
+
+# Minimal recipe
+
+```{r}
+nhl_rec <-
+  recipe(on_goal ~ ., data = nhl_train) %>%
+  step_other(all_nominal_predictors()) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+# Include recipe in workflow
+
+```{r}
+#| code-line-numbers: "3"
+
+nhl_glm_wflow <-
+  workflow() %>%
+  add_recipe(nhl_rec) %>%
+  add_model(logistic_reg())
+
+nhl_glm_res <-
+  nhl_glm_wflow %>%
+  fit_resamples(nhl_val)
+
+collect_metrics(nhl_glm_res)
+```
+
+
+# Classification metrics
+
+placeholder to talk about AUC ROC
+
+
+
+
+
 
 # What do we do with the player data?
 
@@ -180,6 +299,7 @@ There are `r length(unique(nhl_train$player))` unique player values in our train
 -   Or using [feature hashing](https://www.tmwr.org/categorical.html#feature-hashing) to make a subset.
 
 Instead, we will be using effect encoding to replace the `player` column with the estimated effect of that predictor.
+
 
 # Per-player statistics
 
@@ -243,24 +363,26 @@ inner_join(player_stats, estimates, by = "player") %>%
   labs(x = "Raw Rate", y = "Estimated via Effects Encoding")
 ```
 
-# The last recipe `r I(hexes(c("recipes", "embed")))`
+# Player effects `r I(hexes(c("recipes", "embed")))`
 
 ```{r}
+#| code-line-numbers: "5"
 library(embed)
 
-encoded_players <- 
-  recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_lencode_mixed(player, outcome = vars(on_goal)) %>%   #<<
-  step_dummy(all_nominal_predictors()) %>% 
-  step_zv(all_predictors()) %>% 
-  step_normalize(all_numeric_predictors()) 
+nhl_effect_rec <-
+  recipe(on_goal ~ ., data = nhl_train) %>%
+  step_lencode_mixed(player, outcome = vars(on_goal)) %>%
+  step_other(all_nominal_predictors()) %>% # TODO: keep this?
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
 ```
 
 It is very important to appropriately validate the effect encoding step to make sure that we are not overfitting.
 
 # Recipes are estimated
 
-*Every* preprocessing step in a recipe that involved calculations uses the *training set*. For example:
+*Every* preprocessing step in a recipe that involved calculations uses the *training set*.
+For example:
 
 -   Levels of a factor
 -   Determination of zero-variance
@@ -272,13 +394,92 @@ and so on.
 
 Once a recipe is added to a workflow, this occurs when `fit()` is called.
 
+
+# Resampling and recipes
+
+```{r resample-encoding}
+nhl_effect_wflow <-
+  workflow() %>%
+  add_recipe(nhl_effect_rec) %>%
+  add_model(logistic_reg())
+
+nhl_effect_res <-
+  nhl_effect_wflow %>%
+  fit_resamples(nhl_val)
+
+collect_metrics(nhl_effect_res)
+```
+
+# Where is the shot coming from?
+
+```{r}
+nhl_angle_rec <-
+  nhl_effect_rec %>%
+  step_mutate(
+    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi))
+  )
+```
+
+
+# 
+
+```{r}
+nhl_distance_rec <-
+  nhl_angle_rec %>%
+  step_mutate(
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2)
+  )
+```
+
+#
+```{r}
+nhl_behind_rec <-
+  nhl_distance_rec %>%
+  step_mutate(
+    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
+  )
+```
+
+
+# Fit different recipes
+
+```{r}
+nhl_glm_set_res <-
+  workflow_set(
+    list(dummy = nhl_rec, encoded = nhl_effect_rec,
+         angle = nhl_angle_rec, dist = nhl_distance_rec, bgl = nhl_behind_rec),
+    list(logistic = logistic_reg())
+  ) %>%
+  workflow_map(fn = "fit_resamples", resamples = nhl_val)
+```
+
+
+# Compare different recipes
+
+```{r}
+#| echo: false
+
+library(forcats)
+collect_metrics(nhl_glm_set_res) %>%
+  filter(.metric == "roc_auc") %>%
+  mutate(
+    features = gsub("_logistic", "", wflow_id), 
+    features = fct_reorder(features, mean)
+  ) %>%
+  ggplot(aes(x = mean, y = features)) +
+  geom_point()
+```
+
+
 # Debugging a recipe
 
 90% of the time, you will want to use a workflow to estimate and apply a recipe.
 
-If you have an error, the original recipe object (e.g. `encoded_players`) can be estimated manually with a function called `prep()`. It is analogous to `fit()`.
+If you have an error, the original recipe object (e.g. `encoded_players`) can be estimated manually with a function called `prep()`.
+It is analogous to `fit()`.
 
-This returns the fitted recipe. This can help debug any issues.
+This returns the fitted recipe.
+This can help debug any issues.
 
 Another function (`bake()`) is analogous to `predict()` and gives you the processed data back.
 
@@ -293,19 +494,4 @@ Another function (`bake()`) is analogous to `predict()` and gives you the proces
         -   Julia and Emil have written an amazing text processing book: [*Supervised Machine Learning for Text Analysis in R*](https://smltar.com/)
 -   There are a lot of ways to handle [categorical predictors](https://recipes.tidymodels.org/articles/Dummies.html), even those with novel levels.
 -   Several dplyr steps exist, such as `step_mutate()`.
-
-# Resampling and recipes
-
-```{r resample-encoding}
-encoded_players_wflow <-
-  workflow() %>%
-  add_recipe(encoded_players) %>%
-  add_model(spec_glm)
-
-ctrl <- control_resamples(save_pred = TRUE)
-encoded_players_res <- 
-  encoded_players_wflow %>% 
-  fit_resamples(nhl_split, control = ctrl)
-collect_metrics(encoded_players_res)
-```
 
