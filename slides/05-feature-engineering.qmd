@@ -256,7 +256,6 @@ Nonlinear transforms like *natural splines* and so on.
 ```{r}
 nhl_rec <-
   recipe(on_goal ~ ., data = nhl_train) %>%
-  step_other(all_nominal_predictors()) %>%
   step_dummy(all_nominal_predictors()) %>%
   step_zv(all_predictors())
 ```
@@ -369,7 +368,6 @@ library(embed)
 nhl_effect_rec <-
   recipe(on_goal ~ ., data = nhl_train) %>%
   step_lencode_mixed(player, outcome = vars(on_goal)) %>%
-  step_other(all_nominal_predictors()) %>% # TODO: keep this?
   step_dummy(all_nominal_predictors()) %>%
   step_zv(all_predictors())
 ```
@@ -411,7 +409,7 @@ collect_metrics(nhl_effect_res)
 
 ```{r}
 nhl_angle_rec <-
-  nhl_effect_rec %>%
+  nhl_rec %>%
   step_mutate(
     angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi))
   )
@@ -444,7 +442,8 @@ nhl_behind_rec <-
 nhl_glm_set_res <-
   workflow_set(
     list(dummy = nhl_rec, encoded = nhl_effect_rec,
-         angle = nhl_angle_rec, dist = nhl_distance_rec, bgl = nhl_behind_rec),
+         angle = nhl_angle_rec, dist = nhl_distance_rec, 
+         bgl = nhl_behind_rec),
     list(logistic = logistic_reg())
   ) %>%
   workflow_map(fn = "fit_resamples", resamples = nhl_val)
