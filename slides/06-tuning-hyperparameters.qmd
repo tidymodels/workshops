@@ -10,6 +10,8 @@ format:
 knitr:
   opts_chunk: 
     echo: true
+    collapse: true
+    comment: "#>"
 ---
 
 ```{r setup}
@@ -17,6 +19,7 @@ knitr:
 #| file: setup.R
 library(rpart)
 library(partykit)
+options(width = 200)
 ```
 
 
@@ -278,12 +281,12 @@ The creation of the tree has two phases:
 
 ```{r, echo = FALSE, fig.width=14, fig.height=8,  out.width = '90%', fig.align='center', dev = 'svg', dev.args = list(bg = "transparent")}
 tree_mod <- 
-  rpart::rpart(
-  on_goal ~ . - player - offense_team - defence_team,
-  data = nhl_train,
-  control = rpart::rpart.control(maxdepth = 8)
-) %>% 
-  partykit::as.party()
+    rpart::rpart(
+        on_goal ~ . - player - offense_team - defence_team - coord_x - coord_y,
+        data = nhl_train,
+        control = rpart::rpart.control(maxdepth = 3, cp = 0.001)
+    ) %>% 
+    partykit::as.party()
 plot(tree_mod)
 ```
 
@@ -308,12 +311,8 @@ We'll use _early stopping_ where we stop boosting when a few iterations produces
 ```{r, cache = TRUE}
 xgb_spec <-
   boost_tree(
-    trees = 500,
-    min_n = tune(),
-    stop_iter = tune(),
-    tree_depth = tune(),
-    learn_rate = tune(),
-    loss_reduction = tune()
+    trees = 500, min_n = tune(), stop_iter = tune(), tree_depth = tune(),
+    learn_rate = tune(), loss_reduction = tune()
   ) %>%
   set_mode("classification") %>% 
   set_engine("xgboost", validation = 1/10) # <- for better early stopping

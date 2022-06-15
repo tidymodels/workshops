@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
   dev = 'svglite'
 )
 
+# devtools::install_github("gadenbuie/countdown")
 library(countdown)
 library(ggplot2)
 theme_set(theme_minimal())
