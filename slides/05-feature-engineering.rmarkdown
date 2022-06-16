@@ -25,6 +25,7 @@ registerDoMC(cores = 10)
 ```
 
 
+
 # What is feature engineering?
 
 First thing's first: what's a feature? 
@@ -42,16 +43,20 @@ Old-school features:
 
 # Two types of preprocessing
 
+
 ```{r venn-titles, echo = FALSE, out.width="75%", fig.align='center'}
 knitr::include_graphics("images/fe_venn.svg")
 ```
 
 
+
 # Two types of preprocessing
+
 
 ```{r venn-info, echo = FALSE, out.width="75%", fig.align='center'}
 knitr::include_graphics("images/fe_venn_info.svg")
 ```
+
 
 
 # Easy examples
@@ -72,15 +77,19 @@ It can be re-encoded as:
 
 # Original column
 
+
 ```{r before-fe, echo = FALSE, out.width="35%", fig.align='center'}
 knitr::include_graphics("images/steve.gif")
 ```
 
+
 # Features
+
 
 ```{r after-fe, echo = FALSE, out.width="75%", fig.align='center'}
 knitr::include_graphics("images/cap.png")
 ```
+
 
 (At least that's what we hope the difference looks like.)
 
@@ -105,6 +114,7 @@ The resulting processed output can then be used as inputs for statistical or mac
 
 ## Case study
 
+
 ```{r hello-tidymodels}
 library(tidymodels)
 library(ongoal)
@@ -115,7 +125,9 @@ names(season_2015)
 
 ```
 
+
 ## Splitting the NHL data `r I(hexes(c("rsample")))`
+
 
 ```{r split}
 set.seed(23)
@@ -128,7 +140,9 @@ nhl_test  <- testing(nhl_split)
 c(training = nrow(nhl_train), testing = nrow(nhl_test))
 ```
 
+
 # Validation split
+
 
 ```{r val}
 set.seed(234)
@@ -136,7 +150,9 @@ nhl_val <- validation_split(nhl_train, prop = 0.80)
 nhl_val
 ```
 
+
 # A first recipe `r I(hexes(c("recipes")))`
+
 
 ```{r base-recipe}
 nhl_rec <- 
@@ -146,15 +162,19 @@ nhl_rec <-
 # recipe(data = nhl_train)
 ```
 
+
 Based on the formula, the function assigns columns to roles of "outcome" or "predictor"
 
 # A first recipe `r I(hexes(c("recipes")))`
+
 
 ```{r rec-summary}
 summary(nhl_rec)
 ```
 
+
 # Create indicator variables `r I(hexes(c("recipes")))`
+
 
 ```{r}
 #| code-line-numbers: "3"
@@ -163,11 +183,13 @@ nhl_rec <-
   step_dummy(all_nominal_predictors())
 ```
 
+
 For any factor or character predictors, make binary indicators.
 
 There are *many* recipe steps that can convert categorical predictors to numeric columns.
 
 # Filter out constant columns `r I(hexes(c("recipes")))`
+
 
 ```{r}
 #| code-line-numbers: "4"
@@ -177,11 +199,13 @@ nhl_rec <-
   step_zv(all_predictors())
 ```
 
+
 In case there is factor level that never was observed in the trainnig data, we can delete any *zero-variance* predictors that have a single unique value.
 
 <!--Note that the selector chooses all columns with a role of "predictor".-->
 
 # Normalization `r I(hexes(c("recipes")))`
+
 
 ```{r rec-norm, eval = FALSE}
 #| code-line-numbers: "5"
@@ -192,6 +216,7 @@ nhl_rec <-
   step_normalize(all_numeric_predictors())
 ```
 
+
 This centers and scales the numeric predictors.
 
 Note that this will use the training set to estimate the means and standard deviations of the data.
@@ -199,6 +224,7 @@ Note that this will use the training set to estimate the means and standard devi
 All data put through the recipe will be normalized using those statistics (there is no re-estimation).
 
 # Reduce correlation `r I(hexes(c("recipes")))`
+
 
 ```{r, eval = FALSE}
 #| code-line-numbers: "6"
@@ -210,9 +236,11 @@ nhl_rec <-
   step_corr(all_numeric_predictors(), threshold = 0.9)
 ```
 
+
 To deal with highly correlated predictors, find the minimum predictor set to remove to make the pairwise correlations less than 0.9.
 
 # Other possible steps `r I(hexes(c("recipes")))`
+
 
 ```{r, eval = FALSE}
 #| code-line-numbers: "6"
@@ -224,9 +252,11 @@ nhl_rec <-
   step_pca(all_numeric_predictors())
 ```
 
+
 PCA feature extraction...
 
 # Other possible steps `r I(hexes(c("recipes", "embed")))`
+
 
 ```{r, eval = FALSE}
 #| code-line-numbers: "6"
@@ -239,9 +269,11 @@ nhl_rec <-
   step_umap(all_numeric_predictors(), outcome = on_goal)
 ```
 
+
 A fancy machine learning supervised dimension reduction technique
 
 # Other possible steps `r I(hexes(c("recipes")))`
+
 
 ```{r, eval = FALSE}
 #| code-line-numbers: "6"
@@ -253,10 +285,12 @@ nhl_rec <-
   step_ns(coord_y, coord_x, deg_free = 10)
 ```
 
+
 Nonlinear transforms like *natural splines* and so on.
 
 
 # Minimal recipe
+
 
 ```{r}
 nhl_rec <-
@@ -265,7 +299,9 @@ nhl_rec <-
   step_zv(all_predictors())
 ```
 
+
 # Using a workflow
+
 
 ```{r}
 #| code-line-numbers: "3"
@@ -282,13 +318,16 @@ nhl_glm_res <-
 collect_metrics(nhl_glm_res)
 ```
 
+
 # Validation predictions
+
 
 ```{r}
 # Since we used `save_pred = TRUE`
 glm_val <- collect_predictions(nhl_glm_res)
 glm_val
 ```
+
 
 # Two class data
 
@@ -334,6 +373,7 @@ Instead, we will be using effect encoding to replace the `player` column with th
 
 ::: columns
 ::: {.column width="50%"}
+
 ```{r effects, echo = FALSE, out.width = '100%', fig.width = 6, fig.height = 3, fig.align='center', dev = 'svg', dev.args = list(bg = "transparent")}
 player_stats <- 
   nhl_train %>%
@@ -355,6 +395,7 @@ player_stats %>%
   geom_histogram(binwidth = 1/40, col = "red", fill = "red", alpha = 1/3) +
   labs(x = "On-goal rate per player")
 ```
+
 :::
 
 ::: {.column width="50%"}
@@ -367,6 +408,7 @@ The embed package has recipes steps for effect encodings.
 :::
 
 # Partial pooling
+
 
 ```{r effect-compare, echo = FALSE, out.width = '50%', fig.width = 4, fig.height = 4, fig.align='center', dev = 'svg', dev.args = list(bg = "transparent")}
 library(embed)
@@ -392,7 +434,9 @@ inner_join(player_stats, estimates, by = "player") %>%
   labs(x = "Raw Rate", y = "Estimated via Effects Encoding")
 ```
 
+
 # Player effects `r I(hexes(c("recipes", "embed")))`
+
 
 ```{r}
 #| code-line-numbers: "5"
@@ -404,6 +448,7 @@ nhl_effect_rec <-
   step_dummy(all_nominal_predictors()) %>%
   step_zv(all_predictors())
 ```
+
 
 It is very important to appropriately validate the effect encoding step to make sure that we are not overfitting.
 
@@ -424,6 +469,7 @@ Once a recipe is added to a workflow, this occurs when `fit()` is called.
 
 
 # Effect encoding results
+
 ```{r resample-encoding}
 #| code-line-numbers: "3"
 nhl_effect_wflow <-
@@ -437,7 +483,9 @@ nhl_effect_res <-
 collect_metrics(nhl_effect_res)
 ```
 
+
 # Where is the shot coming from?
+
 
 ```{r}
 nhl_angle_rec <-
@@ -448,7 +496,9 @@ nhl_angle_rec <-
 ```
 
 
+
 # 
+
 
 ```{r}
 nhl_distance_rec <-
@@ -458,7 +508,9 @@ nhl_distance_rec <-
   )
 ```
 
+
 #
+
 ```{r}
 nhl_behind_rec <-
   nhl_distance_rec %>%
@@ -468,7 +520,9 @@ nhl_behind_rec <-
 ```
 
 
+
 # Fit different recipes
+
 
 ```{r}
 nhl_glm_set_res <-
@@ -482,7 +536,9 @@ nhl_glm_set_res <-
 ```
 
 
+
 # Compare recipes
+
 
 ```{r rank-res-code}
 #| eval: false
@@ -499,13 +555,16 @@ collect_metrics(nhl_glm_set_res) %>%
   labs(y = NULL, x = "ROC AUC (validation set)")
 ```
 
+
 # Compare recipes
+
 
 ```{r}
 #| ref.label: 'rank-res-code'
 #| echo: false
 
 ```
+
 
 
 # Debugging a recipe
@@ -531,4 +590,5 @@ Another function (`bake()`) is analogous to `predict()` and gives you the proces
         -   Julia and Emil have written an amazing text processing book: [*Supervised Machine Learning for Text Analysis in R*](https://smltar.com/)
 -   There are a lot of ways to handle [categorical predictors](https://recipes.tidymodels.org/articles/Dummies.html), even those with novel levels.
 -   Several dplyr steps exist, such as `step_mutate()`.
+
 

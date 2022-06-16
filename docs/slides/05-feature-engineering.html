@@ -643,24 +643,26 @@
 </div>
 </section>
 
-<section id="include-recipe-in-workflow" class="title-slide slide level1 center">
-<h1>Include recipe in workflow</h1>
+<section id="using-a-workflow" class="title-slide slide level1 center">
+<h1>Using a workflow</h1>
+<p>::: columns ::: {.column width=“42%”}</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb14" data-code-line-numbers="3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>nhl_glm_wflow <span class="ot">&lt;-</span></span>
 <span id="cb14-2"><a href="#cb14-2"></a>  <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
 <span id="cb14-3"><a href="#cb14-3"></a>  <span class="fu">add_recipe</span>(nhl_rec) <span class="sc">%&gt;%</span></span>
 <span id="cb14-4"><a href="#cb14-4"></a>  <span class="fu">add_model</span>(<span class="fu">logistic_reg</span>())</span>
-<span id="cb14-5"><a href="#cb14-5"></a></span>
-<span id="cb14-6"><a href="#cb14-6"></a>nhl_glm_res <span class="ot">&lt;-</span></span>
-<span id="cb14-7"><a href="#cb14-7"></a>  nhl_glm_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb14-8"><a href="#cb14-8"></a>  <span class="fu">fit_resamples</span>(nhl_val)</span>
-<span id="cb14-9"><a href="#cb14-9"></a></span>
-<span id="cb14-10"><a href="#cb14-10"></a><span class="fu">collect_metrics</span>(nhl_glm_res)</span>
-<span id="cb14-11"><a href="#cb14-11"></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
-<span id="cb14-12"><a href="#cb14-12"></a><span class="co">#&gt;   .metric  .estimator  mean     n std_err .config             </span></span>
-<span id="cb14-13"><a href="#cb14-13"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
-<span id="cb14-14"><a href="#cb14-14"></a><span class="co">#&gt; 1 accuracy binary     0.578     1      NA Preprocessor1_Model1</span></span>
-<span id="cb14-15"><a href="#cb14-15"></a><span class="co">#&gt; 2 roc_auc  binary     0.581     1      NA Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb14-5"><a href="#cb14-5"></a> </span>
+<span id="cb14-6"><a href="#cb14-6"></a>ctrl <span class="ot">&lt;-</span> <span class="fu">control_resamples</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb14-7"><a href="#cb14-7"></a>nhl_glm_res <span class="ot">&lt;-</span></span>
+<span id="cb14-8"><a href="#cb14-8"></a>  nhl_glm_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb14-9"><a href="#cb14-9"></a>  <span class="fu">fit_resamples</span>(nhl_val, <span class="at">control =</span> ctrl)</span>
+<span id="cb14-10"><a href="#cb14-10"></a></span>
+<span id="cb14-11"><a href="#cb14-11"></a><span class="fu">collect_metrics</span>(nhl_glm_res)</span>
+<span id="cb14-12"><a href="#cb14-12"></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
+<span id="cb14-13"><a href="#cb14-13"></a><span class="co">#&gt;   .metric  .estimator  mean     n std_err .config             </span></span>
+<span id="cb14-14"><a href="#cb14-14"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb14-15"><a href="#cb14-15"></a><span class="co">#&gt; 1 accuracy binary     0.578     1      NA Preprocessor1_Model1</span></span>
+<span id="cb14-16"><a href="#cb14-16"></a><span class="co">#&gt; 2 roc_auc  binary     0.581     1      NA Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 
@@ -740,24 +742,23 @@
 <p>Once a recipe is added to a workflow, this occurs when <code>fit()</code> is called.</p>
 </section>
 
-<section id="resampling-and-recipes" class="title-slide slide level1 center">
-<h1>Resampling and recipes</h1>
+<section id="effect-encoding-results" class="title-slide slide level1 center">
+<h1>Effect encoding results</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a>nhl_effect_wflow <span class="ot">&lt;-</span></span>
-<span id="cb16-2"><a href="#cb16-2"></a>  <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb16-3"><a href="#cb16-3"></a>  <span class="fu">add_recipe</span>(nhl_effect_rec) <span class="sc">%&gt;%</span></span>
-<span id="cb16-4"><a href="#cb16-4"></a>  <span class="fu">add_model</span>(<span class="fu">logistic_reg</span>())</span>
-<span id="cb16-5"><a href="#cb16-5"></a></span>
-<span id="cb16-6"><a href="#cb16-6"></a>nhl_effect_res <span class="ot">&lt;-</span></span>
-<span id="cb16-7"><a href="#cb16-7"></a>  nhl_effect_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb16-8"><a href="#cb16-8"></a>  <span class="fu">fit_resamples</span>(nhl_val)</span>
-<span id="cb16-9"><a href="#cb16-9"></a></span>
-<span id="cb16-10"><a href="#cb16-10"></a><span class="fu">collect_metrics</span>(nhl_effect_res)</span>
-<span id="cb16-11"><a href="#cb16-11"></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
-<span id="cb16-12"><a href="#cb16-12"></a><span class="co">#&gt;   .metric  .estimator  mean     n std_err .config             </span></span>
-<span id="cb16-13"><a href="#cb16-13"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
-<span id="cb16-14"><a href="#cb16-14"></a><span class="co">#&gt; 1 accuracy binary     0.549     1      NA Preprocessor1_Model1</span></span>
-<span id="cb16-15"><a href="#cb16-15"></a><span class="co">#&gt; 2 roc_auc  binary     0.552     1      NA Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16" data-code-line-numbers="3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a>nhl_effect_wflow <span class="ot">&lt;-</span></span>
+<span id="cb16-2"><a href="#cb16-2"></a>  nhl_glm_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb16-3"><a href="#cb16-3"></a>  <span class="fu">update_recipe</span>(nhl_effect_rec)</span>
+<span id="cb16-4"><a href="#cb16-4"></a></span>
+<span id="cb16-5"><a href="#cb16-5"></a>nhl_effect_res <span class="ot">&lt;-</span></span>
+<span id="cb16-6"><a href="#cb16-6"></a>  nhl_effect_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb16-7"><a href="#cb16-7"></a>  <span class="fu">fit_resamples</span>(nhl_val)</span>
+<span id="cb16-8"><a href="#cb16-8"></a></span>
+<span id="cb16-9"><a href="#cb16-9"></a><span class="fu">collect_metrics</span>(nhl_effect_res)</span>
+<span id="cb16-10"><a href="#cb16-10"></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
+<span id="cb16-11"><a href="#cb16-11"></a><span class="co">#&gt;   .metric  .estimator  mean     n std_err .config             </span></span>
+<span id="cb16-12"><a href="#cb16-12"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb16-13"><a href="#cb16-13"></a><span class="co">#&gt; 1 accuracy binary     0.549     1      NA Preprocessor1_Model1</span></span>
+<span id="cb16-14"><a href="#cb16-14"></a><span class="co">#&gt; 2 roc_auc  binary     0.552     1      NA Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 
@@ -808,8 +809,23 @@
 </div>
 </section>
 
-<section id="compare-different-recipes" class="title-slide slide level1 center">
-<h1>Compare different recipes</h1>
+<section id="compare-recipes" class="title-slide slide level1 center">
+<h1>Compare recipes</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a><span class="fu">library</span>(forcats)</span>
+<span id="cb21-2"><a href="#cb21-2"></a><span class="fu">collect_metrics</span>(nhl_glm_set_res) <span class="sc">%&gt;%</span></span>
+<span id="cb21-3"><a href="#cb21-3"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"roc_auc"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb21-4"><a href="#cb21-4"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb21-5"><a href="#cb21-5"></a>    <span class="at">features =</span> <span class="fu">gsub</span>(<span class="st">"_logistic"</span>, <span class="st">""</span>, wflow_id), </span>
+<span id="cb21-6"><a href="#cb21-6"></a>    <span class="at">features =</span> <span class="fu">fct_reorder</span>(features, mean)</span>
+<span id="cb21-7"><a href="#cb21-7"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb21-8"><a href="#cb21-8"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> mean, <span class="at">y =</span> features)) <span class="sc">+</span></span>
+<span id="cb21-9"><a href="#cb21-9"></a>  <span class="fu">geom_point</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+
+<section id="compare-recipes-1" class="title-slide slide level1 center">
+<h1>Compare recipes</h1>
 
 <img data-src="05-feature-engineering_files/figure-revealjs/unnamed-chunk-14-1.svg" class="r-stretch"></section>
 
