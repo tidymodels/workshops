@@ -282,43 +282,58 @@ nhl_glm_res <-
 collect_metrics(nhl_glm_res)
 ```
 
-# Validation predictions
+# Holdout predictions
 
 ```{r}
 # Since we used `save_pred = TRUE`
-glm_val <- collect_predictions(nhl_glm_res)
-glm_val
+glm_val_pred <- collect_predictions(nhl_glm_res)
+glm_val_pred %>% slice(1:7)
 ```
 
 # Two class data
 
 Let's say we can define one class as the "event".
 
-* The **sensitivity** is the _true positive rate_ (accuracy on actual positives).
+* The **sensitivity** is the _true positive rate_ (accuracy on actual events).
 
-* The **specificity** is the rate of correctly predicted negatives, or 1 - _false positive rate_/
+* The **specificity** is the rate of correctly predicted non-events, or 1 - _false positive rate_.
 
 # Two class data
 
-These definitions assume that we know the threshold for class predictions (is 50% good). 
+These definitions assume that we know the threshold for class predictions (is 50% good?). 
 
-What happens if we say that we need to be 80% sure to declare an event? 
+What happens if we say that we need to be 80% sure to declare an event? (sensitivity `r emo::ji("down_arrow")`, specificity `r emo::ji("down_arrow")`)
 
-What happens for 20%? 
+What happens for a 20% threshold? (sensitivity `r emo::ji("up_arrow")`, specificity `r emo::ji("down_arrow")`) 
 
 # ROC curves
 
 We calculate the sensitivity and specificity for all possible thresholds. 
 
-Plot true positive rate (y) versus false positive rate(x)
+Plot  false positive rate(x) versus true positive rate (y).
 
 Insensitive to class imbalances. 
 
-Use the area under the curve as a metric (1 = perfect, 1/2 = not great)
+Use the area under the curve as a metric (1 = `r emo::ji("100")` 1/2 = `r emo::ji("thumb")`)
+
+# ROC curves
+
+```{r}
+# Assumes _first_ factor level is event; there are options to change
+roc_curve_points <- glm_val_pred %>% roc_curve(truth = on_goal, .pred_yes)
+roc_curve_points %>% slice(1, 50, 100)
+
+glm_val_pred %>% roc_auc(truth = on_goal, .pred_yes)
+
+# autoplot(roc_curve_points)
+```
 
 
+# ROC curve plot
 
-
+```{r roc-curve, echo = FALSE, out.width = '60%', fig.width = 5, fig.height = 5, fig.align='center', dev = 'svg', dev.args = list(bg = "transparent")}
+autoplot(roc_curve_points)
+```
 
 # What do we do with the player data?
 
@@ -395,7 +410,7 @@ inner_join(player_stats, estimates, by = "player") %>%
 # Player effects `r I(hexes(c("recipes", "embed")))`
 
 ```{r}
-#| code-line-numbers: "5"
+#| code-line-numbers: "1,5"
 library(embed)
 
 nhl_effect_rec <-
@@ -526,9 +541,4 @@ Another function (`bake()`) is analogous to `predict()` and gives you the proces
 -   A list of all known steps is [here](https://www.tidymodels.org/find/recipes/).
 -   Some steps can be [skipped](https://recipes.tidymodels.org/articles/Skipping.html) when using `predict()`.
 -   The [order](https://recipes.tidymodels.org/articles/Ordering.html) of the steps matters.
--   There are recipes-adjacent packages with more steps: embed, timetk, textrecipes, and others.
-    -   If you do any text processing, textrecipes is `r emo::ji("cool")`<sup>`r emo::ji("infinity")`</sup>.
-        -   Julia and Emil have written an amazing text processing book: [*Supervised Machine Learning for Text Analysis in R*](https://smltar.com/)
--   There are a lot of ways to handle [categorical predictors](https://recipes.tidymodels.org/articles/Dummies.html), even those with novel levels.
--   Several dplyr steps exist, such as `step_mutate()`.
 
