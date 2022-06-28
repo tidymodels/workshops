@@ -20,6 +20,8 @@ knitr:
 library(rpart)
 library(partykit)
 options(width = 200)
+
+theme_set(theme_bw())
 ```
 
 
@@ -65,7 +67,7 @@ nhl_distance_res <-
   fit_resamples(nhl_val)
 ```
 
-# Tuning parameters
+## Tuning parameters
 
 These are model or preprocessing parameters that are important but cannot be estimated directly from the data. 
 
@@ -87,7 +89,7 @@ Some examples:
 :::
 
 
-# Optimizing tuning parameters
+## Optimizing tuning parameters
 
 The main approach is to try different values and measure their performance. This can lead us to good values for these parameters. 
 
@@ -100,7 +102,7 @@ The main two classes of optimization models are:
 Once the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set. 
 
 
-# Choosing tuning parameters `r I(hexes(c("recipes", "workflows", "parsnip", "tune")))`
+## Choosing tuning parameters `r I(hexes(c("recipes", "workflows", "parsnip", "tune")))`
 
 Let's take our previous recipe and add a few changes:
 
@@ -126,7 +128,7 @@ glm_wflow <-
   add_recipe(glm_rec)
 ```
 
-# Grid search
+## Grid search
 
 This is the most basic (but very effective) way for tuning models. 
 
@@ -139,7 +141,7 @@ The `extract_parameter_set_dials()` function extracts the tuning parameters and 
 The `grid_*()` functions can make a grid. 
 
 
-# Manual grid - get parameters `r I(hexes(c("dials", "workflows")))`
+## Manual grid - get parameters `r I(hexes(c("dials", "workflows")))`
 
 ::: columns
 ::: {.column width="50%"}
@@ -157,7 +159,7 @@ This type of object can be updated (e.g. to change the ranges, etc)
 :::
 
 
-# Manual grid - create grid `r I(hexes(c("dials", "workflows")))`
+## Manual grid - create grid `r I(hexes(c("dials", "workflows")))`
 
 ::: columns
 ::: {.column width="50%"}
@@ -184,7 +186,7 @@ It tends to do much better than random grids and is (usually) more efficient tha
 :::
 
 
-# The results `r I(hexes(c("dials", "workflows")))`
+## The results `r I(hexes(c("dials", "workflows")))`
 
 ::: columns
 ::: {.column width="50%"}
@@ -207,7 +209,7 @@ grid %>%
 :::
 :::
 
-# Grid search `r I(hexes(c("tune")))`
+## Grid search `r I(hexes(c("tune")))`
 
 The `tune_*()` functions can be used to tune models. 
 
@@ -224,14 +226,14 @@ glm_res
 ```
 
 
-# Grid results `r I(hexes(c("tune")))`
+## Grid results `r I(hexes(c("tune")))`
 
 ```{r autoplot, out.width = '90%', fig.align='center', dev = 'svg', dev.args = list(bg = "transparent"), fig.width=10, fig.height=5}
 autoplot(glm_res)
 ```
 
 
-# Returning results `r I(hexes(c("tune")))`
+## Returning results `r I(hexes(c("tune")))`
 
 ```{r}
 collect_metrics(glm_res)
@@ -240,7 +242,7 @@ collect_metrics(glm_res, summarize = FALSE)
 ```
 
 
-# Picking a parameter combination `r I(hexes(c("tune")))`
+## Picking a parameter combination `r I(hexes(c("tune")))`
 
 You can create a tibble of your own or use one of the `tune::select_*()` functions: 
 
@@ -250,7 +252,7 @@ select_best(glm_res, metric = "roc_auc")
 ```
 
 
-# Your turn {transition="slide-in"}
+## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
@@ -261,7 +263,7 @@ select_best(glm_res, metric = "roc_auc")
 countdown(minutes = 7)
 ```
 
-# Boosted Trees
+## Boosted Trees
 
 An ensemble method of tree-based models. 
 
@@ -277,7 +279,7 @@ The creation of the tree has two phases:
  * Tree _pruning_ where the ends of the trees are removed until the "right sized" tree is found.  
 
 
-# Tree-based Models
+## Tree-based Models
 
 ```{r, echo = FALSE, fig.width=14, fig.height=8,  out.width = '90%', fig.align='center', dev = 'svg', dev.args = list(bg = "transparent")}
 tree_mod <- 
@@ -291,7 +293,7 @@ plot(tree_mod)
 ```
 
 
-# Boosting
+## Boosting
 
 Boosting methods fit a sequence of tree-based models. 
 
@@ -306,7 +308,7 @@ Most modern boosting methods have _a lot_ of tuning parameters.
 We'll use _early stopping_ where we stop boosting when a few iterations produces consecutively worse results. 
 
 
-# Boosting `r I(hexes(c("recipes", "workflows", "parsnip", "tune")))`
+## Boosting `r I(hexes(c("recipes", "workflows", "parsnip", "tune")))`
 
 ```{r, cache = TRUE}
 xgb_spec <-
@@ -330,7 +332,7 @@ xgb_wflow <-
 ```
 
 
-# Running in parallel
+## Running in parallel
 
 ::: columns
 ::: {.column width="50%"}
@@ -363,7 +365,7 @@ resamples_times %>%
 
 
 
-# Running in parallel
+## Running in parallel
 
 There are various degrees of speed-ups that are fairly linear up until the number of physical cores. 
 
@@ -381,7 +383,7 @@ ggplot(times, aes(x = num_cores, y = speed_up, color = parallel_over, shape = pa
 ```
 
 
-# Tuning `r I(hexes(c("tune")))`
+## Tuning `r I(hexes(c("tune")))`
 
 This will take some time to run...
 
@@ -393,13 +395,13 @@ xgb_res <-
 xgb_res
 ```
 
-# Tuning Results `r I(hexes(c("tune")))`
+## Tuning Results `r I(hexes(c("tune")))`
 
 ```{r, fig.width=11, fig.height=4,  out.width = '100%'}
 autoplot(xgb_res)
 ```
 
-# Compare to GLM
+## Compare to GLM
 
 ```{r}
 nhl_distance_res %>%
@@ -411,7 +413,7 @@ show_best(xgb_res, metric = "roc_auc", n = 1) %>%
 ```
 
 
-# Updating the workflow and final fit `r I(hexes(c("workflows", "tune")))`
+## Updating the workflow and final fit `r I(hexes(c("workflows", "tune")))`
 
 ```{r}
 best_auc <- select_best(xgb_res, metric = "roc_auc")
@@ -428,7 +430,7 @@ test_res
 ```
 
 
-# Compare test set and resampling results `r I(hexes(c("tune")))`
+## Compare test set and resampling results `r I(hexes(c("tune")))`
 
 ```{r}
 collect_metrics(test_res)
@@ -437,7 +439,7 @@ collect_metrics(test_res)
 show_best(xgb_res, metric = "roc_auc", n = 1)
 ```
 
-# Final fitted workflow
+## Final fitted workflow
 
 The final fitted workflow, fit using the training set, can be pulled out:
 
