@@ -329,7 +329,7 @@ select_best(glm_res, metric = "roc_auc")
 
 ```{r}
 #| echo: false
-countdown(minutes = 7)
+countdown(minutes = 15)
 ```
 
 ## Boosted Trees
@@ -339,6 +339,8 @@ An ensemble method of tree-based models.
 A tree-based model creates a series of splits on predictors that partition them into two groups to maximize the purity of the resulting sets.
 
 This forms a series of if/then statements that make up a tree structure.
+
+## Boosted Trees
 
 The creation of the tree has two phases:
 
@@ -351,9 +353,9 @@ The creation of the tree has two phases:
 
 ```{r tree-example}
 #| echo: false
-#| out-width: '90%'
-#| fig-width: 14
-#| fig-height: 8
+#| out-width: '60%'
+#| fig-width: 16
+#| fig-height: 7
 #| fig-align: 'center'
 #| dev: 'svg'
 #| dev-args: list(bg = "transparent")
@@ -515,6 +517,19 @@ show_best(xgb_res, metric = "roc_auc", n = 1) %>%
   select(.metric, .estimator, mean, n, std_err, .config)
 ```
 
+
+## Your turn to tune {transition="slide-in"}
+
+Can you get better ROC results by just increasing `tree_depth` beyond the tested range? 
+
+
+```{r}
+#| echo: false
+countdown(minutes = 20)
+```
+
+
+
 ## Updating the workflow `r I(hexes(c("workflows", "tune")))`
 
 ```{r xgboost-select-best}
@@ -546,15 +561,15 @@ Validation results from tuning:
 
 ```{r xgb-val-res}
 # Resampling results
-show_best(xgb_res, metric = "roc_auc", n = 1)
+xgb_res %>% 
+  show_best(metric = "roc_auc", n = 1) %>% 
+  select(.metric, mean, n, std_err)
 ```
 
 Test set results: 
 
 ```{r xgb-test-res}
-test_res %>% 
-  collect_metrics() %>% 
-  select(.metric, mean, n, std_err)
+test_res %>% collect_metrics()
 ```
 
 ## Final fitted workflow
@@ -576,9 +591,9 @@ predict(final_xgb_wflow, nhl_test[1:3,])
 
 * Document the model.
 
-* Create an applicability domain model to help monitor our data over time
+* Create an applicability domain model to help monitor our data over time.
 
-* Deploy the model
+* Deploy the model.
 
 
 
