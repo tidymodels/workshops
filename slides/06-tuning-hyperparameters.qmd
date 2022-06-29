@@ -89,7 +89,7 @@ Some examples:
 
 Some others...
 
-## Activation function in neural networks.
+# Activation function in neural networks?
 
 Sigmoidal functions, ReLu, etc.
 
@@ -97,19 +97,19 @@ Sigmoidal functions, ReLu, etc.
 Yes, it is a tuning parameter.
 :::
 
-## Number of PCA components to retain
+# Number of PCA components to retain?
 
 ::: fragment
 Yes, it is a tuning parameter.
 :::
 
-## Bayesian priors for model parameters
+# Bayesian priors for model parameters?
 
 ::: fragment
 Hmmm probably not. These are based on prior belief.
 :::
 
-## Covariance/correlation matrix structure in mixed models
+# Covariance/correlation matrix structure in mixed models?
 
 ::: fragment
 Yes but it is unlikely to affect performance.
@@ -255,7 +255,7 @@ grid
 ::: columns
 ::: {.column width="50%"}
 ```{r show-grid-code}
-#| eval: 'none'
+#| eval: false
 grid %>% 
   ggplot(aes(angle, distance)) +
   geom_point(cex = 4)
@@ -295,10 +295,9 @@ glm_res
 ## Grid results `r I(hexes(c("tune")))`
 
 ```{r autoplot}
-#| echo: false
-#| out-width: '90%'
-#| fig-width: 10
-#| fig-height: 5
+#| out-width: '70%'
+#| fig-width: 8
+#| fig-height: 4
 #| fig-align: 'center'
 #| dev: 'svg'
 #| dev-args: list(bg = "transparent")
@@ -376,7 +375,14 @@ Each is dependent on the last and tries to compensate to any poor results in the
 
 -   This is akin to gradient-based steepest ascent methods from calculus.
 
-Most modern boosting methods have *a lot* of tuning parameters. \* For tree growth and pruning (`min_n`, `max_depth`. etc). \* For boosting (`trees`, `stop_iter`, `learn_rate`)
+
+## Boosting
+
+Most modern boosting methods have *a lot* of tuning parameters. 
+
+* For tree growth and pruning (`min_n`, `max_depth`. etc). 
+
+* For boosting (`trees`, `stop_iter`, `learn_rate`)
 
 We'll use *early stopping* where we stop boosting when a few iterations produces consecutively worse results.
 
@@ -491,20 +497,27 @@ xgb_res
 autoplot(xgb_res)
 ```
 
-## Compare to GLM
+## Compare models
 
-```{r xgboost-best}
+Best logistic regression results:
+
+```{r logistic-best}
 nhl_distance_res %>%
   collect_metrics() %>% 
   filter(.metric == "roc_auc")
+```
+
+Best boosting results:
+
+```{r xgboost-best}
 
 show_best(xgb_res, metric = "roc_auc", n = 1) %>% 
   select(.metric, .estimator, mean, n, std_err, .config)
 ```
 
-## Updating the workflow and final fit `r I(hexes(c("workflows", "tune")))`
+## Updating the workflow `r I(hexes(c("workflows", "tune")))`
 
-```{r xgboost-final}
+```{r xgboost-select-best}
 #| cache: true
 
 best_auc <- select_best(xgb_res, metric = "roc_auc")
@@ -514,19 +527,34 @@ xgb_wflow <-
   xgb_wflow %>% 
   finalize_workflow(best_auc)
 
+xgb_wflow
+```
+
+## The final fit `r I(hexes(c("workflows", "tune")))`
+
+```{r xgboost-final}
+#| cache: true
 test_res <- 
   xgb_wflow %>% 
   last_fit(split = nhl_split)
 test_res
 ```
 
-## Compare test set and resampling results `r I(hexes(c("tune")))`
+## Estimates of ROC AUC `r I(hexes(c("tune")))`
 
-```{r}
-collect_metrics(test_res)
+Validation results from tuning: 
 
+```{r xgb-val-res}
 # Resampling results
 show_best(xgb_res, metric = "roc_auc", n = 1)
+```
+
+Test set results: 
+
+```{r xgb-test-res}
+test_res %>% 
+  collect_metrics() %>% 
+  select(.metric, mean, n, std_err)
 ```
 
 ## Final fitted workflow
@@ -541,6 +569,17 @@ final_xgb_wflow <-
 # use to predict or deploy via vetiver
 predict(final_xgb_wflow, nhl_test[1:3,])
 ```
+
+## Next steps
+
+* We can use explainers to help characterize the model and the predictions. 
+
+* Document the model.
+
+* Create an applicability domain model to help monitor our data over time
+
+* Deploy the model
+
 
 
 ```{r teardown}
