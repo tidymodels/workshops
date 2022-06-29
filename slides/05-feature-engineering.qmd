@@ -329,7 +329,7 @@ Nonlinear transforms like *natural splines* and so on.
 ## Minimal recipe
 
 ```{r}
-nhl_rec <-
+nhl_indicators <-
   recipe(on_goal ~ ., data = nhl_train) %>%
   step_dummy(all_nominal_predictors()) %>%
   step_zv(all_predictors())
@@ -342,7 +342,7 @@ nhl_rec <-
 #| cache: true
 nhl_glm_wflow <-
   workflow() %>%
-  add_recipe(nhl_rec) %>%
+  add_recipe(nhl_indicators) %>%
   add_model(logistic_reg())
  
 ctrl <- control_resamples(save_pred = TRUE)
@@ -549,7 +549,7 @@ collect_metrics(nhl_effect_res)
 
 ```{r}
 nhl_angle_rec <-
-  nhl_rec %>%
+  nhl_indicators %>%
   step_mutate(
     angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi))
   )
@@ -574,8 +574,8 @@ example_data <-
 
 example_data %>% 
   filter(angle <= 25) %>% 
-  sample_n(200) %>% 
-  plot_nhl_shots(emphasis = on_goal) +
+  sample_n(500) %>% 
+  plot_nhl_shots(emphasis = on_goal, alpha = 1/2) +
   ggtitle("<= 25 degree angle")
 ```
 
@@ -637,16 +637,18 @@ example_data %>%
 
 ## Fit different recipes
 
+A workflow set can cross models and/or preprocessors and then resample them _en masse_. 
+
 ```{r nhl-feature-sets}
 #| cache: true
 nhl_glm_set_res <-
   workflow_set(
-    list(dummy = nhl_rec, encoded = nhl_effect_rec,
+    list(dummy = nhl_indicators, encoded = nhl_effect_rec,
          angle = nhl_angle_rec, dist = nhl_distance_rec, 
          bgl = nhl_behind_rec),
     list(logistic = logistic_reg())
   ) %>%
-  workflow_map(fn = "fit_resamples", resamples = nhl_val)
+  workflow_map(fn = "fit_resamples", resamples = nhl_val, verbose = TRUE)
 ```
 
 ## Compare recipes
