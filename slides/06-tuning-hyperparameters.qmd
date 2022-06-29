@@ -178,7 +178,7 @@ The `grid_*()` functions can make a grid.
 ::: columns
 ::: {.column width="50%"}
 ```{r get-param}
-#| echo: false
+#| eval: false
 #| tidy: false
 glm_wflow %>% 
   extract_parameter_set_dials()
@@ -221,18 +221,41 @@ It tends to do much better than random grids and is (usually) more efficient tha
 :::
 :::
 
+
+
+## Update parameter ranges
+
+::: columns
+::: {.column width="50%"}
+```{r mod-grid-code}
+#| eval: false
+#| code-line-numbers: "5-6"
+set.seed(2)
+grid <- 
+  glm_wflow %>% 
+  extract_parameter_set_dials() %>% 
+  update(angle = spline_degree(c(2L, 20L)),
+         distance = spline_degree(c(2L, 20L))) %>% 
+  grid_latin_hypercube(size = 25)
+
+grid
+```
+:::
+
+::: {.column width="50%"}
+```{r mod-grid, ref.label = 'mod-grid-code'}
+#| echo: false
+```
+:::
+:::
+
+
 ## The results `r I(hexes(c("dials", "workflows")))`
 
 ::: columns
 ::: {.column width="50%"}
 ```{r show-grid-code}
-#| results: 'none'
-set.seed(2)
-grid <- 
-  glm_wflow %>% 
-  extract_parameter_set_dials() %>% 
-  grid_latin_hypercube(size = 25)
-
+#| eval: 'none'
 grid %>% 
   ggplot(aes(angle, distance)) +
   geom_point(cex = 4)
@@ -240,7 +263,7 @@ grid %>%
 :::
 
 ::: {.column width="50%"}
-```{r ref.label = 'show-grid-code'}
+```{r show-grid, ref.label = 'show-grid-code'}
 #| echo: false
 #| out-width: '90%'
 #| fig-width: 5
