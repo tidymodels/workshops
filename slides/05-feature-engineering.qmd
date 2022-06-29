@@ -72,7 +72,7 @@ knitr::include_graphics("images/fe_venn_info.svg")
 
 For example, centering and scaling are definitely not feature engineering.
 
-Consider the `date` field in the data. If given as a raw predictor, it is converted to an integer.
+Consider a `date` column. If given as a raw predictor, it is converted to an integer.
 
 It can be re-encoded as:
 
@@ -112,13 +112,14 @@ knitr::include_graphics("images/cap.png")
 
 We'll demonstrate the recipes package for all of your data needs.
 
-## Recipes prepare your data for modeling
+## The NHL data
 
-The package is an extensible framework for pipeable sequences of feature engineering steps that provide preprocessing tools to be applied to data.
+* We'll use a data set that contains `r format(nrow(ongoal::season_2015), big.mark = ",")` shots on goal from games played by the Pittsburgh Penguins games
 
-Statistical parameters for the steps can be estimated from an initial data set and then applied to other data sets.
+ * seasons 2015-2016, 2016-2017, and 2017-2018.
 
-The resulting processed output can then be used as inputs for statistical or machine learning models.
+The idea is to predict whether a shot it on-goal (a goal or blocked by goaltender) or not. 
+
 
 ## Case study
 
@@ -129,8 +130,8 @@ library(ongoal)
 tidymodels_prefer()
 
 names(season_2015)
-
 ```
+
 
 ## Splitting the NHL data `r I(hexes(c("rsample")))`
 
@@ -145,13 +146,61 @@ nhl_test  <- testing(nhl_split)
 c(training = nrow(nhl_train), testing = nrow(nhl_test))
 ```
 
+## Explore the data
+
+Let's look at the training set data for a few minutes. 
+
+The ongoal package has a function, `plot_nhl_shots()`, that can make nice spatial plots of the data. 
+
+
+::: columns
+::: {.column width="50%"}
+```{r rink-code}
+#| eval: false
+set.seed(100)
+nhl_train %>% 
+  sample_n(200) %>%
+  plot_nhl_shots(emphasis = position)
+```
+:::
+
+::: {.column width="50%"}
+```{r rink-plot, ref.label = 'rink-code'}
+#| echo: false
+#| out-width: '90%'
+#| fig-width: 7
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+```
+:::
+:::
+
+```{r}
+#| echo: false
+countdown(minutes = 15, id = "nhl-explore", )
+```
+
 ## Validation split
+
+Since there are a lot of data, we'll use a validation set instead of multiple resamples: 
 
 ```{r val}
 set.seed(234)
 nhl_val <- validation_split(nhl_train, prop = 0.80)
 nhl_val
 ```
+
+
+## Recipes prepare your data for modeling
+
+The package is an extensible framework for pipeable sequences of feature engineering steps that provide preprocessing tools to be applied to data.
+
+Statistical parameters for the steps can be estimated from an initial data set and then applied to other data sets.
+
+The resulting processed output can then be used as inputs for statistical or machine learning models.
+
 
 ## A first recipe `r I(hexes(c("recipes")))`
 
