@@ -339,6 +339,7 @@ nhl_rec <-
 
 ```{r}
 #| code-line-numbers: "3"
+#| cache: true
 nhl_glm_wflow <-
   workflow() %>%
   add_recipe(nhl_rec) %>%
@@ -372,9 +373,13 @@ Let's say we can define one class as the "event".
 
 These definitions assume that we know the threshold for class predictions (is 50% good?).
 
-What happens if we say that we need to be 80% sure to declare an event? (sensitivity `r emo::ji("down_arrow")`, specificity `r emo::ji("down_arrow")`)
+What happens if we say that we need to be 80% sure to declare an event? 
 
-What happens for a 20% threshold? (sensitivity `r emo::ji("up_arrow")`, specificity `r emo::ji("down_arrow")`)
+* sensitivity `r emo::ji("down_arrow")`, specificity `r emo::ji("down_arrow")`
+
+What happens for a 20% threshold?
+
+ * sensitivity `r emo::ji("up_arrow")`, specificity `r emo::ji("down_arrow")`
 
 ## ROC curves
 
@@ -384,7 +389,7 @@ Plot false positive rate(x) versus true positive rate (y).
 
 Insensitive to class imbalances.
 
-Use the area under the curve as a metric (1 = `r emo::ji("100")` 1/2 = `r emo::ji("thumb")`)
+Use the area under the curve as a metric (1 = `r emo::ji("100")` 1/2 = `r emo::ji("cry")`)
 
 ## ROC curves
 
@@ -550,6 +555,31 @@ nhl_angle_rec <-
   )
 ```
 
+```{r angle}
+#| echo: false
+#| out-width: '50%'
+#| fig-width: 7
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+example_data <- 
+  nhl_train %>% 
+  mutate(
+    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
+  )
+
+example_data %>% 
+  filter(angle <= 25) %>% 
+  sample_n(200) %>% 
+  plot_nhl_shots(emphasis = on_goal) +
+  ggtitle("<= 25 degree angle")
+```
+
+
 ## 
 
 ```{r}
@@ -560,6 +590,24 @@ nhl_distance_rec <-
   )
 ```
 
+
+```{r distance}
+#| echo: false
+#| out-width: '50%'
+#| fig-width: 7
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+example_data %>% 
+  filter(distance <= 40) %>% 
+  sample_n(500) %>% 
+  plot_nhl_shots(emphasis = on_goal, alpha = 1/2) +
+  ggtitle("distance <= 30")
+```
+
+
 # 
 
 ```{r}
@@ -569,6 +617,23 @@ nhl_behind_rec <-
     behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
   )
 ```
+
+
+```{r goal-line}
+#| echo: false
+#| out-width: '50%'
+#| fig-width: 7
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+example_data %>% 
+  filter(behind_goal_line == 1) %>% 
+  plot_nhl_shots(emphasis = on_goal, alpha = 1/2) +
+  ggtitle("behind goal line")
+```
+
 
 ## Fit different recipes
 
