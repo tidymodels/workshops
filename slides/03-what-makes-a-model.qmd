@@ -205,18 +205,34 @@ All available models are listed at <https://www.tidymodels.org/find/parsnip/>
 
 ## All models are wrong but...
 
+::: columns
+::: {.column width="60%"}
+
 ```{r}
 #| echo: false
-#| fig.width: 7
+#| fig.width: 9
+#| fig.height: 9
 ggplot(frog_test, aes(age, latency)) +
-  geom_point(color = test_color, size = 2.5)
+  geom_point(color = test_color, size = 3) +
+  theme_minimal(base_size = 18)
 ```
+
+:::
+
+::: {.column width="40%"}
+
+:::
+:::
 
 ## All models are wrong but...
 
+::: columns
+::: {.column width="60%"}
+
 ```{r}
 #| echo: false
-#| fig.width: 7
+#| fig.width: 9
+#| fig.height: 9
 linear_preds <- 
   linear_reg() %>%
   fit(latency ~ age, data = frog_train) %>%
@@ -230,14 +246,63 @@ ggplot(data = NULL, aes(age, latency)) +
   geom_smooth(data = frog_train, method = "lm", 
               se = FALSE, fullrange = TRUE,
               alpha = 0.8, size = 2, color = data_color) +
-  geom_point(data = linear_preds, color = test_color, size = 2.5)
+  geom_point(data = linear_preds, color = test_color, size = 3) +
+  theme_minimal(base_size = 18)
 ```
+
+:::
+
+::: {.column width="40%"}
+
+:::
+:::
+
 
 ## All models are wrong but...
 
+::: columns
+::: {.column width="60%"}
+
 ```{r}
 #| echo: false
-#| fig.width: 7
+#| fig.width: 9
+#| fig.height: 9
+
+ggplot(data = NULL, aes(age, latency)) +
+  geom_segment(data = linear_preds,
+               aes(x = age, xend = age, 
+                   y = latency, yend = .pred), 
+               colour = train_color, alpha = 0.8) +
+  geom_smooth(data = frog_train, method = "lm", 
+              se = FALSE, fullrange = TRUE,
+              alpha = 0.8, size = 2, color = data_color) +
+  geom_point(data = linear_preds, color = test_color, size = 3) +
+  theme_minimal(base_size = 18)
+```
+
+:::
+
+::: {.column width="40%"}
+
+### Linear regression model
+
+- Ordinary least squares (OLS)
+
+- Outcome modeled as linear combination of predictors
+
+:::
+:::
+
+## All models are wrong but...
+
+
+::: columns
+::: {.column width="60%"}
+
+```{r}
+#| echo: false
+#| fig.width: 9
+#| fig.height: 9
 tree_preds <- 
   decision_tree(cost_complexity = 0.015, mode = "regression") %>%
   fit(latency ~ age, data = frog_train) %>%
@@ -248,8 +313,52 @@ ggplot(data = tree_preds, aes(age, latency)) +
                    y = latency, yend = .pred), 
                colour = train_color, alpha = 0.8) +
   geom_line(aes(x = age, y = .pred), size = 2, alpha = 0.8, color = data_color) +
-  geom_point(data = tree_preds, color = test_color, size = 2.5)
+  geom_point(data = tree_preds, color = test_color, size = 3) +
+  theme_minimal(base_size = 18)
 ```
+
+:::
+
+::: {.column width="40%"}
+
+:::
+:::
+
+## All models are wrong but...
+
+
+::: columns
+::: {.column width="60%"}
+
+```{r}
+#| echo: false
+#| fig.width: 9
+#| fig.height: 9
+
+ggplot(data = tree_preds, aes(age, latency)) +
+  geom_segment(aes(x = age, xend = age, 
+                   y = latency, yend = .pred), 
+               colour = train_color, alpha = 0.8) +
+  geom_line(aes(x = age, y = .pred), size = 2, alpha = 0.8, color = data_color) +
+  geom_point(data = tree_preds, color = test_color, size = 3) +
+  theme_minimal(base_size = 18)
+```
+
+:::
+
+::: {.column width="40%"}
+
+### Decision tree model
+
+- Series of splits or if/then statements based on predictors
+
+- First the tree *grows* until some condition is met (maximum depth, no more data)
+
+- Then the tree is *pruned* to reduce its complexity
+
+:::
+:::
+
 
 # ...some are useful! 
 
