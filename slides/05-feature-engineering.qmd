@@ -1,0 +1,687 @@
+---
+title: "5 - Feature engineering"
+subtitle: "Machine learning with tidymodels"
+height: 900
+width: 1600
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    theme: [default, tidymodels.scss]
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+```{r more-setup}
+#| include: false
+
+library(emo)
+library(doParallel)
+
+cores <- parallel::detectCores(logical = FALSE)
+cl <- makePSOCKcluster(cores)
+registerDoParallel(cl)
+
+ggplot2::theme_set(ggplot2::theme_bw())
+```
+
+## What is feature engineering?
+
+First thing's first: what's a feature?
+
+I tend to think of a feature as some representation of a predictor that will be used in a model.
+
+Old-school features:
+
+-   Interactions
+-   Polynomial expansions/splines
+-   PCA feature extraction
+
+"Feature engineering" sounds pretty cool, but let's take a minute to talk about *preprocessing* data.
+
+## Two types of preprocessing
+
+```{r venn-titles}
+#| echo: false 
+#| out-width: "75%"
+#| fig-align: 'center'
+
+knitr::include_graphics("images/fe_venn.svg")
+```
+
+## Two types of preprocessing
+
+```{r venn-info}
+#| echo: false 
+#| out-width: "75%"
+#| fig-align: 'center'
+
+knitr::include_graphics("images/fe_venn_info.svg")
+```
+
+## Easy examples
+
+For example, centering and scaling are definitely not feature engineering.
+
+Consider a `date` column. If given as a raw predictor, it is converted to an integer.
+
+It can be re-encoded as:
+
+-   Days since a reference date
+-   Day of the week
+-   Month
+-   Year
+-   Indicators for holidays
+
+## Original column
+
+```{r before-fe}
+#| echo: false 
+#| out-width: "35%"
+#| fig-align: 'center'
+
+knitr::include_graphics("images/steve.gif")
+```
+
+## Features
+
+```{r after-fe}
+#| echo: false 
+#| out-width: "75%"
+#| fig-align: 'center'
+
+knitr::include_graphics("images/cap.png")
+```
+
+(At least that's what we hope the difference looks like.)
+
+## General definitions
+
+-   *Data preprocessing* are the steps that you take to make your model successful.
+
+-   *Feature engineering* are what you do to the original predictors to make the model do the least work to predict the outcome as well as possible.
+
+We'll demonstrate the recipes package for all of your data needs.
+
+## The NHL data
+
+* We'll use a data set that contains `r format(nrow(ongoal::season_2015), big.mark = ",")` shots on goal from games played by the Pittsburgh Penguins games
+
+ * seasons 2015-2016, 2016-2017, and 2017-2018.
+
+The idea is to predict whether a shot it on-goal (a goal or blocked by goaltender) or not. 
+
+
+## Case study
+
+```{r hello-tidymodels}
+library(tidymodels)
+library(ongoal)
+
+tidymodels_prefer()
+
+names(season_2015)
+```
+
+
+## Splitting the NHL data `r I(hexes(c("rsample")))`
+
+```{r split}
+set.seed(23)
+nhl_split <- initial_split(season_2015, prop = 3/4)
+nhl_split
+
+nhl_train <- training(nhl_split)
+nhl_test  <- testing(nhl_split)
+
+c(training = nrow(nhl_train), testing = nrow(nhl_test))
+```
+
+## Explore the data
+
+Let's look at the training set data for a few minutes. 
+
+The ongoal package has a function, `plot_nhl_shots()`, that can make nice spatial plots of the data. 
+
+
+::: columns
+::: {.column width="50%"}
+```{r rink-code}
+set.seed(100)
+nhl_train %>% 
+  sample_n(200) %>%
+  plot_nhl_shots(emphasis = position)
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+#| echo: false
+countdown(minutes = 15, id = "nhl-explore", )
+```
+:::
+:::
+
+
+## Validation split
+
+Since there are a lot of data, we'll use a validation set instead of multiple resamples: 
+
+```{r val}
+set.seed(234)
+nhl_val <- validation_split(nhl_train, prop = 0.80)
+nhl_val
+```
+
+
+## Recipes prepare your data for modeling
+
+The package is an extensible framework for pipeable sequences of feature engineering steps that provide preprocessing tools to be applied to data.
+
+Statistical parameters for the steps can be estimated from an initial data set and then applied to other data sets.
+
+The resulting processed output can then be used as inputs for statistical or machine learning models.
+
+
+## A first recipe `r I(hexes(c("recipes")))`
+
+```{r base-recipe}
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train)
+
+# If ncol(data) is large, you can use
+# recipe(data = nhl_train)
+```
+
+Based on the formula, the function assigns columns to roles of "outcome" or "predictor"
+
+## A first recipe `r I(hexes(c("recipes")))`
+
+```{r rec-summary}
+summary(nhl_rec)
+```
+
+## Create indicator variables `r I(hexes(c("recipes")))`
+
+```{r}
+#| code-line-numbers: "3"
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors())
+```
+
+For any factor or character predictors, make binary indicators.
+
+There are *many* recipe steps that can convert categorical predictors to numeric columns.
+
+## Filter out constant columns `r I(hexes(c("recipes")))`
+
+```{r}
+#| code-line-numbers: "4"
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors())
+```
+
+In case there is factor level that never was observed in the trainnig data, we can delete any *zero-variance* predictors that have a single unique value.
+
+<!--Note that the selector chooses all columns with a role of "predictor".-->
+
+## Normalization `r I(hexes(c("recipes")))`
+
+```{r rec-norm}
+#| eval: false
+#| code-line-numbers: "5"
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors())
+```
+
+This centers and scales the numeric predictors.
+
+Note that this will use the training set to estimate the means and standard deviations of the data.
+
+All data put through the recipe will be normalized using those statistics (there is no re-estimation).
+
+## Reduce correlation `r I(hexes(c("recipes")))`
+
+```{r }
+#| code-line-numbers: "6"
+#| eval: false
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_corr(all_numeric_predictors(), threshold = 0.9)
+```
+
+To deal with highly correlated predictors, find the minimum predictor set to remove to make the pairwise correlations less than 0.9.
+
+## Other possible steps `r I(hexes(c("recipes")))`
+
+```{r}
+#| code-line-numbers: "6"
+#| eval: false
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_pca(all_numeric_predictors())
+```
+
+PCA feature extraction...
+
+## Other possible steps `r I(hexes(c("recipes", "embed")))`
+
+```{r}
+#| code-line-numbers: "6"
+#| eval: false
+library(embed)
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_umap(all_numeric_predictors(), outcome = on_goal)
+```
+
+A fancy machine learning supervised dimension reduction technique
+
+## Other possible steps `r I(hexes(c("recipes")))`
+
+```{r}
+#| eval: false
+#| code-line-numbers: "6"
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_ns(coord_y, coord_x, deg_free = 10)
+```
+
+Nonlinear transforms like *natural splines* and so on.
+
+## Minimal recipe
+
+```{r}
+nhl_indicators <-
+  recipe(on_goal ~ ., data = nhl_train) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+## Using a workflow
+
+```{r}
+#| code-line-numbers: "3"
+#| cache: true
+nhl_glm_wflow <-
+  workflow() %>%
+  add_recipe(nhl_indicators) %>%
+  add_model(logistic_reg())
+ 
+ctrl <- control_resamples(save_pred = TRUE)
+nhl_glm_res <-
+  nhl_glm_wflow %>%
+  fit_resamples(nhl_val, control = ctrl)
+
+collect_metrics(nhl_glm_res)
+```
+
+## Holdout predictions
+
+```{r}
+# Since we used `save_pred = TRUE`
+glm_val_pred <- collect_predictions(nhl_glm_res)
+glm_val_pred %>% slice(1:7)
+```
+
+## Two class data
+
+Let's say we can define one class as the "event".
+
+-   The **sensitivity** is the *true positive rate* (accuracy on actual events).
+
+-   The **specificity** is the rate of correctly predicted non-events, or 1 - *false positive rate*.
+
+## Two class data
+
+These definitions assume that we know the threshold for class predictions (is 50% good?).
+
+What happens if we say that we need to be 80% sure to declare an event? 
+
+* sensitivity `r emo::ji("down_arrow")`, specificity `r emo::ji("down_arrow")`
+
+What happens for a 20% threshold?
+
+ * sensitivity `r emo::ji("up_arrow")`, specificity `r emo::ji("down_arrow")`
+
+## ROC curves
+
+We calculate the sensitivity and specificity for all possible thresholds.
+
+Plot false positive rate(x) versus true positive rate (y).
+
+Insensitive to class imbalances.
+
+Use the area under the curve as a metric (1 = `r emo::ji("100")` 1/2 = `r emo::ji("cry")`)
+
+## ROC curves
+
+```{r}
+# Assumes _first_ factor level is event; there are options to change
+roc_curve_points <- glm_val_pred %>% roc_curve(truth = on_goal, .pred_yes)
+roc_curve_points %>% slice(1, 50, 100)
+
+glm_val_pred %>% roc_auc(truth = on_goal, .pred_yes)
+```
+
+## ROC curve plot
+
+```{r roc-curve}
+#| out-width: '60%'
+#| fig-width: 5
+#| fig-height: 5
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+autoplot(roc_curve_points)
+```
+
+## What do we do with the player data?
+
+There are `r length(unique(nhl_train$player))` unique player values in our training set.
+
+-   We *could* make the full set of indicator variables...
+-   Or using [feature hashing](https://www.tmwr.org/categorical.html#feature-hashing) to make a subset.
+
+Instead, we will be using effect encoding to replace the `player` column with the estimated effect of that predictor.
+
+## Per-player statistics
+
+::: columns
+::: {.column width="50%"}
+```{r effects}
+#| echo: false
+#| out-width: '100%'
+#| fig-width: 6
+#| fig-height: 3
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+player_stats <- 
+  nhl_train %>%
+  group_by(player) %>%
+  summarize(
+    rate = mean(on_goal == "yes"), 
+    num_shots = n(),
+    .groups = "drop"
+    ) %>%
+  mutate(player = reorder(player, rate))
+  
+player_stats %>%   
+  ggplot(aes(x = num_shots)) +
+  geom_histogram(bins = 30, col = "blue", fill = "blue", alpha = 1/3) +
+  scale_x_log10() +
+  labs(x = "Number of shots per player")
+player_stats %>%   
+  ggplot(aes(x = rate)) +
+  geom_histogram(binwidth = 1/40, col = "red", fill = "red", alpha = 1/3) +
+  labs(x = "On-goal rate per player")
+```
+:::
+
+::: {.column width="50%"}
+There are good statistical methods for estimating these rates that use *partial pooling*.
+
+This borrows strength across players and shrinks extreme values (e.g. zero or one) towards the mean for players with very few shots.
+
+The embed package has recipes steps for effect encodings.
+:::
+:::
+
+## Partial pooling
+
+```{r effect-compare}
+#| echo: false
+#| out-width: '50%'
+#| fig-width: 4
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+library(embed)
+
+estimates <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_lencode_mixed(player, outcome = vars(on_goal), id = "encoding") %>%   #<<
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  prep() %>% 
+  tidy(id = "encoding") %>% 
+  select(player = level, estimate = value)
+
+inner_join(player_stats, estimates, by = "player") %>% 
+  mutate(estimate = binomial()$linkinv(estimate)) %>% 
+  ggplot(aes(x = rate, y = estimate)) + 
+  geom_abline(col = "green", lty = 2) +
+  geom_point(aes(size = num_shots), alpha = 1/3) +
+  lims(x = 0:1, y = 0:1) +
+  coord_fixed() +
+  scale_size(range = c(1/3, 3)) +
+  labs(x = "Raw Rate", y = "Estimated via Effects Encoding")
+```
+
+## Player effects `r I(hexes(c("recipes", "embed")))`
+
+```{r}
+#| code-line-numbers: "1,5"
+library(embed)
+
+nhl_effect_rec <-
+  recipe(on_goal ~ ., data = nhl_train) %>%
+  step_lencode_mixed(player, outcome = vars(on_goal)) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+It is very important to appropriately validate the effect encoding step to make sure that we are not overfitting.
+
+## Recipes are estimated
+
+*Every* preprocessing step in a recipe that involved calculations uses the *training set*. For example:
+
+-   Levels of a factor
+-   Determination of zero-variance
+-   Normalization
+-   Feature extraction
+-   Effect encodings
+
+and so on.
+
+Once a recipe is added to a workflow, this occurs when `fit()` is called.
+
+## Effect encoding results
+
+```{r resample-encoding}
+#| code-line-numbers: "3"
+nhl_effect_wflow <-
+  nhl_glm_wflow %>%
+  update_recipe(nhl_effect_rec)
+
+nhl_effect_res <-
+  nhl_effect_wflow %>%
+  fit_resamples(nhl_val)
+
+collect_metrics(nhl_effect_res)
+```
+
+## Where is the shot coming from?
+
+```{r}
+nhl_angle_rec <-
+  nhl_indicators %>%
+  step_mutate(
+    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi))
+  )
+```
+
+```{r angle}
+#| echo: false
+#| out-width: '50%'
+#| fig-width: 7
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+example_data <- 
+  nhl_train %>% 
+  mutate(
+    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
+  )
+
+example_data %>% 
+  filter(angle <= 25) %>% 
+  sample_n(500) %>% 
+  plot_nhl_shots(emphasis = on_goal, alpha = 1/2) +
+  ggtitle("<= 25 degree angle")
+```
+
+
+## 
+
+```{r}
+nhl_distance_rec <-
+  nhl_angle_rec %>%
+  step_mutate(
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2)
+  )
+```
+
+
+```{r distance}
+#| echo: false
+#| out-width: '50%'
+#| fig-width: 7
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+example_data %>% 
+  filter(distance <= 40) %>% 
+  sample_n(500) %>% 
+  plot_nhl_shots(emphasis = on_goal, alpha = 1/2) +
+  ggtitle("distance <= 30")
+```
+
+
+# 
+
+```{r}
+nhl_behind_rec <-
+  nhl_distance_rec %>%
+  step_mutate(
+    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
+  )
+```
+
+
+```{r goal-line}
+#| echo: false
+#| out-width: '50%'
+#| fig-width: 7
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+example_data %>% 
+  filter(behind_goal_line == 1) %>% 
+  plot_nhl_shots(emphasis = on_goal, alpha = 1/2) +
+  ggtitle("behind goal line")
+```
+
+
+## Fit different recipes
+
+A workflow set can cross models and/or preprocessors and then resample them _en masse_. 
+
+```{r nhl-feature-sets}
+#| cache: true
+nhl_glm_set_res <-
+  workflow_set(
+    list(dummy = nhl_indicators, encoded = nhl_effect_rec,
+         angle = nhl_angle_rec, dist = nhl_distance_rec, 
+         bgl = nhl_behind_rec),
+    list(logistic = logistic_reg())
+  ) %>%
+  workflow_map(fn = "fit_resamples", resamples = nhl_val, verbose = TRUE)
+```
+
+## Compare recipes
+
+```{r rank-res-code}
+#| eval: false
+
+library(forcats)
+collect_metrics(nhl_glm_set_res) %>%
+  filter(.metric == "roc_auc") %>%
+  mutate(
+    features = gsub("_logistic", "", wflow_id), 
+    features = fct_reorder(features, mean)
+  ) %>%
+  ggplot(aes(x = mean, y = features)) +
+  geom_point() +
+  labs(y = NULL, x = "ROC AUC (validation set)")
+```
+
+## Compare recipes
+
+```{r}
+#| ref.label: 'rank-res-code'
+#| echo: false
+
+```
+
+## Debugging a recipe
+
+90% of the time, you will want to use a workflow to estimate and apply a recipe.
+
+If you have an error, the original recipe object (e.g. `encoded_players`) can be estimated manually with a function called `prep()`. It is analogous to `fit()`.
+
+This returns the fitted recipe. This can help debug any issues.
+
+Another function (`bake()`) is analogous to `predict()` and gives you the processed data back.
+
+## More on recipes
+
+-   Once `fit()` is called on a workflow, changing the model does not re-fit the recipe.
+-   A list of all known steps is [here](https://www.tidymodels.org/find/recipes/).
+-   Some steps can be [skipped](https://recipes.tidymodels.org/articles/Skipping.html) when using `predict()`.
+-   The [order](https://recipes.tidymodels.org/articles/Ordering.html) of the steps matters.
+
+
+```{r teardown}
+#| include: false
+parallel::stopCluster(cl)
+```
