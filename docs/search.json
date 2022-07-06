@@ -1173,35 +1173,35 @@
     "href": "slides/06-tuning-hyperparameters.html#tuning-parameters",
     "title": "6 - Tuning hyperparameters",
     "section": "Tuning parameters",
-    "text": "Tuning parameters\nThese are model or preprocessing parameters that are important but cannot be estimated directly from the data.\nSome examples:\n\nTree depth in decision trees.\nNumber of neighbors in a K-nearest neighbor model.\n\nSome others…"
+    "text": "Tuning parameters\nSome model or preprocessing parameters cannot be estimated directly from the data.\n\nSome examples:\n\nTree depth in decision trees\nNumber of neighbors in a K-nearest neighbor model"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#optimizing-tuning-parameters",
     "href": "slides/06-tuning-hyperparameters.html#optimizing-tuning-parameters",
     "title": "6 - Tuning hyperparameters",
     "section": "Optimizing tuning parameters",
-    "text": "Optimizing tuning parameters\nThe main approach is to try different values and measure their performance.\nThis can lead us to good values for these parameters.\nOnce the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set."
+    "text": "Optimizing tuning parameters\n\nTry different values and measure their performance.\n\n\n\nFind good values for these parameters.\n\n\n\n\nOnce the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set."
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#optimizing-tuning-parameters-1",
     "href": "slides/06-tuning-hyperparameters.html#optimizing-tuning-parameters-1",
     "title": "6 - Tuning hyperparameters",
     "section": "Optimizing tuning parameters",
-    "text": "Optimizing tuning parameters\nThe main two classes of optimization models are:\n\nGrid search where a pre-defined set of candidate values are tested.\nIterative search methods suggest/estimate new values of candidate parameters to evaluate."
+    "text": "Optimizing tuning parameters\nThe main two strategies for optimization are:\n\n\nGrid search, which tests a pre-defined set of candidate values\nIterative search, which suggest/estimate new values of candidate parameters to evaluate"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#choosing-tuning-parameters",
     "href": "slides/06-tuning-hyperparameters.html#choosing-tuning-parameters",
     "title": "6 - Tuning hyperparameters",
     "section": "Choosing tuning parameters    ",
-    "text": "Choosing tuning parameters    \nLet’s take our previous recipe and add a few changes:\n\nglm_rec <-\n  recipe(on_goal ~ ., data = nhl_train) %>%\n  step_lencode_mixed(player, outcome = vars(on_goal)) %>%\n  step_dummy(all_nominal_predictors()) %>%\n  step_mutate(\n    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),\n    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),\n    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)\n  ) %>%\n  step_rm(coord_x, coord_y) %>%\n  step_zv(all_predictors()) %>%\n  step_ns(angle, deg_free = tune(\"angle\")) %>%\n  step_ns(distance, deg_free = tune(\"distance\")) %>%\n  step_normalize(all_numeric_predictors())\nglm_wflow <-\n  workflow() %>%\n  add_model(logistic_reg()) %>%\n  add_recipe(glm_rec)"
+    "text": "Choosing tuning parameters    \nLet’s take our previous recipe and add a few changes:\n\nglm_rec <-\n  recipe(on_goal ~ ., data = nhl_train) %>%\n  step_lencode_mixed(player, outcome = vars(on_goal)) %>%\n  step_dummy(all_nominal_predictors()) %>%\n  step_mutate(\n    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),\n    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),\n    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)\n  ) %>%\n  step_rm(coord_x, coord_y) %>%\n  step_zv(all_predictors()) %>%\n  step_ns(angle, deg_free = tune(\"angle\")) %>%\n  step_ns(distance, deg_free = tune(\"distance\")) %>%\n  step_normalize(all_numeric_predictors())\n\nglm_wflow <-\n  workflow() %>%\n  add_model(logistic_reg()) %>%\n  add_recipe(glm_rec)"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#grid-search",
     "href": "slides/06-tuning-hyperparameters.html#grid-search",
     "title": "6 - Tuning hyperparameters",
     "section": "Grid search",
-    "text": "Grid search\nThis is the most basic (but very effective) way for tuning models.\ntidymodels has pre-defined information on tuning parameters, such as their type, range, transformations, etc.\nA grid can be created manually or automatically.\nThe extract_parameter_set_dials() function extracts the tuning parameters and the info.\nThe grid_*() functions can make a grid."
+    "text": "Grid search\nParameters\n\nThe tidymodels framework provides pre-defined information on tuning parameters (such as their type, range, transformations, etc)\nThe extract_parameter_set_dials() function extracts these tuning parameters and the info\n\n\n\nGrids\n\nCreate your grid manually or automatically\nThe grid_*() functions can make a grid\n\n\n\nMost basic (but very effective) way to tune models"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#manual-grid---get-parameters",
@@ -1221,22 +1221,22 @@
     "objectID": "slides/06-tuning-hyperparameters.html#update-parameter-ranges",
     "href": "slides/06-tuning-hyperparameters.html#update-parameter-ranges",
     "title": "6 - Tuning hyperparameters",
-    "section": "Update parameter ranges",
-    "text": "Update parameter ranges\n\n\n\nset.seed(2)\ngrid <- \n  glm_wflow %>% \n  extract_parameter_set_dials() %>% \n  update(angle = spline_degree(c(2L, 20L)),\n         distance = spline_degree(c(2L, 20L))) %>% \n  grid_latin_hypercube(size = 25)\n\ngrid\n\n\n\n#> # A tibble: 24 × 2\n#>    angle distance\n#>    <int>    <int>\n#>  1    16        6\n#>  2    20       11\n#>  3     8       19\n#>  4    14        7\n#>  5    16       17\n#>  6    10       11\n#>  7    19        5\n#>  8    18       17\n#>  9    15       16\n#> 10    11       15\n#> # … with 14 more rows"
+    "section": "Update parameter ranges  ",
+    "text": "Update parameter ranges  \n\nset.seed(2)\ngrid <- \n  glm_wflow %>% \n  extract_parameter_set_dials() %>% \n  update(angle = spline_degree(c(2L, 20L)),\n         distance = spline_degree(c(2L, 20L))) %>% \n  grid_latin_hypercube(size = 25)\n\ngrid\n#> # A tibble: 24 × 2\n#>    angle distance\n#>    <int>    <int>\n#>  1    16        6\n#>  2    20       11\n#>  3     8       19\n#>  4    14        7\n#>  5    16       17\n#>  6    10       11\n#>  7    19        5\n#>  8    18       17\n#>  9    15       16\n#> 10    11       15\n#> # … with 14 more rows"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#the-results",
     "href": "slides/06-tuning-hyperparameters.html#the-results",
     "title": "6 - Tuning hyperparameters",
     "section": "The results  ",
-    "text": "The results  \n\n\n\ngrid %>% \n  ggplot(aes(angle, distance)) +\n  geom_point(cex = 4)"
+    "text": "The results  \n\n\ngrid %>% \n  ggplot(aes(angle, distance)) +\n  geom_point(size = 4)"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#grid-search-1",
     "href": "slides/06-tuning-hyperparameters.html#grid-search-1",
     "title": "6 - Tuning hyperparameters",
-    "section": "Grid search ",
-    "text": "Grid search \nThe tune_*() functions can be used to tune models.\ntune_grid() is pretty representative of their syntax (and is similar to fit_resamples()):\n\nctrl <- control_grid(save_pred = TRUE, parallel_over = \"everything\")\n\nset.seed(9)\nglm_res <-\n  glm_wflow %>%\n  tune_grid(resamples = nhl_val, grid = grid, control = ctrl)\nglm_res\n#> # Tuning results\n#> # Validation Set Split (0.8/0.2)  \n#> # A tibble: 1 × 5\n#>   splits              id         .metrics          .notes            .predictions         \n#>   <list>              <chr>      <list>            <list>            <list>               \n#> 1 <split [7288/1822]> validation <tibble [48 × 6]> <tibble [24 × 3]> <tibble [43,728 × 8]>\n#> \n#> There were issues with some computations:\n#> \n#>   - Warning(s) x24: prediction from a rank-deficient fit may be misleading\n#> \n#> Use `collect_notes(object)` for more information."
+    "section": "Grid search   ",
+    "text": "Grid search   \n\nctrl <- control_grid(save_pred = TRUE, parallel_over = \"everything\")\n\nset.seed(9)\nglm_res <-\n  glm_wflow %>%\n  tune_grid(resamples = nhl_val, grid = grid, control = ctrl)\nglm_res\n#> # Tuning results\n#> # Validation Set Split (0.8/0.2)  \n#> # A tibble: 1 × 5\n#>   splits              id         .metrics          .notes            .predictions         \n#>   <list>              <chr>      <list>            <list>            <list>               \n#> 1 <split [7288/1822]> validation <tibble [48 × 6]> <tibble [24 × 3]> <tibble [43,728 × 8]>\n#> \n#> There were issues with some computations:\n#> \n#>   - Warning(s) x24: prediction from a rank-deficient fit may be misleading\n#> \n#> Use `collect_notes(object)` for more information.\n\n\n\ntune_grid() is representative of tuning function syntax\nsimilar to fit_resamples()"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#grid-results",
@@ -1270,22 +1270,22 @@
     "objectID": "slides/06-tuning-hyperparameters.html#boosted-trees-1",
     "href": "slides/06-tuning-hyperparameters.html#boosted-trees-1",
     "title": "6 - Tuning hyperparameters",
-    "section": "Boosted Trees",
-    "text": "Boosted Trees\nThe creation of the tree has two phases:\n\nThe growing phase where splits are made until we meet some condition\n\nmaximum depth,\nrun out of data\n\nTree pruning where the ends of the trees are removed until the “right sized” tree is found."
+    "section": "Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵",
+    "text": "Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵\n\nEnsemble many decision tree models\n\n\n\nDecision tree\n\nSeries of splits or if/then statements based on predictors\nFirst the tree grows until some condition is met (maximum depth, no more data)\nThen the tree is pruned to reduce its complexity"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#tree-based-models",
     "href": "slides/06-tuning-hyperparameters.html#tree-based-models",
     "title": "6 - Tuning hyperparameters",
-    "section": "Tree-based Models",
-    "text": "Tree-based Models"
+    "section": "Tree-based models",
+    "text": "Tree-based models\n\n\n\n\n\n\n\n\n\n\ndecision tree - creates a series of splits on predictors that partition them into two groups to maximize the purity of the resulting sets\nif/then statements that make up a tree structure"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#boosting",
     "href": "slides/06-tuning-hyperparameters.html#boosting",
     "title": "6 - Tuning hyperparameters",
-    "section": "Boosting",
-    "text": "Boosting\nBoosting methods fit a sequence of tree-based models.\nEach is dependent on the last and tries to compensate to any poor results in the previous models\n\nThis is akin to gradient-based steepest ascent methods from calculus."
+    "section": "Boosting    ",
+    "text": "Boosting    \n\nxgb_spec <-\n  boost_tree(\n    trees = 500, min_n = tune(), stop_iter = tune(), tree_depth = tune(),\n    learn_rate = tune(), loss_reduction = tune()\n  ) %>%\n  set_mode(\"classification\") %>% \n  set_engine(\"xgboost\", validation = 1/10) # <- for better early stopping\n\nxgb_rec <- \n  recipe(on_goal ~ ., data = nhl_train) %>% \n  step_lencode_mixed(player, outcome = vars(on_goal)) %>% \n  step_dummy(all_nominal_predictors()) %>%\n  step_zv(all_predictors())\n\nxgb_wflow <- \n  workflow() %>% \n  add_model(xgb_spec) %>% \n  add_recipe(xgb_rec)"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#boosting-1",
@@ -1306,35 +1306,35 @@
     "href": "slides/06-tuning-hyperparameters.html#running-in-parallel",
     "title": "6 - Tuning hyperparameters",
     "section": "Running in parallel",
-    "text": "Running in parallel\n\n\nGrid search, combined with resampling, ends up fitting a lot of models.\nThese models don’t depend on one another and can be run in parallel.\nWe can use a parallel backend to do this:\n\ncores <- parallel::detectCores(logical = FALSE)\nlibrary(doParallel)\ncl <- makePSOCKcluster(cores)\nregisterDoParallel(cl)"
+    "text": "Running in parallel\n\n\n\nGrid search, combined with resampling, requires fitting a lot of models!\nThese models don’t depend on one another and can be run in parallel.\n\n\nWe can use a parallel backend to do this:\n\ncores <- parallel::detectCores(logical = FALSE)\nlibrary(doParallel)\ncl <- makePSOCKcluster(cores)\nregisterDoParallel(cl)"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#running-in-parallel-1",
     "href": "slides/06-tuning-hyperparameters.html#running-in-parallel-1",
     "title": "6 - Tuning hyperparameters",
     "section": "Running in parallel",
-    "text": "Running in parallel\nThere are various degrees of speed-ups that are fairly linear up until the number of physical cores."
+    "text": "Running in parallel\nSpeed-ups are fairly linear up to the number of physical cores."
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#tuning",
     "href": "slides/06-tuning-hyperparameters.html#tuning",
     "title": "6 - Tuning hyperparameters",
     "section": "Tuning ",
-    "text": "Tuning \nThis will take some time to run…\n\nset.seed(9)\nxgb_res <-\n  xgb_wflow %>%\n  tune_grid(resamples = nhl_val, grid = 20, control = ctrl) # automatic grid now!\nxgb_res\n#> # Tuning results\n#> # Validation Set Split (0.8/0.2)  \n#> # A tibble: 1 × 5\n#>   splits              id         .metrics          .notes           .predictions          \n#>   <list>              <chr>      <list>            <list>           <list>                \n#> 1 <split [7288/1822]> validation <tibble [40 × 9]> <tibble [0 × 3]> <tibble [36,440 × 11]>"
+    "text": "Tuning \nThis will take some time to run ⏳\n\nset.seed(9)\nxgb_res <-\n  xgb_wflow %>%\n  tune_grid(resamples = nhl_val, grid = 20, control = ctrl) # automatic grid now!\nxgb_res\n#> # Tuning results\n#> # Validation Set Split (0.8/0.2)  \n#> # A tibble: 1 × 5\n#>   splits              id         .metrics          .notes           .predictions          \n#>   <list>              <chr>      <list>            <list>           <list>                \n#> 1 <split [7288/1822]> validation <tibble [40 × 9]> <tibble [0 × 3]> <tibble [36,440 × 11]>"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#tuning-results",
     "href": "slides/06-tuning-hyperparameters.html#tuning-results",
     "title": "6 - Tuning hyperparameters",
-    "section": "Tuning Results ",
-    "text": "Tuning Results \n\nautoplot(xgb_res)"
+    "section": "Tuning results ",
+    "text": "Tuning results \n\ncollect_metrics(glm_res)\n#> # A tibble: 48 × 8\n#>    angle distance .metric  .estimator  mean     n std_err .config              \n#>    <int>    <int> <chr>    <chr>      <dbl> <int>   <dbl> <chr>                \n#>  1    16        6 accuracy binary     0.620     1      NA Preprocessor01_Model1\n#>  2    16        6 roc_auc  binary     0.645     1      NA Preprocessor01_Model1\n#>  3    20       11 accuracy binary     0.616     1      NA Preprocessor02_Model1\n#>  4    20       11 roc_auc  binary     0.645     1      NA Preprocessor02_Model1\n#>  5     8       19 accuracy binary     0.617     1      NA Preprocessor03_Model1\n#>  6     8       19 roc_auc  binary     0.649     1      NA Preprocessor03_Model1\n#>  7    14        7 accuracy binary     0.617     1      NA Preprocessor04_Model1\n#>  8    14        7 roc_auc  binary     0.646     1      NA Preprocessor04_Model1\n#>  9    16       17 accuracy binary     0.615     1      NA Preprocessor05_Model1\n#> 10    16       17 roc_auc  binary     0.647     1      NA Preprocessor05_Model1\n#> # … with 38 more rows"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#compare-models",
     "href": "slides/06-tuning-hyperparameters.html#compare-models",
     "title": "6 - Tuning hyperparameters",
     "section": "Compare models",
-    "text": "Compare models\nBest logistic regression results:\n\nnhl_distance_res %>%\n  collect_metrics() %>% \n  filter(.metric == \"roc_auc\")\n#> # A tibble: 1 × 6\n#>   .metric .estimator  mean     n std_err .config             \n#>   <chr>   <chr>      <dbl> <int>   <dbl> <chr>               \n#> 1 roc_auc binary     0.596     1      NA Preprocessor1_Model1\n\nBest boosting results:\n\n\nshow_best(xgb_res, metric = \"roc_auc\", n = 1) %>% \n  select(.metric, .estimator, mean, n, std_err, .config)\n#> # A tibble: 1 × 6\n#>   .metric .estimator  mean     n std_err .config              \n#>   <chr>   <chr>      <dbl> <int>   <dbl> <chr>                \n#> 1 roc_auc binary     0.747     1      NA Preprocessor1_Model08"
+    "text": "Compare models\nBest logistic regression results:\n\nnhl_distance_res %>%\n  collect_metrics() %>% \n  filter(.metric == \"roc_auc\")\n#> # A tibble: 1 × 6\n#>   .metric .estimator  mean     n std_err .config             \n#>   <chr>   <chr>      <dbl> <int>   <dbl> <chr>               \n#> 1 roc_auc binary     0.596     1      NA Preprocessor1_Model1\n\n\nBest boosting results:\n\n\nshow_best(xgb_res, metric = \"roc_auc\", n = 1) %>% \n  select(.metric, .estimator, mean, n, std_err, .config)\n#> # A tibble: 1 × 6\n#>   .metric .estimator  mean     n std_err .config              \n#>   <chr>   <chr>      <dbl> <int>   <dbl> <chr>                \n#> 1 roc_auc binary     0.747     1      NA Preprocessor1_Model08"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#your-turn-to-tune",
@@ -1355,28 +1355,28 @@
     "href": "slides/06-tuning-hyperparameters.html#the-final-fit",
     "title": "6 - Tuning hyperparameters",
     "section": "The final fit  ",
-    "text": "The final fit  \n\ntest_res <- \n  xgb_wflow %>% \n  last_fit(split = nhl_split)\ntest_res\n#> # Resampling results\n#> # Manual resampling \n#> # A tibble: 1 × 6\n#>   splits              id               .metrics         .notes           .predictions         .workflow \n#>   <list>              <chr>            <list>           <list>           <list>               <list>    \n#> 1 <split [9110/3037]> train/test split <tibble [2 × 4]> <tibble [0 × 3]> <tibble [3,037 × 6]> <workflow>"
+    "text": "The final fit  \n\ntest_res <- \n  xgb_wflow %>% \n  last_fit(split = nhl_split)\ntest_res\n#> # Resampling results\n#> # Manual resampling \n#> # A tibble: 1 × 6\n#>   splits              id               .metrics         .notes           .predictions         .workflow \n#>   <list>              <chr>            <list>           <list>           <list>               <list>    \n#> 1 <split [9110/3037]> train/test split <tibble [2 × 4]> <tibble [0 × 3]> <tibble [3,037 × 6]> <workflow>\n\n\nRemember that last_fit() fits one time with the training set and evaluates one time on the testing set."
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#estimates-of-roc-auc",
     "href": "slides/06-tuning-hyperparameters.html#estimates-of-roc-auc",
     "title": "6 - Tuning hyperparameters",
     "section": "Estimates of ROC AUC ",
-    "text": "Estimates of ROC AUC \nValidation results from tuning:\n\n# Resampling results\nxgb_res %>% \n  show_best(metric = \"roc_auc\", n = 1) %>% \n  select(.metric, mean, n, std_err)\n#> # A tibble: 1 × 4\n#>   .metric  mean     n std_err\n#>   <chr>   <dbl> <int>   <dbl>\n#> 1 roc_auc 0.747     1      NA\n\nTest set results:\n\ntest_res %>% collect_metrics()\n#> # A tibble: 2 × 4\n#>   .metric  .estimator .estimate .config             \n#>   <chr>    <chr>          <dbl> <chr>               \n#> 1 accuracy binary         0.695 Preprocessor1_Model1\n#> 2 roc_auc  binary         0.738 Preprocessor1_Model1"
+    "text": "Estimates of ROC AUC \nValidation results from tuning:\n\nxgb_res %>% \n  show_best(metric = \"roc_auc\", n = 1) %>% \n  select(.metric, mean, n, std_err)\n#> # A tibble: 1 × 4\n#>   .metric  mean     n std_err\n#>   <chr>   <dbl> <int>   <dbl>\n#> 1 roc_auc 0.747     1      NA\n\n\nTest set results:\n\ntest_res %>% collect_metrics()\n#> # A tibble: 2 × 4\n#>   .metric  .estimator .estimate .config             \n#>   <chr>    <chr>          <dbl> <chr>               \n#> 1 accuracy binary         0.695 Preprocessor1_Model1\n#> 2 roc_auc  binary         0.738 Preprocessor1_Model1"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#final-fitted-workflow",
     "href": "slides/06-tuning-hyperparameters.html#final-fitted-workflow",
     "title": "6 - Tuning hyperparameters",
     "section": "Final fitted workflow",
-    "text": "Final fitted workflow\nThe final fitted workflow, fit using the training set, can be pulled out:\n\nfinal_xgb_wflow <- \n  test_res %>% \n  extract_workflow()\n\n# use to predict or deploy via vetiver\npredict(final_xgb_wflow, nhl_test[1:3,])\n#> # A tibble: 3 × 1\n#>   .pred_class\n#>   <fct>      \n#> 1 no         \n#> 2 yes        \n#> 3 yes"
+    "text": "Final fitted workflow\nExtract the final fitted workflow, fit using the training set:\n\nfinal_xgb_wflow <- \n  test_res %>% \n  extract_workflow()\n\n# use this object to predict or deploy\npredict(final_xgb_wflow, nhl_test[1:3,])\n#> # A tibble: 3 × 1\n#>   .pred_class\n#>   <fct>      \n#> 1 no         \n#> 2 yes        \n#> 3 yes"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#next-steps",
     "href": "slides/06-tuning-hyperparameters.html#next-steps",
     "title": "6 - Tuning hyperparameters",
     "section": "Next steps",
-    "text": "Next steps\n\nWe can use explainers to help characterize the model and the predictions.\nDocument the model.\nCreate an applicability domain model to help monitor our data over time.\nDeploy the model.\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Next steps\n\nUse explainers to characterize the model and the predictions.\n\n\n\nDocument the model.\n\n\n\n\nCreate an applicability domain model to help monitor our data over time.\n\n\n\n\nDeploy the model.\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
     "objectID": "slides/01-introduction.html#workshop-policies-1",
@@ -1482,5 +1482,152 @@
     "title": "7 - Wrapping up",
     "section": "Resources to keep learning",
     "text": "Resources to keep learning\n\n\nhttps://www.tidymodels.org/\n\n\n\n\nhttps://www.tmwr.org/\n\n\n\n\nhttp://www.feat.engineering/\n\n\n\n\nhttps://smltar.com/\n\n\n\nFollow us on Twitter and at the tidyverse blog for updates!"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#manual-grid",
+    "href": "slides/06-tuning-hyperparameters.html#manual-grid",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Manual grid  ",
+    "text": "Manual grid  \n\nglm_wflow %>% \n  extract_parameter_set_dials()\n#> Collection of 2 parameters for tuning\n#> \n#>  identifier     type    object\n#>       angle deg_free nparam[+]\n#>    distance deg_free nparam[+]\n\n\nA parameter set can be updated (e.g. to change the ranges)"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#manual-grid-1",
+    "href": "slides/06-tuning-hyperparameters.html#manual-grid-1",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Manual grid  ",
+    "text": "Manual grid  \n\n\n\nset.seed(2)\ngrid <- \n  glm_wflow %>% \n  extract_parameter_set_dials() %>% \n  grid_latin_hypercube(size = 25)\n\ngrid\n#> # A tibble: 23 × 2\n#>    angle distance\n#>    <int>    <int>\n#>  1    12        4\n#>  2    15        8\n#>  3     6       14\n#>  4    10        5\n#>  5    12       12\n#>  6     7        8\n#>  7    14        3\n#>  8    14       13\n#>  9    11       12\n#> 10     8       11\n#> # … with 13 more rows\n\n\n\n\nA space-filling design like this tends to perform better than random grids.\nSpace-filling designs are also usually more efficient than regular grids."
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#tuning-results-1",
+    "href": "slides/06-tuning-hyperparameters.html#tuning-results-1",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Tuning results ",
+    "text": "Tuning results \n\ncollect_metrics(glm_res, summarize = FALSE)\n#> # A tibble: 48 × 7\n#>    id         angle distance .metric  .estimator .estimate .config              \n#>    <chr>      <int>    <int> <chr>    <chr>          <dbl> <chr>                \n#>  1 validation    16        6 accuracy binary         0.620 Preprocessor01_Model1\n#>  2 validation    16        6 roc_auc  binary         0.645 Preprocessor01_Model1\n#>  3 validation    20       11 accuracy binary         0.616 Preprocessor02_Model1\n#>  4 validation    20       11 roc_auc  binary         0.645 Preprocessor02_Model1\n#>  5 validation     8       19 accuracy binary         0.617 Preprocessor03_Model1\n#>  6 validation     8       19 roc_auc  binary         0.649 Preprocessor03_Model1\n#>  7 validation    14        7 accuracy binary         0.617 Preprocessor04_Model1\n#>  8 validation    14        7 roc_auc  binary         0.646 Preprocessor04_Model1\n#>  9 validation    16       17 accuracy binary         0.615 Preprocessor05_Model1\n#> 10 validation    16       17 roc_auc  binary         0.647 Preprocessor05_Model1\n#> # … with 38 more rows"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#pick-a-parameter-combination",
+    "href": "slides/06-tuning-hyperparameters.html#pick-a-parameter-combination",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Pick a parameter combination ",
+    "text": "Pick a parameter combination \nYou can create a tibble of your own or use one of the tune::select_*() functions:\n\nshow_best(glm_res, metric = \"roc_auc\")\n#> # A tibble: 5 × 8\n#>   angle distance .metric .estimator  mean     n std_err .config              \n#>   <int>    <int> <chr>   <chr>      <dbl> <int>   <dbl> <chr>                \n#> 1     3       15 roc_auc binary     0.650     1      NA Preprocessor13_Model1\n#> 2     3       13 roc_auc binary     0.649     1      NA Preprocessor11_Model1\n#> 3     8       19 roc_auc binary     0.649     1      NA Preprocessor03_Model1\n#> 4     5       19 roc_auc binary     0.649     1      NA Preprocessor24_Model1\n#> 5     6        9 roc_auc binary     0.649     1      NA Preprocessor17_Model1\nselect_best(glm_res, metric = \"roc_auc\")\n#> # A tibble: 1 × 3\n#>   angle distance .config              \n#>   <int>    <int> <chr>                \n#> 1     3       15 Preprocessor13_Model1"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#tuning-results-2",
+    "href": "slides/06-tuning-hyperparameters.html#tuning-results-2",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Tuning results ",
+    "text": "Tuning results \n\nautoplot(xgb_res)"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#choose-a-parameter-combination",
+    "href": "slides/06-tuning-hyperparameters.html#choose-a-parameter-combination",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Choose a parameter combination ",
+    "text": "Choose a parameter combination \n\nshow_best(glm_res, metric = \"roc_auc\")\n#> # A tibble: 5 × 8\n#>   angle distance .metric .estimator  mean     n std_err .config              \n#>   <int>    <int> <chr>   <chr>      <dbl> <int>   <dbl> <chr>                \n#> 1     3       15 roc_auc binary     0.650     1      NA Preprocessor13_Model1\n#> 2     3       13 roc_auc binary     0.649     1      NA Preprocessor11_Model1\n#> 3     8       19 roc_auc binary     0.649     1      NA Preprocessor03_Model1\n#> 4     5       19 roc_auc binary     0.649     1      NA Preprocessor24_Model1\n#> 5     6        9 roc_auc binary     0.649     1      NA Preprocessor17_Model1"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#boosted-trees-2",
+    "href": "slides/06-tuning-hyperparameters.html#boosted-trees-2",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵",
+    "text": "Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵\nBoosting methods fit a sequence of tree-based models.\n\n\nEach tree is dependent on the one before and tries to compensate for any poor results in the previous models.\nThis is like gradient-based steepest ascent methods from calculus."
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#decision-tree-1",
+    "href": "slides/06-tuning-hyperparameters.html#decision-tree-1",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Decision tree",
+    "text": "Decision tree"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#boosted-trees-3",
+    "href": "slides/06-tuning-hyperparameters.html#boosted-trees-3",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵",
+    "text": "Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵\nMost modern boosting methods have a lot of tuning parameters!\n\n\nFor tree growth and pruning (min_n, max_depth, etc)\nFor boosting (trees, stop_iter, learn_rate)\n\n\n\nWe’ll use early stopping to stop boosting when a few iterations produce consecutively worse results."
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#boosted-trees-4",
+    "href": "slides/06-tuning-hyperparameters.html#boosted-trees-4",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Boosted trees    ",
+    "text": "Boosted trees    \n\nxgb_spec <-\n  boost_tree(\n    trees = 500, min_n = tune(), stop_iter = tune(), tree_depth = tune(),\n    learn_rate = tune(), loss_reduction = tune()\n  ) %>%\n  set_mode(\"classification\") %>% \n  set_engine(\"xgboost\", validation = 1/10) # <- for better early stopping\n\nxgb_rec <- \n  recipe(on_goal ~ ., data = nhl_train) %>% \n  step_lencode_mixed(player, outcome = vars(on_goal)) %>% \n  step_dummy(all_nominal_predictors()) %>%\n  step_zv(all_predictors())\n\nxgb_wflow <- \n  workflow() %>% \n  add_model(xgb_spec) %>% \n  add_recipe(xgb_rec)"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#your-turn",
+    "href": "slides/06-tuning-hyperparameters.html#your-turn",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Your turn",
+    "text": "Your turn\n\nCreate a grid for our tunable workflow.\nTry out creating a regular grid.\n\n\n\n03:00"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#create-a-grid",
+    "href": "slides/06-tuning-hyperparameters.html#create-a-grid",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Create a grid  ",
+    "text": "Create a grid  \n\nglm_wflow %>% \n  extract_parameter_set_dials()\n#> Collection of 2 parameters for tuning\n#> \n#>  identifier     type    object\n#>       angle deg_free nparam[+]\n#>    distance deg_free nparam[+]\n\n\nA parameter set can be updated (e.g. to change the ranges)"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#create-a-grid-1",
+    "href": "slides/06-tuning-hyperparameters.html#create-a-grid-1",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Create a grid  ",
+    "text": "Create a grid  \n\n\n\nset.seed(2)\ngrid <- \n  glm_wflow %>% \n  extract_parameter_set_dials() %>% \n  grid_latin_hypercube(size = 25)\n\ngrid\n#> # A tibble: 23 × 2\n#>    angle distance\n#>    <int>    <int>\n#>  1    12        4\n#>  2    15        8\n#>  3     6       14\n#>  4    10        5\n#>  5    12       12\n#>  6     7        8\n#>  7    14        3\n#>  8    14       13\n#>  9    11       12\n#> 10     8       11\n#> # … with 13 more rows\n\n\n\n\nA space-filling design like this tends to perform better than random grids.\nSpace-filling designs are also usually more efficient than regular grids."
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#your-turn-1",
+    "href": "slides/06-tuning-hyperparameters.html#your-turn-1",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Your turn",
+    "text": "Your turn\n\nTune our glm_flow.\nWhat happens if you use the default of grid = 10?\n\n\n\n03:00"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#choose-a-parameter-combination-1",
+    "href": "slides/06-tuning-hyperparameters.html#choose-a-parameter-combination-1",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Choose a parameter combination ",
+    "text": "Choose a parameter combination \nCreate your own tibble for final parameters or use one of the tune::select_*() functions:\n\nselect_best(glm_res, metric = \"roc_auc\")\n#> # A tibble: 1 × 3\n#>   angle distance .config              \n#>   <int>    <int> <chr>                \n#> 1     3       15 Preprocessor13_Model1\n\n\nThis best result has:\n\nlow-degree spline for angle (less “wiggly”, less complex)\nhigh-degree spline for distance (more “wiggly”, more complex)"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#your-turn-2",
+    "href": "slides/06-tuning-hyperparameters.html#your-turn-2",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Your turn",
+    "text": "Your turn\n\nTry an alternative selection strategy.\nRead the docs for select_by_pct_loss().\nTry choosing a model that has a simpler relationship for distance.\n\n\n\n03:00"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#choose-a-parameter-combination-2",
+    "href": "slides/06-tuning-hyperparameters.html#choose-a-parameter-combination-2",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Choose a parameter combination ",
+    "text": "Choose a parameter combination \n\nselect_best(glm_res, metric = \"roc_auc\")\n#> # A tibble: 1 × 3\n#>   angle distance .config              \n#>   <int>    <int> <chr>                \n#> 1     3       15 Preprocessor13_Model1\nselect_by_pct_loss(glm_res, distance, metric = \"roc_auc\")\n#> # A tibble: 1 × 10\n#>   angle distance .metric .estimator  mean     n std_err .config               .best .loss\n#>   <int>    <int> <chr>   <chr>      <dbl> <int>   <dbl> <chr>                 <dbl> <dbl>\n#> 1    20       11 roc_auc binary     0.645     1      NA Preprocessor02_Model1 0.650 0.782"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#your-turn-3",
+    "href": "slides/06-tuning-hyperparameters.html#your-turn-3",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Your turn",
+    "text": "Your turn\n\nCreate your boosted tree workflow.\n\n\n\n03:00"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#your-turn-4",
+    "href": "slides/06-tuning-hyperparameters.html#your-turn-4",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Your turn",
+    "text": "Your turn\n\nStart tuning the boosted tree model!\nWe won’t wait for everyone’s tuning to finish, but take this time to get it started before we move on.\n\n\n\n03:00"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#your-turn-5",
+    "href": "slides/06-tuning-hyperparameters.html#your-turn-5",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Your turn",
+    "text": "Your turn\n\nCan you get better ROC results?\nTry increasing tree_depth beyond the original range.\n\n\n\n20:00"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#your-turn-6",
+    "href": "slides/06-tuning-hyperparameters.html#your-turn-6",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Your turn",
+    "text": "Your turn\n\nFinalize your workflow with the best parameters.\nCreate a final fit.\n\n\n\n20:00"
   }
 ]
