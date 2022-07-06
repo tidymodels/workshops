@@ -1,14 +1,14 @@
 ---
 title: "6 - Tuning hyperparameters"
 subtitle: "Machine learning with tidymodels"
-height: 900
-width: 1600
 format:
   revealjs: 
     slide-number: true
     footer: <https://workshops.tidymodels.org>
     include-before-body: header.html
     theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
 knitr:
   opts_chunk: 
     echo: true
@@ -20,7 +20,6 @@ knitr:
 #| include: false
 #| file: setup.R
 ```
-
 
 ```{r more-setup}
 #| include: false
@@ -36,7 +35,6 @@ options(width = 200)
 
 ggplot2::theme_set(ggplot2::theme_bw())
 ```
-
 
 ```{r previously}
 #| include: false
@@ -80,14 +78,14 @@ nhl_distance_res <-
 
 ## Tuning parameters
 
-These are model or preprocessing parameters that are important but cannot be estimated directly from the data.
+Some model or preprocessing parameters cannot be estimated directly from the data.
+
+. . .
 
 Some examples:
 
--   Tree depth in decision trees.
--   Number of neighbors in a K-nearest neighbor model.
-
-Some others...
+-   Tree depth in decision trees
+-   Number of neighbors in a K-nearest neighbor model
 
 # Activation function in neural networks?
 
@@ -95,47 +93,58 @@ Sigmoidal functions, ReLu, etc.
 
 ::: fragment
 Yes, it is a tuning parameter.
+✅
 :::
 
 # Number of PCA components to retain?
 
 ::: fragment
 Yes, it is a tuning parameter.
+✅
 :::
 
 # Bayesian priors for model parameters?
 
 ::: fragment
-Hmmm probably not. These are based on prior belief.
+Hmmmm, probably not.
+These are based on prior belief.
+❌
 :::
 
 # Covariance/correlation matrix structure in mixed models?
 
 ::: fragment
-Yes but it is unlikely to affect performance.
+Yes, but it is unlikely to affect performance.
 :::
 
 ::: fragment
 It will impact inference though.
+🤔
 :::
 
-## Optimizing tuning parameters
+## Optimize tuning parameters
 
-The main approach is to try different values and measure their performance.
+-   Try different values and measure their performance.
 
-This can lead us to good values for these parameters.
+. . .
 
-Once the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set.
+-   Find good values for these parameters.
 
-## Optimizing tuning parameters
+. . .
 
-The main two classes of optimization models are:
+-   Once the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set.
 
--   *Grid search* where a pre-defined set of candidate values are tested.
+## Optimize tuning parameters
 
--   *Iterative search* methods suggest/estimate new values of candidate parameters to evaluate.
+The main two strategies for optimization are:
 
-## Choosing tuning parameters `r I(hexes(c("recipes", "workflows", "parsnip", "tune")))`
+. . .
+
+-   **Grid search** 💠 which tests a pre-defined set of candidate values
+
+-   **Iterative search** 🌀 which suggests/estimates new values of candidate parameters to evaluate
+
+## Choosing tuning parameters `r hexes("recipes","parsnip", "workflows", "tune")`
 
 Let's take our previous recipe and add a few changes:
 
@@ -163,43 +172,41 @@ glm_wflow <-
 
 ## Grid search
 
-This is the most basic (but very effective) way for tuning models.
+#### Parameters
 
-tidymodels has pre-defined information on tuning parameters, such as their type, range, transformations, etc.
+-   The tidymodels framework provides pre-defined information on tuning parameters (such as their type, range, transformations, etc)
 
-A grid can be created manually or automatically.
+-   The `extract_parameter_set_dials()` function extracts these tuning parameters and the info
 
-The `extract_parameter_set_dials()` function extracts the tuning parameters and the info.
+::: fragment
+#### Grids
 
-The `grid_*()` functions can make a grid.
+-   Create your grid manually or automatically
 
-## Manual grid - get parameters `r I(hexes(c("dials", "workflows")))`
+-   The `grid_*()` functions can make a grid
+:::
 
-::: columns
-::: {.column width="50%"}
+::: notes
+Most basic (but very effective) way to tune models
+:::
+
+## Create a grid `r hexes(c("dials", "workflows"))`
+
 ```{r get-param}
-#| eval: false
 #| tidy: false
 glm_wflow %>% 
   extract_parameter_set_dials()
 ```
 
-This type of object can be updated (e.g. to change the ranges, etc)
+::: fragment
+A parameter set can be updated (e.g. to change the ranges)
 :::
 
-::: {.column width="50%"}
-```{r ref.label = 'get-param'}
-#| echo: false
-```
-:::
-:::
-
-## Manual grid - create grid `r I(hexes(c("dials", "workflows")))`
+## Create a grid `r hexes(c("dials", "workflows"))`
 
 ::: columns
 ::: {.column width="50%"}
 ```{r get-grid}
-#| eval: false
 set.seed(2)
 grid <- 
   glm_wflow %>% 
@@ -208,27 +215,45 @@ grid <-
 
 grid
 ```
-
-This is a type of *space-filling design*.
-
-It tends to do much better than random grids and is (usually) more efficient than regular grids.
 :::
 
 ::: {.column width="50%"}
-```{r ref.label = 'get-grid'}
+::: fragment
+-   A *space-filling design* like this tends to perform better than random grids.
+-   Space-filling designs are also usually more efficient than regular grids.
+:::
+:::
+:::
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Create a grid for our tunable workflow.*
+
+*Try creating a regular grid.*
+
+```{r}
 #| echo: false
+countdown(minutes = 3, id = "make-grid")
 ```
-:::
-:::
 
+## Create a grid `r hexes(c("dials", "workflows"))`
 
+```{r get-regular-grid}
+#| code-line-numbers: "5"
+set.seed(2)
+grid <- 
+  glm_wflow %>% 
+  extract_parameter_set_dials() %>% 
+  grid_regular(size = 25)
 
-## Update parameter ranges
+grid
+```
 
-::: columns
-::: {.column width="50%"}
+## Update parameter ranges `r hexes(c("dials", "workflows"))`
+
 ```{r mod-grid-code}
-#| eval: false
 #| code-line-numbers: "5-6"
 set.seed(2)
 grid <- 
@@ -240,46 +265,23 @@ grid <-
 
 grid
 ```
-:::
 
-::: {.column width="50%"}
-```{r mod-grid, ref.label = 'mod-grid-code'}
-#| echo: false
-```
-:::
-:::
+## The results `r hexes(c("dials", "workflows"))`
 
-
-## The results `r I(hexes(c("dials", "workflows")))`
-
-::: columns
-::: {.column width="50%"}
 ```{r show-grid-code}
-#| eval: false
-grid %>% 
-  ggplot(aes(angle, distance)) +
-  geom_point(cex = 4)
-```
-:::
-
-::: {.column width="50%"}
-```{r show-grid, ref.label = 'show-grid-code'}
-#| echo: false
-#| out-width: '90%'
+#| output-location: column
+#| collapse: false
 #| fig-width: 5
 #| fig-height: 5.1
 #| fig-align: 'center'
-#| dev: 'svg'
-#| dev-args: list(bg = "transparent")
+grid %>% 
+  ggplot(aes(angle, distance)) +
+  geom_point(size = 4)
 ```
-:::
-:::
 
-## Grid search `r I(hexes(c("tune")))`
+# Use the `tune_*()` functions to tune models
 
-The `tune_*()` functions can be used to tune models.
-
-`tune_grid()` is pretty representative of their syntax (and is similar to `fit_resamples()`):
+## Grid search `r hexes(c("dials", "workflows", "tune"))`
 
 ```{r tuning}
 #| cache: true
@@ -292,61 +294,110 @@ glm_res <-
 glm_res
 ```
 
-## Grid results `r I(hexes(c("tune")))`
+::: notes
+-   `tune_grid()` is representative of tuning function syntax
+-   similar to `fit_resamples()`
+:::
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Tune our `glm_flow`.*
+
+*What happens if you change `grid` to use the default?*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "tune-glm")
+```
+
+## Grid results `r hexes(c("tune"))`
 
 ```{r autoplot}
-#| out-width: '70%'
-#| fig-width: 8
-#| fig-height: 4
 #| fig-align: 'center'
-#| dev: 'svg'
 #| dev-args: list(bg = "transparent")
 autoplot(glm_res)
 ```
 
-## Returning results `r I(hexes(c("tune")))`
+## Tuning results `r hexes(c("tune"))`
 
 ```{r}
 collect_metrics(glm_res)
+```
 
+## Tuning results `r hexes(c("tune"))`
+
+```{r}
 collect_metrics(glm_res, summarize = FALSE)
 ```
 
-## Picking a parameter combination `r I(hexes(c("tune")))`
-
-You can create a tibble of your own or use one of the `tune::select_*()` functions:
+## Choose a parameter combination `r hexes(c("tune"))`
 
 ```{r}
 show_best(glm_res, metric = "roc_auc")
+```
+
+## Choose a parameter combination `r hexes(c("tune"))`
+
+Create your own tibble for final parameters or use one of the `tune::select_*()` functions:
+
+```{r}
 select_best(glm_res, metric = "roc_auc")
 ```
 
-## Boosted Trees
+. . .
 
-An ensemble method of tree-based models.
+This best result has:
 
-A tree-based model creates a series of splits on predictors that partition them into two groups to maximize the purity of the resulting sets.
+-   low-degree spline for `angle` (less "wiggly", less complex)
+-   high-degree spline for `distance` (more "wiggly", more complex)
 
-This forms a series of if/then statements that make up a tree structure.
+## Your turn {transition="slide-in"}
 
-## Boosted Trees
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-The creation of the tree has two phases:
+*Try an alternative selection strategy.*
 
--   The *growing* phase where splits are made until we meet some condition
-    -   maximum depth,
-    -   run out of data
--   Tree *pruning* where the ends of the trees are removed until the "right sized" tree is found.
+*Read the docs for `select_by_pct_loss()`.*
 
-## Tree-based Models
+*Try choosing a model that has a simpler (less "wiggly") relationship for `distance`.*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "select-by-pct-loss")
+```
+
+## Choose a parameter combination `r hexes(c("tune"))`
+
+```{r}
+select_best(glm_res, metric = "roc_auc")
+select_by_pct_loss(glm_res, distance, metric = "roc_auc")
+```
+
+# Boosted trees 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌵🌴🌲🌳🌴🌵🌳🌴🌳
+
+## Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵
+
+-   Ensemble many decision tree models
+
+::: fragment
+### Review how a decision tree model works:
+
+-   Series of splits or if/then statements based on predictors
+
+-   First the tree *grows* until some condition is met (maximum depth, no more data)
+
+-   Then the tree is *pruned* to reduce its complexity
+:::
+
+## Single decision tree
 
 ```{r tree-example}
 #| echo: false
-#| out-width: '60%'
-#| fig-width: 16
-#| fig-height: 7
+#| fig.width: 16
+#| fig.height: 8
 #| fig-align: 'center'
-#| dev: 'svg'
 #| dev-args: list(bg = "transparent")
 tree_mod <- 
     rpart::rpart(
@@ -358,26 +409,31 @@ tree_mod <-
 plot(tree_mod)
 ```
 
-## Boosting
+## Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵
 
-Boosting methods fit a sequence of tree-based models.
+Boosting methods fit a *sequence* of tree-based models.
 
-Each is dependent on the last and tries to compensate to any poor results in the previous models
+. . .
 
--   This is akin to gradient-based steepest ascent methods from calculus.
+-   Each tree is dependent on the one before and tries to compensate for any poor results in the previous trees.
 
+-   This is like gradient-based steepest ascent methods from calculus.
 
-## Boosting
+## Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵
 
-Most modern boosting methods have *a lot* of tuning parameters. 
+Most modern boosting methods have *a lot* of tuning parameters!
 
-* For tree growth and pruning (`min_n`, `max_depth`. etc). 
+. . .
 
-* For boosting (`trees`, `stop_iter`, `learn_rate`)
+-   For tree growth and pruning (`min_n`, `max_depth`, etc)
 
-We'll use *early stopping* where we stop boosting when a few iterations produces consecutively worse results.
+-   For boosting (`trees`, `stop_iter`, `learn_rate`)
 
-## Boosting `r I(hexes(c("recipes", "workflows", "parsnip", "tune")))`
+. . .
+
+We'll use *early stopping* to stop boosting when a few iterations produce consecutively worse results.
+
+## Boosted trees `r hexes(c("recipes", "workflows", "parsnip", "tune"))`
 
 ```{r xgboost-specs}
 xgb_spec <-
@@ -400,14 +456,26 @@ xgb_wflow <-
   add_recipe(xgb_rec)
 ```
 
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Create your boosted tree workflow.*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "xgb-wflow")
+```
+
 ## Running in parallel
 
 ::: columns
-::: {.column width="50%"}
-Grid search, combined with resampling, ends up fitting a lot of models.
+::: {.column width="60%"}
+-   Grid search, combined with resampling, requires fitting a lot of models!
 
-These models don't depend on one another and can be run in parallel.
+-   These models don't depend on one another and can be run in parallel.
 
+::: fragment
 We can use a *parallel backend* to do this:
 
 ```{r, eval= FALSE}
@@ -417,15 +485,15 @@ cl <- makePSOCKcluster(cores)
 registerDoParallel(cl)
 ```
 :::
+:::
 
-::: {.column width="50%"}
+::: {.column width="40%"}
 ```{r resample-times}
 #| echo: false
 #| out-width: '100%'
 #| fig-width: 6
 #| fig-height: 6
 #| fig-align: 'center'
-#| dev: 'svg'
 #| dev-args: list(bg = "transparent")
 load("resamples_times.RData")
 resamples_times %>%
@@ -441,7 +509,7 @@ resamples_times %>%
 
 ## Running in parallel
 
-There are various degrees of speed-ups that are fairly linear up until the number of physical cores.
+Speed-ups are fairly linear up to the number of physical cores.
 
 ```{r}
 #| echo: false
@@ -449,7 +517,6 @@ There are various degrees of speed-ups that are fairly linear up until the numbe
 #| fig-width: 9
 #| fig-height: 4
 #| fig-align: 'center'
-#| dev: 'svg'
 #| dev-args: list(bg = "transparent")
 load("xgb_times.RData")
 ggplot(times, aes(x = num_cores, y = speed_up, color = parallel_over, shape = parallel_over)) + 
@@ -463,9 +530,9 @@ ggplot(times, aes(x = num_cores, y = speed_up, color = parallel_over, shape = pa
   theme(legend.position = "top")
 ```
 
-## Tuning `r I(hexes(c("tune")))`
+## Tuning `r hexes(c("tune"))`
 
-This will take some time to run...
+This will take some time to run ⏳
 
 ```{r xgboost-tune}
 #| cache: true
@@ -476,14 +543,26 @@ xgb_res <-
 xgb_res
 ```
 
-## Tuning Results `r I(hexes(c("tune")))`
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Start tuning the boosted tree model!*
+
+*We won't wait for everyone's tuning to finish, but take this time to get it started before we move on.*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "tune-xgboost")
+```
+
+## Tuning results `r hexes(c("tune"))`
 
 ```{r autoplot-xgboost}
 #| out-width: '100%'
 #| fig-width: 11
 #| fig-height: 4
 #| fig-align: 'center'
-#| dev: 'svg'
 #| dev-args: list(bg = "transparent")
 autoplot(xgb_res)
 ```
@@ -498,6 +577,7 @@ nhl_distance_res %>%
   filter(.metric == "roc_auc")
 ```
 
+::: fragment
 Best boosting results:
 
 ```{r xgboost-best}
@@ -505,21 +585,22 @@ Best boosting results:
 show_best(xgb_res, metric = "roc_auc", n = 1) %>% 
   select(.metric, .estimator, mean, n, std_err, .config)
 ```
+:::
 
+## Your turn {transition="slide-in"}
 
-## Your turn to tune {transition="slide-in"}
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-Can you get better ROC results by just increasing `tree_depth` beyond the tested range? 
+*Can you get better ROC results?*
 
+*Try increasing `tree_depth` beyond the original range.*
 
 ```{r}
 #| echo: false
-countdown(minutes = 20)
+countdown(minutes = 20, id = "improve-xgb")
 ```
 
-
-
-## Updating the workflow `r I(hexes(c("workflows", "tune")))`
+## Updating the workflow `r hexes(c("workflows", "tune"))`
 
 ```{r xgboost-select-best}
 #| cache: true
@@ -534,7 +615,7 @@ xgb_wflow <-
 xgb_wflow
 ```
 
-## The final fit `r I(hexes(c("workflows", "tune")))`
+## The final fit `r hexes(c("workflows", "tune"))`
 
 ```{r xgboost-final}
 #| cache: true
@@ -544,50 +625,71 @@ test_res <-
 test_res
 ```
 
-## Estimates of ROC AUC `r I(hexes(c("tune")))`
+. . .
 
-Validation results from tuning: 
+Remember that `last_fit()` **fits** one time with the training set and **evaluates** one time with the testing set.
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Finalize your workflow with the best parameters.*
+
+*Create a final fit.*
+
+```{r}
+#| echo: false
+countdown(minutes = 20, id = "finalize-xgb")
+```
+
+## Estimates of ROC AUC `r hexes(c("tune"))`
+
+Validation results from tuning:
 
 ```{r xgb-val-res}
-# Resampling results
 xgb_res %>% 
   show_best(metric = "roc_auc", n = 1) %>% 
   select(.metric, mean, n, std_err)
 ```
 
-Test set results: 
+::: fragment
+Test set results:
 
 ```{r xgb-test-res}
 test_res %>% collect_metrics()
 ```
+:::
 
 ## Final fitted workflow
 
-The final fitted workflow, fit using the training set, can be pulled out:
+Extract the final fitted workflow, fit using the training set:
 
 ```{r}
 final_xgb_wflow <- 
   test_res %>% 
   extract_workflow()
 
-# use to predict or deploy via vetiver
+# use this object to predict or deploy
 predict(final_xgb_wflow, nhl_test[1:3,])
 ```
 
 ## Next steps
 
-* We can use explainers to help characterize the model and the predictions. 
+-   Use [explainers](https://www.tmwr.org/explain.html) to characterize the model and the predictions.
 
-* Document the model.
+. . .
 
-* Create an applicability domain model to help monitor our data over time.
+-   [Document the model](https://vetiver.rstudio.com/learn-more/model-card.html).
 
-* Deploy the model.
+. . .
 
+-   Create an [applicability domain model](https://applicable.tidymodels.org/) to help monitor our data over time.
 
+. . .
+
+-   [Deploy the model](https://vetiver.rstudio.com/get-started/).
 
 ```{r teardown}
 #| include: false
 parallel::stopCluster(cl)
 ```
-
