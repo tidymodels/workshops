@@ -488,6 +488,38 @@ xgb_res
 autoplot(xgb_res)
 ```
 
+## Again with the location features
+
+```{r xgb-coord}
+coord_rec <- 
+  xgb_rec %>%
+  step_mutate(
+    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
+  ) %>% 
+  step_rm(coord_x, coord_y)
+
+xgb_coord_wflow <- 
+  workflow() %>% 
+  add_model(xgb_spec) %>% 
+  add_recipe(coord_rec)
+
+set.seed(9)
+xgb_coord_res <-
+  xgb_coord_wflow %>%
+  tune_grid(resamples = nhl_val, grid = 20, control = ctrl)
+```
+
+## Did the machine figure it out? 
+
+```{r}
+show_best(xgb_res, metric = "roc_auc")
+
+show_best(xgb_coord_res, metric = "roc_auc")
+```
+
+
 ## Compare models
 
 Best logistic regression results:
@@ -606,16 +638,15 @@ xgb_curves <-
   mutate(wflow_id = "xgboost") %>% 
   relocate(wflow_id)
 
-lvls <- c("dummy_logistic", "encoded_logistic", "angle_logistic", "dist_logistic", 
-          "bgl_logistic", "splines", "xgboost")
+xgb_coord_curves <- 
+  xgb_coord_res %>% 
+  collect_predictions(parameters = select_best(xgb_coord_res, metric = "roc_auc")) %>% 
+  roc_curve(on_goal, .pred_yes) %>% 
+  mutate(wflow_id = "xgboost-coords") %>% 
+  relocate(wflow_id)
 
-load("roc_curves.RData")
+roc_curves_part_6 <- bind_rows(spline_curves, xgb_curves, xgb_coord_curves) 
 
-roc_curves <- 
-  roc_curves %>% 
-  bind_rows(spline_curves, xgb_curves) %>%
-  mutate(wflow_id = factor(wflow_id, levels = lvls))
-
-save(roc_curves, file = "roc_curves.RData", compress = TRUE)
+save(roc_curves_part_6, file = "roc_curves_part_6.RData", compress = TRUE)
 ```
 
