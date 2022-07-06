@@ -140,9 +140,9 @@ The main two strategies for optimization are:
 
 . . .
 
--   **Grid search,** which tests a pre-defined set of candidate values
+-   **Grid search** 💠 which tests a pre-defined set of candidate values
 
--   **Iterative search**, which suggest/estimate new values of candidate parameters to evaluate
+-   **Iterative search** 🌀 which suggests/estimates new values of candidate parameters to evaluate
 
 ## Choosing tuning parameters `r hexes("recipes","parsnip", "workflows", "tune")`
 
@@ -240,7 +240,7 @@ countdown(minutes = 3, id = "make-grid")
 
 ## Create a grid `r hexes(c("dials", "workflows"))`
 
-```{r get-grid}
+```{r get-regular-grid}
 #| code-line-numbers: "5"
 set.seed(2)
 grid <- 
@@ -250,7 +250,6 @@ grid <-
 
 grid
 ```
-
 
 ## Update parameter ranges `r hexes(c("dials", "workflows"))`
 
@@ -308,13 +307,10 @@ glm_res
 
 *What happens if you change `grid` to use the default?*
 
-
 ```{r}
 #| echo: false
 countdown(minutes = 3, id = "tune-glm")
 ```
-
-
 
 ## Grid results `r hexes(c("tune"))`
 
@@ -352,11 +348,10 @@ select_best(glm_res, metric = "roc_auc")
 
 . . .
 
-This best result has: 
+This best result has:
 
-- low-degree spline for `angle` (less "wiggly", less complex)
-- high-degree spline for `distance` (more "wiggly", more complex)
-
+-   low-degree spline for `angle` (less "wiggly", less complex)
+-   high-degree spline for `distance` (more "wiggly", more complex)
 
 ## Your turn {transition="slide-in"}
 
@@ -367,7 +362,6 @@ This best result has:
 *Read the docs for `select_by_pct_loss()`.*
 
 *Try choosing a model that has a simpler (less "wiggly") relationship for `distance`.*
-
 
 ```{r}
 #| echo: false
@@ -380,8 +374,6 @@ countdown(minutes = 3, id = "select-by-pct-loss")
 select_best(glm_res, metric = "roc_auc")
 select_by_pct_loss(glm_res, distance, metric = "roc_auc")
 ```
-
-
 
 # Boosted trees 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌵🌴🌲🌳🌴🌵🌳🌴🌳
 
@@ -470,12 +462,10 @@ xgb_wflow <-
 
 *Create your boosted tree workflow.*
 
-
 ```{r}
 #| echo: false
 countdown(minutes = 3, id = "xgb-wflow")
 ```
-
 
 ## Running in parallel
 
@@ -561,13 +551,10 @@ xgb_res
 
 *We won't wait for everyone's tuning to finish, but take this time to get it started before we move on.*
 
-
 ```{r}
 #| echo: false
 countdown(minutes = 3, id = "tune-xgboost")
 ```
-
-
 
 ## Tuning results `r hexes(c("tune"))`
 
@@ -590,8 +577,7 @@ nhl_distance_res %>%
   filter(.metric == "roc_auc")
 ```
 
-:::fragment
-
+::: fragment
 Best boosting results:
 
 ```{r xgboost-best}
@@ -599,14 +585,13 @@ Best boosting results:
 show_best(xgb_res, metric = "roc_auc", n = 1) %>% 
   select(.metric, .estimator, mean, n, std_err, .config)
 ```
-
 :::
 
 ## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Can you get better ROC results?* 
+*Can you get better ROC results?*
 
 *Try increasing `tree_depth` beyond the original range.*
 
@@ -648,7 +633,7 @@ Remember that `last_fit()` **fits** one time with the training set and **evaluat
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Finalize your workflow with the best parameters.* 
+*Finalize your workflow with the best parameters.*
 
 *Create a final fit.*
 
@@ -656,7 +641,6 @@ Remember that `last_fit()` **fits** one time with the training set and **evaluat
 #| echo: false
 countdown(minutes = 20, id = "finalize-xgb")
 ```
-
 
 ## Estimates of ROC AUC `r hexes(c("tune"))`
 
@@ -668,14 +652,12 @@ xgb_res %>%
   select(.metric, mean, n, std_err)
 ```
 
-:::fragment
-
+::: fragment
 Test set results:
 
 ```{r xgb-test-res}
 test_res %>% collect_metrics()
 ```
-
 :::
 
 ## Final fitted workflow
@@ -693,19 +675,19 @@ predict(final_xgb_wflow, nhl_test[1:3,])
 
 ## Next steps
 
--   Use explainers to characterize the model and the predictions.
+-   Use [explainers](https://www.tmwr.org/explain.html) to characterize the model and the predictions.
 
 . . .
 
--   Document the model.
+-   [Document the model](https://vetiver.rstudio.com/learn-more/model-card.html).
 
 . . .
 
--   Create an applicability domain model to help monitor our data over time.
+-   Create an [applicability domain model](https://applicable.tidymodels.org/) to help monitor our data over time.
 
 . . .
 
--   Deploy the model.
+-   [Deploy the model](https://vetiver.rstudio.com/get-started/).
 
 ```{r teardown}
 #| include: false

@@ -1194,7 +1194,7 @@
     "href": "slides/06-tuning-hyperparameters.html#choosing-tuning-parameters",
     "title": "6 - Tuning hyperparameters",
     "section": "Choosing tuning parameters    ",
-    "text": "Choosing tuning parameters    \nLet’s take our previous recipe and add a few changes:\n\nglm_rec <-\n  recipe(on_goal ~ ., data = nhl_train) %>%\n  step_lencode_mixed(player, outcome = vars(on_goal)) %>%\n  step_dummy(all_nominal_predictors()) %>%\n  step_mutate(\n    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),\n    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),\n    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)\n  ) %>%\n  step_rm(coord_x, coord_y) %>%\n  step_zv(all_predictors()) %>%\n  step_ns(angle, deg_free = tune(\"angle\")) %>%\n  step_ns(distance, deg_free = tune(\"distance\")) %>%\n  step_normalize(all_numeric_predictors())\n\nglm_wflow <-\n  workflow() %>%\n  add_model(logistic_reg()) %>%\n  add_recipe(glm_rec)"
+    "text": "Choosing tuning parameters    \nLet’s take our previous recipe and add a few changes:\n\nglm_rec <-\n  recipe(on_goal ~ ., data = nhl_train) %>%\n  step_lencode_mixed(player, outcome = vars(on_goal)) %>%\n  step_dummy(all_nominal_predictors()) %>%\n  step_mutate(\n    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),\n    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),\n    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)\n  ) %>%\n  step_rm(coord_x, coord_y) %>%\n  step_zv(all_predictors()) %>%\n  step_ns(angle, deg_free = tune(\"angle\")) %>%\n  step_ns(distance, deg_free = tune(\"distance\")) %>%\n  step_normalize(all_numeric_predictors())\nglm_wflow <-\n  workflow() %>%\n  add_model(logistic_reg()) %>%\n  add_recipe(glm_rec)"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#grid-search",
@@ -1271,7 +1271,7 @@
     "href": "slides/06-tuning-hyperparameters.html#boosted-trees-1",
     "title": "6 - Tuning hyperparameters",
     "section": "Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵",
-    "text": "Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵\n\nEnsemble many decision tree models\n\n\n\nDecision tree\n\nSeries of splits or if/then statements based on predictors\nFirst the tree grows until some condition is met (maximum depth, no more data)\nThen the tree is pruned to reduce its complexity"
+    "text": "Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵\n\nEnsemble many decision tree models\n\n\n\nReview how a decision tree model works:\n\nSeries of splits or if/then statements based on predictors\nFirst the tree grows until some condition is met (maximum depth, no more data)\nThen the tree is pruned to reduce its complexity"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#tree-based-models",
@@ -1355,7 +1355,7 @@
     "href": "slides/06-tuning-hyperparameters.html#the-final-fit",
     "title": "6 - Tuning hyperparameters",
     "section": "The final fit  ",
-    "text": "The final fit  \n\ntest_res <- \n  xgb_wflow %>% \n  last_fit(split = nhl_split)\ntest_res\n#> # Resampling results\n#> # Manual resampling \n#> # A tibble: 1 × 6\n#>   splits              id               .metrics         .notes           .predictions         .workflow \n#>   <list>              <chr>            <list>           <list>           <list>               <list>    \n#> 1 <split [9110/3037]> train/test split <tibble [2 × 4]> <tibble [0 × 3]> <tibble [3,037 × 6]> <workflow>\n\n\nRemember that last_fit() fits one time with the training set and evaluates one time on the testing set."
+    "text": "The final fit  \n\ntest_res <- \n  xgb_wflow %>% \n  last_fit(split = nhl_split)\ntest_res\n#> # Resampling results\n#> # Manual resampling \n#> # A tibble: 1 × 6\n#>   splits              id               .metrics         .notes           .predictions         .workflow \n#>   <list>              <chr>            <list>           <list>           <list>               <list>    \n#> 1 <split [9110/3037]> train/test split <tibble [2 × 4]> <tibble [0 × 3]> <tibble [3,037 × 6]> <workflow>\n\n\nRemember that last_fit() fits one time with the training set and evaluates one time with the testing set."
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#estimates-of-roc-auc",
@@ -1530,7 +1530,7 @@
     "href": "slides/06-tuning-hyperparameters.html#boosted-trees-2",
     "title": "6 - Tuning hyperparameters",
     "section": "Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵",
-    "text": "Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵\nBoosting methods fit a sequence of tree-based models.\n\n\nEach tree is dependent on the one before and tries to compensate for any poor results in the previous models.\nThis is like gradient-based steepest ascent methods from calculus."
+    "text": "Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵\nBoosting methods fit a sequence of tree-based models.\n\n\nEach tree is dependent on the one before and tries to compensate for any poor results in the previous trees.\nThis is like gradient-based steepest ascent methods from calculus."
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#decision-tree-1",
@@ -1558,7 +1558,7 @@
     "href": "slides/06-tuning-hyperparameters.html#your-turn",
     "title": "6 - Tuning hyperparameters",
     "section": "Your turn",
-    "text": "Your turn\n\nCreate a grid for our tunable workflow.\nTry out creating a regular grid.\n\n\n\n03:00"
+    "text": "Your turn\n\nCreate a grid for our tunable workflow.\nTry creating a regular grid.\n\n\n\n03:00"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#create-a-grid",
@@ -1579,7 +1579,7 @@
     "href": "slides/06-tuning-hyperparameters.html#your-turn-1",
     "title": "6 - Tuning hyperparameters",
     "section": "Your turn",
-    "text": "Your turn\n\nTune our glm_flow.\nWhat happens if you use the default of grid = 10?\n\n\n\n03:00"
+    "text": "Your turn\n\nTune our glm_flow.\nWhat happens if you change grid to use the default?\n\n\n\n03:00"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#choose-a-parameter-combination-1",
@@ -1593,7 +1593,7 @@
     "href": "slides/06-tuning-hyperparameters.html#your-turn-2",
     "title": "6 - Tuning hyperparameters",
     "section": "Your turn",
-    "text": "Your turn\n\nTry an alternative selection strategy.\nRead the docs for select_by_pct_loss().\nTry choosing a model that has a simpler relationship for distance.\n\n\n\n03:00"
+    "text": "Your turn\n\nTry an alternative selection strategy.\nRead the docs for select_by_pct_loss().\nTry choosing a model that has a simpler (less “wiggly”) relationship for distance.\n\n\n\n03:00"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#choose-a-parameter-combination-2",
@@ -1629,5 +1629,33 @@
     "title": "6 - Tuning hyperparameters",
     "section": "Your turn",
     "text": "Your turn\n\nFinalize your workflow with the best parameters.\nCreate a final fit.\n\n\n\n20:00"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#optimize-tuning-parameters",
+    "href": "slides/06-tuning-hyperparameters.html#optimize-tuning-parameters",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Optimize tuning parameters",
+    "text": "Optimize tuning parameters\n\nTry different values and measure their performance.\n\n\n\nFind good values for these parameters.\n\n\n\n\nOnce the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set."
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#optimize-tuning-parameters-1",
+    "href": "slides/06-tuning-hyperparameters.html#optimize-tuning-parameters-1",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Optimize tuning parameters",
+    "text": "Optimize tuning parameters\nThe main two strategies for optimization are:\n\n\nGrid search 💠 which tests a pre-defined set of candidate values\nIterative search 🌀 which suggests/estimates new values of candidate parameters to evaluate"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#create-a-grid-2",
+    "href": "slides/06-tuning-hyperparameters.html#create-a-grid-2",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Create a grid  ",
+    "text": "Create a grid  \n\nset.seed(2)\ngrid <- \n  glm_wflow %>% \n  extract_parameter_set_dials() %>% \n  grid_regular(size = 25)\n\ngrid\n#> # A tibble: 9 × 2\n#>   angle distance\n#>   <int>    <int>\n#> 1     1        1\n#> 2     8        1\n#> 3    15        1\n#> 4     1        8\n#> 5     8        8\n#> 6    15        8\n#> 7     1       15\n#> 8     8       15\n#> 9    15       15"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#single-decision-tree",
+    "href": "slides/06-tuning-hyperparameters.html#single-decision-tree",
+    "title": "6 - Tuning hyperparameters",
+    "section": "Single decision tree",
+    "text": "Single decision tree"
   }
 ]

@@ -439,8 +439,8 @@
 <p>It will impact inference though. 🤔</p>
 </div>
 </section>
-<section id="optimizing-tuning-parameters" class="slide level2">
-<h2>Optimizing tuning parameters</h2>
+<section id="optimize-tuning-parameters" class="slide level2">
+<h2>Optimize tuning parameters</h2>
 <ul>
 <li>Try different values and measure their performance.</li>
 </ul>
@@ -455,13 +455,13 @@
 </ul>
 </div>
 </section>
-<section id="optimizing-tuning-parameters-1" class="slide level2">
-<h2>Optimizing tuning parameters</h2>
+<section id="optimize-tuning-parameters-1" class="slide level2">
+<h2>Optimize tuning parameters</h2>
 <p>The main two strategies for optimization are:</p>
 <div class="fragment">
 <ul>
-<li><p><strong>Grid search,</strong> which tests a pre-defined set of candidate values</p></li>
-<li><p><strong>Iterative search</strong>, which suggest/estimate new values of candidate parameters to evaluate</p></li>
+<li><p><strong>Grid search</strong> 💠 which tests a pre-defined set of candidate values</p></li>
+<li><p><strong>Iterative search</strong> 🌀 which suggests/estimates new values of candidate parameters to evaluate</p></li>
 </ul>
 </div>
 </section>
@@ -483,11 +483,10 @@
 <span id="cb1-12"><a href="#cb1-12"></a>  <span class="fu">step_ns</span>(angle, <span class="at">deg_free =</span> <span class="fu">tune</span>(<span class="st">"angle"</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb1-13"><a href="#cb1-13"></a>  <span class="fu">step_ns</span>(distance, <span class="at">deg_free =</span> <span class="fu">tune</span>(<span class="st">"distance"</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb1-14"><a href="#cb1-14"></a>  <span class="fu">step_normalize</span>(<span class="fu">all_numeric_predictors</span>())</span>
-<span id="cb1-15"><a href="#cb1-15"></a></span>
-<span id="cb1-16"><a href="#cb1-16"></a>glm_wflow <span class="ot">&lt;-</span></span>
-<span id="cb1-17"><a href="#cb1-17"></a>  <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb1-18"><a href="#cb1-18"></a>  <span class="fu">add_model</span>(<span class="fu">logistic_reg</span>()) <span class="sc">%&gt;%</span></span>
-<span id="cb1-19"><a href="#cb1-19"></a>  <span class="fu">add_recipe</span>(glm_rec)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-15"><a href="#cb1-15"></a>glm_wflow <span class="ot">&lt;-</span></span>
+<span id="cb1-16"><a href="#cb1-16"></a>  <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb1-17"><a href="#cb1-17"></a>  <span class="fu">add_model</span>(<span class="fu">logistic_reg</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb1-18"><a href="#cb1-18"></a>  <span class="fu">add_recipe</span>(glm_rec)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="grid-search" class="slide level2">
@@ -575,7 +574,7 @@
 <h2>Your turn</h2>
 <p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
 <p><em>Create a grid for our tunable workflow.</em></p>
-<p><em>Try out creating a regular grid.</em></p>
+<p><em>Try creating a regular grid.</em></p>
 <div class="cell">
 <div class="cell-output-display">
 <div class="countdown" id="make-grid" style="right:0;bottom:0;" data-warnwhen="0">
@@ -584,41 +583,65 @@
 </div>
 </div>
 </section>
-<section id="update-parameter-ranges" class="slide level2">
-<h2>Update parameter ranges <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<section id="create-a-grid-2" class="slide level2">
+<h2>Create a grid <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4" data-code-line-numbers="5-6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
+<div class="sourceCode cell-code" id="cb4" data-code-line-numbers="5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
 <span id="cb4-2"><a href="#cb4-2"></a>grid <span class="ot">&lt;-</span> </span>
 <span id="cb4-3"><a href="#cb4-3"></a>  glm_wflow <span class="sc">%&gt;%</span> </span>
 <span id="cb4-4"><a href="#cb4-4"></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb4-5"><a href="#cb4-5"></a>  <span class="fu">update</span>(<span class="at">angle =</span> <span class="fu">spline_degree</span>(<span class="fu">c</span>(2L, 20L)),</span>
-<span id="cb4-6"><a href="#cb4-6"></a>         <span class="at">distance =</span> <span class="fu">spline_degree</span>(<span class="fu">c</span>(2L, 20L))) <span class="sc">%&gt;%</span> </span>
-<span id="cb4-7"><a href="#cb4-7"></a>  <span class="fu">grid_latin_hypercube</span>(<span class="at">size =</span> <span class="dv">25</span>)</span>
-<span id="cb4-8"><a href="#cb4-8"></a></span>
-<span id="cb4-9"><a href="#cb4-9"></a>grid</span>
-<span id="cb4-10"><a href="#cb4-10"></a><span class="co">#&gt; # A tibble: 24 × 2</span></span>
-<span id="cb4-11"><a href="#cb4-11"></a><span class="co">#&gt;    angle distance</span></span>
-<span id="cb4-12"><a href="#cb4-12"></a><span class="co">#&gt;    &lt;int&gt;    &lt;int&gt;</span></span>
-<span id="cb4-13"><a href="#cb4-13"></a><span class="co">#&gt;  1    16        6</span></span>
-<span id="cb4-14"><a href="#cb4-14"></a><span class="co">#&gt;  2    20       11</span></span>
-<span id="cb4-15"><a href="#cb4-15"></a><span class="co">#&gt;  3     8       19</span></span>
-<span id="cb4-16"><a href="#cb4-16"></a><span class="co">#&gt;  4    14        7</span></span>
-<span id="cb4-17"><a href="#cb4-17"></a><span class="co">#&gt;  5    16       17</span></span>
-<span id="cb4-18"><a href="#cb4-18"></a><span class="co">#&gt;  6    10       11</span></span>
-<span id="cb4-19"><a href="#cb4-19"></a><span class="co">#&gt;  7    19        5</span></span>
-<span id="cb4-20"><a href="#cb4-20"></a><span class="co">#&gt;  8    18       17</span></span>
-<span id="cb4-21"><a href="#cb4-21"></a><span class="co">#&gt;  9    15       16</span></span>
-<span id="cb4-22"><a href="#cb4-22"></a><span class="co">#&gt; 10    11       15</span></span>
-<span id="cb4-23"><a href="#cb4-23"></a><span class="co">#&gt; # … with 14 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-5"><a href="#cb4-5"></a>  <span class="fu">grid_regular</span>(<span class="at">size =</span> <span class="dv">25</span>)</span>
+<span id="cb4-6"><a href="#cb4-6"></a></span>
+<span id="cb4-7"><a href="#cb4-7"></a>grid</span>
+<span id="cb4-8"><a href="#cb4-8"></a><span class="co">#&gt; # A tibble: 9 × 2</span></span>
+<span id="cb4-9"><a href="#cb4-9"></a><span class="co">#&gt;   angle distance</span></span>
+<span id="cb4-10"><a href="#cb4-10"></a><span class="co">#&gt;   &lt;int&gt;    &lt;int&gt;</span></span>
+<span id="cb4-11"><a href="#cb4-11"></a><span class="co">#&gt; 1     1        1</span></span>
+<span id="cb4-12"><a href="#cb4-12"></a><span class="co">#&gt; 2     8        1</span></span>
+<span id="cb4-13"><a href="#cb4-13"></a><span class="co">#&gt; 3    15        1</span></span>
+<span id="cb4-14"><a href="#cb4-14"></a><span class="co">#&gt; 4     1        8</span></span>
+<span id="cb4-15"><a href="#cb4-15"></a><span class="co">#&gt; 5     8        8</span></span>
+<span id="cb4-16"><a href="#cb4-16"></a><span class="co">#&gt; 6    15        8</span></span>
+<span id="cb4-17"><a href="#cb4-17"></a><span class="co">#&gt; 7     1       15</span></span>
+<span id="cb4-18"><a href="#cb4-18"></a><span class="co">#&gt; 8     8       15</span></span>
+<span id="cb4-19"><a href="#cb4-19"></a><span class="co">#&gt; 9    15       15</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="update-parameter-ranges" class="slide level2">
+<h2>Update parameter ranges <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5" data-code-line-numbers="5-6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
+<span id="cb5-2"><a href="#cb5-2"></a>grid <span class="ot">&lt;-</span> </span>
+<span id="cb5-3"><a href="#cb5-3"></a>  glm_wflow <span class="sc">%&gt;%</span> </span>
+<span id="cb5-4"><a href="#cb5-4"></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb5-5"><a href="#cb5-5"></a>  <span class="fu">update</span>(<span class="at">angle =</span> <span class="fu">spline_degree</span>(<span class="fu">c</span>(2L, 20L)),</span>
+<span id="cb5-6"><a href="#cb5-6"></a>         <span class="at">distance =</span> <span class="fu">spline_degree</span>(<span class="fu">c</span>(2L, 20L))) <span class="sc">%&gt;%</span> </span>
+<span id="cb5-7"><a href="#cb5-7"></a>  <span class="fu">grid_latin_hypercube</span>(<span class="at">size =</span> <span class="dv">25</span>)</span>
+<span id="cb5-8"><a href="#cb5-8"></a></span>
+<span id="cb5-9"><a href="#cb5-9"></a>grid</span>
+<span id="cb5-10"><a href="#cb5-10"></a><span class="co">#&gt; # A tibble: 24 × 2</span></span>
+<span id="cb5-11"><a href="#cb5-11"></a><span class="co">#&gt;    angle distance</span></span>
+<span id="cb5-12"><a href="#cb5-12"></a><span class="co">#&gt;    &lt;int&gt;    &lt;int&gt;</span></span>
+<span id="cb5-13"><a href="#cb5-13"></a><span class="co">#&gt;  1    16        6</span></span>
+<span id="cb5-14"><a href="#cb5-14"></a><span class="co">#&gt;  2    20       11</span></span>
+<span id="cb5-15"><a href="#cb5-15"></a><span class="co">#&gt;  3     8       19</span></span>
+<span id="cb5-16"><a href="#cb5-16"></a><span class="co">#&gt;  4    14        7</span></span>
+<span id="cb5-17"><a href="#cb5-17"></a><span class="co">#&gt;  5    16       17</span></span>
+<span id="cb5-18"><a href="#cb5-18"></a><span class="co">#&gt;  6    10       11</span></span>
+<span id="cb5-19"><a href="#cb5-19"></a><span class="co">#&gt;  7    19        5</span></span>
+<span id="cb5-20"><a href="#cb5-20"></a><span class="co">#&gt;  8    18       17</span></span>
+<span id="cb5-21"><a href="#cb5-21"></a><span class="co">#&gt;  9    15       16</span></span>
+<span id="cb5-22"><a href="#cb5-22"></a><span class="co">#&gt; 10    11       15</span></span>
+<span id="cb5-23"><a href="#cb5-23"></a><span class="co">#&gt; # … with 14 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="the-results" class="slide level2">
 <h2>The results <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell columns column-output-location" data-layout-align="center">
 <div class="column">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>grid <span class="sc">%&gt;%</span> </span>
-<span id="cb5-2"><a href="#cb5-2"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(angle, distance)) <span class="sc">+</span></span>
-<span id="cb5-3"><a href="#cb5-3"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>grid <span class="sc">%&gt;%</span> </span>
+<span id="cb6-2"><a href="#cb6-2"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(angle, distance)) <span class="sc">+</span></span>
+<span id="cb6-3"><a href="#cb6-3"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div><div class="column">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -638,25 +661,25 @@
 <section id="grid-search-1" class="slide level2">
 <h2>Grid search <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "></h2>
 <div class="cell" data-hash="06-tuning-hyperparameters_cache/revealjs/tuning_8393bf82ac67b495966de65fe665a954">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>ctrl <span class="ot">&lt;-</span> <span class="fu">control_grid</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>, <span class="at">parallel_over =</span> <span class="st">"everything"</span>)</span>
-<span id="cb6-2"><a href="#cb6-2"></a></span>
-<span id="cb6-3"><a href="#cb6-3"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
-<span id="cb6-4"><a href="#cb6-4"></a>glm_res <span class="ot">&lt;-</span></span>
-<span id="cb6-5"><a href="#cb6-5"></a>  glm_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb6-6"><a href="#cb6-6"></a>  <span class="fu">tune_grid</span>(<span class="at">resamples =</span> nhl_val, <span class="at">grid =</span> grid, <span class="at">control =</span> ctrl)</span>
-<span id="cb6-7"><a href="#cb6-7"></a>glm_res</span>
-<span id="cb6-8"><a href="#cb6-8"></a><span class="co">#&gt; # Tuning results</span></span>
-<span id="cb6-9"><a href="#cb6-9"></a><span class="co">#&gt; # Validation Set Split (0.8/0.2)  </span></span>
-<span id="cb6-10"><a href="#cb6-10"></a><span class="co">#&gt; # A tibble: 1 × 5</span></span>
-<span id="cb6-11"><a href="#cb6-11"></a><span class="co">#&gt;   splits              id         .metrics          .notes            .predictions         </span></span>
-<span id="cb6-12"><a href="#cb6-12"></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;      &lt;list&gt;            &lt;list&gt;            &lt;list&gt;               </span></span>
-<span id="cb6-13"><a href="#cb6-13"></a><span class="co">#&gt; 1 &lt;split [7288/1822]&gt; validation &lt;tibble [48 × 6]&gt; &lt;tibble [24 × 3]&gt; &lt;tibble [43,728 × 8]&gt;</span></span>
-<span id="cb6-14"><a href="#cb6-14"></a><span class="co">#&gt; </span></span>
-<span id="cb6-15"><a href="#cb6-15"></a><span class="co">#&gt; There were issues with some computations:</span></span>
-<span id="cb6-16"><a href="#cb6-16"></a><span class="co">#&gt; </span></span>
-<span id="cb6-17"><a href="#cb6-17"></a><span class="co">#&gt;   - Warning(s) x24: prediction from a rank-deficient fit may be misleading</span></span>
-<span id="cb6-18"><a href="#cb6-18"></a><span class="co">#&gt; </span></span>
-<span id="cb6-19"><a href="#cb6-19"></a><span class="co">#&gt; Use `collect_notes(object)` for more information.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>ctrl <span class="ot">&lt;-</span> <span class="fu">control_grid</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>, <span class="at">parallel_over =</span> <span class="st">"everything"</span>)</span>
+<span id="cb7-2"><a href="#cb7-2"></a></span>
+<span id="cb7-3"><a href="#cb7-3"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
+<span id="cb7-4"><a href="#cb7-4"></a>glm_res <span class="ot">&lt;-</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a>  glm_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb7-6"><a href="#cb7-6"></a>  <span class="fu">tune_grid</span>(<span class="at">resamples =</span> nhl_val, <span class="at">grid =</span> grid, <span class="at">control =</span> ctrl)</span>
+<span id="cb7-7"><a href="#cb7-7"></a>glm_res</span>
+<span id="cb7-8"><a href="#cb7-8"></a><span class="co">#&gt; # Tuning results</span></span>
+<span id="cb7-9"><a href="#cb7-9"></a><span class="co">#&gt; # Validation Set Split (0.8/0.2)  </span></span>
+<span id="cb7-10"><a href="#cb7-10"></a><span class="co">#&gt; # A tibble: 1 × 5</span></span>
+<span id="cb7-11"><a href="#cb7-11"></a><span class="co">#&gt;   splits              id         .metrics          .notes            .predictions         </span></span>
+<span id="cb7-12"><a href="#cb7-12"></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;      &lt;list&gt;            &lt;list&gt;            &lt;list&gt;               </span></span>
+<span id="cb7-13"><a href="#cb7-13"></a><span class="co">#&gt; 1 &lt;split [7288/1822]&gt; validation &lt;tibble [48 × 6]&gt; &lt;tibble [24 × 3]&gt; &lt;tibble [43,728 × 8]&gt;</span></span>
+<span id="cb7-14"><a href="#cb7-14"></a><span class="co">#&gt; </span></span>
+<span id="cb7-15"><a href="#cb7-15"></a><span class="co">#&gt; There were issues with some computations:</span></span>
+<span id="cb7-16"><a href="#cb7-16"></a><span class="co">#&gt; </span></span>
+<span id="cb7-17"><a href="#cb7-17"></a><span class="co">#&gt;   - Warning(s) x24: prediction from a rank-deficient fit may be misleading</span></span>
+<span id="cb7-18"><a href="#cb7-18"></a><span class="co">#&gt; </span></span>
+<span id="cb7-19"><a href="#cb7-19"></a><span class="co">#&gt; Use `collect_notes(object)` for more information.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <aside class="notes">
 <ul>
@@ -679,7 +702,7 @@
 <h2>Your turn</h2>
 <p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
 <p><em>Tune our <code>glm_flow</code>.</em></p>
-<p><em>What happens if you use the default of <code>grid = 10</code>?</em></p>
+<p><em>What happens if you change <code>grid</code> to use the default?</em></p>
 <div class="cell">
 <div class="cell-output-display">
 <div class="countdown" id="tune-glm" style="right:0;bottom:0;" data-warnwhen="0">
@@ -691,7 +714,7 @@
 <section id="grid-results" class="slide level2">
 <h2>Grid results <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="fu">autoplot</span>(glm_res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="fu">autoplot</span>(glm_res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure>
@@ -704,66 +727,66 @@
 <section id="tuning-results" class="slide level2">
 <h2>Tuning results <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="fu">collect_metrics</span>(glm_res)</span>
-<span id="cb8-2"><a href="#cb8-2"></a><span class="co">#&gt; # A tibble: 48 × 8</span></span>
-<span id="cb8-3"><a href="#cb8-3"></a><span class="co">#&gt;    angle distance .metric  .estimator  mean     n std_err .config              </span></span>
-<span id="cb8-4"><a href="#cb8-4"></a><span class="co">#&gt;    &lt;int&gt;    &lt;int&gt; &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
-<span id="cb8-5"><a href="#cb8-5"></a><span class="co">#&gt;  1    16        6 accuracy binary     0.620     1      NA Preprocessor01_Model1</span></span>
-<span id="cb8-6"><a href="#cb8-6"></a><span class="co">#&gt;  2    16        6 roc_auc  binary     0.645     1      NA Preprocessor01_Model1</span></span>
-<span id="cb8-7"><a href="#cb8-7"></a><span class="co">#&gt;  3    20       11 accuracy binary     0.616     1      NA Preprocessor02_Model1</span></span>
-<span id="cb8-8"><a href="#cb8-8"></a><span class="co">#&gt;  4    20       11 roc_auc  binary     0.645     1      NA Preprocessor02_Model1</span></span>
-<span id="cb8-9"><a href="#cb8-9"></a><span class="co">#&gt;  5     8       19 accuracy binary     0.617     1      NA Preprocessor03_Model1</span></span>
-<span id="cb8-10"><a href="#cb8-10"></a><span class="co">#&gt;  6     8       19 roc_auc  binary     0.649     1      NA Preprocessor03_Model1</span></span>
-<span id="cb8-11"><a href="#cb8-11"></a><span class="co">#&gt;  7    14        7 accuracy binary     0.617     1      NA Preprocessor04_Model1</span></span>
-<span id="cb8-12"><a href="#cb8-12"></a><span class="co">#&gt;  8    14        7 roc_auc  binary     0.646     1      NA Preprocessor04_Model1</span></span>
-<span id="cb8-13"><a href="#cb8-13"></a><span class="co">#&gt;  9    16       17 accuracy binary     0.615     1      NA Preprocessor05_Model1</span></span>
-<span id="cb8-14"><a href="#cb8-14"></a><span class="co">#&gt; 10    16       17 roc_auc  binary     0.647     1      NA Preprocessor05_Model1</span></span>
-<span id="cb8-15"><a href="#cb8-15"></a><span class="co">#&gt; # … with 38 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="fu">collect_metrics</span>(glm_res)</span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="co">#&gt; # A tibble: 48 × 8</span></span>
+<span id="cb9-3"><a href="#cb9-3"></a><span class="co">#&gt;    angle distance .metric  .estimator  mean     n std_err .config              </span></span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="co">#&gt;    &lt;int&gt;    &lt;int&gt; &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
+<span id="cb9-5"><a href="#cb9-5"></a><span class="co">#&gt;  1    16        6 accuracy binary     0.620     1      NA Preprocessor01_Model1</span></span>
+<span id="cb9-6"><a href="#cb9-6"></a><span class="co">#&gt;  2    16        6 roc_auc  binary     0.645     1      NA Preprocessor01_Model1</span></span>
+<span id="cb9-7"><a href="#cb9-7"></a><span class="co">#&gt;  3    20       11 accuracy binary     0.616     1      NA Preprocessor02_Model1</span></span>
+<span id="cb9-8"><a href="#cb9-8"></a><span class="co">#&gt;  4    20       11 roc_auc  binary     0.645     1      NA Preprocessor02_Model1</span></span>
+<span id="cb9-9"><a href="#cb9-9"></a><span class="co">#&gt;  5     8       19 accuracy binary     0.617     1      NA Preprocessor03_Model1</span></span>
+<span id="cb9-10"><a href="#cb9-10"></a><span class="co">#&gt;  6     8       19 roc_auc  binary     0.649     1      NA Preprocessor03_Model1</span></span>
+<span id="cb9-11"><a href="#cb9-11"></a><span class="co">#&gt;  7    14        7 accuracy binary     0.617     1      NA Preprocessor04_Model1</span></span>
+<span id="cb9-12"><a href="#cb9-12"></a><span class="co">#&gt;  8    14        7 roc_auc  binary     0.646     1      NA Preprocessor04_Model1</span></span>
+<span id="cb9-13"><a href="#cb9-13"></a><span class="co">#&gt;  9    16       17 accuracy binary     0.615     1      NA Preprocessor05_Model1</span></span>
+<span id="cb9-14"><a href="#cb9-14"></a><span class="co">#&gt; 10    16       17 roc_auc  binary     0.647     1      NA Preprocessor05_Model1</span></span>
+<span id="cb9-15"><a href="#cb9-15"></a><span class="co">#&gt; # … with 38 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="tuning-results-1" class="slide level2">
 <h2>Tuning results <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="fu">collect_metrics</span>(glm_res, <span class="at">summarize =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb9-2"><a href="#cb9-2"></a><span class="co">#&gt; # A tibble: 48 × 7</span></span>
-<span id="cb9-3"><a href="#cb9-3"></a><span class="co">#&gt;    id         angle distance .metric  .estimator .estimate .config              </span></span>
-<span id="cb9-4"><a href="#cb9-4"></a><span class="co">#&gt;    &lt;chr&gt;      &lt;int&gt;    &lt;int&gt; &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;                </span></span>
-<span id="cb9-5"><a href="#cb9-5"></a><span class="co">#&gt;  1 validation    16        6 accuracy binary         0.620 Preprocessor01_Model1</span></span>
-<span id="cb9-6"><a href="#cb9-6"></a><span class="co">#&gt;  2 validation    16        6 roc_auc  binary         0.645 Preprocessor01_Model1</span></span>
-<span id="cb9-7"><a href="#cb9-7"></a><span class="co">#&gt;  3 validation    20       11 accuracy binary         0.616 Preprocessor02_Model1</span></span>
-<span id="cb9-8"><a href="#cb9-8"></a><span class="co">#&gt;  4 validation    20       11 roc_auc  binary         0.645 Preprocessor02_Model1</span></span>
-<span id="cb9-9"><a href="#cb9-9"></a><span class="co">#&gt;  5 validation     8       19 accuracy binary         0.617 Preprocessor03_Model1</span></span>
-<span id="cb9-10"><a href="#cb9-10"></a><span class="co">#&gt;  6 validation     8       19 roc_auc  binary         0.649 Preprocessor03_Model1</span></span>
-<span id="cb9-11"><a href="#cb9-11"></a><span class="co">#&gt;  7 validation    14        7 accuracy binary         0.617 Preprocessor04_Model1</span></span>
-<span id="cb9-12"><a href="#cb9-12"></a><span class="co">#&gt;  8 validation    14        7 roc_auc  binary         0.646 Preprocessor04_Model1</span></span>
-<span id="cb9-13"><a href="#cb9-13"></a><span class="co">#&gt;  9 validation    16       17 accuracy binary         0.615 Preprocessor05_Model1</span></span>
-<span id="cb9-14"><a href="#cb9-14"></a><span class="co">#&gt; 10 validation    16       17 roc_auc  binary         0.647 Preprocessor05_Model1</span></span>
-<span id="cb9-15"><a href="#cb9-15"></a><span class="co">#&gt; # … with 38 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="fu">collect_metrics</span>(glm_res, <span class="at">summarize =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="co">#&gt; # A tibble: 48 × 7</span></span>
+<span id="cb10-3"><a href="#cb10-3"></a><span class="co">#&gt;    id         angle distance .metric  .estimator .estimate .config              </span></span>
+<span id="cb10-4"><a href="#cb10-4"></a><span class="co">#&gt;    &lt;chr&gt;      &lt;int&gt;    &lt;int&gt; &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;                </span></span>
+<span id="cb10-5"><a href="#cb10-5"></a><span class="co">#&gt;  1 validation    16        6 accuracy binary         0.620 Preprocessor01_Model1</span></span>
+<span id="cb10-6"><a href="#cb10-6"></a><span class="co">#&gt;  2 validation    16        6 roc_auc  binary         0.645 Preprocessor01_Model1</span></span>
+<span id="cb10-7"><a href="#cb10-7"></a><span class="co">#&gt;  3 validation    20       11 accuracy binary         0.616 Preprocessor02_Model1</span></span>
+<span id="cb10-8"><a href="#cb10-8"></a><span class="co">#&gt;  4 validation    20       11 roc_auc  binary         0.645 Preprocessor02_Model1</span></span>
+<span id="cb10-9"><a href="#cb10-9"></a><span class="co">#&gt;  5 validation     8       19 accuracy binary         0.617 Preprocessor03_Model1</span></span>
+<span id="cb10-10"><a href="#cb10-10"></a><span class="co">#&gt;  6 validation     8       19 roc_auc  binary         0.649 Preprocessor03_Model1</span></span>
+<span id="cb10-11"><a href="#cb10-11"></a><span class="co">#&gt;  7 validation    14        7 accuracy binary         0.617 Preprocessor04_Model1</span></span>
+<span id="cb10-12"><a href="#cb10-12"></a><span class="co">#&gt;  8 validation    14        7 roc_auc  binary         0.646 Preprocessor04_Model1</span></span>
+<span id="cb10-13"><a href="#cb10-13"></a><span class="co">#&gt;  9 validation    16       17 accuracy binary         0.615 Preprocessor05_Model1</span></span>
+<span id="cb10-14"><a href="#cb10-14"></a><span class="co">#&gt; 10 validation    16       17 roc_auc  binary         0.647 Preprocessor05_Model1</span></span>
+<span id="cb10-15"><a href="#cb10-15"></a><span class="co">#&gt; # … with 38 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="choose-a-parameter-combination" class="slide level2">
 <h2>Choose a parameter combination <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="fu">show_best</span>(glm_res, <span class="at">metric =</span> <span class="st">"roc_auc"</span>)</span>
-<span id="cb10-2"><a href="#cb10-2"></a><span class="co">#&gt; # A tibble: 5 × 8</span></span>
-<span id="cb10-3"><a href="#cb10-3"></a><span class="co">#&gt;   angle distance .metric .estimator  mean     n std_err .config              </span></span>
-<span id="cb10-4"><a href="#cb10-4"></a><span class="co">#&gt;   &lt;int&gt;    &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
-<span id="cb10-5"><a href="#cb10-5"></a><span class="co">#&gt; 1     3       15 roc_auc binary     0.650     1      NA Preprocessor13_Model1</span></span>
-<span id="cb10-6"><a href="#cb10-6"></a><span class="co">#&gt; 2     3       13 roc_auc binary     0.649     1      NA Preprocessor11_Model1</span></span>
-<span id="cb10-7"><a href="#cb10-7"></a><span class="co">#&gt; 3     8       19 roc_auc binary     0.649     1      NA Preprocessor03_Model1</span></span>
-<span id="cb10-8"><a href="#cb10-8"></a><span class="co">#&gt; 4     5       19 roc_auc binary     0.649     1      NA Preprocessor24_Model1</span></span>
-<span id="cb10-9"><a href="#cb10-9"></a><span class="co">#&gt; 5     6        9 roc_auc binary     0.649     1      NA Preprocessor17_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="fu">show_best</span>(glm_res, <span class="at">metric =</span> <span class="st">"roc_auc"</span>)</span>
+<span id="cb11-2"><a href="#cb11-2"></a><span class="co">#&gt; # A tibble: 5 × 8</span></span>
+<span id="cb11-3"><a href="#cb11-3"></a><span class="co">#&gt;   angle distance .metric .estimator  mean     n std_err .config              </span></span>
+<span id="cb11-4"><a href="#cb11-4"></a><span class="co">#&gt;   &lt;int&gt;    &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
+<span id="cb11-5"><a href="#cb11-5"></a><span class="co">#&gt; 1     3       15 roc_auc binary     0.650     1      NA Preprocessor13_Model1</span></span>
+<span id="cb11-6"><a href="#cb11-6"></a><span class="co">#&gt; 2     3       13 roc_auc binary     0.649     1      NA Preprocessor11_Model1</span></span>
+<span id="cb11-7"><a href="#cb11-7"></a><span class="co">#&gt; 3     8       19 roc_auc binary     0.649     1      NA Preprocessor03_Model1</span></span>
+<span id="cb11-8"><a href="#cb11-8"></a><span class="co">#&gt; 4     5       19 roc_auc binary     0.649     1      NA Preprocessor24_Model1</span></span>
+<span id="cb11-9"><a href="#cb11-9"></a><span class="co">#&gt; 5     6        9 roc_auc binary     0.649     1      NA Preprocessor17_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="choose-a-parameter-combination-1" class="slide level2">
 <h2>Choose a parameter combination <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <p>Create your own tibble for final parameters or use one of the <code>tune::select_*()</code> functions:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="fu">select_best</span>(glm_res, <span class="at">metric =</span> <span class="st">"roc_auc"</span>)</span>
-<span id="cb11-2"><a href="#cb11-2"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
-<span id="cb11-3"><a href="#cb11-3"></a><span class="co">#&gt;   angle distance .config              </span></span>
-<span id="cb11-4"><a href="#cb11-4"></a><span class="co">#&gt;   &lt;int&gt;    &lt;int&gt; &lt;chr&gt;                </span></span>
-<span id="cb11-5"><a href="#cb11-5"></a><span class="co">#&gt; 1     3       15 Preprocessor13_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="fu">select_best</span>(glm_res, <span class="at">metric =</span> <span class="st">"roc_auc"</span>)</span>
+<span id="cb12-2"><a href="#cb12-2"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb12-3"><a href="#cb12-3"></a><span class="co">#&gt;   angle distance .config              </span></span>
+<span id="cb12-4"><a href="#cb12-4"></a><span class="co">#&gt;   &lt;int&gt;    &lt;int&gt; &lt;chr&gt;                </span></span>
+<span id="cb12-5"><a href="#cb12-5"></a><span class="co">#&gt; 1     3       15 Preprocessor13_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="fragment">
 <p>This best result has:</p>
@@ -778,7 +801,7 @@
 <p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
 <p><em>Try an alternative selection strategy.</em></p>
 <p><em>Read the docs for <code>select_by_pct_loss()</code>.</em></p>
-<p><em>Try choosing a model that has a simpler relationship for <code>distance</code>.</em></p>
+<p><em>Try choosing a model that has a simpler (less “wiggly”) relationship for <code>distance</code>.</em></p>
 <div class="cell">
 <div class="cell-output-display">
 <div class="countdown" id="select-by-pct-loss" style="right:0;bottom:0;" data-warnwhen="0">
@@ -790,16 +813,16 @@
 <section id="choose-a-parameter-combination-2" class="slide level2">
 <h2>Choose a parameter combination <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="fu">select_best</span>(glm_res, <span class="at">metric =</span> <span class="st">"roc_auc"</span>)</span>
-<span id="cb12-2"><a href="#cb12-2"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
-<span id="cb12-3"><a href="#cb12-3"></a><span class="co">#&gt;   angle distance .config              </span></span>
-<span id="cb12-4"><a href="#cb12-4"></a><span class="co">#&gt;   &lt;int&gt;    &lt;int&gt; &lt;chr&gt;                </span></span>
-<span id="cb12-5"><a href="#cb12-5"></a><span class="co">#&gt; 1     3       15 Preprocessor13_Model1</span></span>
-<span id="cb12-6"><a href="#cb12-6"></a><span class="fu">select_by_pct_loss</span>(glm_res, distance, <span class="at">metric =</span> <span class="st">"roc_auc"</span>)</span>
-<span id="cb12-7"><a href="#cb12-7"></a><span class="co">#&gt; # A tibble: 1 × 10</span></span>
-<span id="cb12-8"><a href="#cb12-8"></a><span class="co">#&gt;   angle distance .metric .estimator  mean     n std_err .config               .best .loss</span></span>
-<span id="cb12-9"><a href="#cb12-9"></a><span class="co">#&gt;   &lt;int&gt;    &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                 &lt;dbl&gt; &lt;dbl&gt;</span></span>
-<span id="cb12-10"><a href="#cb12-10"></a><span class="co">#&gt; 1    20       11 roc_auc binary     0.645     1      NA Preprocessor02_Model1 0.650 0.782</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="fu">select_best</span>(glm_res, <span class="at">metric =</span> <span class="st">"roc_auc"</span>)</span>
+<span id="cb13-2"><a href="#cb13-2"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb13-3"><a href="#cb13-3"></a><span class="co">#&gt;   angle distance .config              </span></span>
+<span id="cb13-4"><a href="#cb13-4"></a><span class="co">#&gt;   &lt;int&gt;    &lt;int&gt; &lt;chr&gt;                </span></span>
+<span id="cb13-5"><a href="#cb13-5"></a><span class="co">#&gt; 1     3       15 Preprocessor13_Model1</span></span>
+<span id="cb13-6"><a href="#cb13-6"></a><span class="fu">select_by_pct_loss</span>(glm_res, distance, <span class="at">metric =</span> <span class="st">"roc_auc"</span>)</span>
+<span id="cb13-7"><a href="#cb13-7"></a><span class="co">#&gt; # A tibble: 1 × 10</span></span>
+<span id="cb13-8"><a href="#cb13-8"></a><span class="co">#&gt;   angle distance .metric .estimator  mean     n std_err .config               .best .loss</span></span>
+<span id="cb13-9"><a href="#cb13-9"></a><span class="co">#&gt;   &lt;int&gt;    &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                 &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb13-10"><a href="#cb13-10"></a><span class="co">#&gt; 1    20       11 roc_auc binary     0.645     1      NA Preprocessor02_Model1 0.650 0.782</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section></section>
 <section>
@@ -814,7 +837,7 @@
 </ul>
 <div class="fragment">
 <!-- -->
-<h3 id="decision-tree">Decision tree</h3>
+<h3 id="review-how-a-decision-tree-model-works">Review how a decision tree model works:</h3>
 <ul>
 <li><p>Series of splits or if/then statements based on predictors</p></li>
 <li><p>First the tree <em>grows</em> until some condition is met (maximum depth, no more data)</p></li>
@@ -822,8 +845,8 @@
 </ul>
 </div>
 </section>
-<section id="decision-tree-1" class="slide level2">
-<h2>Decision tree</h2>
+<section id="single-decision-tree" class="slide level2">
+<h2>Single decision tree</h2>
 
 <img data-src="06-tuning-hyperparameters_files/figure-revealjs/tree-example-1.svg" class="r-stretch quarto-figure-center"></section>
 <section id="boosted-trees-2" class="slide level2">
@@ -831,7 +854,7 @@
 <p>Boosting methods fit a <em>sequence</em> of tree-based models.</p>
 <div class="fragment">
 <ul>
-<li><p>Each tree is dependent on the one before and tries to compensate for any poor results in the previous models.</p></li>
+<li><p>Each tree is dependent on the one before and tries to compensate for any poor results in the previous trees.</p></li>
 <li><p>This is like gradient-based steepest ascent methods from calculus.</p></li>
 </ul>
 </div>
@@ -852,24 +875,24 @@
 <section id="boosted-trees-4" class="slide level2">
 <h2>Boosted trees <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>xgb_spec <span class="ot">&lt;-</span></span>
-<span id="cb13-2"><a href="#cb13-2"></a>  <span class="fu">boost_tree</span>(</span>
-<span id="cb13-3"><a href="#cb13-3"></a>    <span class="at">trees =</span> <span class="dv">500</span>, <span class="at">min_n =</span> <span class="fu">tune</span>(), <span class="at">stop_iter =</span> <span class="fu">tune</span>(), <span class="at">tree_depth =</span> <span class="fu">tune</span>(),</span>
-<span id="cb13-4"><a href="#cb13-4"></a>    <span class="at">learn_rate =</span> <span class="fu">tune</span>(), <span class="at">loss_reduction =</span> <span class="fu">tune</span>()</span>
-<span id="cb13-5"><a href="#cb13-5"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb13-6"><a href="#cb13-6"></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-7"><a href="#cb13-7"></a>  <span class="fu">set_engine</span>(<span class="st">"xgboost"</span>, <span class="at">validation =</span> <span class="dv">1</span><span class="sc">/</span><span class="dv">10</span>) <span class="co"># &lt;- for better early stopping</span></span>
-<span id="cb13-8"><a href="#cb13-8"></a></span>
-<span id="cb13-9"><a href="#cb13-9"></a>xgb_rec <span class="ot">&lt;-</span> </span>
-<span id="cb13-10"><a href="#cb13-10"></a>  <span class="fu">recipe</span>(on_goal <span class="sc">~</span> ., <span class="at">data =</span> nhl_train) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-11"><a href="#cb13-11"></a>  <span class="fu">step_lencode_mixed</span>(player, <span class="at">outcome =</span> <span class="fu">vars</span>(on_goal)) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-12"><a href="#cb13-12"></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span></span>
-<span id="cb13-13"><a href="#cb13-13"></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span>
-<span id="cb13-14"><a href="#cb13-14"></a></span>
-<span id="cb13-15"><a href="#cb13-15"></a>xgb_wflow <span class="ot">&lt;-</span> </span>
-<span id="cb13-16"><a href="#cb13-16"></a>  <span class="fu">workflow</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb13-17"><a href="#cb13-17"></a>  <span class="fu">add_model</span>(xgb_spec) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-18"><a href="#cb13-18"></a>  <span class="fu">add_recipe</span>(xgb_rec)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>xgb_spec <span class="ot">&lt;-</span></span>
+<span id="cb14-2"><a href="#cb14-2"></a>  <span class="fu">boost_tree</span>(</span>
+<span id="cb14-3"><a href="#cb14-3"></a>    <span class="at">trees =</span> <span class="dv">500</span>, <span class="at">min_n =</span> <span class="fu">tune</span>(), <span class="at">stop_iter =</span> <span class="fu">tune</span>(), <span class="at">tree_depth =</span> <span class="fu">tune</span>(),</span>
+<span id="cb14-4"><a href="#cb14-4"></a>    <span class="at">learn_rate =</span> <span class="fu">tune</span>(), <span class="at">loss_reduction =</span> <span class="fu">tune</span>()</span>
+<span id="cb14-5"><a href="#cb14-5"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb14-6"><a href="#cb14-6"></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb14-7"><a href="#cb14-7"></a>  <span class="fu">set_engine</span>(<span class="st">"xgboost"</span>, <span class="at">validation =</span> <span class="dv">1</span><span class="sc">/</span><span class="dv">10</span>) <span class="co"># &lt;- for better early stopping</span></span>
+<span id="cb14-8"><a href="#cb14-8"></a></span>
+<span id="cb14-9"><a href="#cb14-9"></a>xgb_rec <span class="ot">&lt;-</span> </span>
+<span id="cb14-10"><a href="#cb14-10"></a>  <span class="fu">recipe</span>(on_goal <span class="sc">~</span> ., <span class="at">data =</span> nhl_train) <span class="sc">%&gt;%</span> </span>
+<span id="cb14-11"><a href="#cb14-11"></a>  <span class="fu">step_lencode_mixed</span>(player, <span class="at">outcome =</span> <span class="fu">vars</span>(on_goal)) <span class="sc">%&gt;%</span> </span>
+<span id="cb14-12"><a href="#cb14-12"></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb14-13"><a href="#cb14-13"></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span>
+<span id="cb14-14"><a href="#cb14-14"></a></span>
+<span id="cb14-15"><a href="#cb14-15"></a>xgb_wflow <span class="ot">&lt;-</span> </span>
+<span id="cb14-16"><a href="#cb14-16"></a>  <span class="fu">workflow</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb14-17"><a href="#cb14-17"></a>  <span class="fu">add_model</span>(xgb_spec) <span class="sc">%&gt;%</span> </span>
+<span id="cb14-18"><a href="#cb14-18"></a>  <span class="fu">add_recipe</span>(xgb_rec)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="your-turn-3" class="slide level2" data-transition="slide-in">
@@ -895,10 +918,10 @@
 <div class="fragment">
 <p>We can use a <em>parallel backend</em> to do this:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>cores <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">detectCores</span>(<span class="at">logical =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb14-2"><a href="#cb14-2"></a><span class="fu">library</span>(doParallel)</span>
-<span id="cb14-3"><a href="#cb14-3"></a>cl <span class="ot">&lt;-</span> <span class="fu">makePSOCKcluster</span>(cores)</span>
-<span id="cb14-4"><a href="#cb14-4"></a><span class="fu">registerDoParallel</span>(cl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>cores <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">detectCores</span>(<span class="at">logical =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb15-2"><a href="#cb15-2"></a><span class="fu">library</span>(doParallel)</span>
+<span id="cb15-3"><a href="#cb15-3"></a>cl <span class="ot">&lt;-</span> <span class="fu">makePSOCKcluster</span>(cores)</span>
+<span id="cb15-4"><a href="#cb15-4"></a><span class="fu">registerDoParallel</span>(cl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div><div class="column" style="width:40%;">
@@ -923,17 +946,17 @@
 <h2>Tuning <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <p>This will take some time to run ⏳</p>
 <div class="cell" data-hash="06-tuning-hyperparameters_cache/revealjs/xgboost-tune_974c73bcadd89069562165a5e860553b">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
-<span id="cb15-2"><a href="#cb15-2"></a>xgb_res <span class="ot">&lt;-</span></span>
-<span id="cb15-3"><a href="#cb15-3"></a>  xgb_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb15-4"><a href="#cb15-4"></a>  <span class="fu">tune_grid</span>(<span class="at">resamples =</span> nhl_val, <span class="at">grid =</span> <span class="dv">20</span>, <span class="at">control =</span> ctrl) <span class="co"># automatic grid now!</span></span>
-<span id="cb15-5"><a href="#cb15-5"></a>xgb_res</span>
-<span id="cb15-6"><a href="#cb15-6"></a><span class="co">#&gt; # Tuning results</span></span>
-<span id="cb15-7"><a href="#cb15-7"></a><span class="co">#&gt; # Validation Set Split (0.8/0.2)  </span></span>
-<span id="cb15-8"><a href="#cb15-8"></a><span class="co">#&gt; # A tibble: 1 × 5</span></span>
-<span id="cb15-9"><a href="#cb15-9"></a><span class="co">#&gt;   splits              id         .metrics          .notes           .predictions          </span></span>
-<span id="cb15-10"><a href="#cb15-10"></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;      &lt;list&gt;            &lt;list&gt;           &lt;list&gt;                </span></span>
-<span id="cb15-11"><a href="#cb15-11"></a><span class="co">#&gt; 1 &lt;split [7288/1822]&gt; validation &lt;tibble [40 × 9]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [36,440 × 11]&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
+<span id="cb16-2"><a href="#cb16-2"></a>xgb_res <span class="ot">&lt;-</span></span>
+<span id="cb16-3"><a href="#cb16-3"></a>  xgb_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb16-4"><a href="#cb16-4"></a>  <span class="fu">tune_grid</span>(<span class="at">resamples =</span> nhl_val, <span class="at">grid =</span> <span class="dv">20</span>, <span class="at">control =</span> ctrl) <span class="co"># automatic grid now!</span></span>
+<span id="cb16-5"><a href="#cb16-5"></a>xgb_res</span>
+<span id="cb16-6"><a href="#cb16-6"></a><span class="co">#&gt; # Tuning results</span></span>
+<span id="cb16-7"><a href="#cb16-7"></a><span class="co">#&gt; # Validation Set Split (0.8/0.2)  </span></span>
+<span id="cb16-8"><a href="#cb16-8"></a><span class="co">#&gt; # A tibble: 1 × 5</span></span>
+<span id="cb16-9"><a href="#cb16-9"></a><span class="co">#&gt;   splits              id         .metrics          .notes           .predictions          </span></span>
+<span id="cb16-10"><a href="#cb16-10"></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;      &lt;list&gt;            &lt;list&gt;           &lt;list&gt;                </span></span>
+<span id="cb16-11"><a href="#cb16-11"></a><span class="co">#&gt; 1 &lt;split [7288/1822]&gt; validation &lt;tibble [40 × 9]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [36,440 × 11]&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="your-turn-4" class="slide level2" data-transition="slide-in">
@@ -952,7 +975,7 @@
 <section id="tuning-results-2" class="slide level2">
 <h2>Tuning results <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="fu">autoplot</span>(xgb_res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="fu">autoplot</span>(xgb_res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure>
@@ -966,24 +989,24 @@
 <h2>Compare models</h2>
 <p>Best logistic regression results:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a>nhl_distance_res <span class="sc">%&gt;%</span></span>
-<span id="cb17-2"><a href="#cb17-2"></a>  <span class="fu">collect_metrics</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb17-3"><a href="#cb17-3"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"roc_auc"</span>)</span>
-<span id="cb17-4"><a href="#cb17-4"></a><span class="co">#&gt; # A tibble: 1 × 6</span></span>
-<span id="cb17-5"><a href="#cb17-5"></a><span class="co">#&gt;   .metric .estimator  mean     n std_err .config             </span></span>
-<span id="cb17-6"><a href="#cb17-6"></a><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
-<span id="cb17-7"><a href="#cb17-7"></a><span class="co">#&gt; 1 roc_auc binary     0.596     1      NA Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a>nhl_distance_res <span class="sc">%&gt;%</span></span>
+<span id="cb18-2"><a href="#cb18-2"></a>  <span class="fu">collect_metrics</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb18-3"><a href="#cb18-3"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"roc_auc"</span>)</span>
+<span id="cb18-4"><a href="#cb18-4"></a><span class="co">#&gt; # A tibble: 1 × 6</span></span>
+<span id="cb18-5"><a href="#cb18-5"></a><span class="co">#&gt;   .metric .estimator  mean     n std_err .config             </span></span>
+<span id="cb18-6"><a href="#cb18-6"></a><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb18-7"><a href="#cb18-7"></a><span class="co">#&gt; 1 roc_auc binary     0.596     1      NA Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="fragment">
 <p>Best boosting results:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a></span>
-<span id="cb18-2"><a href="#cb18-2"></a><span class="fu">show_best</span>(xgb_res, <span class="at">metric =</span> <span class="st">"roc_auc"</span>, <span class="at">n =</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb18-3"><a href="#cb18-3"></a>  <span class="fu">select</span>(.metric, .estimator, mean, n, std_err, .config)</span>
-<span id="cb18-4"><a href="#cb18-4"></a><span class="co">#&gt; # A tibble: 1 × 6</span></span>
-<span id="cb18-5"><a href="#cb18-5"></a><span class="co">#&gt;   .metric .estimator  mean     n std_err .config              </span></span>
-<span id="cb18-6"><a href="#cb18-6"></a><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
-<span id="cb18-7"><a href="#cb18-7"></a><span class="co">#&gt; 1 roc_auc binary     0.747     1      NA Preprocessor1_Model08</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a></span>
+<span id="cb19-2"><a href="#cb19-2"></a><span class="fu">show_best</span>(xgb_res, <span class="at">metric =</span> <span class="st">"roc_auc"</span>, <span class="at">n =</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb19-3"><a href="#cb19-3"></a>  <span class="fu">select</span>(.metric, .estimator, mean, n, std_err, .config)</span>
+<span id="cb19-4"><a href="#cb19-4"></a><span class="co">#&gt; # A tibble: 1 × 6</span></span>
+<span id="cb19-5"><a href="#cb19-5"></a><span class="co">#&gt;   .metric .estimator  mean     n std_err .config              </span></span>
+<span id="cb19-6"><a href="#cb19-6"></a><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
+<span id="cb19-7"><a href="#cb19-7"></a><span class="co">#&gt; 1 roc_auc binary     0.747     1      NA Preprocessor1_Model08</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </section>
@@ -1003,62 +1026,62 @@
 <section id="updating-the-workflow" class="slide level2">
 <h2>Updating the workflow <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell" data-hash="06-tuning-hyperparameters_cache/revealjs/xgboost-select-best_71893375bab2f9fab45593ae29497d2a">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a>best_auc <span class="ot">&lt;-</span> <span class="fu">select_best</span>(xgb_res, <span class="at">metric =</span> <span class="st">"roc_auc"</span>)</span>
-<span id="cb19-2"><a href="#cb19-2"></a>best_auc</span>
-<span id="cb19-3"><a href="#cb19-3"></a><span class="co">#&gt; # A tibble: 1 × 6</span></span>
-<span id="cb19-4"><a href="#cb19-4"></a><span class="co">#&gt;   min_n tree_depth learn_rate loss_reduction stop_iter .config              </span></span>
-<span id="cb19-5"><a href="#cb19-5"></a><span class="co">#&gt;   &lt;int&gt;      &lt;int&gt;      &lt;dbl&gt;          &lt;dbl&gt;     &lt;int&gt; &lt;chr&gt;                </span></span>
-<span id="cb19-6"><a href="#cb19-6"></a><span class="co">#&gt; 1     7         13    0.00424         0.0608         9 Preprocessor1_Model08</span></span>
-<span id="cb19-7"><a href="#cb19-7"></a></span>
-<span id="cb19-8"><a href="#cb19-8"></a>xgb_wflow <span class="ot">&lt;-</span></span>
-<span id="cb19-9"><a href="#cb19-9"></a>  xgb_wflow <span class="sc">%&gt;%</span> </span>
-<span id="cb19-10"><a href="#cb19-10"></a>  <span class="fu">finalize_workflow</span>(best_auc)</span>
-<span id="cb19-11"><a href="#cb19-11"></a></span>
-<span id="cb19-12"><a href="#cb19-12"></a>xgb_wflow</span>
-<span id="cb19-13"><a href="#cb19-13"></a><span class="co">#&gt; ══ Workflow ══════════════════════════════════════════════════════════</span></span>
-<span id="cb19-14"><a href="#cb19-14"></a><span class="co">#&gt; Preprocessor: Recipe</span></span>
-<span id="cb19-15"><a href="#cb19-15"></a><span class="co">#&gt; Model: boost_tree()</span></span>
-<span id="cb19-16"><a href="#cb19-16"></a><span class="co">#&gt; </span></span>
-<span id="cb19-17"><a href="#cb19-17"></a><span class="co">#&gt; ── Preprocessor ──────────────────────────────────────────────────────</span></span>
-<span id="cb19-18"><a href="#cb19-18"></a><span class="co">#&gt; 3 Recipe Steps</span></span>
-<span id="cb19-19"><a href="#cb19-19"></a><span class="co">#&gt; </span></span>
-<span id="cb19-20"><a href="#cb19-20"></a><span class="co">#&gt; • step_lencode_mixed()</span></span>
-<span id="cb19-21"><a href="#cb19-21"></a><span class="co">#&gt; • step_dummy()</span></span>
-<span id="cb19-22"><a href="#cb19-22"></a><span class="co">#&gt; • step_zv()</span></span>
-<span id="cb19-23"><a href="#cb19-23"></a><span class="co">#&gt; </span></span>
-<span id="cb19-24"><a href="#cb19-24"></a><span class="co">#&gt; ── Model ─────────────────────────────────────────────────────────────</span></span>
-<span id="cb19-25"><a href="#cb19-25"></a><span class="co">#&gt; Boosted Tree Model Specification (classification)</span></span>
-<span id="cb19-26"><a href="#cb19-26"></a><span class="co">#&gt; </span></span>
-<span id="cb19-27"><a href="#cb19-27"></a><span class="co">#&gt; Main Arguments:</span></span>
-<span id="cb19-28"><a href="#cb19-28"></a><span class="co">#&gt;   trees = 500</span></span>
-<span id="cb19-29"><a href="#cb19-29"></a><span class="co">#&gt;   min_n = 7</span></span>
-<span id="cb19-30"><a href="#cb19-30"></a><span class="co">#&gt;   tree_depth = 13</span></span>
-<span id="cb19-31"><a href="#cb19-31"></a><span class="co">#&gt;   learn_rate = 0.00423836761218599</span></span>
-<span id="cb19-32"><a href="#cb19-32"></a><span class="co">#&gt;   loss_reduction = 0.0608248196174336</span></span>
-<span id="cb19-33"><a href="#cb19-33"></a><span class="co">#&gt;   stop_iter = 9</span></span>
-<span id="cb19-34"><a href="#cb19-34"></a><span class="co">#&gt; </span></span>
-<span id="cb19-35"><a href="#cb19-35"></a><span class="co">#&gt; Engine-Specific Arguments:</span></span>
-<span id="cb19-36"><a href="#cb19-36"></a><span class="co">#&gt;   validation = 1/10</span></span>
-<span id="cb19-37"><a href="#cb19-37"></a><span class="co">#&gt; </span></span>
-<span id="cb19-38"><a href="#cb19-38"></a><span class="co">#&gt; Computational engine: xgboost</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a>best_auc <span class="ot">&lt;-</span> <span class="fu">select_best</span>(xgb_res, <span class="at">metric =</span> <span class="st">"roc_auc"</span>)</span>
+<span id="cb20-2"><a href="#cb20-2"></a>best_auc</span>
+<span id="cb20-3"><a href="#cb20-3"></a><span class="co">#&gt; # A tibble: 1 × 6</span></span>
+<span id="cb20-4"><a href="#cb20-4"></a><span class="co">#&gt;   min_n tree_depth learn_rate loss_reduction stop_iter .config              </span></span>
+<span id="cb20-5"><a href="#cb20-5"></a><span class="co">#&gt;   &lt;int&gt;      &lt;int&gt;      &lt;dbl&gt;          &lt;dbl&gt;     &lt;int&gt; &lt;chr&gt;                </span></span>
+<span id="cb20-6"><a href="#cb20-6"></a><span class="co">#&gt; 1     7         13    0.00424         0.0608         9 Preprocessor1_Model08</span></span>
+<span id="cb20-7"><a href="#cb20-7"></a></span>
+<span id="cb20-8"><a href="#cb20-8"></a>xgb_wflow <span class="ot">&lt;-</span></span>
+<span id="cb20-9"><a href="#cb20-9"></a>  xgb_wflow <span class="sc">%&gt;%</span> </span>
+<span id="cb20-10"><a href="#cb20-10"></a>  <span class="fu">finalize_workflow</span>(best_auc)</span>
+<span id="cb20-11"><a href="#cb20-11"></a></span>
+<span id="cb20-12"><a href="#cb20-12"></a>xgb_wflow</span>
+<span id="cb20-13"><a href="#cb20-13"></a><span class="co">#&gt; ══ Workflow ══════════════════════════════════════════════════════════</span></span>
+<span id="cb20-14"><a href="#cb20-14"></a><span class="co">#&gt; Preprocessor: Recipe</span></span>
+<span id="cb20-15"><a href="#cb20-15"></a><span class="co">#&gt; Model: boost_tree()</span></span>
+<span id="cb20-16"><a href="#cb20-16"></a><span class="co">#&gt; </span></span>
+<span id="cb20-17"><a href="#cb20-17"></a><span class="co">#&gt; ── Preprocessor ──────────────────────────────────────────────────────</span></span>
+<span id="cb20-18"><a href="#cb20-18"></a><span class="co">#&gt; 3 Recipe Steps</span></span>
+<span id="cb20-19"><a href="#cb20-19"></a><span class="co">#&gt; </span></span>
+<span id="cb20-20"><a href="#cb20-20"></a><span class="co">#&gt; • step_lencode_mixed()</span></span>
+<span id="cb20-21"><a href="#cb20-21"></a><span class="co">#&gt; • step_dummy()</span></span>
+<span id="cb20-22"><a href="#cb20-22"></a><span class="co">#&gt; • step_zv()</span></span>
+<span id="cb20-23"><a href="#cb20-23"></a><span class="co">#&gt; </span></span>
+<span id="cb20-24"><a href="#cb20-24"></a><span class="co">#&gt; ── Model ─────────────────────────────────────────────────────────────</span></span>
+<span id="cb20-25"><a href="#cb20-25"></a><span class="co">#&gt; Boosted Tree Model Specification (classification)</span></span>
+<span id="cb20-26"><a href="#cb20-26"></a><span class="co">#&gt; </span></span>
+<span id="cb20-27"><a href="#cb20-27"></a><span class="co">#&gt; Main Arguments:</span></span>
+<span id="cb20-28"><a href="#cb20-28"></a><span class="co">#&gt;   trees = 500</span></span>
+<span id="cb20-29"><a href="#cb20-29"></a><span class="co">#&gt;   min_n = 7</span></span>
+<span id="cb20-30"><a href="#cb20-30"></a><span class="co">#&gt;   tree_depth = 13</span></span>
+<span id="cb20-31"><a href="#cb20-31"></a><span class="co">#&gt;   learn_rate = 0.00423836761218599</span></span>
+<span id="cb20-32"><a href="#cb20-32"></a><span class="co">#&gt;   loss_reduction = 0.0608248196174336</span></span>
+<span id="cb20-33"><a href="#cb20-33"></a><span class="co">#&gt;   stop_iter = 9</span></span>
+<span id="cb20-34"><a href="#cb20-34"></a><span class="co">#&gt; </span></span>
+<span id="cb20-35"><a href="#cb20-35"></a><span class="co">#&gt; Engine-Specific Arguments:</span></span>
+<span id="cb20-36"><a href="#cb20-36"></a><span class="co">#&gt;   validation = 1/10</span></span>
+<span id="cb20-37"><a href="#cb20-37"></a><span class="co">#&gt; </span></span>
+<span id="cb20-38"><a href="#cb20-38"></a><span class="co">#&gt; Computational engine: xgboost</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="the-final-fit" class="slide level2">
 <h2>The final fit <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell" data-hash="06-tuning-hyperparameters_cache/revealjs/xgboost-final_9316d30600618460e1e6b7113021433b">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a>test_res <span class="ot">&lt;-</span> </span>
-<span id="cb20-2"><a href="#cb20-2"></a>  xgb_wflow <span class="sc">%&gt;%</span> </span>
-<span id="cb20-3"><a href="#cb20-3"></a>  <span class="fu">last_fit</span>(<span class="at">split =</span> nhl_split)</span>
-<span id="cb20-4"><a href="#cb20-4"></a>test_res</span>
-<span id="cb20-5"><a href="#cb20-5"></a><span class="co">#&gt; # Resampling results</span></span>
-<span id="cb20-6"><a href="#cb20-6"></a><span class="co">#&gt; # Manual resampling </span></span>
-<span id="cb20-7"><a href="#cb20-7"></a><span class="co">#&gt; # A tibble: 1 × 6</span></span>
-<span id="cb20-8"><a href="#cb20-8"></a><span class="co">#&gt;   splits              id               .metrics         .notes           .predictions         .workflow </span></span>
-<span id="cb20-9"><a href="#cb20-9"></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;            &lt;list&gt;           &lt;list&gt;           &lt;list&gt;               &lt;list&gt;    </span></span>
-<span id="cb20-10"><a href="#cb20-10"></a><span class="co">#&gt; 1 &lt;split [9110/3037]&gt; train/test split &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [3,037 × 6]&gt; &lt;workflow&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a>test_res <span class="ot">&lt;-</span> </span>
+<span id="cb21-2"><a href="#cb21-2"></a>  xgb_wflow <span class="sc">%&gt;%</span> </span>
+<span id="cb21-3"><a href="#cb21-3"></a>  <span class="fu">last_fit</span>(<span class="at">split =</span> nhl_split)</span>
+<span id="cb21-4"><a href="#cb21-4"></a>test_res</span>
+<span id="cb21-5"><a href="#cb21-5"></a><span class="co">#&gt; # Resampling results</span></span>
+<span id="cb21-6"><a href="#cb21-6"></a><span class="co">#&gt; # Manual resampling </span></span>
+<span id="cb21-7"><a href="#cb21-7"></a><span class="co">#&gt; # A tibble: 1 × 6</span></span>
+<span id="cb21-8"><a href="#cb21-8"></a><span class="co">#&gt;   splits              id               .metrics         .notes           .predictions         .workflow </span></span>
+<span id="cb21-9"><a href="#cb21-9"></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;            &lt;list&gt;           &lt;list&gt;           &lt;list&gt;               &lt;list&gt;    </span></span>
+<span id="cb21-10"><a href="#cb21-10"></a><span class="co">#&gt; 1 &lt;split [9110/3037]&gt; train/test split &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [3,037 × 6]&gt; &lt;workflow&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="fragment">
-<p>Remember that <code>last_fit()</code> fits one time with the training set and evaluates one time on the testing set.</p>
+<p>Remember that <code>last_fit()</code> <strong>fits</strong> one time with the training set and <strong>evaluates</strong> one time with the testing set.</p>
 </div>
 </section>
 <section id="your-turn-6" class="slide level2" data-transition="slide-in">
@@ -1078,23 +1101,23 @@
 <h2>Estimates of ROC AUC <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <p>Validation results from tuning:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a>xgb_res <span class="sc">%&gt;%</span> </span>
-<span id="cb21-2"><a href="#cb21-2"></a>  <span class="fu">show_best</span>(<span class="at">metric =</span> <span class="st">"roc_auc"</span>, <span class="at">n =</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb21-3"><a href="#cb21-3"></a>  <span class="fu">select</span>(.metric, mean, n, std_err)</span>
-<span id="cb21-4"><a href="#cb21-4"></a><span class="co">#&gt; # A tibble: 1 × 4</span></span>
-<span id="cb21-5"><a href="#cb21-5"></a><span class="co">#&gt;   .metric  mean     n std_err</span></span>
-<span id="cb21-6"><a href="#cb21-6"></a><span class="co">#&gt;   &lt;chr&gt;   &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
-<span id="cb21-7"><a href="#cb21-7"></a><span class="co">#&gt; 1 roc_auc 0.747     1      NA</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a>xgb_res <span class="sc">%&gt;%</span> </span>
+<span id="cb22-2"><a href="#cb22-2"></a>  <span class="fu">show_best</span>(<span class="at">metric =</span> <span class="st">"roc_auc"</span>, <span class="at">n =</span> <span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb22-3"><a href="#cb22-3"></a>  <span class="fu">select</span>(.metric, mean, n, std_err)</span>
+<span id="cb22-4"><a href="#cb22-4"></a><span class="co">#&gt; # A tibble: 1 × 4</span></span>
+<span id="cb22-5"><a href="#cb22-5"></a><span class="co">#&gt;   .metric  mean     n std_err</span></span>
+<span id="cb22-6"><a href="#cb22-6"></a><span class="co">#&gt;   &lt;chr&gt;   &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
+<span id="cb22-7"><a href="#cb22-7"></a><span class="co">#&gt; 1 roc_auc 0.747     1      NA</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="fragment">
 <p>Test set results:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a>test_res <span class="sc">%&gt;%</span> <span class="fu">collect_metrics</span>()</span>
-<span id="cb22-2"><a href="#cb22-2"></a><span class="co">#&gt; # A tibble: 2 × 4</span></span>
-<span id="cb22-3"><a href="#cb22-3"></a><span class="co">#&gt;   .metric  .estimator .estimate .config             </span></span>
-<span id="cb22-4"><a href="#cb22-4"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               </span></span>
-<span id="cb22-5"><a href="#cb22-5"></a><span class="co">#&gt; 1 accuracy binary         0.695 Preprocessor1_Model1</span></span>
-<span id="cb22-6"><a href="#cb22-6"></a><span class="co">#&gt; 2 roc_auc  binary         0.738 Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a>test_res <span class="sc">%&gt;%</span> <span class="fu">collect_metrics</span>()</span>
+<span id="cb23-2"><a href="#cb23-2"></a><span class="co">#&gt; # A tibble: 2 × 4</span></span>
+<span id="cb23-3"><a href="#cb23-3"></a><span class="co">#&gt;   .metric  .estimator .estimate .config             </span></span>
+<span id="cb23-4"><a href="#cb23-4"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb23-5"><a href="#cb23-5"></a><span class="co">#&gt; 1 accuracy binary         0.695 Preprocessor1_Model1</span></span>
+<span id="cb23-6"><a href="#cb23-6"></a><span class="co">#&gt; 2 roc_auc  binary         0.738 Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </section>
@@ -1102,38 +1125,38 @@
 <h2>Final fitted workflow</h2>
 <p>Extract the final fitted workflow, fit using the training set:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a>final_xgb_wflow <span class="ot">&lt;-</span> </span>
-<span id="cb23-2"><a href="#cb23-2"></a>  test_res <span class="sc">%&gt;%</span> </span>
-<span id="cb23-3"><a href="#cb23-3"></a>  <span class="fu">extract_workflow</span>()</span>
-<span id="cb23-4"><a href="#cb23-4"></a></span>
-<span id="cb23-5"><a href="#cb23-5"></a><span class="co"># use this object to predict or deploy</span></span>
-<span id="cb23-6"><a href="#cb23-6"></a><span class="fu">predict</span>(final_xgb_wflow, nhl_test[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>,])</span>
-<span id="cb23-7"><a href="#cb23-7"></a><span class="co">#&gt; # A tibble: 3 × 1</span></span>
-<span id="cb23-8"><a href="#cb23-8"></a><span class="co">#&gt;   .pred_class</span></span>
-<span id="cb23-9"><a href="#cb23-9"></a><span class="co">#&gt;   &lt;fct&gt;      </span></span>
-<span id="cb23-10"><a href="#cb23-10"></a><span class="co">#&gt; 1 no         </span></span>
-<span id="cb23-11"><a href="#cb23-11"></a><span class="co">#&gt; 2 yes        </span></span>
-<span id="cb23-12"><a href="#cb23-12"></a><span class="co">#&gt; 3 yes</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a>final_xgb_wflow <span class="ot">&lt;-</span> </span>
+<span id="cb24-2"><a href="#cb24-2"></a>  test_res <span class="sc">%&gt;%</span> </span>
+<span id="cb24-3"><a href="#cb24-3"></a>  <span class="fu">extract_workflow</span>()</span>
+<span id="cb24-4"><a href="#cb24-4"></a></span>
+<span id="cb24-5"><a href="#cb24-5"></a><span class="co"># use this object to predict or deploy</span></span>
+<span id="cb24-6"><a href="#cb24-6"></a><span class="fu">predict</span>(final_xgb_wflow, nhl_test[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>,])</span>
+<span id="cb24-7"><a href="#cb24-7"></a><span class="co">#&gt; # A tibble: 3 × 1</span></span>
+<span id="cb24-8"><a href="#cb24-8"></a><span class="co">#&gt;   .pred_class</span></span>
+<span id="cb24-9"><a href="#cb24-9"></a><span class="co">#&gt;   &lt;fct&gt;      </span></span>
+<span id="cb24-10"><a href="#cb24-10"></a><span class="co">#&gt; 1 no         </span></span>
+<span id="cb24-11"><a href="#cb24-11"></a><span class="co">#&gt; 2 yes        </span></span>
+<span id="cb24-12"><a href="#cb24-12"></a><span class="co">#&gt; 3 yes</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="next-steps" class="slide level2">
 <h2>Next steps</h2>
 <ul>
-<li>Use explainers to characterize the model and the predictions.</li>
+<li>Use <a href="https://www.tmwr.org/explain.html">explainers</a> to characterize the model and the predictions.</li>
 </ul>
 <div class="fragment">
 <ul>
-<li>Document the model.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Create an applicability domain model to help monitor our data over time.</li>
+<li><a href="https://vetiver.rstudio.com/learn-more/model-card.html">Document the model</a>.</li>
 </ul>
 </div>
 <div class="fragment">
 <ul>
-<li>Deploy the model.</li>
+<li>Create an <a href="https://applicable.tidymodels.org/">applicability domain model</a> to help monitor our data over time.</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li><a href="https://vetiver.rstudio.com/get-started/">Deploy the model</a>.</li>
 </ul>
 
 <div class="footer footer-default">
