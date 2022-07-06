@@ -7,9 +7,13 @@ format:
     footer: <https://workshops.tidymodels.org>
     include-before-body: header.html
     theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
 knitr:
   opts_chunk: 
     echo: true
+    collapse: true
+    comment: "#>"
 ---
 
 ```{r}
@@ -158,23 +162,29 @@ tree_fit %>%
 :::
 :::
 
-Really though... don't use the test set until the *very* end of modeling.
+. . .
 
-We're just demonstrating overfitting here.
+⚠️ Remember that we're demonstrating overfitting 
 
-##  {background-image="https://media.giphy.com/media/55itGuoAJiZEEen9gg/giphy.gif" background-size="800px"}
+. . .
+
+⚠️ Don't use the test set until the *end* of your modeling analysis
+
+##  {background-image="https://media.giphy.com/media/55itGuoAJiZEEen9gg/giphy.gif" background-size="70%"}
 
 ## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Use `augment()` and `metrics()` to compute metrics for both training and testing data.*
+*Use `augment()` and `metrics()` to compute regression metrics.*
+
+*Compute the metrics for both training and testing data.*
 
 *Notice the evidence of overfitting!* ⚠️
 
 ```{r}
 #| echo: false
-countdown(minutes = 5)
+countdown(minutes = 5, id = "augment-metrics")
 ```
 
 ## Dangers of overfitting ⚠️ `r hexes("yardstick")`
@@ -213,7 +223,7 @@ And we want to understand if these are important differences?
 
 # How can we use the *training* data to compare and evaluate different models? 🤔
 
-##  {background-color="white" background-image="https://www.tmwr.org/premade/resampling.svg" background-size="1000px"}
+##  {background-color="white" background-image="https://www.tmwr.org/premade/resampling.svg" background-size="80%"}
 
 ## Cross-validation
 
@@ -238,7 +248,7 @@ And we want to understand if these are important differences?
 
 ```{r}
 #| echo: false
-countdown(minutes = 3)
+countdown(minutes = 3, id = "percent-in-folds")
 ```
 
 ## Resampling `r hexes("rsample")`
@@ -289,7 +299,7 @@ bootstraps(frog_train)
 
 ```{r}
 #| echo: false
-countdown(minutes = 5)
+countdown(minutes = 5, id = "try-rsample")
 ```
 
 ## Resampling `r hexes("rsample")`
@@ -346,7 +356,8 @@ Where are the fitted models??!??
 fit_resamples(tree_wflow, frog_folds)
 ```
 
-Where are the fitted models??!?? 🗑️
+Where are the fitted models??!??
+🗑️
 
 . . .
 
@@ -383,17 +394,26 @@ Each fit is independent of the others
 
 ## Comparing metrics `r hexes("yardstick")`
 
-How do the metrics from resampling compare to the metrics from the training set?
+How do the metrics from resampling compare to the metrics from training and testing?
+
+```{r}
+#| echo: false
+frog_training_rmse <-
+  tree_fit %>%
+  augment(frog_train) %>%
+  rmse(latency, .pred) %>%
+  pull(.estimate) %>%
+  round(digits = 2)
+
+frog_testing_rmse <-
+  tree_fit %>%
+  augment(frog_test) %>%
+  rmse(latency, .pred) %>%
+  pull(.estimate) %>%
+  round(digits = 2)
+```
 
 ::: columns
-::: {.column width="50%"}
-```{r}
-tree_fit %>%
-  augment(frog_train) %>%
-  metrics(latency, .pred)
-```
-:::
-
 ::: {.column width="50%"}
 ```{r}
 tree_res %>%
@@ -401,15 +421,22 @@ tree_res %>%
   select(.metric, mean, n)
 ```
 :::
+
+::: {.column width="50%"}
+The RMSE previously was
+
+- `r frog_training_rmse` for the training set
+- `r frog_testing_rmse` for test set
+:::
 :::
 
 . . .
 
-When looking at the results on this slide, remember that:
+Remember that:
 
 ⚠️ the training set gives you overly optimistic metrics
 
-⚠️ we should use resampling instead of the test set
+⚠️ the test set is precious
 
 ## Evaluating model performance `r hexes("tune")`
 
@@ -435,7 +462,19 @@ tree_preds %>%
 
 # Decision tree 🌳
 
-# Random forest 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌳
+# Random forest 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌵🌴🌲🌳🌴🌵
+
+## Random forest 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵
+
+- Ensemble many decision tree models
+
+- All the trees vote! 🗳️
+
+- Bootstrap aggregating + random feature selection
+
+. . .
+
+- Often works well without tuning hyperparameters (more on this tomorrow!), as long as there are enough trees
 
 ## Create a random forest model `r hexes("parsnip")`
 
@@ -463,7 +502,7 @@ rf_wflow
 
 ```{r}
 #| echo: false
-countdown(minutes = 5)
+countdown(minutes = 5, id = "try-fit-resamples")
 ```
 
 ## Evaluating model performance `r hexes("tune")`
@@ -488,14 +527,51 @@ collect_predictions(rf_res) %>%
   coord_obs_pred()
 ```
 
+## How can we compare multiple model workflows at once? {background-image="images/Hatching-process.jpg"}
 
 
+## Evaluate a workflow set
+
+```{r}
+workflow_set(list(latency ~ .), list(tree_spec, rf_spec))
+```
+
+## Evaluate a workflow set
+
+```{r}
+workflow_set(list(latency ~ .), list(tree_spec, rf_spec)) %>%
+  workflow_map("fit_resamples", resamples = frog_folds)
+```
+
+## Evaluate a workflow set
+
+```{r}
+workflow_set(list(latency ~ .), list(tree_spec, rf_spec)) %>%
+  workflow_map("fit_resamples", resamples = frog_folds) %>%
+  rank_results()
+```
+
+. . .
+
+Lots more available with workflow sets, like `collect_metrics()`, `autoplot()` methods, and more!
+
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*When do you think a workflow set would be useful?*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "discuss-workflow-sets")
+```
 
 ## The final fit `r hexes("tune")`
 
-Suppose that we are happy with our random forest model. 
+Suppose that we are happy with our random forest model.
 
-Let's verify our performance using the test set. 
+Let's verify our performance using the test set.
 
 We've shown you `fit()` and `predict()` (+ `augment()`) but there is a shortcut:
 
@@ -506,8 +582,7 @@ final_fit <- last_fit(rf_wflow, frog_split)
 final_fit
 ```
 
-
-## What is in this `final_fit` object? `r hexes("tune")`
+## What is in `final_fit`? `r hexes("tune")`
 
 ```{r}
 collect_metrics(final_fit)
@@ -517,7 +592,7 @@ collect_metrics(final_fit)
 
 These are metrics computed with the **test** set
 
-## What is in this `final_fit` object? `r hexes("tune")`
+## What is in `final_fit`? `r hexes("tune")`
 
 ```{r}
 collect_predictions(final_fit)
@@ -537,8 +612,7 @@ collect_predictions(final_fit) %>%
   coord_obs_pred()
 ```
 
-
-## What is in this `final_fit` object? `r hexes("tune")`
+## What is in `final_fit`? `r hexes("tune")`
 
 ```{r}
 extract_workflow(final_fit)
@@ -548,12 +622,9 @@ extract_workflow(final_fit)
 
 Use this for **prediction** on new data, like for deploying
 
-
-
 ## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
-
 
 *End of the day discussion!*
 
@@ -565,5 +636,5 @@ Use this for **prediction** on new data, like for deploying
 
 ```{r}
 #| echo: false
-countdown(minutes = 5)
+countdown(minutes = 5, id = "discuss-which-model")
 ```

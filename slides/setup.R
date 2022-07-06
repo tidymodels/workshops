@@ -4,7 +4,7 @@ hexes <- function(..., size = 64) {
   right <- (seq_along(x) - 1) * size
 
   res <- glue::glue(
-    '![](hexes/<x>.png){.absolute top=0 right=<right> width="<size>" height="<size * 1.16>"}',
+    '![](hexes/<x>.png){.absolute top=-20 right=<right> width="<size>" height="<size * 1.16>"}',
     .open = "<", .close = ">"
   )
 
@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
   dev = 'svglite'
 )
 
+# devtools::install_github("gadenbuie/countdown")
 library(countdown)
 library(ggplot2)
 theme_set(theme_minimal())
