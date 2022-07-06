@@ -24,6 +24,9 @@ knitr:
 ```{r more-setup}
 #| include: false
 
+# pak::pak("gadenbuie/countdown")
+# pak::pak("hadley/emo")
+library(countdown)
 library(emo)
 library(doParallel)
 
@@ -628,6 +631,9 @@ A workflow set can cross models and/or preprocessors and then resample them _en 
 
 ```{r nhl-feature-sets}
 #| cache: true
+#| results: 'markup'
+
+
 nhl_glm_set_res <-
   workflow_set(
     list(dummy = nhl_indicators, encoded = nhl_effect_rec,
@@ -635,7 +641,7 @@ nhl_glm_set_res <-
          bgl = nhl_behind_rec),
     list(logistic = logistic_reg())
   ) %>%
-  workflow_map(fn = "fit_resamples", resamples = nhl_val, verbose = TRUE)
+  workflow_map(fn = "fit_resamples", resamples = nhl_val, verbose = TRUE, control = ctrl)
 ```
 
 ## Compare recipes
@@ -683,5 +689,15 @@ Another function (`bake()`) is analogous to `predict()` and gives you the proces
 
 ```{r teardown}
 #| include: false
+
 parallel::stopCluster(cl)
+
+# Used in whole game slides in introduction
+roc_curves <- 
+  nhl_glm_set_res %>% 
+  collect_predictions() %>% 
+  group_by(wflow_id) %>% 
+  roc_curve(on_goal, .pred_yes)
+
+save(roc_curves, file = "roc_curves.RData", compress = TRUE)
 ```

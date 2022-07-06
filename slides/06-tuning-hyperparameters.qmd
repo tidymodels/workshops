@@ -588,6 +588,34 @@ predict(final_xgb_wflow, nhl_test[1:3,])
 
 ```{r teardown}
 #| include: false
+
 parallel::stopCluster(cl)
+
+# Used in whole game slides in introduction
+spline_curves <- 
+  glm_res %>% 
+  collect_predictions(parameters = select_best(glm_res, metric = "roc_auc")) %>% 
+  roc_curve(on_goal, .pred_yes) %>% 
+  mutate(wflow_id = "splines") %>% 
+  relocate(wflow_id)
+
+xgb_curves <- 
+  xgb_res %>% 
+  collect_predictions(parameters = select_best(xgb_res, metric = "roc_auc")) %>% 
+  roc_curve(on_goal, .pred_yes) %>% 
+  mutate(wflow_id = "xgboost") %>% 
+  relocate(wflow_id)
+
+lvls <- c("dummy_logistic", "encoded_logistic", "angle_logistic", "dist_logistic", 
+          "bgl_logistic", "splines", "xgboost")
+
+load("roc_curves.RData")
+
+roc_curves <- 
+  roc_curves %>% 
+  bind_rows(spline_curves, xgb_curves) %>%
+  mutate(wflow_id = factor(wflow_id, levels = lvls))
+
+save(roc_curves, file = "roc_curves.RData", compress = TRUE)
 ```
 
