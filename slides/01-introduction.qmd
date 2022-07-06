@@ -201,6 +201,151 @@ library(tidymodels)
 
 ## The whole game
 
+
+
+## Some data
+
+```{r rink-shots}
+#| echo: false
+#| out-width: '90%'
+#| fig-width: 7
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+library(ongoal)
+set.seed(100)
+on_goal %>% 
+  sample_n(500) %>%
+  plot_nhl_shots(emphasis = on_goal)
+```
+
+
+## Basic features (inc dummy variables)
+
+```{r basic-features}
+#| echo: false
+#| out-width: '70%'
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+plot_roc <- function(x, highlight = "dummy_logistic") {
+  emphasize <- dplyr::filter(x, wflow_id == highlight)
+  
+  lvls <- levels(x$wflow_id)
+  hl_lvl <- which(lvls == highlight)
+  if (hl_lvl > 1) {
+    prev_lvls <- lvls[1:(hl_lvl - 1)]
+    others    <- dplyr::filter(x, wflow_id %in% prev_lvls)
+  } else {
+    others <- x[0,]
+  }
+  
+  p <- 
+    ggplot(others, aes(x = 1 - specificity, y = sensitivity)) + 
+    geom_abline(col = "red", lty = 3) +
+    geom_step(aes(group = wflow_id, col = wflow_id), alpha = 1/4, lwd = 1, show.legend = FALSE) + 
+    geom_step(data = emphasize, lwd = 1) +
+    coord_fixed()
+  
+  p
+}
+
+load("roc_curves.RData")
+plot_roc(roc_curves, "dummy_logistic") + theme_bw()
+```
+
+
+## Different player encoding
+
+```{r player-encoding}
+#| echo: false
+#| out-width: '70%'
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+plot_roc(roc_curves, "encoded_logistic") + theme_bw()
+```
+
+
+## Add shot angle? 
+
+```{r shot-angle}
+#| echo: false
+#| out-width: '70%'
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+plot_roc(roc_curves, "angle_logistic") + theme_bw()
+```
+
+## Add shot distance? 
+
+```{r shot-dist}
+#| echo: false
+#| out-width: '70%'
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+plot_roc(roc_curves, "dist_logistic") + theme_bw()
+```
+
+## Add shot behind goal line? 
+
+```{r shot-behind-goal}
+#| echo: false
+#| out-width: '70%'
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+plot_roc(roc_curves, "bgl_logistic") + theme_bw()
+```
+
+
+## Nonlinear terms for angle and distiance 
+
+```{r splines}
+#| echo: false
+#| out-width: '70%'
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+plot_roc(roc_curves, "splines") + theme_bw()
+```
+
+## Switch to boosting and basic features
+
+```{r xgboost-model}
+#| echo: false
+#| out-width: '70%'
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+plot_roc(roc_curves, "xgboost") + theme_bw()
+```
+
 ## Let's install some packages
 
 If you are using your own laptop instead of RStudio Cloud:
