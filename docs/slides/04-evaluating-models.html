@@ -1285,6 +1285,214 @@
 </div>
 </div>
 </div>
+</section>
+<section id="why-choose-just-one-final_fit" class="slide level2">
+<h2>Why choose just one <code>final_fit</code>? <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p><em>Model stacks</em> generate predictions that are informed by several models.</p>
+</section>
+<section id="why-choose-just-one-final_fit-1" class="slide level2">
+<h2>Why choose just one <code>final_fit</code>? <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p><img data-src="images/stack_01.png"></p>
+</section>
+<section id="why-choose-just-one-final_fit-2" class="slide level2">
+<h2>Why choose just one <code>final_fit</code>? <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p><img data-src="images/stack_02.png"></p>
+</section>
+<section id="why-choose-just-one-final_fit-3" class="slide level2">
+<h2>Why choose just one <code>final_fit</code>? <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p><img data-src="images/stack_03.png"></p>
+</section>
+<section id="why-choose-just-one-final_fit-4" class="slide level2">
+<h2>Why choose just one <code>final_fit</code>? <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p><img data-src="images/stack_04.png"></p>
+</section>
+<section id="why-choose-just-one-final_fit-5" class="slide level2">
+<h2>Why choose just one <code>final_fit</code>? <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p><img data-src="images/stack_05.png"></p>
+</section>
+<section id="building-a-model-stack" class="slide level2">
+<h2>Building a model stack <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1"></a><span class="fu">library</span>(stacks)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ol type="1">
+<li>Define candidate members</li>
+<li>Initialize a data stack object</li>
+<li>Iteratively add candidate ensemble members to the data stack</li>
+<li>Evaluate how to combine their predictions</li>
+<li>Fit candidate ensemble members with non-zero stacking coefficients</li>
+<li>Predict on new data!</li>
+</ol>
+</section>
+<section id="building-a-model-stack-1" class="slide level2">
+<h2>Building a model stack <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1"></a>stack_ctrl <span class="ot">&lt;-</span> <span class="fu">control_resamples</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>, <span class="at">save_workflow =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="building-a-model-stack-2" class="slide level2">
+<h2>Building a model stack <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<ol type="1">
+<li><strong>Define candidate members</strong></li>
+</ol>
+<p>Start out with a linear regression:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1"></a>lr_res <span class="ot">&lt;-</span> </span>
+<span id="cb42-2"><a href="#cb42-2"></a>  <span class="co"># define model spec</span></span>
+<span id="cb42-3"><a href="#cb42-3"></a>  <span class="fu">linear_reg</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb42-4"><a href="#cb42-4"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb42-5"><a href="#cb42-5"></a>  <span class="co"># add to workflow</span></span>
+<span id="cb42-6"><a href="#cb42-6"></a>  <span class="fu">workflow</span>(<span class="at">preprocessor =</span> latency <span class="sc">~</span> .) <span class="sc">%&gt;%</span></span>
+<span id="cb42-7"><a href="#cb42-7"></a>  <span class="co"># fit to resamples</span></span>
+<span id="cb42-8"><a href="#cb42-8"></a>  <span class="fu">fit_resamples</span>(frog_folds, <span class="at">control =</span> stack_ctrl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="building-a-model-stack-3" class="slide level2">
+<h2>Building a model stack <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1"></a>lr_res</span>
+<span id="cb43-2"><a href="#cb43-2"></a><span class="co">#&gt; # Resampling results</span></span>
+<span id="cb43-3"><a href="#cb43-3"></a><span class="co">#&gt; # 10-fold cross-validation using stratification </span></span>
+<span id="cb43-4"><a href="#cb43-4"></a><span class="co">#&gt; # A tibble: 10 × 5</span></span>
+<span id="cb43-5"><a href="#cb43-5"></a><span class="co">#&gt;    splits           id     .metrics         .notes           .predictions     </span></span>
+<span id="cb43-6"><a href="#cb43-6"></a><span class="co">#&gt;    &lt;list&gt;           &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;           &lt;list&gt;           </span></span>
+<span id="cb43-7"><a href="#cb43-7"></a><span class="co">#&gt;  1 &lt;split [408/48]&gt; Fold01 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [48 × 4]&gt;</span></span>
+<span id="cb43-8"><a href="#cb43-8"></a><span class="co">#&gt;  2 &lt;split [408/48]&gt; Fold02 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [48 × 4]&gt;</span></span>
+<span id="cb43-9"><a href="#cb43-9"></a><span class="co">#&gt;  3 &lt;split [408/48]&gt; Fold03 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [48 × 4]&gt;</span></span>
+<span id="cb43-10"><a href="#cb43-10"></a><span class="co">#&gt;  4 &lt;split [409/47]&gt; Fold04 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [47 × 4]&gt;</span></span>
+<span id="cb43-11"><a href="#cb43-11"></a><span class="co">#&gt;  5 &lt;split [411/45]&gt; Fold05 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [45 × 4]&gt;</span></span>
+<span id="cb43-12"><a href="#cb43-12"></a><span class="co">#&gt;  6 &lt;split [412/44]&gt; Fold06 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [44 × 4]&gt;</span></span>
+<span id="cb43-13"><a href="#cb43-13"></a><span class="co">#&gt;  7 &lt;split [412/44]&gt; Fold07 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [44 × 4]&gt;</span></span>
+<span id="cb43-14"><a href="#cb43-14"></a><span class="co">#&gt;  8 &lt;split [412/44]&gt; Fold08 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [44 × 4]&gt;</span></span>
+<span id="cb43-15"><a href="#cb43-15"></a><span class="co">#&gt;  9 &lt;split [412/44]&gt; Fold09 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [44 × 4]&gt;</span></span>
+<span id="cb43-16"><a href="#cb43-16"></a><span class="co">#&gt; 10 &lt;split [412/44]&gt; Fold10 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [44 × 4]&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="building-a-model-stack-4" class="slide level2">
+<h2>Building a model stack <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p>Then, a random forest:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1"></a>rf_res <span class="ot">&lt;-</span> </span>
+<span id="cb44-2"><a href="#cb44-2"></a>  <span class="co"># define model spec</span></span>
+<span id="cb44-3"><a href="#cb44-3"></a>  <span class="fu">rand_forest</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb44-4"><a href="#cb44-4"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb44-5"><a href="#cb44-5"></a>  <span class="co"># add to workflow</span></span>
+<span id="cb44-6"><a href="#cb44-6"></a>  <span class="fu">workflow</span>(<span class="at">preprocessor =</span> latency <span class="sc">~</span> .) <span class="sc">%&gt;%</span></span>
+<span id="cb44-7"><a href="#cb44-7"></a>  <span class="co"># fit to resamples</span></span>
+<span id="cb44-8"><a href="#cb44-8"></a>  <span class="fu">fit_resamples</span>(frog_folds, <span class="at">control =</span> stack_ctrl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="building-a-model-stack-5" class="slide level2">
+<h2>Building a model stack <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1"></a>rf_res</span>
+<span id="cb45-2"><a href="#cb45-2"></a><span class="co">#&gt; # Resampling results</span></span>
+<span id="cb45-3"><a href="#cb45-3"></a><span class="co">#&gt; # 10-fold cross-validation using stratification </span></span>
+<span id="cb45-4"><a href="#cb45-4"></a><span class="co">#&gt; # A tibble: 10 × 5</span></span>
+<span id="cb45-5"><a href="#cb45-5"></a><span class="co">#&gt;    splits           id     .metrics         .notes           .predictions     </span></span>
+<span id="cb45-6"><a href="#cb45-6"></a><span class="co">#&gt;    &lt;list&gt;           &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;           &lt;list&gt;           </span></span>
+<span id="cb45-7"><a href="#cb45-7"></a><span class="co">#&gt;  1 &lt;split [408/48]&gt; Fold01 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [48 × 4]&gt;</span></span>
+<span id="cb45-8"><a href="#cb45-8"></a><span class="co">#&gt;  2 &lt;split [408/48]&gt; Fold02 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [48 × 4]&gt;</span></span>
+<span id="cb45-9"><a href="#cb45-9"></a><span class="co">#&gt;  3 &lt;split [408/48]&gt; Fold03 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [48 × 4]&gt;</span></span>
+<span id="cb45-10"><a href="#cb45-10"></a><span class="co">#&gt;  4 &lt;split [409/47]&gt; Fold04 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [47 × 4]&gt;</span></span>
+<span id="cb45-11"><a href="#cb45-11"></a><span class="co">#&gt;  5 &lt;split [411/45]&gt; Fold05 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [45 × 4]&gt;</span></span>
+<span id="cb45-12"><a href="#cb45-12"></a><span class="co">#&gt;  6 &lt;split [412/44]&gt; Fold06 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [44 × 4]&gt;</span></span>
+<span id="cb45-13"><a href="#cb45-13"></a><span class="co">#&gt;  7 &lt;split [412/44]&gt; Fold07 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [44 × 4]&gt;</span></span>
+<span id="cb45-14"><a href="#cb45-14"></a><span class="co">#&gt;  8 &lt;split [412/44]&gt; Fold08 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [44 × 4]&gt;</span></span>
+<span id="cb45-15"><a href="#cb45-15"></a><span class="co">#&gt;  9 &lt;split [412/44]&gt; Fold09 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [44 × 4]&gt;</span></span>
+<span id="cb45-16"><a href="#cb45-16"></a><span class="co">#&gt; 10 &lt;split [412/44]&gt; Fold10 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [44 × 4]&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="building-a-model-stack-6" class="slide level2">
+<h2>Building a model stack <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<ol start="2" type="1">
+<li>Initialize a data stack object</li>
+</ol>
+<!-- point out analogy with `ggplot()` constructor -->
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1"></a>st <span class="ot">&lt;-</span> <span class="fu">stacks</span>()</span>
+<span id="cb46-2"><a href="#cb46-2"></a></span>
+<span id="cb46-3"><a href="#cb46-3"></a>st</span>
+<span id="cb46-4"><a href="#cb46-4"></a><span class="co">#&gt; # A data stack with 0 model definitions and 0 candidate members.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="building-a-model-stack-7" class="slide level2">
+<h2>Building a model stack <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<ol start="3" type="1">
+<li>Iteratively add candidate ensemble members to the data stack</li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1"></a>st <span class="ot">&lt;-</span> st <span class="sc">%&gt;%</span></span>
+<span id="cb47-2"><a href="#cb47-2"></a>  <span class="fu">add_candidates</span>(lr_res) <span class="sc">%&gt;%</span></span>
+<span id="cb47-3"><a href="#cb47-3"></a>  <span class="fu">add_candidates</span>(rf_res)</span>
+<span id="cb47-4"><a href="#cb47-4"></a></span>
+<span id="cb47-5"><a href="#cb47-5"></a>st</span>
+<span id="cb47-6"><a href="#cb47-6"></a><span class="co">#&gt; # A data stack with 2 model definitions and 2 candidate members:</span></span>
+<span id="cb47-7"><a href="#cb47-7"></a><span class="co">#&gt; #   lr_res: 1 model configuration</span></span>
+<span id="cb47-8"><a href="#cb47-8"></a><span class="co">#&gt; #   rf_res: 1 model configuration</span></span>
+<span id="cb47-9"><a href="#cb47-9"></a><span class="co">#&gt; # Outcome: latency (numeric)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="building-a-model-stack-8" class="slide level2">
+<h2>Building a model stack <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<ol start="4" type="1">
+<li>Evaluate how to combine their predictions</li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1"></a>st <span class="ot">&lt;-</span> st <span class="sc">%&gt;%</span></span>
+<span id="cb48-2"><a href="#cb48-2"></a>  <span class="fu">blend_predictions</span>()</span>
+<span id="cb48-3"><a href="#cb48-3"></a></span>
+<span id="cb48-4"><a href="#cb48-4"></a>st</span>
+<span id="cb48-5"><a href="#cb48-5"></a><span class="co">#&gt; # A tibble: 2 × 3</span></span>
+<span id="cb48-6"><a href="#cb48-6"></a><span class="co">#&gt;   member     type        weight</span></span>
+<span id="cb48-7"><a href="#cb48-7"></a><span class="co">#&gt;   &lt;chr&gt;      &lt;chr&gt;        &lt;dbl&gt;</span></span>
+<span id="cb48-8"><a href="#cb48-8"></a><span class="co">#&gt; 1 rf_res_1_1 rand_forest  0.670</span></span>
+<span id="cb48-9"><a href="#cb48-9"></a><span class="co">#&gt; 2 lr_res_1_1 linear_reg   0.318</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="building-a-model-stack-9" class="slide level2">
+<h2>Building a model stack <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<ol start="5" type="1">
+<li>Fit candidate ensemble members with non-zero stacking coefficients</li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1"></a>st <span class="ot">&lt;-</span> st <span class="sc">%&gt;%</span></span>
+<span id="cb49-2"><a href="#cb49-2"></a>  <span class="fu">fit_members</span>()</span>
+<span id="cb49-3"><a href="#cb49-3"></a></span>
+<span id="cb49-4"><a href="#cb49-4"></a>st</span>
+<span id="cb49-5"><a href="#cb49-5"></a><span class="co">#&gt; # A tibble: 2 × 3</span></span>
+<span id="cb49-6"><a href="#cb49-6"></a><span class="co">#&gt;   member     type        weight</span></span>
+<span id="cb49-7"><a href="#cb49-7"></a><span class="co">#&gt;   &lt;chr&gt;      &lt;chr&gt;        &lt;dbl&gt;</span></span>
+<span id="cb49-8"><a href="#cb49-8"></a><span class="co">#&gt; 1 rf_res_1_1 rand_forest  0.670</span></span>
+<span id="cb49-9"><a href="#cb49-9"></a><span class="co">#&gt; 2 lr_res_1_1 linear_reg   0.318</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="building-a-model-stack-10" class="slide level2">
+<h2>Building a model stack <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<ol start="5" type="1">
+<li>Predict on new data!</li>
+</ol>
+<div class="cell columns column-output-location" data-layout-align="center">
+<div class="column">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1"></a>frog_test <span class="sc">%&gt;%</span></span>
+<span id="cb50-2"><a href="#cb50-2"></a>  <span class="fu">select</span>(latency) <span class="sc">%&gt;%</span></span>
+<span id="cb50-3"><a href="#cb50-3"></a>  <span class="fu">bind_cols</span>(<span class="fu">predict</span>(st, frog_test)) <span class="sc">%&gt;%</span></span>
+<span id="cb50-4"><a href="#cb50-4"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(latency, .pred)) <span class="sc">+</span> </span>
+<span id="cb50-5"><a href="#cb50-5"></a>  <span class="fu">geom_abline</span>(<span class="at">lty =</span> <span class="dv">2</span>, </span>
+<span id="cb50-6"><a href="#cb50-6"></a>              <span class="at">col =</span> <span class="st">"deeppink4"</span>, </span>
+<span id="cb50-7"><a href="#cb50-7"></a>              <span class="at">size =</span> <span class="fl">1.5</span>) <span class="sc">+</span></span>
+<span id="cb50-8"><a href="#cb50-8"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb50-9"><a href="#cb50-9"></a>  <span class="fu">coord_obs_pred</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div><div class="column">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="04-evaluating-models_files/figure-revealjs/unnamed-chunk-58-1.svg"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
 
 <div class="footer footer-default">
 <p><a href="https://workshops.tidymodels.org" class="uri">https://workshops.tidymodels.org</a></p>
