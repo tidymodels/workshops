@@ -333,7 +333,8 @@ Set the seed when creating resamples
 ## Evaluating model performance `r hexes("tune")`
 
 ```{r}
-fit_resamples(tree_wflow, frog_folds)
+tree_res <- fit_resamples(tree_wflow, frog_folds)
+tree_res
 ```
 
 . . .
@@ -343,7 +344,8 @@ Where are the fitted models??!??
 ## Evaluating model performance `r hexes("tune")`
 
 ```{r}
-fit_resamples(tree_wflow, frog_folds)
+tree_res <- fit_resamples(tree_wflow, frog_folds)
+tree_res
 ```
 
 Where are the fitted models??!??
@@ -356,31 +358,13 @@ For more advanced use cases, you can extract and save them: <https://www.tmwr.or
 ## Evaluating model performance `r hexes("tune")`
 
 ```{r}
-fit_resamples(tree_wflow, frog_folds) %>%
+tree_res %>%
   collect_metrics()
 ```
 
 . . .
 
 We can reliably measure performance using only the **training** data 🎉
-
-## Embarrassingly parallel `r hexes("tune")`
-
-```{r}
-doParallel::registerDoParallel()
-
-# Save the assessment set results
-ctrl_frog <- control_resamples(save_pred = TRUE)
-
-set.seed(1)
-tree_res <- fit_resamples(tree_wflow, frog_folds, control = ctrl_frog)
-
-tree_res %>% collect_metrics()
-```
-
-. . .
-
-Each fit is independent of the others
 
 ## Comparing metrics `r hexes("yardstick")`
 
@@ -431,12 +415,11 @@ Remember that:
 ## Evaluating model performance `r hexes("tune")`
 
 ```{r}
+# Save the assessment set results
 ctrl_frog <- control_resamples(save_pred = TRUE)
+tree_res <- fit_resamples(tree_wflow, frog_folds, control = ctrl_frog)
 
-tree_preds <- 
-  tree_res %>%
-  collect_predictions()
-
+tree_preds <- collect_predictions(tree_res)
 tree_preds
 ```
 
