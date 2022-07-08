@@ -8,7 +8,7 @@
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-0.9.624">
+  <meta name="generator" content="quarto-0.9.651">
 
   <title>Machine learning with tidymodels - 6 - Tuning hyperparameters</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -590,21 +590,23 @@
 <span id="cb4-2"><a href="#cb4-2"></a>grid <span class="ot">&lt;-</span> </span>
 <span id="cb4-3"><a href="#cb4-3"></a>  glm_wflow <span class="sc">%&gt;%</span> </span>
 <span id="cb4-4"><a href="#cb4-4"></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb4-5"><a href="#cb4-5"></a>  <span class="fu">grid_regular</span>(<span class="at">size =</span> <span class="dv">25</span>)</span>
+<span id="cb4-5"><a href="#cb4-5"></a>  <span class="fu">grid_regular</span>(<span class="at">levels =</span> <span class="dv">25</span>)</span>
 <span id="cb4-6"><a href="#cb4-6"></a></span>
 <span id="cb4-7"><a href="#cb4-7"></a>grid</span>
-<span id="cb4-8"><a href="#cb4-8"></a><span class="co">#&gt; # A tibble: 9 × 2</span></span>
-<span id="cb4-9"><a href="#cb4-9"></a><span class="co">#&gt;   angle distance</span></span>
-<span id="cb4-10"><a href="#cb4-10"></a><span class="co">#&gt;   &lt;int&gt;    &lt;int&gt;</span></span>
-<span id="cb4-11"><a href="#cb4-11"></a><span class="co">#&gt; 1     1        1</span></span>
-<span id="cb4-12"><a href="#cb4-12"></a><span class="co">#&gt; 2     8        1</span></span>
-<span id="cb4-13"><a href="#cb4-13"></a><span class="co">#&gt; 3    15        1</span></span>
-<span id="cb4-14"><a href="#cb4-14"></a><span class="co">#&gt; 4     1        8</span></span>
-<span id="cb4-15"><a href="#cb4-15"></a><span class="co">#&gt; 5     8        8</span></span>
-<span id="cb4-16"><a href="#cb4-16"></a><span class="co">#&gt; 6    15        8</span></span>
-<span id="cb4-17"><a href="#cb4-17"></a><span class="co">#&gt; 7     1       15</span></span>
-<span id="cb4-18"><a href="#cb4-18"></a><span class="co">#&gt; 8     8       15</span></span>
-<span id="cb4-19"><a href="#cb4-19"></a><span class="co">#&gt; 9    15       15</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-8"><a href="#cb4-8"></a><span class="co">#&gt; # A tibble: 225 × 2</span></span>
+<span id="cb4-9"><a href="#cb4-9"></a><span class="co">#&gt;    angle distance</span></span>
+<span id="cb4-10"><a href="#cb4-10"></a><span class="co">#&gt;    &lt;int&gt;    &lt;int&gt;</span></span>
+<span id="cb4-11"><a href="#cb4-11"></a><span class="co">#&gt;  1     1        1</span></span>
+<span id="cb4-12"><a href="#cb4-12"></a><span class="co">#&gt;  2     2        1</span></span>
+<span id="cb4-13"><a href="#cb4-13"></a><span class="co">#&gt;  3     3        1</span></span>
+<span id="cb4-14"><a href="#cb4-14"></a><span class="co">#&gt;  4     4        1</span></span>
+<span id="cb4-15"><a href="#cb4-15"></a><span class="co">#&gt;  5     5        1</span></span>
+<span id="cb4-16"><a href="#cb4-16"></a><span class="co">#&gt;  6     6        1</span></span>
+<span id="cb4-17"><a href="#cb4-17"></a><span class="co">#&gt;  7     7        1</span></span>
+<span id="cb4-18"><a href="#cb4-18"></a><span class="co">#&gt;  8     8        1</span></span>
+<span id="cb4-19"><a href="#cb4-19"></a><span class="co">#&gt;  9     9        1</span></span>
+<span id="cb4-20"><a href="#cb4-20"></a><span class="co">#&gt; 10    10        1</span></span>
+<span id="cb4-21"><a href="#cb4-21"></a><span class="co">#&gt; # … with 215 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="update-parameter-ranges" class="slide level2">
@@ -915,14 +917,15 @@
 <li><p>Grid search, combined with resampling, requires fitting a lot of models!</p></li>
 <li><p>These models don’t depend on one another and can be run in parallel.</p></li>
 </ul>
-<div class="fragment">
 <p>We can use a <em>parallel backend</em> to do this:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>cores <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">detectCores</span>(<span class="at">logical =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb15-2"><a href="#cb15-2"></a><span class="fu">library</span>(doParallel)</span>
-<span id="cb15-3"><a href="#cb15-3"></a>cl <span class="ot">&lt;-</span> <span class="fu">makePSOCKcluster</span>(cores)</span>
-<span id="cb15-4"><a href="#cb15-4"></a><span class="fu">registerDoParallel</span>(cl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<span id="cb15-2"><a href="#cb15-2"></a>cl <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">makePSOCKcluster</span>(cores)</span>
+<span id="cb15-3"><a href="#cb15-3"></a>doParallel<span class="sc">::</span><span class="fu">registerDoParallel</span>(cl)</span>
+<span id="cb15-4"><a href="#cb15-4"></a></span>
+<span id="cb15-5"><a href="#cb15-5"></a><span class="co"># Shut it down with:</span></span>
+<span id="cb15-6"><a href="#cb15-6"></a>foreach<span class="sc">::</span><span class="fu">registerDoSEQ</span>()</span>
+<span id="cb15-7"><a href="#cb15-7"></a>parallel<span class="sc">::</span><span class="fu">stopCluster</span>(cl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div><div class="column" style="width:40%;">
 <div class="cell" data-layout-align="center">
