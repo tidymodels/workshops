@@ -53,7 +53,6 @@ nhl_test  <- testing(nhl_split)
 set.seed(234)
 nhl_val <- validation_split(nhl_train, prop = 0.80)
 
-
 nhl_distance_rec <-
   recipe(on_goal ~ ., data = nhl_train) %>%
   step_lencode_mixed(player, outcome = vars(on_goal)) %>%
@@ -149,7 +148,7 @@ The main two strategies for optimization are:
 Let's take our previous recipe and add a few changes:
 
 ```{r}
-#| code-line-numbers: "12-13"
+#| code-line-numbers: "13-14"
 glm_rec <-
   recipe(on_goal ~ ., data = nhl_train) %>%
   step_lencode_mixed(player, outcome = vars(on_goal)) %>%
@@ -576,6 +575,7 @@ coord_rec <-
   step_mutate(
     angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
     distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    distance = log(distance),
     behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
   ) %>% 
   step_rm(coord_x, coord_y)
@@ -615,7 +615,7 @@ Best boosting results:
 
 ```{r xgboost-best}
 
-show_best(xgb_res, metric = "roc_auc", n = 1) %>% 
+show_best(xgb_coord_res, metric = "roc_auc", n = 1) %>% 
   select(.metric, .estimator, mean, n, std_err, .config)
 ```
 :::
@@ -638,7 +638,7 @@ countdown(minutes = 20, id = "improve-xgb")
 ```{r xgboost-select-best}
 #| cache: true
 
-best_auc <- select_best(xgb_res, metric = "roc_auc")
+best_auc <- select_best(xgb_coord_res, metric = "roc_auc")
 best_auc
 
 xgb_wflow <-
@@ -680,7 +680,7 @@ countdown(minutes = 20, id = "finalize-xgb")
 Validation results from tuning:
 
 ```{r xgb-val-res}
-xgb_res %>% 
+xgb_coord_res %>% 
   show_best(metric = "roc_auc", n = 1) %>% 
   select(.metric, mean, n, std_err)
 ```
@@ -736,8 +736,8 @@ spline_curves <-
   relocate(wflow_id)
 
 xgb_curves <- 
-  xgb_res %>% 
-  collect_predictions(parameters = select_best(xgb_res, metric = "roc_auc")) %>% 
+  xgb_coord_res %>% 
+  collect_predictions(parameters = select_best(xgb_coord_res, metric = "roc_auc")) %>% 
   roc_curve(on_goal, .pred_yes) %>% 
   mutate(wflow_id = "xgboost") %>% 
   relocate(wflow_id)
