@@ -25,11 +25,10 @@ knitr:
 #| include: false
 library(rpart)
 library(partykit)
-library(doParallel)
 
 cores <- parallel::detectCores(logical = FALSE)
-cl <- makePSOCKcluster(cores)
-registerDoParallel(cl)
+cl <- parallel::makePSOCKcluster(cores)
+doParallel::registerDoParallel(cl)
 
 options(width = 200)
 
@@ -400,7 +399,7 @@ select_by_pct_loss(glm_res, distance, metric = "roc_auc")
 #| dev-args: list(bg = "transparent")
 tree_mod <- 
     rpart::rpart(
-        on_goal ~ . - player - offense_team - defence_team - coord_x - coord_y,
+        on_goal ~ . - player - offense_team - defense_team - coord_x - coord_y,
         data = nhl_train,
         control = rpart::rpart.control(maxdepth = 3, cp = 0.001)
     ) %>% 
@@ -474,16 +473,17 @@ countdown(minutes = 3, id = "xgb-wflow")
 
 -   These models don't depend on one another and can be run in parallel.
 
-::: fragment
 We can use a *parallel backend* to do this:
 
 ```{r, eval= FALSE}
 cores <- parallel::detectCores(logical = FALSE)
-library(doParallel)
-cl <- makePSOCKcluster(cores)
-registerDoParallel(cl)
+cl <- parallel::makePSOCKcluster(cores)
+doParallel::registerDoParallel(cl)
+
+# Shut it down with:
+foreach::registerDoSEQ()
+parallel::stopCluster(cl)
 ```
-:::
 :::
 
 ::: {.column width="40%"}
@@ -722,7 +722,7 @@ predict(final_xgb_wflow, nhl_test[1:3,])
 
 ```{r teardown}
 #| include: false
-
+foreach::registerDoSEQ()
 parallel::stopCluster(cl)
 
 # Used in whole game slides in introduction
