@@ -24,6 +24,11 @@ knitr:
 ```{r more-setup}
 #| include: false
 
+# pak::pak("gadenbuie/countdown")
+# pak::pak("hadley/emo")
+library(countdown)
+library(emo)
+
 library(doParallel)
 
 cores <- parallel::detectCores(logical = FALSE)
@@ -61,13 +66,13 @@ Example representations:
 
 ![](images/fe_venn_info.svg){.absolute bottom="0" right="0" height="400"}
 
-Where do centering and scaling belong in the diagram?
+Where does creation of dummy variables belong on the diagram? 
 
 ## Two types of preprocessing
 
 ![](images/fe_venn_info.svg){.absolute bottom="0" right="0" height="400"}
 
-Where does re-encoding a date belong in the diagram?
+Where does engineering a date column belong in the diagram? 
 
 . . .
 
@@ -117,7 +122,7 @@ The recipes package can handle both!
 
 -   From Pittsburgh Penguins games, `r format(nrow(ongoal::season_2015), big.mark = ",")` shots on goal
 
--   Seasons 2015-2016, 2016-2017, and 2017-2018
+-   Season from the 2015-2016 season
 
 . . .
 
@@ -175,7 +180,7 @@ countdown(minutes = 15, id = "nhl-explore")
 
 ## Validation split `r hexes("rsample")`
 
-Since there are a lot of data, we'll use a validation set:
+Since there are a lot of observations, we'll use a validation set: 
 
 ```{r val}
 set.seed(234)
@@ -185,7 +190,7 @@ nhl_val
 
 . . .
 
-Remember that a validation split is a kind of resample.
+Remember that a validation split is a type of resample. 
 
 ## Prepare your data for modeling `r hexes("recipes")`
 
@@ -308,7 +313,7 @@ nhl_rec <-
   step_pca(all_numeric_predictors())
 ```
 
-. . .
+. . . 
 
 PCA feature extraction...
 
@@ -326,7 +331,7 @@ nhl_rec <-
   step_umap(all_numeric_predictors(), outcome = on_goal)
 ```
 
-. . .
+. . . 
 
 A fancy machine learning supervised dimension reduction technique...
 
@@ -343,7 +348,7 @@ nhl_rec <-
   step_ns(coord_y, coord_x, deg_free = 10)
 ```
 
-. . .
+. . . 
 
 Nonlinear transforms like natural splines, and so on!
 
@@ -380,7 +385,7 @@ nhl_indicators <-
 ## Using a workflow `r hexes("recipes", "workflows", "parsnip", "tune")`
 
 ```{r}
-#| code-line-numbers: "3"
+#| code-line-numbers: "3|"
 #| cache: true
 nhl_glm_wflow <-
   workflow() %>%
@@ -438,13 +443,13 @@ Is a 50% threshold good?
 
 What happens if we say that we need to be 80% sure to declare an event?
 
--   sensitivity ⬇️, specificity ⬇️
+-   sensitivity ⬇️, specificity ⬆️
 
 . . .
 
 What happens for a 20% threshold?
 
--   sensitivity ⬆️, specificity ⬆️
+-   sensitivity ⬆️, specificity ⬇️
 
 ## ROC curves
 
@@ -468,7 +473,7 @@ ROC curves are insensitive to class imbalance.
 ## ROC curves `r hexes("yardstick")`
 
 ```{r}
-# Assumes _first_ factor level is event; there are options to change
+# Assumes _first_ factor level is event; there are options to change that
 roc_curve_points <- glm_val_pred %>% roc_curve(truth = on_goal, .pred_yes)
 roc_curve_points %>% slice(1, 50, 100)
 
@@ -538,7 +543,7 @@ Let's use an _effect encoding_.
 ::: {.column width="50%"}
 ```{r effects}
 #| echo: false
-#| out-width: '100%'
+#| out-width: '90%'
 #| fig-width: 6
 #| fig-height: 3
 #| fig-align: 'center'
@@ -649,7 +654,7 @@ When a recipe is part of a workflow, this estimation occurs when `fit()` is call
 ## Effect encoding results `r hexes("recipes","embed", "workflows", "tune")`
 
 ```{r resample-encoding}
-#| code-line-numbers: "3"
+#| code-line-numbers: "3|"
 nhl_effect_wflow <-
   nhl_glm_wflow %>%
   update_recipe(nhl_effect_rec)
@@ -698,7 +703,7 @@ example_data %>%
 ```
 
 :::notes
-Note the danger of using `step_mutate()` -- easy to have data leakage
+Note the danger of using `step_mutate()` -- easy to have data leakage 
 :::
 
 ## 
@@ -707,7 +712,8 @@ Note the danger of using `step_mutate()` -- easy to have data leakage
 nhl_distance_rec <-
   nhl_angle_rec %>%
   step_mutate(
-    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2)
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    distance = log(distance)
   )
 ```
 
@@ -754,10 +760,13 @@ example_data %>%
 
 ## Fit different recipes `r hexes("recipes","embed", "workflows", "tune")`
 
-A workflow set can cross models and/or preprocessors and then resample them *en masse*.
+A workflow set can cross models and/or preprocessors and then resample them *en masse*. 
 
 ```{r nhl-feature-sets}
 #| cache: true
+#| results: 'markup'
+
+
 nhl_glm_set_res <-
   workflow_set(
     list(dummy = nhl_indicators, encoded = nhl_effect_rec,
@@ -765,7 +774,7 @@ nhl_glm_set_res <-
          bgl = nhl_behind_rec),
     list(logistic = logistic_reg())
   ) %>%
-  workflow_map(fn = "fit_resamples", resamples = nhl_val, verbose = TRUE)
+  workflow_map(fn = "fit_resamples", resamples = nhl_val, verbose = TRUE, control = ctrl)
 ```
 
 ## Your turn {transition="slide-in"}
@@ -774,7 +783,7 @@ nhl_glm_set_res <-
 
 *Create a workflow set with 2 or 3 recipes.*
 
-*Use `workflow_map()` to resample the workflow set.*
+*Use `workflow_map()` to resample the workflow set.* 
 
 
 ```{r}
@@ -838,5 +847,15 @@ collect_metrics(nhl_glm_set_res) %>%
 
 ```{r teardown}
 #| include: false
+
 parallel::stopCluster(cl)
+
+# Used in whole game slides in introduction
+roc_curves_part_5 <- 
+  nhl_glm_set_res %>% 
+  collect_predictions() %>% 
+  group_by(wflow_id) %>% 
+  roc_curve(on_goal, .pred_yes)
+
+save(roc_curves_part_5, file = "roc_curves_part_5.RData", compress = TRUE)
 ```

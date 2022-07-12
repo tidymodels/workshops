@@ -1,5 +1,5 @@
 ---
-title: "6 - Tuning hyperparameters"
+title: "6 - Tuning Hyperparameters"
 subtitle: "Machine learning with tidymodels"
 format:
   revealjs: 
@@ -53,7 +53,6 @@ nhl_test  <- testing(nhl_split)
 set.seed(234)
 nhl_val <- validation_split(nhl_train, prop = 0.80)
 
-
 nhl_distance_rec <-
   recipe(on_goal ~ ., data = nhl_train) %>%
   step_lencode_mixed(player, outcome = vars(on_goal)) %>%
@@ -62,7 +61,8 @@ nhl_distance_rec <-
   step_zv(all_predictors()) %>%
   step_mutate(
     angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
-    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2)
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    distance = log(distance)
   )
 
 nhl_distance_wflow <-
@@ -148,7 +148,7 @@ The main two strategies for optimization are:
 Let's take our previous recipe and add a few changes:
 
 ```{r}
-#| code-line-numbers: "12-13"
+#| code-line-numbers: "13-14"
 glm_rec <-
   recipe(on_goal ~ ., data = nhl_train) %>%
   step_lencode_mixed(player, outcome = vars(on_goal)) %>%
@@ -156,6 +156,7 @@ glm_rec <-
   step_mutate(
     angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
     distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    distance = log(distance),
     behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
   ) %>%
   step_rm(coord_x, coord_y) %>%
@@ -163,7 +164,7 @@ glm_rec <-
   step_ns(angle, deg_free = tune("angle")) %>%
   step_ns(distance, deg_free = tune("distance")) %>%
   step_normalize(all_numeric_predictors())
-glm_wflow <-
+glm_spline_wflow <-
   workflow() %>%
   add_model(logistic_reg()) %>%
   add_recipe(glm_rec)
@@ -193,7 +194,7 @@ Most basic (but very effective) way to tune models
 
 ```{r get-param}
 #| tidy: false
-glm_wflow %>% 
+glm_spline_wflow %>% 
   extract_parameter_set_dials()
 ```
 
@@ -208,7 +209,7 @@ A parameter set can be updated (e.g. to change the ranges).
 ```{r get-grid}
 set.seed(2)
 grid <- 
-  glm_wflow %>% 
+  glm_spline_wflow %>% 
   extract_parameter_set_dials() %>% 
   grid_latin_hypercube(size = 25)
 
@@ -234,7 +235,7 @@ grid
 
 ```{r}
 #| echo: false
-countdown(minutes = 3, id = "make-grid")
+countdown::countdown(minutes = 3, id = "make-grid")
 ```
 
 ## Create a grid `r hexes(c("dials", "workflows"))`
@@ -243,7 +244,7 @@ countdown(minutes = 3, id = "make-grid")
 #| code-line-numbers: "5"
 set.seed(2)
 grid <- 
-  glm_wflow %>% 
+  glm_spline_wflow %>% 
   extract_parameter_set_dials() %>% 
   grid_regular(levels = 25)
 
@@ -256,7 +257,7 @@ grid
 #| code-line-numbers: "5-6"
 set.seed(2)
 grid <- 
-  glm_wflow %>% 
+  glm_spline_wflow %>% 
   extract_parameter_set_dials() %>% 
   update(angle = spline_degree(c(2L, 20L)),
          distance = spline_degree(c(2L, 20L))) %>% 
@@ -279,17 +280,17 @@ grid %>%
 
 # Use the `tune_*()` functions to tune models
 
-## Grid search `r hexes(c("dials", "workflows", "tune"))`
+## Spline grid search {.annotation}
 
-```{r tuning}
+```{r tuning} 
 #| cache: true
 ctrl <- control_grid(save_pred = TRUE, parallel_over = "everything")
 
 set.seed(9)
-glm_res <-
-  glm_wflow %>%
+glm_spline_res <-
+  glm_spline_wflow %>%
   tune_grid(resamples = nhl_val, grid = grid, control = ctrl)
-glm_res 
+glm_spline_res
 ```
 
 ::: notes
@@ -307,7 +308,7 @@ glm_res
 
 ```{r}
 #| echo: false
-countdown(minutes = 3, id = "tune-glm")
+countdown::countdown(minutes = 3, id = "tune-glm")
 ```
 
 ## Grid results `r hexes(c("tune"))`
@@ -315,25 +316,25 @@ countdown(minutes = 3, id = "tune-glm")
 ```{r autoplot}
 #| fig-align: 'center'
 #| dev-args: list(bg = "transparent")
-autoplot(glm_res)
+autoplot(glm_spline_res)
 ```
 
 ## Tuning results `r hexes(c("tune"))`
 
 ```{r}
-collect_metrics(glm_res)
+collect_metrics(glm_spline_res)
 ```
 
 ## Tuning results `r hexes(c("tune"))`
 
 ```{r}
-collect_metrics(glm_res, summarize = FALSE)
+collect_metrics(glm_spline_res, summarize = FALSE)
 ```
 
 ## Choose a parameter combination `r hexes(c("tune"))`
 
 ```{r}
-show_best(glm_res, metric = "roc_auc")
+show_best(glm_spline_res, metric = "roc_auc")
 ```
 
 ## Choose a parameter combination `r hexes(c("tune"))`
@@ -341,7 +342,7 @@ show_best(glm_res, metric = "roc_auc")
 Create your own tibble for final parameters or use one of the `tune::select_*()` functions:
 
 ```{r}
-select_best(glm_res, metric = "roc_auc")
+select_best(glm_spline_res, metric = "roc_auc")
 ```
 
 . . .
@@ -349,7 +350,7 @@ select_best(glm_res, metric = "roc_auc")
 This best result has:
 
 -   low-degree spline for `angle` (less "wiggly", less complex)
--   high-degree spline for `distance` (more "wiggly", more complex)
+-   higher-degree spline for `distance` (more "wiggly", more complex)
 
 ## Your turn {transition="slide-in"}
 
@@ -363,14 +364,14 @@ This best result has:
 
 ```{r}
 #| echo: false
-countdown(minutes = 3, id = "select-by-pct-loss")
+countdown::countdown(minutes = 3, id = "select-by-pct-loss")
 ```
 
 ## Choose a parameter combination `r hexes(c("tune"))`
 
 ```{r}
-select_best(glm_res, metric = "roc_auc")
-select_by_pct_loss(glm_res, distance, metric = "roc_auc")
+select_best(glm_spline_res, metric = "roc_auc")
+select_by_pct_loss(glm_spline_res, distance, metric = "roc_auc")
 ```
 
 # Boosted trees 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌵🌴🌲🌳🌴🌵🌳🌴🌳
@@ -399,7 +400,7 @@ select_by_pct_loss(glm_res, distance, metric = "roc_auc")
 #| dev-args: list(bg = "transparent")
 tree_mod <- 
     rpart::rpart(
-        on_goal ~ . - player - offense_team - defence_team - coord_x - coord_y,
+        on_goal ~ . - player - offense_team - defense_team - coord_x - coord_y,
         data = nhl_train,
         control = rpart::rpart.control(maxdepth = 3, cp = 0.001)
     ) %>% 
@@ -462,7 +463,7 @@ xgb_wflow <-
 
 ```{r}
 #| echo: false
-countdown(minutes = 3, id = "xgb-wflow")
+countdown::countdown(minutes = 3, id = "xgb-wflow")
 ```
 
 ## Running in parallel
@@ -552,7 +553,7 @@ xgb_res
 
 ```{r}
 #| echo: false
-countdown(minutes = 3, id = "tune-xgboost")
+countdown::countdown(minutes = 3, id = "tune-xgboost")
 ```
 
 ## Tuning results `r hexes(c("tune"))`
@@ -566,22 +567,55 @@ countdown(minutes = 3, id = "tune-xgboost")
 autoplot(xgb_res)
 ```
 
+## Again with the location features
+
+```{r xgb-coord}
+coord_rec <- 
+  xgb_rec %>%
+  step_mutate(
+    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    distance = log(distance),
+    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
+  ) %>% 
+  step_rm(coord_x, coord_y)
+
+xgb_coord_wflow <- 
+  workflow() %>% 
+  add_model(xgb_spec) %>% 
+  add_recipe(coord_rec)
+
+set.seed(9)
+xgb_coord_res <-
+  xgb_coord_wflow %>%
+  tune_grid(resamples = nhl_val, grid = 20, control = ctrl)
+```
+
+## Did the machine figure it out? 
+
+```{r}
+show_best(xgb_res, metric = "roc_auc")
+
+show_best(xgb_coord_res, metric = "roc_auc")
+```
+
+
 ## Compare models
 
 Best logistic regression results:
 
 ```{r logistic-best}
-nhl_distance_res %>%
-  collect_metrics() %>% 
-  filter(.metric == "roc_auc")
+glm_spline_res %>% 
+  show_best(metric = "roc_auc", n = 1) %>% 
+  select(.metric, .estimator, mean, n, std_err, .config)
 ```
 
 ::: fragment
 Best boosting results:
 
 ```{r xgboost-best}
-
-show_best(xgb_res, metric = "roc_auc", n = 1) %>% 
+xgb_coord_res %>% 
+  show_best(metric = "roc_auc", n = 1) %>% 
   select(.metric, .estimator, mean, n, std_err, .config)
 ```
 :::
@@ -596,37 +630,37 @@ show_best(xgb_res, metric = "roc_auc", n = 1) %>%
 
 ```{r}
 #| echo: false
-countdown(minutes = 20, id = "improve-xgb")
+countdown::countdown(minutes = 20, id = "improve-xgb")
 ```
 
 ## Updating the workflow `r hexes(c("workflows", "tune"))`
 
-```{r xgboost-select-best}
+```{r final-select-best}
 #| cache: true
 
-best_auc <- select_best(xgb_res, metric = "roc_auc")
+best_auc <- select_best(glm_spline_res, metric = "roc_auc")
 best_auc
 
-xgb_wflow <-
-  xgb_wflow %>% 
+glm_spline_wflow <-
+  glm_spline_wflow %>% 
   finalize_workflow(best_auc)
 
-xgb_wflow
+glm_spline_wflow
 ```
 
 ## The final fit `r hexes(c("workflows", "tune"))`
 
-```{r xgboost-final}
+```{r final-last-fit}
 #| cache: true
 test_res <- 
-  xgb_wflow %>% 
+  glm_spline_wflow %>% 
   last_fit(split = nhl_split)
 test_res
 ```
 
 . . .
 
-Remember that `last_fit()` **fits** one time with the training set and **evaluates** one time with the testing set.
+Remember that `last_fit()` **fits** one time with the non-training set and **evaluates** one time with the testing set.
 
 ## Your turn {transition="slide-in"}
 
@@ -638,15 +672,15 @@ Remember that `last_fit()` **fits** one time with the training set and **evaluat
 
 ```{r}
 #| echo: false
-countdown(minutes = 20, id = "finalize-xgb")
+countdown::countdown(minutes = 20, id = "finalize-xgb")
 ```
 
 ## Estimates of ROC AUC `r hexes(c("tune"))`
 
 Validation results from tuning:
 
-```{r xgb-val-res}
-xgb_res %>% 
+```{r val-res}
+glm_spline_res %>% 
   show_best(metric = "roc_auc", n = 1) %>% 
   select(.metric, mean, n, std_err)
 ```
@@ -654,7 +688,7 @@ xgb_res %>%
 ::: fragment
 Test set results:
 
-```{r xgb-test-res}
+```{r test-res}
 test_res %>% collect_metrics()
 ```
 :::
@@ -664,12 +698,12 @@ test_res %>% collect_metrics()
 Extract the final fitted workflow, fit using the training set:
 
 ```{r}
-final_xgb_wflow <- 
+final_glm_spline_wflow <- 
   test_res %>% 
   extract_workflow()
 
 # use this object to predict or deploy
-predict(final_xgb_wflow, nhl_test[1:3,])
+predict(final_glm_spline_wflow, nhl_test[1:3,])
 ```
 
 ## Next steps
@@ -692,4 +726,30 @@ predict(final_xgb_wflow, nhl_test[1:3,])
 #| include: false
 foreach::registerDoSEQ()
 parallel::stopCluster(cl)
+
+# Used in whole game slides in introduction
+spline_curves <- 
+  glm_spline_res %>% 
+  collect_predictions(parameters = select_best(glm_spline_res, metric = "roc_auc")) %>% 
+  roc_curve(on_goal, .pred_yes) %>% 
+  mutate(wflow_id = "splines") %>% 
+  relocate(wflow_id)
+
+xgb_curves <- 
+  xgb_coord_res %>% 
+  collect_predictions(parameters = select_best(xgb_coord_res, metric = "roc_auc")) %>% 
+  roc_curve(on_goal, .pred_yes) %>% 
+  mutate(wflow_id = "xgboost") %>% 
+  relocate(wflow_id)
+
+xgb_coord_curves <- 
+  xgb_coord_res %>% 
+  collect_predictions(parameters = select_best(xgb_coord_res, metric = "roc_auc")) %>% 
+  roc_curve(on_goal, .pred_yes) %>% 
+  mutate(wflow_id = "xgboost-coords") %>% 
+  relocate(wflow_id)
+
+roc_curves_part_6 <- bind_rows(spline_curves, xgb_curves, xgb_coord_curves) 
+
+save(roc_curves_part_6, file = "roc_curves_part_6.RData", compress = TRUE)
 ```
