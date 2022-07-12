@@ -24,6 +24,11 @@ knitr:
 ```{r more-setup}
 #| include: false
 
+# pak::pak("gadenbuie/countdown")
+# pak::pak("hadley/emo")
+library(countdown)
+library(emo)
+
 library(doParallel)
 
 cores <- parallel::detectCores(logical = FALSE)
@@ -538,7 +543,7 @@ Let's use an _effect encoding_.
 ::: {.column width="50%"}
 ```{r effects}
 #| echo: false
-#| out-width: '100%'
+#| out-width: '90%'
 #| fig-width: 6
 #| fig-height: 3
 #| fig-align: 'center'
@@ -707,7 +712,8 @@ Note the danger of using `step_mutate()` -- easy to have data leakage
 nhl_distance_rec <-
   nhl_angle_rec %>%
   step_mutate(
-    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2)
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    distance = log(distance)
   )
 ```
 
@@ -758,6 +764,9 @@ A workflow set can cross models and/or preprocessors and then resample them *en 
 
 ```{r nhl-feature-sets}
 #| cache: true
+#| results: 'markup'
+
+
 nhl_glm_set_res <-
   workflow_set(
     list(dummy = nhl_indicators, encoded = nhl_effect_rec,
@@ -765,7 +774,7 @@ nhl_glm_set_res <-
          bgl = nhl_behind_rec),
     list(logistic = logistic_reg())
   ) %>%
-  workflow_map(fn = "fit_resamples", resamples = nhl_val, verbose = TRUE)
+  workflow_map(fn = "fit_resamples", resamples = nhl_val, verbose = TRUE, control = ctrl)
 ```
 
 ## Your turn {transition="slide-in"}
@@ -838,5 +847,15 @@ collect_metrics(nhl_glm_set_res) %>%
 
 ```{r teardown}
 #| include: false
+
 parallel::stopCluster(cl)
+
+# Used in whole game slides in introduction
+roc_curves_part_5 <- 
+  nhl_glm_set_res %>% 
+  collect_predictions() %>% 
+  group_by(wflow_id) %>% 
+  roc_curve(on_goal, .pred_yes)
+
+save(roc_curves_part_5, file = "roc_curves_part_5.RData", compress = TRUE)
 ```
