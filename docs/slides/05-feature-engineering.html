@@ -6,9 +6,9 @@
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-0.9.594">
+  <meta name="generator" content="quarto-1.0.14">
 
   <title>Machine learning with tidymodels - 5 - Feature engineering</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -380,11 +380,13 @@
   <link href="../site_libs/countdown-0.3.5/countdown.css" rel="stylesheet">
   <script src="../site_libs/countdown-0.3.5/countdown.js"></script>
 <meta property="og:title" content="Machine learning with tidymodels - 5 - Feature engineering">
+<meta property="og:description" content="Machine learning with tidymodels">
 <meta property="og:site-name" content="Machine learning with tidymodels">
 <meta name="twitter:title" content="Machine learning with tidymodels - 5 - Feature engineering">
+<meta name="twitter:description" content="Machine learning with tidymodels">
 <meta name="twitter:card" content="summary">
 </head>
-<body>
+<body class="quarto-light">
 <script src="https://use.fontawesome.com/5235085b15.js"></script>
   <div class="reveal">
     <div class="slides">
@@ -420,12 +422,12 @@
 <section id="two-types-of-preprocessing-2" class="slide level2" data-auto-animate="true">
 <h2 data-id="quarto-animate-title">Two types of preprocessing</h2>
 <p><img data-src="images/fe_venn_info.svg" class="absolute" style="bottom: 0px; right: 0px; height: 400px; "></p>
-<p>Where do centering and scaling belong in the diagram?</p>
+<p>Where does creation of dummy variables belong on the diagram?</p>
 </section>
 <section id="two-types-of-preprocessing-3" class="slide level2">
 <h2>Two types of preprocessing</h2>
 <p><img data-src="images/fe_venn_info.svg" class="absolute" style="bottom: 0px; right: 0px; height: 400px; "></p>
-<p>Where does re-encoding a date belong in the diagram?</p>
+<p>Where does engineering a date column belong in the diagram?</p>
 <div class="fragment">
 <p>When a date column is used in its native format, it is usually converted by an R model to an integer.</p>
 </div>
@@ -497,7 +499,7 @@
 <h2>The NHL data 🏒</h2>
 <ul>
 <li><p>From Pittsburgh Penguins games, 12,147 shots on goal</p></li>
-<li><p>Seasons 2015-2016, 2016-2017, and 2017-2018</p></li>
+<li><p>Season from the 2015-2016 season</p></li>
 </ul>
 <div class="fragment">
 <p>Let’s predict whether a shot is on-goal (a goal or blocked by goaltender) or not.</p>
@@ -578,7 +580,7 @@
 </section>
 <section id="validation-split" class="slide level2">
 <h2>Validation split <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
-<p>Since there are a lot of data, we’ll use a validation set:</p>
+<p>Since there are a lot of observations, we’ll use a validation set:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="fu">set.seed</span>(<span class="dv">234</span>)</span>
 <span id="cb4-2"><a href="#cb4-2"></a>nhl_val <span class="ot">&lt;-</span> <span class="fu">validation_split</span>(nhl_train, <span class="at">prop =</span> <span class="fl">0.80</span>)</span>
@@ -590,7 +592,7 @@
 <span id="cb4-8"><a href="#cb4-8"></a><span class="co">#&gt; 1 &lt;split [7288/1822]&gt; validation</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="fragment">
-<p>Remember that a validation split is a kind of resample.</p>
+<p>Remember that a validation split is a type of resample.</p>
 </div>
 </section>
 <section id="prepare-your-data-for-modeling" class="slide level2">
@@ -802,8 +804,8 @@
 </section>
 <section id="using-a-workflow" class="slide level2">
 <h2>Using a workflow <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "></h2>
-<div class="cell" data-hash="05-feature-engineering_cache/revealjs/unnamed-chunk-10_1dd7f61b79382ffb9a5f5c52369c081c">
-<div class="sourceCode cell-code" id="cb15" data-code-line-numbers="3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>nhl_glm_wflow <span class="ot">&lt;-</span></span>
+<div class="cell" data-hash="05-feature-engineering_cache/revealjs/unnamed-chunk-10_d634a7eb271a3d55fc941f12a7105c0e">
+<div class="sourceCode cell-code" id="cb15" data-code-line-numbers="3|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>nhl_glm_wflow <span class="ot">&lt;-</span></span>
 <span id="cb15-2"><a href="#cb15-2"></a>  <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
 <span id="cb15-3"><a href="#cb15-3"></a>  <span class="fu">add_recipe</span>(nhl_indicators) <span class="sc">%&gt;%</span></span>
 <span id="cb15-4"><a href="#cb15-4"></a>  <span class="fu">add_model</span>(<span class="fu">logistic_reg</span>())</span>
@@ -870,13 +872,13 @@
 <p>Is a 50% threshold good?</p>
 <p>What happens if we say that we need to be 80% sure to declare an event?</p>
 <ul>
-<li>sensitivity ⬇️, specificity ⬇️</li>
+<li>sensitivity ⬇️, specificity ⬆️</li>
 </ul>
 </div>
 <div class="fragment">
 <p>What happens for a 20% threshold?</p>
 <ul>
-<li>sensitivity ⬆️, specificity ⬆️</li>
+<li>sensitivity ⬆️, specificity ⬇️</li>
 </ul>
 </div>
 </section>
@@ -911,7 +913,7 @@
 <section id="roc-curves-1" class="slide level2">
 <h2>ROC curves <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="co"># Assumes _first_ factor level is event; there are options to change</span></span>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="co"># Assumes _first_ factor level is event; there are options to change that</span></span>
 <span id="cb17-2"><a href="#cb17-2"></a>roc_curve_points <span class="ot">&lt;-</span> glm_val_pred <span class="sc">%&gt;%</span> <span class="fu">roc_curve</span>(<span class="at">truth =</span> on_goal, .pred_yes)</span>
 <span id="cb17-3"><a href="#cb17-3"></a>roc_curve_points <span class="sc">%&gt;%</span> <span class="fu">slice</span>(<span class="dv">1</span>, <span class="dv">50</span>, <span class="dv">100</span>)</span>
 <span id="cb17-4"><a href="#cb17-4"></a><span class="co">#&gt; # A tibble: 3 × 3</span></span>
@@ -1048,7 +1050,7 @@
 <section id="effect-encoding-results" class="slide level2">
 <h2>Effect encoding results <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20" data-code-line-numbers="3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a>nhl_effect_wflow <span class="ot">&lt;-</span></span>
+<div class="sourceCode cell-code" id="cb20" data-code-line-numbers="3|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a>nhl_effect_wflow <span class="ot">&lt;-</span></span>
 <span id="cb20-2"><a href="#cb20-2"></a>  nhl_glm_wflow <span class="sc">%&gt;%</span></span>
 <span id="cb20-3"><a href="#cb20-3"></a>  <span class="fu">update_recipe</span>(nhl_effect_rec)</span>
 <span id="cb20-4"><a href="#cb20-4"></a></span>
@@ -1468,6 +1470,21 @@
 
     <script id="quarto-html-after-body" type="application/javascript">
     window.document.addEventListener("DOMContentLoaded", function (event) {
+      const toggleBodyColorMode = (bsSheetEl) => {
+        const mode = bsSheetEl.getAttribute("data-mode");
+        const bodyEl = window.document.querySelector("body");
+        if (mode === "dark") {
+          bodyEl.classList.add("quarto-dark");
+          bodyEl.classList.remove("quarto-light");
+        } else {
+          bodyEl.classList.add("quarto-light");
+          bodyEl.classList.remove("quarto-dark");
+        }
+      }
+      const toggleBodyColorPrimary = () => {
+        toggleBodyColorMode(window.document.querySelector("link#quarto-bootstrap"));
+      }
+      toggleBodyColorPrimary();  
       const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
       tabsets.forEach(function(tabset) {
         const tabby = new Tabby('#' + tabset.id);

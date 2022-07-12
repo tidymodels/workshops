@@ -6,9 +6,9 @@
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-0.9.594">
+  <meta name="generator" content="quarto-1.0.14">
 
   <title>Machine learning with tidymodels - 3 - What makes a model?</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -380,11 +380,13 @@
   <link href="../site_libs/countdown-0.3.5/countdown.css" rel="stylesheet">
   <script src="../site_libs/countdown-0.3.5/countdown.js"></script>
 <meta property="og:title" content="Machine learning with tidymodels - 3 - What makes a model?">
+<meta property="og:description" content="Machine learning with tidymodels">
 <meta property="og:site-name" content="Machine learning with tidymodels">
 <meta name="twitter:title" content="Machine learning with tidymodels - 3 - What makes a model?">
+<meta name="twitter:description" content="Machine learning with tidymodels">
 <meta name="twitter:card" content="summary">
 </head>
-<body>
+<body class="quarto-light">
 <script src="https://use.fontawesome.com/5235085b15.js"></script>
   <div class="reveal">
     <div class="slides">
@@ -677,6 +679,23 @@
 <ul>
 <li><u>Most importantly</u>, a workflow captures the entire modeling process: <code>fit()</code> and <code>predict()</code> apply to the preprocessing steps in addition to the actual model fit</li>
 </ul>
+<aside class="notes">
+<p>Two ways workflows handle levels better than <code>model.matrix()</code>:</p>
+<ul>
+<li><p>Enforces that new levels are not allowed at prediction time (this is an optional check that can be turned off)</p></li>
+<li><p>Restores missing levels that were present at fit time, but happen to be missing at prediction time (like, if your “new” data just doesn’t have an instance of that level)</p></li>
+</ul>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </div>
 </section>
 <section id="a-model-workflow-1" class="slide level2">
@@ -718,8 +737,8 @@
 <span id="cb7-3"><a href="#cb7-3"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>)</span>
 <span id="cb7-4"><a href="#cb7-4"></a></span>
 <span id="cb7-5"><a href="#cb7-5"></a><span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb7-6"><a href="#cb7-6"></a>  <span class="fu">add_model</span>(tree_spec) <span class="sc">%&gt;%</span></span>
-<span id="cb7-7"><a href="#cb7-7"></a>  <span class="fu">add_formula</span>(latency <span class="sc">~</span> .) <span class="sc">%&gt;%</span></span>
+<span id="cb7-6"><a href="#cb7-6"></a>  <span class="fu">add_formula</span>(latency <span class="sc">~</span> .) <span class="sc">%&gt;%</span></span>
+<span id="cb7-7"><a href="#cb7-7"></a>  <span class="fu">add_model</span>(tree_spec) <span class="sc">%&gt;%</span></span>
 <span id="cb7-8"><a href="#cb7-8"></a>  <span class="fu">fit</span>(<span class="at">data =</span> frog_train) </span>
 <span id="cb7-9"><a href="#cb7-9"></a><span class="co">#&gt; ══ Workflow [trained] ════════════════════════════════════════════════</span></span>
 <span id="cb7-10"><a href="#cb7-10"></a><span class="co">#&gt; Preprocessor: Formula</span></span>
@@ -757,8 +776,8 @@
 <span id="cb8-3"><a href="#cb8-3"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>)</span>
 <span id="cb8-4"><a href="#cb8-4"></a></span>
 <span id="cb8-5"><a href="#cb8-5"></a><span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb8-6"><a href="#cb8-6"></a>  <span class="fu">add_model</span>(tree_spec) <span class="sc">%&gt;%</span></span>
-<span id="cb8-7"><a href="#cb8-7"></a>  <span class="fu">add_variables</span>(<span class="at">outcomes =</span> latency, <span class="at">predictors =</span> <span class="fu">everything</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb8-6"><a href="#cb8-6"></a>  <span class="fu">add_variables</span>(<span class="at">outcomes =</span> latency, <span class="at">predictors =</span> <span class="fu">everything</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb8-7"><a href="#cb8-7"></a>  <span class="fu">add_model</span>(tree_spec) <span class="sc">%&gt;%</span></span>
 <span id="cb8-8"><a href="#cb8-8"></a>  <span class="fu">fit</span>(<span class="at">data =</span> frog_train) </span>
 <span id="cb8-9"><a href="#cb8-9"></a><span class="co">#&gt; ══ Workflow [trained] ════════════════════════════════════════════════</span></span>
 <span id="cb8-10"><a href="#cb8-10"></a><span class="co">#&gt; Preprocessor: Variables</span></span>
@@ -886,7 +905,7 @@
 </section></section>
 <section>
 <section id="the-tidymodels-prediction-guarantee" class="title-slide slide level1 center">
-<h1>The tidymodels prediction guarantee! <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h1>
+<h1>The tidymodels prediction guarantee!</h1>
 <div class="fragment">
 <ul>
 <li>The predictions will always be inside a <strong>tibble</strong></li>
@@ -1260,6 +1279,21 @@
 
     <script id="quarto-html-after-body" type="application/javascript">
     window.document.addEventListener("DOMContentLoaded", function (event) {
+      const toggleBodyColorMode = (bsSheetEl) => {
+        const mode = bsSheetEl.getAttribute("data-mode");
+        const bodyEl = window.document.querySelector("body");
+        if (mode === "dark") {
+          bodyEl.classList.add("quarto-dark");
+          bodyEl.classList.remove("quarto-light");
+        } else {
+          bodyEl.classList.add("quarto-light");
+          bodyEl.classList.remove("quarto-dark");
+        }
+      }
+      const toggleBodyColorPrimary = () => {
+        toggleBodyColorMode(window.document.querySelector("link#quarto-bootstrap"));
+      }
+      toggleBodyColorPrimary();  
       const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
       tabsets.forEach(function(tabset) {
         const tabby = new Tabby('#' + tabset.id);
