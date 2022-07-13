@@ -212,6 +212,50 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>In this case there is just “testing” and “training”. Once the final model is determined, the entire training set is used for the last fit.</p>
 </section>
 </section>
+<section id="data-budget" class="level1">
+<h1>02 - Data Budget</h1>
+<section id="data-splitting-and-spending" class="level2">
+<h2 class="anchored" data-anchor-id="data-splitting-and-spending">Data splitting and spending <img src="hexes/rsample.png" class="absolute" data-top="-20" data-right="0" width="64" height="74"></h2>
+<p>What does <code>set.seed()</code> do?</p>
+<p>We’ll use pseudo-random numbers (PRN) to partition the data into training and testing. PRN are numbers that emulate truly random numbers (but really are not truly random).</p>
+<p>Think of PRN as a box that takes a starting value (the “seed”) that produces random numbers using that starting value as an input into its process.</p>
+<p>If we know a seed value, we can reproduce our “random” numbers. To use a different set of random numbers, choose a different seed value.</p>
+<p>For example:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">runif</span>(<span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; [1] 0.2655087 0.3721239 0.5728534</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get a new set or random numbers:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">runif</span>(<span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; [1] 0.1848823 0.7023740 0.5733263</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># We can reproduce the old ones with the same seed</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">runif</span>(<span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; [1] 0.2655087 0.3721239 0.5728534</code></pre>
+</div>
+</div>
+<p>If we <em>don’t</em> set the seeds, programs use the clock time as the seed. This isn’t reproducible.</p>
+<p>Since we want our code to be reproducible, we set the seeds before random numbers are used.</p>
+<p>In theory, you can set the seed once at the start of a script. However, if we do interactive data analysis, we might unwittingly use random numbers while coding. In that case, the stream is not the same and we don’t get reproducible results.</p>
+<p>The value of the seed is an integer and really has no meaning. MAx has a script to generate random integers to use as seeds to “spread the randomness around”. It is basically</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">paste0</span>(<span class="st">"set.seed("</span>, <span class="fu">sample.int</span>(<span class="dv">10000</span>, <span class="dv">5</span>), <span class="st">")"</span>, <span class="at">collapse =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; set.seed(9725)
+#&gt; set.seed(8462)
+#&gt; set.seed(4050)
+#&gt; set.seed(8789)
+#&gt; set.seed(1301)</code></pre>
+</div>
+</div>
+</section>
+</section>
 <section id="tuning-hyperparameters" class="level1">
 <h1>06 - Tuning Hyperparameters</h1>
 <section id="spline-grid-search" class="level2">
@@ -236,7 +280,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><code>year</code>, <code>month_Oct</code>, <code>month_Nov</code>, and <code>month_Dec</code></li>
 </ul>
 <p>The first one is easy to explain. For each row, when one these two <code>PIT</code> column has a one, the other must have a zero. The linear regression intercept is represented in the model matrix as a column of all ones. The dependency is</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(Intercept) <span class="ot">=</span> defense_team_PIT <span class="sc">+</span> offense_team_PIT</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(Intercept) <span class="ot">=</span> defense_team_PIT <span class="sc">+</span> offense_team_PIT</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>The way to avoid this problem is to use <code>step_lincomb(all_numeric_predictors())</code> in the recipe. <a href="https://recipes.tidymodels.org/reference/step_lincomb.html">This step</a> removes the minimum number of columns to avoid the issue.</p>
 <p><strong>tl;dr</strong></p>
 <p>Linear regression detects some redundancies in the predictor set. We can ignore the warnings since <code>lm()</code> can deal with it or use <a href="https://recipes.tidymodels.org/reference/step_lincomb.html"><code>step_lincomb()</code></a> to avoid the warnings.</p>

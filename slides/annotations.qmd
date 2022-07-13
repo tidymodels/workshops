@@ -38,6 +38,45 @@ knitr::include_graphics("images/whole-game-final-resamples.svg")
 
 In this case there is just "testing" and "training". Once the final model is determined, the entire training set is used for the last fit. 
 
+# 02 - Data Budget
+
+## Data splitting and spending `r hexes("rsample")` 
+
+What does `set.seed()` do? 
+
+We’ll use pseudo-random numbers (PRN) to partition the data into training and testing. PRN are numbers that emulate truly random numbers (but really are not truly random). 
+
+Think of PRN as a box that takes a starting value (the “seed”) that produces random numbers using that starting value as an input into its process. 
+
+If we know a seed value, we can reproduce our “random” numbers. To use a different set of random numbers, choose a different seed value. 
+
+For example: 
+
+```{r}
+set.seed(1)
+runif(3)
+
+# Get a new set or random numbers:
+set.seed(2)
+runif(3)
+
+# We can reproduce the old ones with the same seed
+set.seed(1)
+runif(3)
+```
+
+If we _don’t_ set the seeds, programs use the clock time as the seed. This isn’t reproducible. 
+
+Since we want our code to be reproducible, we set the seeds before random numbers are used. 
+
+In theory, you can set the seed once at the start of a script. However, if we do interactive data analysis, we might unwittingly use random numbers while coding. In that case, the stream is not the same and we don’t get reproducible results. 
+
+The value of the seed is an integer and really has no meaning. Max has a script to generate random integers to use as seeds to "spread the randomness around". It is basically:
+
+```{r}
+cat(paste0("set.seed(", sample.int(10000, 5), ")", collapse = "\n"))
+```
+
 
 # 06 - Tuning Hyperparameters
 

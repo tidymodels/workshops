@@ -354,7 +354,7 @@
     "href": "slides/02-data-budget.html#data-splitting-and-spending-4",
     "title": "2 - Your data budget",
     "section": "Data splitting and spending ",
-    "text": "Data splitting and spending \n\nfrog_train <- training(frog_split)\nfrog_test <- testing(frog_split)"
+    "text": "Data splitting and spending \n\nset.seed(123)\nfrog_split <- initial_split(tree_frogs, prop = 0.8, strata = latency)\nfrog_train <- training(frog_split)\nfrog_test <- testing(frog_split)\n\nnrow(frog_train)\n#> [1] 456\nnrow(frog_test)\n#> [1] 116"
   },
   {
     "objectID": "slides/02-data-budget.html#data-splitting-and-spending-5",
@@ -1755,5 +1755,33 @@
     "title": "Annotations",
     "section": "Spline grid search",
     "text": "Spline grid search\nWhat’s going on with the\n\nprediction from a rank-deficient fit may be misleading\n\nwarnings?\nFor linear regression, a computation is used called matrix inversion. The matrix in question is called the “model matrix” and it contains the predictor set for the training data.\nMatrix inverse can fail if two or model columns:\n\nare identical, or\nadd up to some other column.\n\nThese situations are called linear dependencies.\nWhen this happens, lm() is pretty tolerant. It does not fail but does not compute regression coefficients for a minimal number of predictors involved in the dependency (and issues the warning above).\nFor these data, there are three dependencies between:\n\ndefense_team_PIT and offense_team_PIT\nstrength_short_handed, player_diff, and strength_power_play\nyear, month_Oct, month_Nov, and month_Dec\n\nThe first one is easy to explain. For each row, when one these two PIT column has a one, the other must have a zero. The linear regression intercept is represented in the model matrix as a column of all ones. The dependency is\n(Intercept) = defense_team_PIT + offense_team_PIT\nThe way to avoid this problem is to use step_lincomb(all_numeric_predictors()) in the recipe. This step removes the minimum number of columns to avoid the issue.\ntl;dr\nLinear regression detects some redundancies in the predictor set. We can ignore the warnings since lm() can deal with it or use step_lincomb() to avoid the warnings."
+  },
+  {
+    "objectID": "slides/02-data-budget.html#accessing-the-data",
+    "href": "slides/02-data-budget.html#accessing-the-data",
+    "title": "2 - Your data budget",
+    "section": "Accessing the data ",
+    "text": "Accessing the data \n\nfrog_train <- training(frog_split)\nfrog_test <- testing(frog_split)"
+  },
+  {
+    "objectID": "slides/02-data-budget.html#the-training-set",
+    "href": "slides/02-data-budget.html#the-training-set",
+    "title": "2 - Your data budget",
+    "section": "The training set",
+    "text": "The training set\n\nfrog_train\n#> # A tibble: 428 × 5\n#>    treatment  reflex    age t_o_d     latency\n#>    <chr>      <fct>   <dbl> <fct>       <dbl>\n#>  1 control    full   467950 morning        33\n#>  2 control    full   464870 morning        19\n#>  3 control    full   464610 morning         2\n#>  4 control    full   469650 morning        39\n#>  5 control    full   467600 morning        42\n#>  6 control    full   410460 afternoon      20\n#>  7 control    full   427685 night          31\n#>  8 control    full   468530 morning        21\n#>  9 gentamicin full   465800 morning        30\n#> 10 control    full   393475 afternoon      43\n#> # … with 418 more rows"
+  },
+  {
+    "objectID": "slides/02-data-budget.html#the-test-set",
+    "href": "slides/02-data-budget.html#the-test-set",
+    "title": "2 - Your data budget",
+    "section": "The test set ",
+    "text": "The test set \n\nfrog_test\n#> # A tibble: 144 × 5\n#>    treatment  reflex    age t_o_d     latency\n#>    <chr>      <fct>   <dbl> <fct>       <dbl>\n#>  1 control    full   466965 morning        22\n#>  2 control    low    361180 night         360\n#>  3 control    full   401595 afternoon     106\n#>  4 control    mid    357810 night         180\n#>  5 gentamicin full   463230 morning        39\n#>  6 control    full   469065 morning        50\n#>  7 control    full   466160 morning        63\n#>  8 control    full   465800 morning        25\n#>  9 control    full   463800 morning        48\n#> 10 control    full   392680 afternoon     126\n#> # … with 134 more rows"
+  },
+  {
+    "objectID": "slides/annotations.html#data-splitting-and-spending",
+    "href": "slides/annotations.html#data-splitting-and-spending",
+    "title": "Annotations",
+    "section": "Data splitting and spending ",
+    "text": "Data splitting and spending \nWhat does set.seed() do?\nWe’ll use pseudo-random numbers (PRN) to partition the data into training and testing. PRN are numbers that emulate truly random numbers (but really are not truly random).\nThink of PRN as a box that takes a starting value (the “seed”) that produces random numbers using that starting value as an input into its process.\nIf we know a seed value, we can reproduce our “random” numbers. To use a different set of random numbers, choose a different seed value.\nFor example:\n\nset.seed(1)\nrunif(3)\n\n#> [1] 0.2655087 0.3721239 0.5728534\n\n# Get a new set or random numbers:\nset.seed(2)\nrunif(3)\n\n#> [1] 0.1848823 0.7023740 0.5733263\n\n# We can reproduce the old ones with the same seed\nset.seed(1)\nrunif(3)\n\n#> [1] 0.2655087 0.3721239 0.5728534\n\n\nIf we don’t set the seeds, programs use the clock time as the seed. This isn’t reproducible.\nSince we want our code to be reproducible, we set the seeds before random numbers are used.\nIn theory, you can set the seed once at the start of a script. However, if we do interactive data analysis, we might unwittingly use random numbers while coding. In that case, the stream is not the same and we don’t get reproducible results.\nThe value of the seed is an integer and really has no meaning. MAx has a script to generate random integers to use as seeds to “spread the randomness around”. It is basically\n\ncat(paste0(\"set.seed(\", sample.int(10000, 5), \")\", collapse = \"\\n\"))\n\n#> set.seed(9725)\n#> set.seed(8462)\n#> set.seed(4050)\n#> set.seed(8789)\n#> set.seed(1301)"
   }
 ]
