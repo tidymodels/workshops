@@ -1,0 +1,113 @@
+---
+title: "2 - Your data budget - Classwork"
+subtitle: "Machine learning with tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Data on tree frog hatching
+
+```{r}
+library(tidymodels)
+
+data("tree_frogs", package = "stacks")
+
+# Slightly modify the original data for the purposes of this workshop
+tree_frogs <- tree_frogs %>%
+  mutate(t_o_d = factor(t_o_d)) %>%
+  filter(!is.na(latency)) %>%
+  select(-c(clutch, hatched))
+```
+
+```{r}
+tree_frogs
+```
+
+## Your turn
+
+When is a good time to split your data?
+
+## Data splitting and spending
+
+```{r}
+set.seed(123)
+
+# Split into training/testing, stratifying by `latency`
+frog_split <- initial_split(tree_frogs, strata = latency)
+frog_split
+```
+
+Extract the training and testing sets
+
+```{r}
+frog_train <- training(frog_split)
+frog_test <- testing(frog_split)
+```
+
+## Your turn
+
+Split your data so 20% is held out for the test set.
+
+Try out different values in `set.seed()` to see how the results change.
+
+Hint: Which argument in `initial_split()` handles the proportion split into training vs testing?
+
+```{r}
+# Your code here!
+
+```
+
+## Data splitting and spending
+
+```{r}
+set.seed(123)
+
+frog_split <- initial_split(tree_frogs, prop = 0.8, strata = latency)
+frog_train <- training(frog_split)
+frog_test <- testing(frog_split)
+```
+
+## Exploratory data analysis for ML
+
+```{r}
+# Histogram of `latency`
+ggplot(frog_train, aes(latency)) +
+  geom_histogram(bins = 20)
+```
+
+```{r}
+# Boxplot of `latency` split by `treatment`
+ggplot(frog_train, aes(latency, treatment, fill = treatment)) +
+  geom_boxplot(alpha = 0.5, show.legend = FALSE)
+```
+
+```{r}
+# Boxplot of `latency` split by `reflex`
+frog_train %>%
+  ggplot(aes(latency, reflex, fill = reflex)) +
+  geom_boxplot(alpha = 0.3, show.legend = FALSE)
+```
+
+```{r}
+# Multivariate plots can show relationships between variable combinations
+ggplot(frog_train, aes(reflex, age)) +
+  stat_summary_2d(
+    aes(z = latency), 
+    alpha = 0.7, binwidth = c(1, 5e3)
+  ) +
+  scale_fill_viridis_c() +
+  labs(fill = "mean latency")
+```
+
+## Your turn
+
+Explore the `frog_train` data on your own!
+
+```{r}
+# Your code here!
+
+```
+
+What other relationships can you find?
