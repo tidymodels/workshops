@@ -151,7 +151,7 @@
     "href": "slides/01-introduction.html#what-is-tidymodels",
     "title": "1 - Introduction",
     "section": "What is tidymodels? ",
-    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n#> ── Attaching packages ──────────────────────────── tidymodels 1.0.0 ──\n#> ✔ broom        1.0.0     ✔ rsample      1.0.0\n#> ✔ dials        1.0.0     ✔ tibble       3.1.7\n#> ✔ dplyr        1.0.9     ✔ tidyr        1.2.0\n#> ✔ infer        1.0.2     ✔ tune         1.0.0\n#> ✔ modeldata    1.0.0     ✔ workflows    1.0.0\n#> ✔ parsnip      1.0.0     ✔ workflowsets 0.2.1\n#> ✔ purrr        0.3.4     ✔ yardstick    1.0.0\n#> ✔ recipes      1.0.1\n#> ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#> ✖ purrr::discard() masks scales::discard()\n#> ✖ dplyr::filter()  masks stats::filter()\n#> ✖ dplyr::lag()     masks stats::lag()\n#> ✖ recipes::step()  masks stats::step()\n#> • Search for functions across packages at https://www.tidymodels.org/find/"
+    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n#> ── Attaching packages ──────────────────────────── tidymodels 1.0.0 ──\n#> ✔ broom        1.0.0     ✔ rsample      1.0.0\n#> ✔ dials        1.0.0     ✔ tibble       3.1.7\n#> ✔ dplyr        1.0.9     ✔ tidyr        1.2.0\n#> ✔ infer        1.0.2     ✔ tune         1.0.0\n#> ✔ modeldata    1.0.0     ✔ workflows    1.0.0\n#> ✔ parsnip      1.0.0     ✔ workflowsets 1.0.0\n#> ✔ purrr        0.3.4     ✔ yardstick    1.0.0\n#> ✔ recipes      1.0.1\n#> ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#> ✖ purrr::discard() masks scales::discard()\n#> ✖ dplyr::filter()  masks stats::filter()\n#> ✖ dplyr::lag()     masks stats::lag()\n#> ✖ recipes::step()  masks stats::step()\n#> • Search for functions across packages at https://www.tidymodels.org/find/"
   },
   {
     "objectID": "slides/01-introduction.html#the-whole-game",
@@ -1526,11 +1526,11 @@
     "text": "The results  \n\n\ngrid %>% \n  ggplot(aes(angle, distance)) +\n  geom_point(size = 4)"
   },
   {
-    "objectID": "slides/06-tuning-hyperparameters.html#grid-search-1",
-    "href": "slides/06-tuning-hyperparameters.html#grid-search-1",
+    "objectID": "slides/06-tuning-hyperparameters.html#spline-grid-search",
+    "href": "slides/06-tuning-hyperparameters.html#spline-grid-search",
     "title": "6 - Tuning Hyperparameters",
-    "section": "Grid search   ",
-    "text": "Grid search   \n\nctrl <- control_grid(save_pred = TRUE, parallel_over = \"everything\")\n\nset.seed(9)\nglm_spline_res <-\n  glm_spline_wflow %>%\n  tune_grid(resamples = nhl_val, grid = grid, control = ctrl)\nglm_spline_res\n#> # Tuning results\n#> # Validation Set Split (0.8/0.2)  \n#> # A tibble: 1 × 5\n#>   splits              id         .metrics          .notes            .predictions         \n#>   <list>              <chr>      <list>            <list>            <list>               \n#> 1 <split [7288/1822]> validation <tibble [48 × 6]> <tibble [24 × 3]> <tibble [43,728 × 8]>\n#> \n#> There were issues with some computations:\n#> \n#>   - Warning(s) x24: prediction from a rank-deficient fit may be misleading\n#> \n#> Run `show_notes(.Last.tune.result)` for more information.\n\n\n\ntune_grid() is representative of tuning function syntax\nsimilar to fit_resamples()"
+    "section": "Spline grid search   ",
+    "text": "Spline grid search   \n\nctrl <- control_grid(save_pred = TRUE, parallel_over = \"everything\")\n\nset.seed(9)\nglm_spline_res <-\n  glm_spline_wflow %>%\n  tune_grid(resamples = nhl_val, grid = grid, control = ctrl)\nglm_spline_res\n#> # Tuning results\n#> # Validation Set Split (0.8/0.2)  \n#> # A tibble: 1 × 5\n#>   splits              id         .metrics          .notes            .predictions         \n#>   <list>              <chr>      <list>            <list>            <list>               \n#> 1 <split [7288/1822]> validation <tibble [48 × 6]> <tibble [24 × 3]> <tibble [43,728 × 8]>\n#> \n#> There were issues with some computations:\n#> \n#>   - Warning(s) x24: prediction from a rank-deficient fit may be misleading\n#> \n#> Run `show_notes(.Last.tune.result)` for more information.\n\n\n\ntune_grid() is representative of tuning function syntax\nsimilar to fit_resamples()"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#your-turn-1",
@@ -1750,24 +1750,10 @@
     "text": "This page contains annotations for selected slides.\nThere’s a lot that we want to tell you. We don’t want people to have to frantically scribble down things that we say that are not on the slides.\nWe’ll add sections to this document with longer explanations and links to other resources.\n\n\n\nThis is a pretty complex data usage scheme. That is mostly because of the validation set. In every other case, the situation is much more simple.\nIn a later section, we will talk about methods of resampling. These methods are like repeated validation sets. As an example, the popular 10-fold cross-validation method is one such type of resampling. Validation sets are special cases of resampling where there is a single “resample”.\nMost types of resampling use multiple hold-out sets of samples from the training set. In those cases, a diagram for data usage here would look like\n\n\n\n\n\n\n\n\n\nIn this case there is just “testing” and “training”. Once the final model is determined, the entire training set is used for the last fit."
   },
   {
-    "objectID": "slides/annotations.html#grid-search",
-    "href": "slides/annotations.html#grid-search",
-    "title": "Annotations",
-    "section": "Grid search   ",
-    "text": "Grid search   \nWhat’s going on with the\n\nprediction from a rank-deficient fit may be misleading\n\nwarnings?"
-  },
-  {
-    "objectID": "slides/06-tuning-hyperparameters.html#spline-grid-search",
-    "href": "slides/06-tuning-hyperparameters.html#spline-grid-search",
-    "title": "6 - Tuning Hyperparameters",
-    "section": "Spline grid search",
-    "text": "Spline grid search\n\nctrl <- control_grid(save_pred = TRUE, parallel_over = \"everything\")\n\nset.seed(9)\nglm_spline_res <-\n  glm_spline_wflow %>%\n  tune_grid(resamples = nhl_val, grid = grid, control = ctrl)\nglm_spline_res\n#> # Tuning results\n#> # Validation Set Split (0.8/0.2)  \n#> # A tibble: 1 × 5\n#>   splits              id         .metrics          .notes            .predictions         \n#>   <list>              <chr>      <list>            <list>            <list>               \n#> 1 <split [7288/1822]> validation <tibble [48 × 6]> <tibble [24 × 3]> <tibble [43,728 × 8]>\n#> \n#> There were issues with some computations:\n#> \n#>   - Warning(s) x24: prediction from a rank-deficient fit may be misleading\n#> \n#> Run `show_notes(.Last.tune.result)` for more information.\n\n\n\ntune_grid() is representative of tuning function syntax\nsimilar to fit_resamples()"
-  },
-  {
     "objectID": "slides/annotations.html#spline-grid-search",
     "href": "slides/annotations.html#spline-grid-search",
     "title": "Annotations",
     "section": "Spline grid search",
-    "text": "Spline grid search\nWhat’s going on with the\n\nprediction from a rank-deficient fit may be misleading\n\nwarnings?\nFor linear regression, a computation is used called matrix inversion. The matrix in question is called the “model matrix” and it contains the predictor set for the training data.\nMatrix inverse can fail if two or model columns:\n\nare identical, or\nadd up to some other column.\n\nThese situations are called linear dependencies.\nWhen this happens, lm() is pretty tolerant. It does not fail but does not compute regression coefficients for a minimal number of predictors involved in the dependency.\nFor these data, there are three dependencies between:\n\ndefense_team_PIT and offense_team_PIT\nstrength_short_handed, player_diff, and strength_power_play\nyear, month_Oct, month_Nov, and month_Dec\n\nThe first one is easy to explain. For each row, when one these two PIT column has a one, the other must have a zero. The linear regression intercept is represented in the model matrix as a column of all ones. The dependency is\n(Intercept) = defense_team_PIT + offense_team_PIT\nThe way to avoid this problem is to use step_lincomb(all_numeric_predictors()) in the recipe. This step removes the minimum number of columns to avoid the issue."
+    "text": "Spline grid search\nWhat’s going on with the\n\nprediction from a rank-deficient fit may be misleading\n\nwarnings?\nFor linear regression, a computation is used called matrix inversion. The matrix in question is called the “model matrix” and it contains the predictor set for the training data.\nMatrix inverse can fail if two or model columns:\n\nare identical, or\nadd up to some other column.\n\nThese situations are called linear dependencies.\nWhen this happens, lm() is pretty tolerant. It does not fail but does not compute regression coefficients for a minimal number of predictors involved in the dependency (and issues the warning above).\nFor these data, there are three dependencies between:\n\ndefense_team_PIT and offense_team_PIT\nstrength_short_handed, player_diff, and strength_power_play\nyear, month_Oct, month_Nov, and month_Dec\n\nThe first one is easy to explain. For each row, when one these two PIT column has a one, the other must have a zero. The linear regression intercept is represented in the model matrix as a column of all ones. The dependency is\n(Intercept) = defense_team_PIT + offense_team_PIT\nThe way to avoid this problem is to use step_lincomb(all_numeric_predictors()) in the recipe. This step removes the minimum number of columns to avoid the issue.\ntl;dr\nLinear regression detects some redundancies in the predictor set. We can ignore the warnings since lm() can deal with it or use step_lincomb() to avoid the warnings."
   }
 ]
