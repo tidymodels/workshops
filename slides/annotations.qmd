@@ -2,6 +2,13 @@
 title: "Annotations"
 ---
 
+```{r startup}
+#| include: false
+
+# To get `hexes()`
+source("setup.R")
+```
+
 # 01 - Introduction
 
 ## `r emo::ji("eyes")`
@@ -16,7 +23,7 @@ We'll add sections to this document with longer explanations and links to other 
 
 ## Finalize and verify
 
-This is a pretty complex data usage scheme. That is mostly because of the validation set. 
+This is a pretty complex data usage scheme. That is mostly because of the validation set. In every other case, the situation is much more simple.
 
 In a later section, we will talk about methods of [resampling](https://www.tmwr.org/resampling.html). These methods are like repeated validation sets. As an example, the popular 10-fold cross-validation method is one such type of resampling. Validation sets are [special cases of resampling](https://www.tmwr.org/resampling.html#validation) where there is a single "resample". 
 
@@ -30,3 +37,46 @@ knitr::include_graphics("images/whole-game-final-resamples.svg")
 ```
 
 In this case there is just "testing" and "training". Once the final model is determined, the entire training set is used for the last fit. 
+
+
+# 06 - Tuning Hyperparameters
+
+## Spline grid search 
+
+What's going on with the 
+
+> prediction from a rank-deficient fit may be misleading
+
+warnings? 
+
+For linear regression, a computation is used called _matrix inversion_. The matrix in question is called the "model matrix" and it contains the predictor set for the training data. 
+
+Matrix inverse can fail if two or model columns: 
+
+ * are identical, or 
+ * add up to some other column. 
+ 
+These situations are called _linear dependencies_.  
+
+When this happens, `lm()` is pretty tolerant. It does not fail but does not compute regression coefficients for a minimal number of predictors involved in the dependency (and issues the warning above).
+
+For these data, there are three dependencies between:
+
+ * `defense_team_PIT` and `offense_team_PIT`
+ * `strength_short_handed`, `player_diff`, and `strength_power_play`
+ * `year`, `month_Oct`, `month_Nov`, and `month_Dec`
+
+The first one is easy to explain. For each row, when one these two `PIT` column has a one, the other must have a zero. The linear regression intercept is represented in the model matrix as a column of all ones. The dependency is 
+
+```r
+(Intercept) = defense_team_PIT + offense_team_PIT
+```
+
+The way to avoid this problem is to use `step_lincomb(all_numeric_predictors())` in the recipe. [This step](https://recipes.tidymodels.org/reference/step_lincomb.html) removes the minimum number of columns to avoid the issue. 
+
+**tl;dr**
+
+Linear regression detects some redundancies in the predictor set. We can ignore the warnings since `lm()` can deal with it or use [`step_lincomb()`](https://recipes.tidymodels.org/reference/step_lincomb.html) to avoid the warnings. 
+
+
+
