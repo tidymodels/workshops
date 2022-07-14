@@ -117,6 +117,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   }
 }</script>
 
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
 <link rel="stylesheet" href="../styles.css">
 <meta property="og:title" content="Machine learning with tidymodels - Annotations">
@@ -198,6 +199,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <section id="finalize-and-verify" class="level2">
 <h2 class="anchored" data-anchor-id="finalize-and-verify">Finalize and verify</h2>
 <p>This is a pretty complex data usage scheme. That is mostly because of the validation set. In every other case, the situation is much more simple.</p>
+<p>The important point here is that: <strong>tidymodels does most of this work for you</strong>. In other words, you don’t have to directly specify which data are being used where.</p>
 <p>In a later section, we will talk about methods of <a href="https://www.tmwr.org/resampling.html">resampling</a>. These methods are like repeated validation sets. As an example, the popular 10-fold cross-validation method is one such type of resampling. Validation sets are <a href="https://www.tmwr.org/resampling.html#validation">special cases of resampling</a> where there is a single “resample”.</p>
 <p>Most types of resampling use multiple hold-out sets of samples from the training set. In those cases, a diagram for data usage here would look like</p>
 <div class="cell" data-layout-align="center">
@@ -286,6 +288,24 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="https://www.tmwr.org/resampling.html#extract" class="uri">https://www.tmwr.org/resampling.html#extract</a></li>
 <li><a href="https://www.tidymodels.org/learn/models/coefficients/" class="uri">https://www.tidymodels.org/learn/models/coefficients/</a> (an example)</li>
 </ul>
+</section>
+</section>
+<section id="feature-engineering" class="level1">
+<h1>05 - Feature Engineering</h1>
+<section id="where-is-the-shot-coming-from" class="level2">
+<h2 class="anchored" data-anchor-id="where-is-the-shot-coming-from">Where is the shot coming from?</h2>
+<p>About these formulas…</p>
+<p>The coordinates for the rink are centered at <code>(0, 0)</code> and the goal lines are both 89 ft from center. The center of the goal on the left is at <code>(-89, 0)</code> and the right-hand goal is centered at <code>(89, 0)</code>.</p>
+<p>For the distance to center ice, the formula is</p>
+<p><span class="math display">\[d_{center} = \sqrt{x^2 + y^2}\]</span></p>
+<p>We want distance to the goal line(s), so we first use <code>x* = (89 - abs(coord_x))</code> to make the side of the rink irrelevant and then compute</p>
+<p><span class="math display">\[d_{goal} = \sqrt{x^{*2} + y^2}\]</span></p>
+<p>In the code, we log the distance value to help its distribution become more symmetric.</p>
+<p>For angle to center, the formula is</p>
+<p><span class="math display">\[a = \tan^{-1}\left(\frac{y}{x}\right)\]</span></p>
+<p>This is in radian units and we can convert to degrees using</p>
+<p><span class="math display">\[a = \frac{180}{\pi}\tan^{-1}\left(\frac{y}{x}\right)\]</span></p>
+<p>For the angle to the goal, we need to alter <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> again. We’ll use <span class="math inline">\(x^*\)</span> from above and also use the absolute value of <span class="math inline">\(y\)</span> so that the degrees range from 0 to 180.</p>
 </section>
 </section>
 <section id="tuning-hyperparameters" class="level1">
