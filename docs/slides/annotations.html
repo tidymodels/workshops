@@ -310,6 +310,66 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </section>
 <section id="tuning-hyperparameters" class="level1">
 <h1>06 - Tuning Hyperparameters</h1>
+<section id="update-parameter-ranges" class="level2">
+<h2 class="anchored" data-anchor-id="update-parameter-ranges">Update parameter ranges</h2>
+<p>In about 90% of the cases, the dials function that you use to update the parameter range has the same name as the argument. For example, if you were to update the <code>mtry</code> parameter in a random forests model, the code would look like</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>parameter_object <span class="sc">%&gt;%</span> </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">update</span>(<span class="at">mtry =</span> <span class="fu">mtry</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">100</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In our case, the argument name is <code>deg_free</code> but we update it with <code>spline_degree</code>.</p>
+<p><code>deg_free</code> represents the general concept of degrees of freedom and could be associated with many different things. For example, if we ever had an argument that was the number of degrees of freedom for a <span class="math inline">\(t\)</span> distribution, we would call that argument <code>deg_free</code>.</p>
+<p>For splines, we probably want a wider range for the degrees of freedom. We made a specialized function called <code>spline_degree()</code> to be used in these cases.</p>
+<p>How can you tell when this happens? There is a helper function called <code>tunable()</code> and that gives information on how we make the default ranges for parameters. There is a column in these objects names <code>call_info</code>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>#&gt; ── Attaching packages ──────────────────────────── tidymodels 0.2.0 ──</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>#&gt; ✔ broom        0.8.0     ✔ rsample      1.0.0
+#&gt; ✔ dials        1.0.0     ✔ tibble       3.1.7
+#&gt; ✔ dplyr        1.0.9     ✔ tidyr        1.2.0
+#&gt; ✔ infer        1.0.0     ✔ tune         1.0.0
+#&gt; ✔ modeldata    1.0.0     ✔ workflows    1.0.0
+#&gt; ✔ parsnip      1.0.0     ✔ workflowsets 0.2.1
+#&gt; ✔ purrr        0.3.4     ✔ yardstick    1.0.0
+#&gt; ✔ recipes      1.0.1</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>#&gt; ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──
+#&gt; ✖ purrr::discard() masks scales::discard()
+#&gt; ✖ dplyr::filter()  masks stats::filter()
+#&gt; ✖ dplyr::lag()     masks stats::lag()
+#&gt; ✖ recipes::step()  masks stats::step()
+#&gt; • Learn how to get started at https://www.tidymodels.org/start/</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>ns_tunable <span class="ot">&lt;-</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">%&gt;%</span> </span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(dis, <span class="at">deg_free =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tunable</span>()</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>ns_tunable</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; # A tibble: 1 × 5
+#&gt;   name     call_info        source component component_id
+#&gt;   &lt;chr&gt;    &lt;list&gt;           &lt;chr&gt;  &lt;chr&gt;     &lt;chr&gt;       
+#&gt; 1 deg_free &lt;named list [3]&gt; recipe step_ns   ns_P1Tjg</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>ns_tunable<span class="sc">$</span>call_info</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; [[1]]
+#&gt; [[1]]$pkg
+#&gt; [1] "dials"
+#&gt; 
+#&gt; [[1]]$fun
+#&gt; [1] "spline_degree"
+#&gt; 
+#&gt; [[1]]$range
+#&gt; [1]  1 15</code></pre>
+</div>
+</div>
+</section>
 <section id="spline-grid-search" class="level2">
 <h2 class="anchored" data-anchor-id="spline-grid-search">Spline grid search</h2>
 <p>What’s going on with the</p>
@@ -332,7 +392,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><code>year</code>, <code>month_Oct</code>, <code>month_Nov</code>, and <code>month_Dec</code></li>
 </ul>
 <p>The first one is easy to explain. For each row, when one these two <code>PIT</code> column has a one, the other must have a zero. The linear regression intercept is represented in the model matrix as a column of all ones. The dependency is</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(Intercept) <span class="ot">=</span> defense_team_PIT <span class="sc">+</span> offense_team_PIT</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(Intercept) <span class="ot">=</span> defense_team_PIT <span class="sc">+</span> offense_team_PIT</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>The way to avoid this problem is to use <code>step_lincomb(all_numeric_predictors())</code> in the recipe. <a href="https://recipes.tidymodels.org/reference/step_lincomb.html">This step</a> removes the minimum number of columns to avoid the issue.</p>
 <p><strong>tl;dr</strong></p>
 <p>Linear regression detects some redundancies in the predictor set. We can ignore the warnings since <code>lm()</code> can deal with it or use <a href="https://recipes.tidymodels.org/reference/step_lincomb.html"><code>step_lincomb()</code></a> to avoid the warnings.</p>

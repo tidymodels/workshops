@@ -143,6 +143,37 @@ For the angle to the goal, we need to alter $x$ and $y$ again. We'll use $x^*$ f
 
 # 06 - Tuning Hyperparameters
 
+## Update parameter ranges
+
+In about 90% of the cases, the dials function that you use to update the parameter range has the same name as the argument. For example, if you were to update the `mtry` parameter in a random forests model, the code would look like
+
+```{r}
+#| eval: false
+
+parameter_object %>% 
+  update(mtry = mtry(c(1, 100)))
+```
+
+In our case, the argument name is `deg_free` but we update it with `spline_degree`. 
+
+`deg_free` represents the general concept of degrees of freedom and could be associated with many different things. For example, if we ever had an argument that was the number of degrees of freedom for a $t$ distribution, we would call that argument `deg_free`. 
+
+For splines, we probably want a wider range for the degrees of freedom. We made a specialized function called `spline_degree()` to be used in these cases. 
+
+How can you tell when this happens? There is a helper function called `tunable()` and that gives information on how we make the default ranges for parameters. There is a column in these objects names `call_info`:
+
+```{r}
+library(tidymodels)
+ns_tunable <- 
+  recipe(mpg ~ ., data = mtcars) %>% 
+  step_ns(dis, deg_free = tune()) %>% 
+  tunable()
+
+ns_tunable
+ns_tunable$call_info
+```
+
+
 ## Spline grid search 
 
 What's going on with the 
