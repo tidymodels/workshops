@@ -491,3 +491,36 @@ remotes::install_github("topepo/ongoal")
 
 [bit.ly/tidymodels-workshop](http://bit.ly/tidymodels-workshop)
 
+
+## Our versions
+
+
+
+```{r pkg-list, echo = FALSE}
+deps <- c("doParallel", "embed", "forcats", "ranger", "remotes", "rpart", 
+          "rpart.plot", "stacks", "tidymodels", "vetiver", "xgboost")
+loaded <- purrr::map(deps, ~ library(.x, character.only = TRUE))
+excl <- c("remotes", "iterators", "emo", "countdown", "stats", "graphics", 
+          "grDevices", "utils", "datasets", "methods", "base", "forcats", 
+          "infer", "foreach")
+loaded <- loaded[[length(loaded)]]
+loaded <- loaded[!(loaded %in% excl)]
+pkgs <- 
+  sessioninfo::package_info(loaded, dependencies = FALSE) %>% 
+  select(-date)
+df <- tibble::tibble(
+  package = pkgs$package,
+  version = pkgs$ondiskversion,
+  source = pkgs$source
+) %>% 
+  mutate(
+    source = gsub(" (R 4.2.0)", "", source, fixed = TRUE),
+    source = substr(source, 1, 31),
+    info = paste0(package, " (", version, ", ", source, ")")
+  )
+pkg_info <- knitr::combine_words(df$info)
+```
+
+`r pkg_info`
+
+
