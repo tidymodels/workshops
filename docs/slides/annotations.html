@@ -215,7 +215,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <section id="data-budget" class="level1">
 <h1>02 - Data Budget</h1>
 <section id="data-splitting-and-spending" class="level2">
-<h2 class="anchored" data-anchor-id="data-splitting-and-spending">Data splitting and spending <img src="hexes/rsample.png" class="absolute" data-top="-20" data-right="0" width="64" height="74"></h2>
+<h2 class="anchored" data-anchor-id="data-splitting-and-spending">Data splitting and spending</h2>
 <p>What does <code>set.seed()</code> do?</p>
 <p>We’ll use pseudo-random numbers (PRN) to partition the data into training and testing. PRN are numbers that emulate truly random numbers (but really are not truly random).</p>
 <p>Think of PRN as a box that takes a starting value (the “seed”) that produces random numbers using that starting value as an input into its process.</p>
@@ -243,7 +243,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>If we <em>don’t</em> set the seeds, programs use the clock time as the seed. This isn’t reproducible.</p>
 <p>Since we want our code to be reproducible, we set the seeds before random numbers are used.</p>
 <p>In theory, you can set the seed once at the start of a script. However, if we do interactive data analysis, we might unwittingly use random numbers while coding. In that case, the stream is not the same and we don’t get reproducible results.</p>
-<p>The value of the seed is an integer and really has no meaning. MAx has a script to generate random integers to use as seeds to “spread the randomness around”. It is basically</p>
+<p>The value of the seed is an integer and really has no meaning. Max has a script to generate random integers to use as seeds to “spread the randomness around”. It is basically:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">paste0</span>(<span class="st">"set.seed("</span>, <span class="fu">sample.int</span>(<span class="dv">10000</span>, <span class="dv">5</span>), <span class="st">")"</span>, <span class="at">collapse =</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -254,6 +254,34 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 #&gt; set.seed(1301)</code></pre>
 </div>
 </div>
+</section>
+</section>
+<section id="what-makes-a-model" class="level1">
+<h1>03 - What Makes A Model?</h1>
+<section id="what-is-wrong-with-this" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-wrong-with-this">What is wrong with this?</h2>
+<p>If we treat the preprocessing as a separate task, it raises the risk that we might accidentally overfit to the data at hand.</p>
+<p>For example, someone might estimate something from the entire data set (such as the principle components) and treat that data as if it were know (and not estimated). Depending on the what was done with the data, consequences in doing that could be:</p>
+<ul>
+<li>You performance metrics are slightly-to-moderately optimistic (e.g.&nbsp;you might think your accuracy us 85% when it is actually 75%)</li>
+<li>A consequential component of the analysis not right and the model just doesn’t work.</li>
+</ul>
+<p>The big issue here is that you won’t be able to figure this out until you get a new piece of data, such as the test set.</p>
+<p>A really good example of this is in <a href="https://pubmed.ncbi.nlm.nih.gov/11983868/">‘Selection bias in gene extraction on the basis of microarray gene-expression data’</a>. The authors re-analyze a previous publication and show that the original researchers did not include feature selection in the workflow. Because of that, their performance statistics were extremely optimistic. In one case, they could do the original analysis of complete noise and achieve zero errors.</p>
+<p>Generally speaking, this problem is referred to as <a href="https://en.wikipedia.org/wiki/Leakage_(machine_learning)">data leakage</a>. Some other references:</p>
+<ul>
+<li><a href="https://bookdown.org/max/FES/selection-overfitting.html">‘Overfitting to Predictors and External Validation’</a></li>
+<li><a href="https://datasets-benchmarks-proceedings.neurips.cc/paper/2021/hash/757b505cfd34c64c85ca5b5690ee5293-Abstract-round2.html">‘Are We Learning Yet? A Meta Review of Evaluation Failures Across Machine Learning’</a></li>
+<li><a href="https://scholar.google.com/scholar?hl=en&amp;as_sdt=0%2C5&amp;q=Navigating+the+pitfalls+of+applying+machine+learning+in+genomics&amp;btnG=">‘Navigating the pitfalls of applying machine learning in genomics’</a></li>
+<li><a href="https://academic.oup.com/bioinformatics/article/23/19/2507/185254">‘A review of feature selection techniques in bioinformatics’</a></li>
+<li><a href="https://www.jmlr.org/papers/volume11/cawley10a/cawley10a.pdf">‘On Over-fitting in Model Selection and Subsequent Selection Bias in Performance Evaluation’</a></li>
+</ul>
+</section>
+<section id="where-are-the-fitted-models" class="level2">
+<h2 class="anchored" data-anchor-id="where-are-the-fitted-models">Where are the fitted models?</h2>
+<p>The primary purpose of resampling is to estimate model performance. The models are almost never needed again.</p>
+<p>Also, if the data set is large, the model object may require a lot of memory to save so, by default, we don’t keep them.</p>
+<p>For more advanced use cases, you can extract and save them: <a href="https://www.tmwr.org/resampling.html#extract" class="uri">https://www.tmwr.org/resampling.html#extract</a></p>
 </section>
 </section>
 <section id="tuning-hyperparameters" class="level1">
