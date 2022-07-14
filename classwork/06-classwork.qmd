@@ -1,0 +1,364 @@
+---
+title: "3 - Tuning Hyperparameters - Classwork"
+subtitle: "Machine learning with tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Setup
+
+Setup from deck 5
+
+```{r}
+library(tidymodels)
+library(embed)
+library(ongoal)
+
+tidymodels_prefer()
+
+set.seed(23)
+nhl_split <- initial_split(season_2015, prop = 3/4)
+nhl_split
+
+nhl_train <- training(nhl_split)
+nhl_test  <- testing(nhl_split)
+
+set.seed(234)
+nhl_val <- validation_split(nhl_train, prop = 0.80)
+
+nhl_distance_rec <-
+  recipe(on_goal ~ ., data = nhl_train) %>%
+  step_lencode_mixed(player, outcome = vars(on_goal)) %>%
+  step_other(all_nominal_predictors()) %>% # TODO: keep this?
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors()) %>%
+  step_mutate(
+    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    distance = log(distance)
+  )
+
+nhl_distance_wflow <-
+  workflow() %>%
+  add_recipe(nhl_distance_rec) %>%
+  add_model(logistic_reg())
+
+nhl_distance_res <-
+  nhl_distance_wflow %>%
+  fit_resamples(nhl_val)
+```
+
+## Updates for tuning
+
+```{r}
+glm_rec <-
+  recipe(on_goal ~ ., data = nhl_train) %>%
+  step_lencode_mixed(player, outcome = vars(on_goal)) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_mutate(
+    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    distance = log(distance),
+    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
+  ) %>%
+  step_rm(coord_x, coord_y) %>%
+  step_zv(all_predictors()) %>%
+  step_ns(angle, deg_free = tune("angle")) %>%
+  step_ns(distance, deg_free = tune("distance")) %>%
+  step_normalize(all_numeric_predictors())
+
+glm_spline_wflow <-
+  workflow() %>%
+  add_model(logistic_reg()) %>%
+  add_recipe(glm_rec)
+```
+
+## Create a grid
+
+```{r}
+set.seed(2)
+grid <- 
+  glm_spline_wflow %>% 
+  extract_parameter_set_dials() %>% 
+  grid_latin_hypercube(size = 25)
+```
+
+## Your turn
+
+Create a grid for our tunable workflow.
+
+Try creating a regular grid.
+
+```{r}
+# Your code here!
+
+```
+
+## Update parameter ranges
+
+```{r}
+set.seed(2)
+grid <- 
+  glm_spline_wflow %>% 
+  extract_parameter_set_dials() %>% 
+  update(angle = spline_degree(c(2L, 20L)),
+         distance = spline_degree(c(2L, 20L))) %>% 
+  grid_latin_hypercube(size = 25)
+
+grid %>% 
+  ggplot(aes(angle, distance)) +
+  geom_point(size = 4)
+```
+
+## Spline grid search
+
+```{r} 
+ctrl <- control_grid(save_pred = TRUE, parallel_over = "everything")
+
+set.seed(9)
+glm_spline_res <-
+  glm_spline_wflow %>%
+  tune_grid(resamples = nhl_val, grid = grid, control = ctrl)
+glm_spline_res
+```
+
+## Your turn
+
+Tune our `glm_wflow`.
+
+What happens if you change `grid` to use the default?
+
+```{r}
+# Your code here!
+
+```
+
+## Grid results
+
+```{r}
+autoplot(glm_spline_res)
+```
+
+## Tuning results
+
+```{r}
+collect_metrics(glm_spline_res)
+collect_metrics(glm_spline_res, summarize = FALSE)
+```
+
+## Choose a parameter combination
+
+```{r}
+show_best(glm_spline_res, metric = "roc_auc")
+select_best(glm_spline_res, metric = "roc_auc")
+```
+
+## Your turn
+
+Try an alternative selection strategy.
+
+Read the docs for `select_by_pct_loss()`.
+
+Try choosing a model that has a simpler (less "wiggly") relationship for `distance`.
+
+```{r}
+# Your code here!
+
+```
+
+## Choose a parameter combination
+
+```{r}
+select_best(glm_spline_res, metric = "roc_auc")
+select_by_pct_loss(glm_spline_res, distance, metric = "roc_auc")
+```
+
+## Boosted trees
+
+```{r}
+xgb_spec <-
+  boost_tree(
+    trees = 500, min_n = tune(), stop_iter = tune(), tree_depth = tune(),
+    learn_rate = tune(), loss_reduction = tune()
+  ) %>%
+  set_mode("classification") %>% 
+  set_engine("xgboost", validation = 1/10) # <- for better early stopping
+
+xgb_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_lencode_mixed(player, outcome = vars(on_goal)) %>% 
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+
+xgb_wflow <- 
+  workflow() %>% 
+  add_model(xgb_spec) %>% 
+  add_recipe(xgb_rec)
+```
+
+## Your turn
+
+Create your boosted tree workflow.
+
+```{r}
+# Your code here!
+
+```
+
+## Running in parallel
+
+```{r}
+cores <- parallel::detectCores(logical = FALSE)
+cl <- parallel::makePSOCKcluster(cores)
+doParallel::registerDoParallel(cl)
+```
+
+## Tuning
+
+```{r}
+# this will take some time to run
+set.seed(9)
+xgb_res <-
+  xgb_wflow %>%
+  tune_grid(resamples = nhl_val, grid = 20, control = ctrl) # automatic grid now!
+xgb_res
+```
+
+## Your turn 
+
+Start tuning the boosted tree model!
+
+We won't wait for everyone's tuning to finish, but take this time to get it started before we move on.
+
+```{r}
+# Your code here!
+
+```
+
+## Tuning results
+
+```{r}
+autoplot(xgb_res)
+```
+
+## Again with the location features
+
+```{r}
+coord_rec <- 
+  xgb_rec %>%
+  step_mutate(
+    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    distance = log(distance),
+    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
+  ) %>% 
+  step_rm(coord_x, coord_y)
+
+xgb_coord_wflow <- 
+  workflow() %>% 
+  add_model(xgb_spec) %>% 
+  add_recipe(coord_rec)
+
+set.seed(9)
+xgb_coord_res <-
+  xgb_coord_wflow %>%
+  tune_grid(resamples = nhl_val, grid = 20, control = ctrl)
+```
+
+## Did the machine figure it out? 
+
+```{r}
+show_best(xgb_res, metric = "roc_auc")
+show_best(xgb_coord_res, metric = "roc_auc")
+```
+
+## Compare models
+
+```{r}
+# Best logistic regression results
+glm_spline_res %>% 
+  show_best(metric = "roc_auc", n = 1) %>% 
+  select(.metric, .estimator, mean, n, std_err, .config)
+```
+
+```{r}
+# Best boosting results
+xgb_coord_res %>% 
+  show_best(metric = "roc_auc", n = 1) %>% 
+  select(.metric, .estimator, mean, n, std_err, .config)
+```
+
+## Your turn
+
+Can you get better ROC results?
+
+Try increasing `tree_depth` beyond the original range.
+
+```{r}
+# Your code here!
+
+```
+
+## Updating the workflow
+
+```{r}
+best_auc <- select_best(glm_spline_res, metric = "roc_auc")
+best_auc
+
+glm_spline_wflow <-
+  glm_spline_wflow %>% 
+  finalize_workflow(best_auc)
+
+glm_spline_wflow
+```
+
+## The final fit 
+
+```{r}
+test_res <- 
+  glm_spline_wflow %>% 
+  last_fit(split = nhl_split)
+test_res
+```
+
+## Your turn 
+
+Finalize your workflow with the best parameters.
+
+Create a final fit.
+
+```{r}
+# Your code here!
+
+```
+
+## Estimates of ROC AUC
+
+```{r}
+# Validation results from tuning
+glm_spline_res %>% 
+  show_best(metric = "roc_auc", n = 1) %>% 
+  select(.metric, mean, n, std_err)
+
+# Test set results
+test_res %>% collect_metrics()
+```
+
+## Final fitted workflow
+
+```{r}
+final_glm_spline_wflow <- 
+  test_res %>% 
+  extract_workflow()
+
+# use this object to predict or deploy
+predict(final_glm_spline_wflow, nhl_test[1:3,])
+```
+
+```{r}
+# turn off parallel backend
+foreach::registerDoSEQ()
+parallel::stopCluster(cl)
+```
