@@ -194,7 +194,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h2 class="anchored" data-anchor-id="section">👀</h2>
 <p>This page contains <em>annotations</em> for selected slides.</p>
 <p>There’s a lot that we want to tell you. We don’t want people to have to frantically scribble down things that we say that are not on the slides.</p>
-<p>We’ll add sections to this document with longer explanations and links to other resources.</p>
+<p>We’ve added sections to this document with longer explanations and links to other resources.</p>
 </section>
 <section id="finalize-and-verify" class="level2">
 <h2 class="anchored" data-anchor-id="finalize-and-verify">Finalize and verify</h2>
@@ -301,6 +301,22 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </section>
 <section id="feature-engineering" class="level1">
 <h1>05 - Feature Engineering</h1>
+<section id="splitting-the-nhl-data" class="level2">
+<h2 class="anchored" data-anchor-id="splitting-the-nhl-data">Splitting the NHL data</h2>
+<p><code>nhl_train</code> isn’t really the right name for these data.</p>
+<p>In a little bit, we’ll use the <code>validation_split()</code> function to take the rows in <code>nhl_train</code> and make a validation set. The data that are not used in the validation set are the data that we will use to build the models during tuning.</p>
+<p>Recall the Whole Game slide had:</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/whole-game-split.svg" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><code>nhl_train</code> has the “Not Testing” data.</p>
+</section>
 <section id="where-is-the-shot-coming-from" class="level2">
 <h2 class="anchored" data-anchor-id="where-is-the-shot-coming-from">Where is the shot coming from?</h2>
 <p>About these formulas…</p>
@@ -331,41 +347,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>For splines, we probably want a wider range for the degrees of freedom. We made a specialized function called <code>spline_degree()</code> to be used in these cases.</p>
 <p>How can you tell when this happens? There is a helper function called <code>tunable()</code> and that gives information on how we make the default ranges for parameters. There is a column in these objects names <code>call_info</code>:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>#&gt; ── Attaching packages ──────────────────────────── tidymodels 1.0.0 ──</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>#&gt; ✔ broom        1.0.0     ✔ rsample      1.0.0
-#&gt; ✔ dials        1.0.0     ✔ tibble       3.1.7
-#&gt; ✔ dplyr        1.0.9     ✔ tidyr        1.2.0
-#&gt; ✔ infer        1.0.2     ✔ tune         1.0.0
-#&gt; ✔ modeldata    1.0.0     ✔ workflows    1.0.0
-#&gt; ✔ parsnip      1.0.0     ✔ workflowsets 1.0.0
-#&gt; ✔ purrr        0.3.4     ✔ yardstick    1.0.0
-#&gt; ✔ recipes      1.0.1</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>#&gt; ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──
-#&gt; ✖ purrr::discard() masks scales::discard()
-#&gt; ✖ dplyr::filter()  masks stats::filter()
-#&gt; ✖ dplyr::lag()     masks stats::lag()
-#&gt; ✖ recipes::step()  masks stats::step()
-#&gt; • Learn how to get started at https://www.tidymodels.org/start/</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>ns_tunable <span class="ot">&lt;-</span> </span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">%&gt;%</span> </span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(dis, <span class="at">deg_free =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tunable</span>()</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>ns_tunable</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>ns_tunable <span class="ot">&lt;-</span> </span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">%&gt;%</span> </span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_ns</span>(dis, <span class="at">deg_free =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tunable</span>()</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>ns_tunable</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>#&gt; # A tibble: 1 × 5
 #&gt;   name     call_info        source component component_id
 #&gt;   &lt;chr&gt;    &lt;list&gt;           &lt;chr&gt;  &lt;chr&gt;     &lt;chr&gt;       
 #&gt; 1 deg_free &lt;named list [3]&gt; recipe step_ns   ns_P1Tjg</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>ns_tunable<span class="sc">$</span>call_info</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>ns_tunable<span class="sc">$</span>call_info</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>#&gt; [[1]]
 #&gt; [[1]]$pkg
@@ -401,7 +396,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><code>year</code>, <code>month_Oct</code>, <code>month_Nov</code>, and <code>month_Dec</code></li>
 </ul>
 <p>The first one is easy to explain. For each row, when one these two <code>PIT</code> column has a one, the other must have a zero. The linear regression intercept is represented in the model matrix as a column of all ones. The dependency is</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(Intercept) <span class="ot">=</span> defense_team_PIT <span class="sc">+</span> offense_team_PIT</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>(Intercept) <span class="ot">=</span> defense_team_PIT <span class="sc">+</span> offense_team_PIT</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>The way to avoid this problem is to use <code>step_lincomb(all_numeric_predictors())</code> in the recipe. <a href="https://recipes.tidymodels.org/reference/step_lincomb.html">This step</a> removes the minimum number of columns to avoid the issue.</p>
 <p><strong>tl;dr</strong></p>
 <p>Linear regression detects some redundancies in the predictor set. We can ignore the warnings since <code>lm()</code> can deal with it or use <a href="https://recipes.tidymodels.org/reference/step_lincomb.html"><code>step_lincomb()</code></a> to avoid the warnings.</p>
@@ -442,21 +437,23 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>There is no agreement in the community on whether this is the best approach or if we should just use the training set. There are good arguments either way.</p>
 <p>If you only want to use the training set for the final model, you can do this via:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Use `fit()` to train the model on just the training set</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>final_glm_spline_wflow <span class="ot">&lt;-</span> </span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  glm_spline_wflow <span class="sc">%&gt;%</span> </span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(<span class="at">data =</span> <span class="fu">analysis</span>(nhl_split))</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Create test set predictions</span></span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>test_set_pred <span class="ot">&lt;-</span> <span class="fu">augment</span>(final_glm_spline_wflow, nhl_test)</span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Setup and compute the test set metrics</span></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>cls_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(roc_auc, accuracy)</span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>test_res <span class="ot">&lt;-</span> </span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>  test_set_pred <span class="sc">%&gt;%</span> </span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cls_metrics</span>(on_goal, <span class="at">estimate =</span> .pred_class, .pred_yes)</span>
-<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>test_res</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>training_data <span class="ot">&lt;-</span> nhl_val<span class="sc">$</span>splits[[<span class="dv">1</span>]] <span class="sc">%&gt;%</span> <span class="fu">analysis</span>()</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Use `fit()` to train the model on just the training set</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>final_glm_spline_wflow <span class="ot">&lt;-</span> </span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  glm_spline_wflow <span class="sc">%&gt;%</span> </span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit</span>(<span class="at">data =</span> training_data)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Create test set predictions</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>test_set_pred <span class="ot">&lt;-</span> <span class="fu">augment</span>(final_glm_spline_wflow, nhl_test)</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Setup and compute the test set metrics</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>cls_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(roc_auc, accuracy)</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>test_res <span class="ot">&lt;-</span> </span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  test_set_pred <span class="sc">%&gt;%</span> </span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cls_metrics</span>(on_goal, <span class="at">estimate =</span> .pred_class, .pred_yes)</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>test_res</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 

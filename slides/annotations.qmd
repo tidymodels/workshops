@@ -5,6 +5,9 @@ title: "Annotations"
 ```{r startup}
 #| include: false
 
+library(tidymodels)
+tidymodels_prefer()
+
 # To get `hexes()`
 source("setup.R")
 ```
@@ -17,7 +20,7 @@ This page contains _annotations_ for selected slides.
 
 There's a lot that we want to tell you. We don't want people to have to frantically scribble down things that we say that are not on the slides. 
 
-We'll add sections to this document with longer explanations and links to other resources. 
+We've added sections to this document with longer explanations and links to other resources. 
 
 
 
@@ -129,6 +132,22 @@ As shown in the Whole Game slides, there is a slightly different scheme used whe
 
 
 # 05 - Feature Engineering
+
+## Splitting the NHL data 
+
+`nhl_train` isn't really the right name for these data. 
+
+In a little bit, we'll use the `validation_split()` function to take the rows in `nhl_train` and make a validation set. The data that are not used in the validation set are the data that we will use to build the models during tuning. 
+
+Recall the Whole Game slide had: 
+
+```{r spending-diagram, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-split.svg")
+```
+
+`nhl_train` has the "Not Testing" data. 
 
 ## Where is the shot coming from?
 
@@ -282,10 +301,12 @@ If you only want to use the training set for the final model, you can do this vi
 ```{r}
 #| eval: false
 
+training_data <- nhl_val$splits[[1]] %>% analysis()
+
 # Use `fit()` to train the model on just the training set
 final_glm_spline_wflow <- 
   glm_spline_wflow %>% 
-  fit(data = analysis(nhl_split))
+  fit(data = training_data)
 
 # Create test set predictions
 test_set_pred <- augment(final_glm_spline_wflow, nhl_test)
