@@ -8,7 +8,7 @@
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.0.27">
+  <meta name="generator" content="quarto-1.0.28">
 
   <title>Machine learning with tidymodels - 6 - Tuning Hyperparameters</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -609,6 +609,19 @@
 <span id="cb4-20"><a href="#cb4-20"></a><span class="co">#&gt; 10    10        1</span></span>
 <span id="cb4-21"><a href="#cb4-21"></a><span class="co">#&gt; # … with 215 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<aside class="notes">
+<p>Note that even though we requested 25x25=625 rows, we only got 15x15=225 back, since the <code>deg_free</code> parameters only have a range of <code>1-&gt;15</code>.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="update-parameter-ranges" class="slide level2">
 <h2>Update parameter ranges <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
@@ -637,6 +650,19 @@
 <span id="cb5-22"><a href="#cb5-22"></a><span class="co">#&gt; 10    11       15</span></span>
 <span id="cb5-23"><a href="#cb5-23"></a><span class="co">#&gt; # … with 14 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<aside class="notes">
+<p>Even though <code>angle</code> is a <code>deg_free</code> parameter in <code>step_ns()</code>, we don’t use the dials <code>deg_free()</code> object here. We have a special <code>spline_degree()</code> function that has better defaults for splines.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="the-results" class="slide level2">
 <h2>The results <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
@@ -663,26 +689,27 @@
 </section>
 <section id="spline-grid-search" class="slide level2 annotation">
 <h2>Spline grid search <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "></h2>
-<div class="cell" data-hash="06-tuning-hyperparameters_cache/revealjs/tuning_9634678ef7f0281d9a73815ee2fd5a95">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>ctrl <span class="ot">&lt;-</span> <span class="fu">control_grid</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>, <span class="at">parallel_over =</span> <span class="st">"everything"</span>)</span>
-<span id="cb7-2"><a href="#cb7-2"></a></span>
-<span id="cb7-3"><a href="#cb7-3"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
+<div class="cell" data-hash="06-tuning-hyperparameters_cache/revealjs/tuning_c4d1d704f9edde994833e709a0f86779">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
+<span id="cb7-2"><a href="#cb7-2"></a>ctrl <span class="ot">&lt;-</span> <span class="fu">control_grid</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>, <span class="at">parallel_over =</span> <span class="st">"everything"</span>)</span>
+<span id="cb7-3"><a href="#cb7-3"></a></span>
 <span id="cb7-4"><a href="#cb7-4"></a>glm_spline_res <span class="ot">&lt;-</span></span>
 <span id="cb7-5"><a href="#cb7-5"></a>  glm_spline_wflow <span class="sc">%&gt;%</span></span>
 <span id="cb7-6"><a href="#cb7-6"></a>  <span class="fu">tune_grid</span>(<span class="at">resamples =</span> nhl_val, <span class="at">grid =</span> grid, <span class="at">control =</span> ctrl)</span>
-<span id="cb7-7"><a href="#cb7-7"></a>glm_spline_res</span>
-<span id="cb7-8"><a href="#cb7-8"></a><span class="co">#&gt; # Tuning results</span></span>
-<span id="cb7-9"><a href="#cb7-9"></a><span class="co">#&gt; # Validation Set Split (0.8/0.2)  </span></span>
-<span id="cb7-10"><a href="#cb7-10"></a><span class="co">#&gt; # A tibble: 1 × 5</span></span>
-<span id="cb7-11"><a href="#cb7-11"></a><span class="co">#&gt;   splits              id         .metrics          .notes            .predictions         </span></span>
-<span id="cb7-12"><a href="#cb7-12"></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;      &lt;list&gt;            &lt;list&gt;            &lt;list&gt;               </span></span>
-<span id="cb7-13"><a href="#cb7-13"></a><span class="co">#&gt; 1 &lt;split [7288/1822]&gt; validation &lt;tibble [48 × 6]&gt; &lt;tibble [24 × 3]&gt; &lt;tibble [43,728 × 8]&gt;</span></span>
-<span id="cb7-14"><a href="#cb7-14"></a><span class="co">#&gt; </span></span>
-<span id="cb7-15"><a href="#cb7-15"></a><span class="co">#&gt; There were issues with some computations:</span></span>
-<span id="cb7-16"><a href="#cb7-16"></a><span class="co">#&gt; </span></span>
-<span id="cb7-17"><a href="#cb7-17"></a><span class="co">#&gt;   - Warning(s) x24: prediction from a rank-deficient fit may be misleading</span></span>
-<span id="cb7-18"><a href="#cb7-18"></a><span class="co">#&gt; </span></span>
-<span id="cb7-19"><a href="#cb7-19"></a><span class="co">#&gt; Run `show_notes(.Last.tune.result)` for more information.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb7-7"><a href="#cb7-7"></a></span>
+<span id="cb7-8"><a href="#cb7-8"></a>glm_spline_res</span>
+<span id="cb7-9"><a href="#cb7-9"></a><span class="co">#&gt; # Tuning results</span></span>
+<span id="cb7-10"><a href="#cb7-10"></a><span class="co">#&gt; # Validation Set Split (0.8/0.2)  </span></span>
+<span id="cb7-11"><a href="#cb7-11"></a><span class="co">#&gt; # A tibble: 1 × 5</span></span>
+<span id="cb7-12"><a href="#cb7-12"></a><span class="co">#&gt;   splits              id         .metrics          .notes            .predictions         </span></span>
+<span id="cb7-13"><a href="#cb7-13"></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;      &lt;list&gt;            &lt;list&gt;            &lt;list&gt;               </span></span>
+<span id="cb7-14"><a href="#cb7-14"></a><span class="co">#&gt; 1 &lt;split [7288/1822]&gt; validation &lt;tibble [48 × 6]&gt; &lt;tibble [24 × 3]&gt; &lt;tibble [43,728 × 8]&gt;</span></span>
+<span id="cb7-15"><a href="#cb7-15"></a><span class="co">#&gt; </span></span>
+<span id="cb7-16"><a href="#cb7-16"></a><span class="co">#&gt; There were issues with some computations:</span></span>
+<span id="cb7-17"><a href="#cb7-17"></a><span class="co">#&gt; </span></span>
+<span id="cb7-18"><a href="#cb7-18"></a><span class="co">#&gt;   - Warning(s) x24: prediction from a rank-deficient fit may be misleading</span></span>
+<span id="cb7-19"><a href="#cb7-19"></a><span class="co">#&gt; </span></span>
+<span id="cb7-20"><a href="#cb7-20"></a><span class="co">#&gt; Run `show_notes(.Last.tune.result)` for more information.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <aside class="notes">
 <ul>
@@ -705,7 +732,7 @@
 <h2>Your turn</h2>
 <p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
 <p><em>Tune our <code>glm_wflow</code>.</em></p>
-<p><em>What happens if you change <code>grid</code> to use the default?</em></p>
+<p><em>What happens if you don’t supply a <code>grid</code> argument to <code>tune_grid()</code>?</em></p>
 <div class="cell">
 <div class="cell-output-display">
 <div class="countdown" id="tune-glm" style="right:0;bottom:0;" data-warnwhen="0">
@@ -920,6 +947,20 @@
 <span id="cb14-17"><a href="#cb14-17"></a>  <span class="fu">add_model</span>(xgb_spec) <span class="sc">%&gt;%</span> </span>
 <span id="cb14-18"><a href="#cb14-18"></a>  <span class="fu">add_recipe</span>(xgb_rec)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<aside class="notes">
+<p><code>validation</code> is an argument to <code>parsnip::xgb_train()</code>, not directly to xgboost. It generates a validation set that is used by xgboost when evaluating model performance. It is eventually assigned to <code>xgb.train(watchlist = list(validation = data))</code>.</p>
+<p>See <code>translate(xgb_spec)</code> to see where it is passed to <code>parsnip::xgb_train()</code>.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="your-turn-3" class="slide level2" data-transition="slide-in">
 <h2>Your turn</h2>
@@ -947,9 +988,11 @@
 <span id="cb15-2"><a href="#cb15-2"></a>cl <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">makePSOCKcluster</span>(cores)</span>
 <span id="cb15-3"><a href="#cb15-3"></a>doParallel<span class="sc">::</span><span class="fu">registerDoParallel</span>(cl)</span>
 <span id="cb15-4"><a href="#cb15-4"></a></span>
-<span id="cb15-5"><a href="#cb15-5"></a><span class="co"># Shut it down with:</span></span>
-<span id="cb15-6"><a href="#cb15-6"></a>foreach<span class="sc">::</span><span class="fu">registerDoSEQ</span>()</span>
-<span id="cb15-7"><a href="#cb15-7"></a>parallel<span class="sc">::</span><span class="fu">stopCluster</span>(cl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb15-5"><a href="#cb15-5"></a><span class="co"># Now call `tune_grid()`!</span></span>
+<span id="cb15-6"><a href="#cb15-6"></a></span>
+<span id="cb15-7"><a href="#cb15-7"></a><span class="co"># Shut it down with:</span></span>
+<span id="cb15-8"><a href="#cb15-8"></a>foreach<span class="sc">::</span><span class="fu">registerDoSEQ</span>()</span>
+<span id="cb15-9"><a href="#cb15-9"></a>parallel<span class="sc">::</span><span class="fu">stopCluster</span>(cl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div><div class="column" style="width:40%;">
 <div class="cell" data-layout-align="center">
@@ -966,24 +1009,47 @@
 </section>
 <section id="running-in-parallel-1" class="slide level2">
 <h2>Running in parallel</h2>
-<p>Speed-ups are fairly linear up to the number of physical cores.</p>
-
-<img data-src="06-tuning-hyperparameters_files/figure-revealjs/unnamed-chunk-12-1.svg" style="width:90.0%" class="r-stretch quarto-figure-center"></section>
+<p>Speed-ups are fairly linear up to the number of physical cores (10 here).</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="06-tuning-hyperparameters_files/figure-revealjs/unnamed-chunk-12-1.svg" style="width:90.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p>Faceted on the expensiveness of preprocessing used.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
 <section id="tuning" class="slide level2">
 <h2>Tuning <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <p>This will take some time to run ⏳</p>
-<div class="cell" data-hash="06-tuning-hyperparameters_cache/revealjs/xgboost-tune_974c73bcadd89069562165a5e860553b">
+<div class="cell" data-hash="06-tuning-hyperparameters_cache/revealjs/xgboost-tune_c27549f41d5d5e174d2846143d0b3eb7">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
-<span id="cb16-2"><a href="#cb16-2"></a>xgb_res <span class="ot">&lt;-</span></span>
-<span id="cb16-3"><a href="#cb16-3"></a>  xgb_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb16-4"><a href="#cb16-4"></a>  <span class="fu">tune_grid</span>(<span class="at">resamples =</span> nhl_val, <span class="at">grid =</span> <span class="dv">20</span>, <span class="at">control =</span> ctrl) <span class="co"># automatic grid now!</span></span>
-<span id="cb16-5"><a href="#cb16-5"></a>xgb_res</span>
-<span id="cb16-6"><a href="#cb16-6"></a><span class="co">#&gt; # Tuning results</span></span>
-<span id="cb16-7"><a href="#cb16-7"></a><span class="co">#&gt; # Validation Set Split (0.8/0.2)  </span></span>
-<span id="cb16-8"><a href="#cb16-8"></a><span class="co">#&gt; # A tibble: 1 × 5</span></span>
-<span id="cb16-9"><a href="#cb16-9"></a><span class="co">#&gt;   splits              id         .metrics          .notes           .predictions          </span></span>
-<span id="cb16-10"><a href="#cb16-10"></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;      &lt;list&gt;            &lt;list&gt;           &lt;list&gt;                </span></span>
-<span id="cb16-11"><a href="#cb16-11"></a><span class="co">#&gt; 1 &lt;split [7288/1822]&gt; validation &lt;tibble [40 × 9]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [36,440 × 11]&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb16-2"><a href="#cb16-2"></a></span>
+<span id="cb16-3"><a href="#cb16-3"></a>xgb_res <span class="ot">&lt;-</span></span>
+<span id="cb16-4"><a href="#cb16-4"></a>  xgb_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb16-5"><a href="#cb16-5"></a>  <span class="fu">tune_grid</span>(<span class="at">resamples =</span> nhl_val, <span class="at">grid =</span> <span class="dv">20</span>, <span class="at">control =</span> ctrl) <span class="co"># automatic grid now!</span></span>
+<span id="cb16-6"><a href="#cb16-6"></a></span>
+<span id="cb16-7"><a href="#cb16-7"></a>xgb_res</span>
+<span id="cb16-8"><a href="#cb16-8"></a><span class="co">#&gt; # Tuning results</span></span>
+<span id="cb16-9"><a href="#cb16-9"></a><span class="co">#&gt; # Validation Set Split (0.8/0.2)  </span></span>
+<span id="cb16-10"><a href="#cb16-10"></a><span class="co">#&gt; # A tibble: 1 × 5</span></span>
+<span id="cb16-11"><a href="#cb16-11"></a><span class="co">#&gt;   splits              id         .metrics          .notes           .predictions          </span></span>
+<span id="cb16-12"><a href="#cb16-12"></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;      &lt;list&gt;            &lt;list&gt;           &lt;list&gt;                </span></span>
+<span id="cb16-13"><a href="#cb16-13"></a><span class="co">#&gt; 1 &lt;split [7288/1822]&gt; validation &lt;tibble [40 × 9]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [36,440 × 11]&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="your-turn-4" class="slide level2" data-transition="slide-in">
@@ -1106,7 +1172,7 @@
 <span id="cb22-3"><a href="#cb22-3"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
 <span id="cb22-4"><a href="#cb22-4"></a><span class="co">#&gt;   angle distance .config              </span></span>
 <span id="cb22-5"><a href="#cb22-5"></a><span class="co">#&gt;   &lt;int&gt;    &lt;int&gt; &lt;chr&gt;                </span></span>
-<span id="cb22-6"><a href="#cb22-6"></a><span class="co">#&gt; 1     5        8 Preprocessor12_Model1</span></span>
+<span id="cb22-6"><a href="#cb22-6"></a><span class="co">#&gt; 1     3       15 Preprocessor13_Model1</span></span>
 <span id="cb22-7"><a href="#cb22-7"></a></span>
 <span id="cb22-8"><a href="#cb22-8"></a>glm_spline_wflow <span class="ot">&lt;-</span></span>
 <span id="cb22-9"><a href="#cb22-9"></a>  glm_spline_wflow <span class="sc">%&gt;%</span> </span>
@@ -1137,23 +1203,24 @@
 </section>
 <section id="the-final-fit" class="slide level2">
 <h2>The final fit <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
-<div class="cell" data-hash="06-tuning-hyperparameters_cache/revealjs/final-last-fit_74e6db8eadb0b88713b973fc6e286ee2">
+<div class="cell" data-hash="06-tuning-hyperparameters_cache/revealjs/final-last-fit_9d92988e4c910b489e50e69d77ea67b4">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a>test_res <span class="ot">&lt;-</span> </span>
 <span id="cb23-2"><a href="#cb23-2"></a>  glm_spline_wflow <span class="sc">%&gt;%</span> </span>
 <span id="cb23-3"><a href="#cb23-3"></a>  <span class="fu">last_fit</span>(<span class="at">split =</span> nhl_split)</span>
-<span id="cb23-4"><a href="#cb23-4"></a>test_res</span>
-<span id="cb23-5"><a href="#cb23-5"></a><span class="co">#&gt; # Resampling results</span></span>
-<span id="cb23-6"><a href="#cb23-6"></a><span class="co">#&gt; # Manual resampling </span></span>
-<span id="cb23-7"><a href="#cb23-7"></a><span class="co">#&gt; # A tibble: 1 × 6</span></span>
-<span id="cb23-8"><a href="#cb23-8"></a><span class="co">#&gt;   splits              id               .metrics         .notes           .predictions         .workflow </span></span>
-<span id="cb23-9"><a href="#cb23-9"></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;            &lt;list&gt;           &lt;list&gt;           &lt;list&gt;               &lt;list&gt;    </span></span>
-<span id="cb23-10"><a href="#cb23-10"></a><span class="co">#&gt; 1 &lt;split [9110/3037]&gt; train/test split &lt;tibble [2 × 4]&gt; &lt;tibble [1 × 3]&gt; &lt;tibble [3,037 × 6]&gt; &lt;workflow&gt;</span></span>
-<span id="cb23-11"><a href="#cb23-11"></a><span class="co">#&gt; </span></span>
-<span id="cb23-12"><a href="#cb23-12"></a><span class="co">#&gt; There were issues with some computations:</span></span>
-<span id="cb23-13"><a href="#cb23-13"></a><span class="co">#&gt; </span></span>
-<span id="cb23-14"><a href="#cb23-14"></a><span class="co">#&gt;   - Warning(s) x1: prediction from a rank-deficient fit may be misleading</span></span>
-<span id="cb23-15"><a href="#cb23-15"></a><span class="co">#&gt; </span></span>
-<span id="cb23-16"><a href="#cb23-16"></a><span class="co">#&gt; Run `show_notes(.Last.tune.result)` for more information.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb23-4"><a href="#cb23-4"></a></span>
+<span id="cb23-5"><a href="#cb23-5"></a>test_res</span>
+<span id="cb23-6"><a href="#cb23-6"></a><span class="co">#&gt; # Resampling results</span></span>
+<span id="cb23-7"><a href="#cb23-7"></a><span class="co">#&gt; # Manual resampling </span></span>
+<span id="cb23-8"><a href="#cb23-8"></a><span class="co">#&gt; # A tibble: 1 × 6</span></span>
+<span id="cb23-9"><a href="#cb23-9"></a><span class="co">#&gt;   splits              id               .metrics         .notes           .predictions         .workflow </span></span>
+<span id="cb23-10"><a href="#cb23-10"></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;            &lt;list&gt;           &lt;list&gt;           &lt;list&gt;               &lt;list&gt;    </span></span>
+<span id="cb23-11"><a href="#cb23-11"></a><span class="co">#&gt; 1 &lt;split [9110/3037]&gt; train/test split &lt;tibble [2 × 4]&gt; &lt;tibble [1 × 3]&gt; &lt;tibble [3,037 × 6]&gt; &lt;workflow&gt;</span></span>
+<span id="cb23-12"><a href="#cb23-12"></a><span class="co">#&gt; </span></span>
+<span id="cb23-13"><a href="#cb23-13"></a><span class="co">#&gt; There were issues with some computations:</span></span>
+<span id="cb23-14"><a href="#cb23-14"></a><span class="co">#&gt; </span></span>
+<span id="cb23-15"><a href="#cb23-15"></a><span class="co">#&gt;   - Warning(s) x1: prediction from a rank-deficient fit may be misleading</span></span>
+<span id="cb23-16"><a href="#cb23-16"></a><span class="co">#&gt; </span></span>
+<span id="cb23-17"><a href="#cb23-17"></a><span class="co">#&gt; Run `show_notes(.Last.tune.result)` for more information.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="fragment">
 <p>Remember that <code>last_fit()</code> fits one time with the combined training and validation set, then evaluates one time with the testing set.</p>
@@ -1191,8 +1258,8 @@
 <span id="cb25-2"><a href="#cb25-2"></a><span class="co">#&gt; # A tibble: 2 × 4</span></span>
 <span id="cb25-3"><a href="#cb25-3"></a><span class="co">#&gt;   .metric  .estimator .estimate .config             </span></span>
 <span id="cb25-4"><a href="#cb25-4"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               </span></span>
-<span id="cb25-5"><a href="#cb25-5"></a><span class="co">#&gt; 1 accuracy binary         0.616 Preprocessor1_Model1</span></span>
-<span id="cb25-6"><a href="#cb25-6"></a><span class="co">#&gt; 2 roc_auc  binary         0.656 Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb25-5"><a href="#cb25-5"></a><span class="co">#&gt; 1 accuracy binary         0.610 Preprocessor1_Model1</span></span>
+<span id="cb25-6"><a href="#cb25-6"></a><span class="co">#&gt; 2 roc_auc  binary         0.655 Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </section>
