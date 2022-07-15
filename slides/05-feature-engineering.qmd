@@ -80,7 +80,7 @@ When a date column is used in its native format, it is usually converted by an R
 
 . . .
 
-It can be re-encoded as:
+It can be re-engineered as:
 
 -   Days since a reference date
 -   Day of the week
@@ -120,9 +120,9 @@ The recipes package can handle both!
 
 ## The NHL data 🏒
 
--   From Pittsburgh Penguins games, `r format(nrow(ongoal::season_2015), big.mark = ",")` shots on goal
+-   From Pittsburgh Penguins games, `r format(nrow(ongoal::season_2015), big.mark = ",")` shots
 
--   Season from the 2015-2016 season
+-   Data from the 2015-2016 season
 
 . . .
 
@@ -136,7 +136,7 @@ library(ongoal)
 
 tidymodels_prefer()
 
-str(season_2015)
+glimpse(season_2015)
 ```
 
 ## Splitting the NHL data `r hexes("rsample")`
@@ -215,11 +215,6 @@ nhl_rec <-
 
 - The `recipe()` function assigns columns to roles of "outcome" or "predictor" using the formula
 
-. . .
-
-- If the number of columns in the dataset is large, use `recipe(data = nhl_train)` instead
-
-
 ## A first recipe `r hexes("recipes")`
 
 ```{r rec-summary}
@@ -253,7 +248,7 @@ nhl_rec <-
 
 . . .
 
-In case there is factor level that never was observed in the training data, we can delete any *zero-variance* predictors that have a single unique value.
+In case there is a factor level that was never observed in the training data (resulting in a column of all `0`s), we can delete any *zero-variance* predictors that have a single unique value.
 
 :::notes
 Note that the selector chooses all columns with a role of "predictor"
@@ -298,7 +293,7 @@ nhl_rec <-
 
 . . .
 
-To deal with highly correlated predictors, find the minimum predictor set to remove to make the pairwise correlations less than the threshold.
+To deal with highly correlated predictors, find the minimum set of predictor columns that make the pairwise correlations less than the threshold.
 
 ## Other possible steps `r hexes("recipes")`
 
@@ -320,15 +315,14 @@ PCA feature extraction...
 ## Other possible steps `r hexes("recipes", "embed")`
 
 ```{r}
-#| code-line-numbers: "7"
+#| code-line-numbers: "6"
 #| eval: false
-library(embed)
 nhl_rec <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
-  step_umap(all_numeric_predictors(), outcome = on_goal)
+  embed::step_umap(all_numeric_predictors(), outcome = on_goal)
 ```
 
 . . . 
@@ -431,11 +425,11 @@ Let's say we can define one class as the "event", like a shot being on goal.
 
 -   The **sensitivity** is the *true positive rate* (accuracy on actual events).
 
--   The **specificity** is the rate of correctly predicted non-events, or 1 - *false positive rate*.
+-   The **specificity** is the *true negative rate* (accuracy on actual non-events, or 1 - *false positive rate*).
 
 ## Two class data
 
-These definitions assume that we know the threshold for class predictions.
+These definitions assume that we know the threshold for converting "soft" probability predictions into "hard" class predictions.
 
 . . .
 
@@ -474,10 +468,10 @@ ROC curves are insensitive to class imbalance.
 
 ```{r}
 # Assumes _first_ factor level is event; there are options to change that
-roc_curve_points <- glm_val_pred %>% roc_curve(truth = on_goal, .pred_yes)
+roc_curve_points <- glm_val_pred %>% roc_curve(truth = on_goal, estimate = .pred_yes)
 roc_curve_points %>% slice(1, 50, 100)
 
-glm_val_pred %>% roc_auc(truth = on_goal, .pred_yes)
+glm_val_pred %>% roc_auc(truth = on_goal, estimate = .pred_yes)
 ```
 
 ## ROC curve plot `r hexes("yardstick")`
@@ -704,6 +698,8 @@ example_data %>%
 
 :::notes
 Note the danger of using `step_mutate()` -- easy to have data leakage 
+
+`coord_x` is "distance from goal". We subtract it from `89` to get the distance from the center of the ice. The `abs()` calls account for the fact that the goals might be on either side of `(0, 0)`. The rest of it is the formula for going from `(x, y)` to angle in degrees.
 :::
 
 ## 
@@ -730,7 +726,7 @@ example_data %>%
   filter(distance <= 40) %>% 
   sample_n(500) %>% 
   plot_nhl_shots(emphasis = on_goal, alpha = 1/2) +
-  ggtitle("distance <= 30")
+  ggtitle("distance <= 40")
 ```
 
 # 
