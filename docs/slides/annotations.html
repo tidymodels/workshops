@@ -351,7 +351,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 #&gt; ✖ dplyr::filter()  masks stats::filter()
 #&gt; ✖ dplyr::lag()     masks stats::lag()
 #&gt; ✖ recipes::step()  masks stats::step()
-#&gt; • Dig deeper into tidy modeling with R at https://www.tmwr.org</code></pre>
+#&gt; • Learn how to get started at https://www.tidymodels.org/start/</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>ns_tunable <span class="ot">&lt;-</span> </span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">%&gt;%</span> </span>
@@ -405,6 +405,23 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>The way to avoid this problem is to use <code>step_lincomb(all_numeric_predictors())</code> in the recipe. <a href="https://recipes.tidymodels.org/reference/step_lincomb.html">This step</a> removes the minimum number of columns to avoid the issue.</p>
 <p><strong>tl;dr</strong></p>
 <p>Linear regression detects some redundancies in the predictor set. We can ignore the warnings since <code>lm()</code> can deal with it or use <a href="https://recipes.tidymodels.org/reference/step_lincomb.html"><code>step_lincomb()</code></a> to avoid the warnings.</p>
+</section>
+<section id="boosted-tree-tuning-parameters" class="level2">
+<h2 class="anchored" data-anchor-id="boosted-tree-tuning-parameters">Boosted tree tuning parameters</h2>
+<p>When the deciding on number of boosting iterations, there are two main strategies:</p>
+<ul>
+<li><p>Directly tune it (<code>trees = tune()</code>)</p></li>
+<li><p>Set it to one value and tune the number of early stopping iterations (<code>trees = 500</code>, <code>stop_iter = tune()</code>).</p></li>
+</ul>
+<p>Early stopping is when we monitor the performance of the model. If the model gets worse for at least <code>stop_iter</code> iterations, training stops.</p>
+<p>Here’s an example where, after eleven iterations, performance starts to get worse.</p>
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="annotations_files/figure-html/early-stopping-1.svg" class="img-fluid"></p>
+</div>
+</div>
+<p>This is likely do to over-fitting so we stop the model at eleven boosting iterations.</p>
+<p>Early stopping usually has good results and takes far less time.</p>
 </section>
 <section id="the-final-fit-to-the-nhl-data" class="level2">
 <h2 class="anchored" data-anchor-id="the-final-fit-to-the-nhl-data">The final fit to the NHL data</h2>

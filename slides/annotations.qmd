@@ -224,6 +224,36 @@ The way to avoid this problem is to use `step_lincomb(all_numeric_predictors())`
 
 Linear regression detects some redundancies in the predictor set. We can ignore the warnings since `lm()` can deal with it or use [`step_lincomb()`](https://recipes.tidymodels.org/reference/step_lincomb.html) to avoid the warnings. 
 
+## Boosted tree tuning parameters
+
+When the deciding on number of boosting iterations, there are two main strategies:
+
+ * Directly tune it (`trees = tune()`)
+ 
+ * Set it to one value and tune the number of early stopping iterations (`trees = 500`, `stop_iter = tune()`).
+
+Early stopping is when we monitor the performance of the model. If the model gets worse for at least `stop_iter` iterations, training stops. 
+
+Here's an example where, after eleven iterations, performance starts to get worse. 
+
+
+```{r early-stopping}
+#| echo: false
+
+roc_vals <- c(0.4994, 0.5075, 0.6131, 0.7077, 0.7376, 0.752, 0.7807, 0.7927, 
+              0.7969, 0.7915, 0.8118, 0.8019, 0.7926, 0.7772, 0.776)
+iterations <- seq_along(roc_vals)
+
+early_stop <- tibble(iterations = iterations, `ROC AUC` = roc_vals)
+
+early_stop %>% ggplot(aes(iterations, `ROC AUC`)) + geom_point() + theme_bw()
+```
+
+This is likely do to over-fitting so we stop the model at eleven boosting iterations.  
+
+Early stopping usually has good results and takes far less time. 
+
+
 ## The final fit to the NHL data
 
 Recall that `last_fit()` uses the objects produced by `initial_fit()` to determine what data are used for the final model fit and which are used as the test set. 
