@@ -8,7 +8,7 @@
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.0.18">
+  <meta name="generator" content="quarto-1.0.27">
 
   <title>Machine learning with tidymodels - 5 - Feature engineering</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -534,6 +534,10 @@
 <span id="cb1-24"><a href="#cb1-24"></a><span class="co">#&gt;  $ year             : num [1:12147] 2016 2016 2016 2016 2016 ...</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
+<section id="data-splitting-strategy" class="slide level2">
+<h2>Data splitting strategy</h2>
+
+<img data-src="images/whole-game-split.svg" class="r-stretch quarto-figure-center"></section>
 <section id="splitting-the-nhl-data" class="slide level2">
 <h2>Splitting the NHL data <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
@@ -543,12 +547,29 @@
 <span id="cb2-4"><a href="#cb2-4"></a><span class="co">#&gt; &lt;Training/Testing/Total&gt;</span></span>
 <span id="cb2-5"><a href="#cb2-5"></a><span class="co">#&gt; &lt;9110/3037/12147&gt;</span></span>
 <span id="cb2-6"><a href="#cb2-6"></a></span>
-<span id="cb2-7"><a href="#cb2-7"></a>nhl_train <span class="ot">&lt;-</span> <span class="fu">training</span>(nhl_split)</span>
+<span id="cb2-7"><a href="#cb2-7"></a>nhl_train_and_val <span class="ot">&lt;-</span> <span class="fu">training</span>(nhl_split)</span>
 <span id="cb2-8"><a href="#cb2-8"></a>nhl_test  <span class="ot">&lt;-</span> <span class="fu">testing</span>(nhl_split)</span>
 <span id="cb2-9"><a href="#cb2-9"></a></span>
-<span id="cb2-10"><a href="#cb2-10"></a><span class="fu">c</span>(<span class="at">training =</span> <span class="fu">nrow</span>(nhl_train), <span class="at">testing =</span> <span class="fu">nrow</span>(nhl_test))</span>
-<span id="cb2-11"><a href="#cb2-11"></a><span class="co">#&gt; training  testing </span></span>
-<span id="cb2-12"><a href="#cb2-12"></a><span class="co">#&gt;     9110     3037</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-10"><a href="#cb2-10"></a><span class="fu">c</span>(<span class="st">`</span><span class="at">not testing</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">nrow</span>(nhl_train_and_val), <span class="at">testing =</span> <span class="fu">nrow</span>(nhl_test))</span>
+<span id="cb2-11"><a href="#cb2-11"></a><span class="co">#&gt; not testing     testing </span></span>
+<span id="cb2-12"><a href="#cb2-12"></a><span class="co">#&gt;        9110        3037</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="validation-split" class="slide level2">
+<h2>Validation split <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p>Since there are a lot of observations, we’ll use a validation set:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">set.seed</span>(<span class="dv">234</span>)</span>
+<span id="cb3-2"><a href="#cb3-2"></a>nhl_val <span class="ot">&lt;-</span> <span class="fu">validation_split</span>(nhl_train_and_val, <span class="at">prop =</span> <span class="fl">0.80</span>)</span>
+<span id="cb3-3"><a href="#cb3-3"></a>nhl_val</span>
+<span id="cb3-4"><a href="#cb3-4"></a><span class="co">#&gt; # Validation Set Split (0.8/0.2)  </span></span>
+<span id="cb3-5"><a href="#cb3-5"></a><span class="co">#&gt; # A tibble: 1 × 2</span></span>
+<span id="cb3-6"><a href="#cb3-6"></a><span class="co">#&gt;   splits              id        </span></span>
+<span id="cb3-7"><a href="#cb3-7"></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;     </span></span>
+<span id="cb3-8"><a href="#cb3-8"></a><span class="co">#&gt; 1 &lt;split [7288/1822]&gt; validation</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="fragment">
+<p>Remember that a validation split is a type of resample.</p>
 </div>
 </section>
 <section id="your-turn" class="slide level2" data-transition="slide-in">
@@ -559,10 +580,12 @@
 <div class="columns">
 <div class="column" style="width:50%;">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">set.seed</span>(<span class="dv">100</span>)</span>
-<span id="cb3-2"><a href="#cb3-2"></a>nhl_train <span class="sc">%&gt;%</span> </span>
-<span id="cb3-3"><a href="#cb3-3"></a>  <span class="fu">sample_n</span>(<span class="dv">200</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb3-4"><a href="#cb3-4"></a>  <span class="fu">plot_nhl_shots</span>(<span class="at">emphasis =</span> position)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>nhl_train <span class="ot">&lt;-</span> <span class="fu">analysis</span>(nhl_val<span class="sc">$</span>splits[[<span class="dv">1</span>]])</span>
+<span id="cb4-2"><a href="#cb4-2"></a></span>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="fu">set.seed</span>(<span class="dv">100</span>)</span>
+<span id="cb4-4"><a href="#cb4-4"></a>nhl_train <span class="sc">%&gt;%</span> </span>
+<span id="cb4-5"><a href="#cb4-5"></a>  <span class="fu">sample_n</span>(<span class="dv">200</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-6"><a href="#cb4-6"></a>  <span class="fu">plot_nhl_shots</span>(<span class="at">emphasis =</span> position)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img data-src="05-feature-engineering_files/figure-revealjs/rink-code-1.svg"></p>
 </div>
@@ -576,23 +599,6 @@
 </div>
 </div>
 </div>
-</div>
-</section>
-<section id="validation-split" class="slide level2">
-<h2>Validation split <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
-<p>Since there are a lot of observations, we’ll use a validation set:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="fu">set.seed</span>(<span class="dv">234</span>)</span>
-<span id="cb4-2"><a href="#cb4-2"></a>nhl_val <span class="ot">&lt;-</span> <span class="fu">validation_split</span>(nhl_train, <span class="at">prop =</span> <span class="fl">0.80</span>)</span>
-<span id="cb4-3"><a href="#cb4-3"></a>nhl_val</span>
-<span id="cb4-4"><a href="#cb4-4"></a><span class="co">#&gt; # Validation Set Split (0.8/0.2)  </span></span>
-<span id="cb4-5"><a href="#cb4-5"></a><span class="co">#&gt; # A tibble: 1 × 2</span></span>
-<span id="cb4-6"><a href="#cb4-6"></a><span class="co">#&gt;   splits              id        </span></span>
-<span id="cb4-7"><a href="#cb4-7"></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;     </span></span>
-<span id="cb4-8"><a href="#cb4-8"></a><span class="co">#&gt; 1 &lt;split [7288/1822]&gt; validation</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="fragment">
-<p>Remember that a validation split is a type of resample.</p>
 </div>
 </section>
 <section id="prepare-your-data-for-modeling" class="slide level2">
@@ -819,8 +825,8 @@
 <span id="cb15-12"><a href="#cb15-12"></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
 <span id="cb15-13"><a href="#cb15-13"></a><span class="co">#&gt;   .metric  .estimator  mean     n std_err .config             </span></span>
 <span id="cb15-14"><a href="#cb15-14"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
-<span id="cb15-15"><a href="#cb15-15"></a><span class="co">#&gt; 1 accuracy binary     0.578     1      NA Preprocessor1_Model1</span></span>
-<span id="cb15-16"><a href="#cb15-16"></a><span class="co">#&gt; 2 roc_auc  binary     0.581     1      NA Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb15-15"><a href="#cb15-15"></a><span class="co">#&gt; 1 accuracy binary     0.555     1      NA Preprocessor1_Model1</span></span>
+<span id="cb15-16"><a href="#cb15-16"></a><span class="co">#&gt; 2 roc_auc  binary     0.557     1      NA Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="your-turn-2" class="slide level2" data-transition="slide-in">
@@ -845,13 +851,13 @@
 <span id="cb16-4"><a href="#cb16-4"></a><span class="co">#&gt; # A tibble: 7 × 7</span></span>
 <span id="cb16-5"><a href="#cb16-5"></a><span class="co">#&gt;   id         .pred_yes .pred_no  .row .pred_class on_goal .config             </span></span>
 <span id="cb16-6"><a href="#cb16-6"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;dbl&gt;    &lt;dbl&gt; &lt;int&gt; &lt;fct&gt;       &lt;fct&gt;   &lt;chr&gt;               </span></span>
-<span id="cb16-7"><a href="#cb16-7"></a><span class="co">#&gt; 1 validation     0.256 7.44e- 1    10 no          no      Preprocessor1_Model1</span></span>
-<span id="cb16-8"><a href="#cb16-8"></a><span class="co">#&gt; 2 validation     0.283 7.17e- 1    17 no          yes     Preprocessor1_Model1</span></span>
-<span id="cb16-9"><a href="#cb16-9"></a><span class="co">#&gt; 3 validation     0.196 8.04e- 1    23 no          no      Preprocessor1_Model1</span></span>
-<span id="cb16-10"><a href="#cb16-10"></a><span class="co">#&gt; 4 validation     1.00  1.37e-12    40 yes         yes     Preprocessor1_Model1</span></span>
-<span id="cb16-11"><a href="#cb16-11"></a><span class="co">#&gt; 5 validation     0.307 6.93e- 1    41 no          yes     Preprocessor1_Model1</span></span>
-<span id="cb16-12"><a href="#cb16-12"></a><span class="co">#&gt; 6 validation     1.00  9.56e-13    46 yes         no      Preprocessor1_Model1</span></span>
-<span id="cb16-13"><a href="#cb16-13"></a><span class="co">#&gt; 7 validation     0.476 5.24e- 1    55 no          no      Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb16-7"><a href="#cb16-7"></a><span class="co">#&gt; 1 validation     0.194 8.06e- 1    10 no          no      Preprocessor1_Model1</span></span>
+<span id="cb16-8"><a href="#cb16-8"></a><span class="co">#&gt; 2 validation     0.259 7.41e- 1    17 no          yes     Preprocessor1_Model1</span></span>
+<span id="cb16-9"><a href="#cb16-9"></a><span class="co">#&gt; 3 validation     0.185 8.15e- 1    23 no          no      Preprocessor1_Model1</span></span>
+<span id="cb16-10"><a href="#cb16-10"></a><span class="co">#&gt; 4 validation     1.00  4.63e-12    40 yes         yes     Preprocessor1_Model1</span></span>
+<span id="cb16-11"><a href="#cb16-11"></a><span class="co">#&gt; 5 validation     0.317 6.83e- 1    41 no          yes     Preprocessor1_Model1</span></span>
+<span id="cb16-12"><a href="#cb16-12"></a><span class="co">#&gt; 6 validation     1.00  4.50e-12    46 yes         no      Preprocessor1_Model1</span></span>
+<span id="cb16-13"><a href="#cb16-13"></a><span class="co">#&gt; 7 validation     0.348 6.52e- 1    55 no          no      Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section>
@@ -920,14 +926,14 @@
 <span id="cb17-5"><a href="#cb17-5"></a><span class="co">#&gt;   .threshold specificity sensitivity</span></span>
 <span id="cb17-6"><a href="#cb17-6"></a><span class="co">#&gt;        &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;</span></span>
 <span id="cb17-7"><a href="#cb17-7"></a><span class="co">#&gt; 1   -Inf          0            1    </span></span>
-<span id="cb17-8"><a href="#cb17-8"></a><span class="co">#&gt; 2      0.134      0.0291       0.975</span></span>
-<span id="cb17-9"><a href="#cb17-9"></a><span class="co">#&gt; 3      0.252      0.0630       0.953</span></span>
+<span id="cb17-8"><a href="#cb17-8"></a><span class="co">#&gt; 2      0.139      0.0315       0.977</span></span>
+<span id="cb17-9"><a href="#cb17-9"></a><span class="co">#&gt; 3      0.267      0.0642       0.954</span></span>
 <span id="cb17-10"><a href="#cb17-10"></a></span>
 <span id="cb17-11"><a href="#cb17-11"></a>glm_val_pred <span class="sc">%&gt;%</span> <span class="fu">roc_auc</span>(<span class="at">truth =</span> on_goal, .pred_yes)</span>
 <span id="cb17-12"><a href="#cb17-12"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
 <span id="cb17-13"><a href="#cb17-13"></a><span class="co">#&gt;   .metric .estimator .estimate</span></span>
 <span id="cb17-14"><a href="#cb17-14"></a><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb17-15"><a href="#cb17-15"></a><span class="co">#&gt; 1 roc_auc binary         0.581</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb17-15"><a href="#cb17-15"></a><span class="co">#&gt; 1 roc_auc binary         0.557</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="roc-curve-plot" class="slide level2">
@@ -969,7 +975,7 @@
 </section>
 <section id="what-do-we-do-with-the-player-data" class="slide level2">
 <h2>What do we do with the player data? 🏒</h2>
-<p>There are 619 unique player values in our training set. How can we include this information in our model?</p>
+<p>There are 597 unique player values in our training set. How can we include this information in our model?</p>
 <div class="fragment">
 <p>We could:</p>
 <ul>
@@ -1482,7 +1488,10 @@
         }
       }
       const toggleBodyColorPrimary = () => {
-        toggleBodyColorMode(window.document.querySelector("link#quarto-bootstrap"));
+        const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+        if (bsSheetEl) {
+          toggleBodyColorMode(bsSheetEl);
+        }
       }
       toggleBodyColorPrimary();  
       const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
