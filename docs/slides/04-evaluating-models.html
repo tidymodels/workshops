@@ -1364,9 +1364,9 @@
 </ol>
 <!-- point out analogy with `ggplot()` constructor -->
 <div class="cell">
-<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1"></a>st <span class="ot">&lt;-</span> <span class="fu">stacks</span>()</span>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1"></a>frog_st <span class="ot">&lt;-</span> <span class="fu">stacks</span>()</span>
 <span id="cb43-2"><a href="#cb43-2"></a></span>
-<span id="cb43-3"><a href="#cb43-3"></a>st</span>
+<span id="cb43-3"><a href="#cb43-3"></a>frog_st</span>
 <span id="cb43-4"><a href="#cb43-4"></a><span class="co">#&gt; # A data stack with 0 model definitions and 0 candidate members.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
@@ -1376,16 +1376,18 @@
 <li>Iteratively add candidate ensemble members to the data stack</li>
 </ol>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1"></a>st <span class="ot">&lt;-</span> st <span class="sc">%&gt;%</span></span>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1"></a>frog_st <span class="ot">&lt;-</span> frog_st <span class="sc">%&gt;%</span></span>
 <span id="cb44-2"><a href="#cb44-2"></a>  <span class="fu">add_candidates</span>(lr_res) <span class="sc">%&gt;%</span></span>
 <span id="cb44-3"><a href="#cb44-3"></a>  <span class="fu">add_candidates</span>(rf_res)</span>
 <span id="cb44-4"><a href="#cb44-4"></a></span>
-<span id="cb44-5"><a href="#cb44-5"></a>st</span>
+<span id="cb44-5"><a href="#cb44-5"></a>frog_st</span>
 <span id="cb44-6"><a href="#cb44-6"></a><span class="co">#&gt; # A data stack with 2 model definitions and 2 candidate members:</span></span>
 <span id="cb44-7"><a href="#cb44-7"></a><span class="co">#&gt; #   lr_res: 1 model configuration</span></span>
 <span id="cb44-8"><a href="#cb44-8"></a><span class="co">#&gt; #   rf_res: 1 model configuration</span></span>
 <span id="cb44-9"><a href="#cb44-9"></a><span class="co">#&gt; # Outcome: latency (numeric)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Tomorrow we’ll discuss <em>tuning parameters</em> where there are different configurations of models (e.g.&nbsp;10 different variations of the random forest model).</p>
+<p>These configurations can greatly improve the performance of the stacking ensemble.</p>
 </section>
 <section id="building-a-model-stack-8" class="slide level2">
 <h2>Building a model stack <img data-src="hexes/stacks.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
@@ -1393,10 +1395,10 @@
 <li>Evaluate how to combine their predictions</li>
 </ol>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1"></a>st <span class="ot">&lt;-</span> st <span class="sc">%&gt;%</span></span>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1"></a>frog_st_res <span class="ot">&lt;-</span> frog_st <span class="sc">%&gt;%</span></span>
 <span id="cb45-2"><a href="#cb45-2"></a>  <span class="fu">blend_predictions</span>()</span>
 <span id="cb45-3"><a href="#cb45-3"></a></span>
-<span id="cb45-4"><a href="#cb45-4"></a>st</span>
+<span id="cb45-4"><a href="#cb45-4"></a>frog_st_res</span>
 <span id="cb45-5"><a href="#cb45-5"></a><span class="co">#&gt; # A tibble: 2 × 3</span></span>
 <span id="cb45-6"><a href="#cb45-6"></a><span class="co">#&gt;   member     type        weight</span></span>
 <span id="cb45-7"><a href="#cb45-7"></a><span class="co">#&gt;   &lt;chr&gt;      &lt;chr&gt;        &lt;dbl&gt;</span></span>
@@ -1410,10 +1412,10 @@
 <li>Fit candidate ensemble members with non-zero stacking coefficients</li>
 </ol>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1"></a>st <span class="ot">&lt;-</span> st <span class="sc">%&gt;%</span></span>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1"></a>frog_st_res <span class="ot">&lt;-</span> frog_st_res <span class="sc">%&gt;%</span></span>
 <span id="cb46-2"><a href="#cb46-2"></a>  <span class="fu">fit_members</span>()</span>
 <span id="cb46-3"><a href="#cb46-3"></a></span>
-<span id="cb46-4"><a href="#cb46-4"></a>st</span>
+<span id="cb46-4"><a href="#cb46-4"></a>frog_st_res</span>
 <span id="cb46-5"><a href="#cb46-5"></a><span class="co">#&gt; # A tibble: 2 × 3</span></span>
 <span id="cb46-6"><a href="#cb46-6"></a><span class="co">#&gt;   member     type        weight</span></span>
 <span id="cb46-7"><a href="#cb46-7"></a><span class="co">#&gt;   &lt;chr&gt;      &lt;chr&gt;        &lt;dbl&gt;</span></span>
@@ -1430,7 +1432,7 @@
 <div class="column">
 <div class="sourceCode cell-code" id="cb47"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1"></a>frog_test <span class="sc">%&gt;%</span></span>
 <span id="cb47-2"><a href="#cb47-2"></a>  <span class="fu">select</span>(latency) <span class="sc">%&gt;%</span></span>
-<span id="cb47-3"><a href="#cb47-3"></a>  <span class="fu">bind_cols</span>(<span class="fu">predict</span>(st, frog_test)) <span class="sc">%&gt;%</span></span>
+<span id="cb47-3"><a href="#cb47-3"></a>  <span class="fu">bind_cols</span>(<span class="fu">predict</span>(frog_st_res, frog_test)) <span class="sc">%&gt;%</span></span>
 <span id="cb47-4"><a href="#cb47-4"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(latency, .pred)) <span class="sc">+</span> </span>
 <span id="cb47-5"><a href="#cb47-5"></a>  <span class="fu">geom_abline</span>(<span class="at">lty =</span> <span class="dv">2</span>, </span>
 <span id="cb47-6"><a href="#cb47-6"></a>              <span class="at">col =</span> <span class="st">"deeppink4"</span>, </span>

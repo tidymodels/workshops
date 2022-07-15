@@ -698,9 +698,9 @@ rf_res
 <!-- point out analogy with `ggplot()` constructor -->
 
 ```{r}
-st <- stacks()
+frog_st <- stacks()
 
-st
+frog_st
 ```
 
 ## Building a model stack `r hexes("stacks")`
@@ -708,12 +708,16 @@ st
 3) Iteratively add candidate ensemble members to the data stack
 
 ```{r}
-st <- st %>%
+frog_st <- frog_st %>%
   add_candidates(lr_res) %>%
   add_candidates(rf_res)
 
-st
+frog_st
 ```
+
+Tomorrow we'll discuss _tuning parameters_ where there are different configurations of models (e.g. 10 different variations of the random forest model). 
+
+These configurations can greatly improve the performance of the stacking ensemble. 
 
 
 ## Building a model stack `r hexes("stacks")`
@@ -721,10 +725,10 @@ st
 4) Evaluate how to combine their predictions
 
 ```{r}
-st <- st %>%
+frog_st_res <- frog_st %>%
   blend_predictions()
 
-st
+frog_st_res
 ```
 
 ## Building a model stack `r hexes("stacks")`
@@ -732,10 +736,10 @@ st
 5) Fit candidate ensemble members with non-zero stacking coefficients
 
 ```{r}
-st <- st %>%
+frog_st_res <- frog_st_res %>%
   fit_members()
 
-st
+frog_st_res
 ```
 
 ## Building a model stack `r hexes("stacks")`
@@ -751,7 +755,7 @@ st
 #| fig-align: 'center'
 frog_test %>%
   select(latency) %>%
-  bind_cols(predict(st, frog_test)) %>%
+  bind_cols(predict(frog_st_res, frog_test)) %>%
   ggplot(aes(latency, .pred)) + 
   geom_abline(lty = 2, 
               col = "deeppink4", 

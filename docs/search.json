@@ -1089,35 +1089,35 @@
     "href": "slides/04-evaluating-models.html#building-a-model-stack-6",
     "title": "4 - Evaluating models",
     "section": "Building a model stack ",
-    "text": "Building a model stack \n\nInitialize a data stack object\n\n\n\nst <- stacks()\n\nst\n#> # A data stack with 0 model definitions and 0 candidate members."
+    "text": "Building a model stack \n\nInitialize a data stack object\n\n\n\nfrog_st <- stacks()\n\nfrog_st\n#> # A data stack with 0 model definitions and 0 candidate members."
   },
   {
     "objectID": "slides/04-evaluating-models.html#building-a-model-stack-7",
     "href": "slides/04-evaluating-models.html#building-a-model-stack-7",
     "title": "4 - Evaluating models",
     "section": "Building a model stack ",
-    "text": "Building a model stack \n\nIteratively add candidate ensemble members to the data stack\n\n\nst <- st %>%\n  add_candidates(lr_res) %>%\n  add_candidates(rf_res)\n\nst\n#> # A data stack with 2 model definitions and 2 candidate members:\n#> #   lr_res: 1 model configuration\n#> #   rf_res: 1 model configuration\n#> # Outcome: latency (numeric)"
+    "text": "Building a model stack \n\nIteratively add candidate ensemble members to the data stack\n\n\nfrog_st <- frog_st %>%\n  add_candidates(lr_res) %>%\n  add_candidates(rf_res)\n\nfrog_st\n#> # A data stack with 2 model definitions and 2 candidate members:\n#> #   lr_res: 1 model configuration\n#> #   rf_res: 1 model configuration\n#> # Outcome: latency (numeric)\n\nTomorrow we’ll discuss tuning parameters where there are different configurations of models (e.g. 10 different variations of the random forest model).\nThese configurations can greatly improve the performance of the stacking ensemble."
   },
   {
     "objectID": "slides/04-evaluating-models.html#building-a-model-stack-8",
     "href": "slides/04-evaluating-models.html#building-a-model-stack-8",
     "title": "4 - Evaluating models",
     "section": "Building a model stack ",
-    "text": "Building a model stack \n\nEvaluate how to combine their predictions\n\n\nst <- st %>%\n  blend_predictions()\n\nst\n#> # A tibble: 2 × 3\n#>   member     type        weight\n#>   <chr>      <chr>        <dbl>\n#> 1 rf_res_1_1 rand_forest  0.635\n#> 2 lr_res_1_1 linear_reg   0.344"
+    "text": "Building a model stack \n\nEvaluate how to combine their predictions\n\n\nfrog_st_res <- frog_st %>%\n  blend_predictions()\n\nfrog_st_res\n#> # A tibble: 2 × 3\n#>   member     type        weight\n#>   <chr>      <chr>        <dbl>\n#> 1 rf_res_1_1 rand_forest  0.635\n#> 2 lr_res_1_1 linear_reg   0.344"
   },
   {
     "objectID": "slides/04-evaluating-models.html#building-a-model-stack-9",
     "href": "slides/04-evaluating-models.html#building-a-model-stack-9",
     "title": "4 - Evaluating models",
     "section": "Building a model stack ",
-    "text": "Building a model stack \n\nFit candidate ensemble members with non-zero stacking coefficients\n\n\nst <- st %>%\n  fit_members()\n\nst\n#> # A tibble: 2 × 3\n#>   member     type        weight\n#>   <chr>      <chr>        <dbl>\n#> 1 rf_res_1_1 rand_forest  0.635\n#> 2 lr_res_1_1 linear_reg   0.344"
+    "text": "Building a model stack \n\nFit candidate ensemble members with non-zero stacking coefficients\n\n\nfrog_st_res <- frog_st_res %>%\n  fit_members()\n\nfrog_st_res\n#> # A tibble: 2 × 3\n#>   member     type        weight\n#>   <chr>      <chr>        <dbl>\n#> 1 rf_res_1_1 rand_forest  0.635\n#> 2 lr_res_1_1 linear_reg   0.344"
   },
   {
     "objectID": "slides/04-evaluating-models.html#building-a-model-stack-10",
     "href": "slides/04-evaluating-models.html#building-a-model-stack-10",
     "title": "4 - Evaluating models",
     "section": "Building a model stack ",
-    "text": "Building a model stack \n\nPredict on new data!\n\n\n\nfrog_test %>%\n  select(latency) %>%\n  bind_cols(predict(st, frog_test)) %>%\n  ggplot(aes(latency, .pred)) + \n  geom_abline(lty = 2, \n              col = \"deeppink4\", \n              size = 1.5) +\n  geom_point(alpha = 0.5) +\n  coord_obs_pred()\n\n\n\n\n\n\n\n\n\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Building a model stack \n\nPredict on new data!\n\n\n\nfrog_test %>%\n  select(latency) %>%\n  bind_cols(predict(frog_st_res, frog_test)) %>%\n  ggplot(aes(latency, .pred)) + \n  geom_abline(lty = 2, \n              col = \"deeppink4\", \n              size = 1.5) +\n  geom_point(alpha = 0.5) +\n  coord_obs_pred()\n\n\n\n\n\n\n\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
     "objectID": "slides/05-feature-engineering.html#what-is-feature-engineering",
@@ -1796,7 +1796,7 @@
     "href": "slides/annotations.html#update-parameter-ranges",
     "title": "Annotations",
     "section": "Update parameter ranges",
-    "text": "Update parameter ranges\nIn about 90% of the cases, the dials function that you use to update the parameter range has the same name as the argument. For example, if you were to update the mtry parameter in a random forests model, the code would look like\n\nparameter_object %>% \n  update(mtry = mtry(c(1, 100)))\n\nIn our case, the argument name is deg_free but we update it with spline_degree.\ndeg_free represents the general concept of degrees of freedom and could be associated with many different things. For example, if we ever had an argument that was the number of degrees of freedom for a \\(t\\) distribution, we would call that argument deg_free.\nFor splines, we probably want a wider range for the degrees of freedom. We made a specialized function called spline_degree() to be used in these cases.\nHow can you tell when this happens? There is a helper function called tunable() and that gives information on how we make the default ranges for parameters. There is a column in these objects names call_info:\n\nlibrary(tidymodels)\n\n#> ── Attaching packages ──────────────────────────── tidymodels 1.0.0 ──\n\n\n#> ✔ broom        1.0.0     ✔ rsample      1.0.0\n#> ✔ dials        1.0.0     ✔ tibble       3.1.7\n#> ✔ dplyr        1.0.9     ✔ tidyr        1.2.0\n#> ✔ infer        1.0.2     ✔ tune         1.0.0\n#> ✔ modeldata    1.0.0     ✔ workflows    1.0.0\n#> ✔ parsnip      1.0.0     ✔ workflowsets 1.0.0\n#> ✔ purrr        0.3.4     ✔ yardstick    1.0.0\n#> ✔ recipes      1.0.1\n\n\n#> ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#> ✖ purrr::discard() masks scales::discard()\n#> ✖ dplyr::filter()  masks stats::filter()\n#> ✖ dplyr::lag()     masks stats::lag()\n#> ✖ recipes::step()  masks stats::step()\n#> • Use tidymodels_prefer() to resolve common conflicts.\n\nns_tunable <- \n  recipe(mpg ~ ., data = mtcars) %>% \n  step_ns(dis, deg_free = tune()) %>% \n  tunable()\n\nns_tunable\n\n#> # A tibble: 1 × 5\n#>   name     call_info        source component component_id\n#>   <chr>    <list>           <chr>  <chr>     <chr>       \n#> 1 deg_free <named list [3]> recipe step_ns   ns_P1Tjg\n\nns_tunable$call_info\n\n#> [[1]]\n#> [[1]]$pkg\n#> [1] \"dials\"\n#> \n#> [[1]]$fun\n#> [1] \"spline_degree\"\n#> \n#> [[1]]$range\n#> [1]  1 15"
+    "text": "Update parameter ranges\nIn about 90% of the cases, the dials function that you use to update the parameter range has the same name as the argument. For example, if you were to update the mtry parameter in a random forests model, the code would look like\n\nparameter_object %>% \n  update(mtry = mtry(c(1, 100)))\n\nIn our case, the argument name is deg_free but we update it with spline_degree.\ndeg_free represents the general concept of degrees of freedom and could be associated with many different things. For example, if we ever had an argument that was the number of degrees of freedom for a \\(t\\) distribution, we would call that argument deg_free.\nFor splines, we probably want a wider range for the degrees of freedom. We made a specialized function called spline_degree() to be used in these cases.\nHow can you tell when this happens? There is a helper function called tunable() and that gives information on how we make the default ranges for parameters. There is a column in these objects names call_info:\n\nlibrary(tidymodels)\n\n#> ── Attaching packages ──────────────────────────── tidymodels 1.0.0 ──\n\n\n#> ✔ broom        1.0.0     ✔ rsample      1.0.0\n#> ✔ dials        1.0.0     ✔ tibble       3.1.7\n#> ✔ dplyr        1.0.9     ✔ tidyr        1.2.0\n#> ✔ infer        1.0.2     ✔ tune         1.0.0\n#> ✔ modeldata    1.0.0     ✔ workflows    1.0.0\n#> ✔ parsnip      1.0.0     ✔ workflowsets 1.0.0\n#> ✔ purrr        0.3.4     ✔ yardstick    1.0.0\n#> ✔ recipes      1.0.1\n\n\n#> ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#> ✖ purrr::discard() masks scales::discard()\n#> ✖ dplyr::filter()  masks stats::filter()\n#> ✖ dplyr::lag()     masks stats::lag()\n#> ✖ recipes::step()  masks stats::step()\n#> • Dig deeper into tidy modeling with R at https://www.tmwr.org\n\nns_tunable <- \n  recipe(mpg ~ ., data = mtcars) %>% \n  step_ns(dis, deg_free = tune()) %>% \n  tunable()\n\nns_tunable\n\n#> # A tibble: 1 × 5\n#>   name     call_info        source component component_id\n#>   <chr>    <list>           <chr>  <chr>     <chr>       \n#> 1 deg_free <named list [3]> recipe step_ns   ns_P1Tjg\n\nns_tunable$call_info\n\n#> [[1]]\n#> [[1]]$pkg\n#> [1] \"dials\"\n#> \n#> [[1]]$fun\n#> [1] \"spline_degree\"\n#> \n#> [[1]]$range\n#> [1]  1 15"
   },
   {
     "objectID": "slides/annotations.html#spline-grid-search",
