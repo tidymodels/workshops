@@ -40,6 +40,8 @@ knitr::include_graphics("images/whole-game-final-resamples.svg")
 
 In this case there is just "testing" and "training". Once the final model is determined, the entire training set is used for the last fit. 
 
+This is the process that will be used for the tree frog data. 
+
 # 02 - Data Budget
 
 ## Data splitting and spending
@@ -114,6 +116,17 @@ For more advanced use cases, you can extract and save them. See:
 
  * <https://www.tmwr.org/resampling.html#extract>
  * <https://www.tidymodels.org/learn/models/coefficients/> (an example)
+
+
+# 04 - Evaluating Models
+
+
+## The final fit
+
+Since our data spending scheme created the resamples from the training set, `last_fit()` will use all of the training data to fit the final workflow. 
+
+As shown in the Whole Game slides, there is a slightly different scheme used when we have a validation set (instead of multiple resamples like 10-fold CV). 
+
 
 # 05 - Feature Engineering
 
@@ -211,5 +224,34 @@ The way to avoid this problem is to use `step_lincomb(all_numeric_predictors())`
 
 Linear regression detects some redundancies in the predictor set. We can ignore the warnings since `lm()` can deal with it or use [`step_lincomb()`](https://recipes.tidymodels.org/reference/step_lincomb.html) to avoid the warnings. 
 
+## The final fit to the NHL data
+
+Recall that `last_fit()` uses the objects produced by `initial_fit()` to determine what data are used for the final model fit and which are used as the test set. 
+
+For the validation set, `last_fit()` will use the non-testing data to create the final model fit. This includes the training and validation set. 
+
+There is no agreement in the community on whether this is the best approach or if we should just use the training set. There are good arguments either way. 
+
+If you only want to use the training set for the final model, you can do this via: 
+
+```{r}
+#| eval: false
+
+# Use `fit()` to train the model on just the training set
+final_glm_spline_wflow <- 
+  glm_spline_wflow %>% 
+  fit(data = analysis(nhl_split))
+
+# Create test set predictions
+test_set_pred <- augment(final_glm_spline_wflow, nhl_test)
+
+# Setup and compute the test set metrics
+cls_metrics <- metric_set(roc_auc, accuracy)
+
+test_res <- 
+  test_set_pred %>% 
+  cls_metrics(on_goal, estimate = .pred_class, .pred_yes)
+test_res
+```
 
 
