@@ -151,7 +151,7 @@
     "href": "slides/01-introduction.html#what-is-tidymodels",
     "title": "1 - Introduction",
     "section": "What is tidymodels? ",
-    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n#> ── Attaching packages ──────────────────────────── tidymodels 1.0.0 ──\n#> ✔ broom        1.0.0     ✔ rsample      1.0.0\n#> ✔ dials        1.0.0     ✔ tibble       3.1.7\n#> ✔ dplyr        1.0.9     ✔ tidyr        1.2.0\n#> ✔ infer        1.0.2     ✔ tune         1.0.0\n#> ✔ modeldata    1.0.0     ✔ workflows    1.0.0\n#> ✔ parsnip      1.0.0     ✔ workflowsets 1.0.0\n#> ✔ purrr        0.3.4     ✔ yardstick    1.0.0\n#> ✔ recipes      1.0.1\n#> ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#> ✖ purrr::discard() masks scales::discard()\n#> ✖ dplyr::filter()  masks stats::filter()\n#> ✖ dplyr::lag()     masks stats::lag()\n#> ✖ recipes::step()  masks stats::step()\n#> • Use suppressPackageStartupMessages() to eliminate package startup messages"
+    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n#> ── Attaching packages ──────────────────────────── tidymodels 1.0.0 ──\n#> ✔ broom        1.0.0     ✔ rsample      1.0.0\n#> ✔ dials        1.0.0     ✔ tibble       3.1.7\n#> ✔ dplyr        1.0.9     ✔ tidyr        1.2.0\n#> ✔ infer        1.0.2     ✔ tune         1.0.0\n#> ✔ modeldata    1.0.0     ✔ workflows    1.0.0\n#> ✔ parsnip      1.0.0     ✔ workflowsets 1.0.0\n#> ✔ purrr        0.3.4     ✔ yardstick    1.0.0\n#> ✔ recipes      1.0.1\n#> ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#> ✖ purrr::discard() masks scales::discard()\n#> ✖ dplyr::filter()  masks stats::filter()\n#> ✖ dplyr::lag()     masks stats::lag()\n#> ✖ recipes::step()  masks stats::step()\n#> • Dig deeper into tidy modeling with R at https://www.tmwr.org"
   },
   {
     "objectID": "slides/01-introduction.html#the-whole-game",
@@ -1624,18 +1624,18 @@
     "text": "Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵\nBoosting methods fit a sequence of tree-based models.\n\n\nEach tree is dependent on the one before and tries to compensate for any poor results in the previous trees.\nThis is like gradient-based steepest ascent methods from calculus."
   },
   {
-    "objectID": "slides/06-tuning-hyperparameters.html#boosted-trees-3",
-    "href": "slides/06-tuning-hyperparameters.html#boosted-trees-3",
+    "objectID": "slides/06-tuning-hyperparameters.html#boosted-tree-tuning-parameters",
+    "href": "slides/06-tuning-hyperparameters.html#boosted-tree-tuning-parameters",
     "title": "6 - Tuning Hyperparameters",
-    "section": "Boosted trees    ",
-    "text": "Boosted trees    \n\nxgb_spec <-\n  boost_tree(\n    trees = 500, min_n = tune(), stop_iter = tune(), tree_depth = tune(),\n    learn_rate = tune(), loss_reduction = tune()\n  ) %>%\n  set_mode(\"classification\") %>% \n  set_engine(\"xgboost\", validation = 1/10) # <- for better early stopping\n\nxgb_rec <- \n  recipe(on_goal ~ ., data = nhl_train) %>% \n  step_lencode_mixed(player, outcome = vars(on_goal)) %>% \n  step_dummy(all_nominal_predictors()) %>%\n  step_zv(all_predictors())\n\nxgb_wflow <- \n  workflow() %>% \n  add_model(xgb_spec) %>% \n  add_recipe(xgb_rec)"
+    "section": "Boosted tree tuning parameters",
+    "text": "Boosted tree tuning parameters\nMost modern boosting methods have a lot of tuning parameters!\n\n\nFor tree growth and pruning (min_n, max_depth, etc)\nFor boosting (trees, stop_iter, learn_rate)\n\n\n\nWe’ll use early stopping to stop boosting when a few iterations produce consecutively worse results."
   },
   {
-    "objectID": "slides/06-tuning-hyperparameters.html#boosted-trees-4",
-    "href": "slides/06-tuning-hyperparameters.html#boosted-trees-4",
+    "objectID": "slides/06-tuning-hyperparameters.html#boosted-tree-code",
+    "href": "slides/06-tuning-hyperparameters.html#boosted-tree-code",
     "title": "6 - Tuning Hyperparameters",
-    "section": "Boosted trees    ",
-    "text": "Boosted trees    \n\nxgb_spec <-\n  boost_tree(\n    trees = 500, min_n = tune(), stop_iter = tune(), tree_depth = tune(),\n    learn_rate = tune(), loss_reduction = tune()\n  ) %>%\n  set_mode(\"classification\") %>% \n  set_engine(\"xgboost\", validation = 1/10) # <- for better early stopping\n\nxgb_rec <- \n  recipe(on_goal ~ ., data = nhl_train) %>% \n  step_lencode_mixed(player, outcome = vars(on_goal)) %>% \n  step_dummy(all_nominal_predictors()) %>%\n  step_zv(all_predictors())\n\nxgb_wflow <- \n  workflow() %>% \n  add_model(xgb_spec) %>% \n  add_recipe(xgb_rec)"
+    "section": "Boosted tree code",
+    "text": "Boosted tree code\n\nxgb_spec <-\n  boost_tree(\n    trees = 500, min_n = tune(), stop_iter = tune(), tree_depth = tune(),\n    learn_rate = tune(), loss_reduction = tune()\n  ) %>%\n  set_mode(\"classification\") %>% \n  set_engine(\"xgboost\", validation = 1/10) # <- for better early stopping\n\nxgb_rec <- \n  recipe(on_goal ~ ., data = nhl_train) %>% \n  step_lencode_mixed(player, outcome = vars(on_goal)) %>% \n  step_dummy(all_nominal_predictors()) %>%\n  step_zv(all_predictors())\n\nxgb_wflow <- \n  workflow() %>% \n  add_model(xgb_spec) %>% \n  add_recipe(xgb_rec)"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#your-turn-3",
@@ -1715,11 +1715,11 @@
     "text": "Updating the workflow  \n\nbest_auc <- select_best(glm_spline_res, metric = \"roc_auc\")\nbest_auc\n#> # A tibble: 1 × 3\n#>   angle distance .config              \n#>   <int>    <int> <chr>                \n#> 1     5        8 Preprocessor12_Model1\n\nglm_spline_wflow <-\n  glm_spline_wflow %>% \n  finalize_workflow(best_auc)\n\nglm_spline_wflow\n#> ══ Workflow ══════════════════════════════════════════════════════════\n#> Preprocessor: Recipe\n#> Model: logistic_reg()\n#> \n#> ── Preprocessor ──────────────────────────────────────────────────────\n#> 8 Recipe Steps\n#> \n#> • step_lencode_mixed()\n#> • step_dummy()\n#> • step_mutate()\n#> • step_rm()\n#> • step_zv()\n#> • step_ns()\n#> • step_ns()\n#> • step_normalize()\n#> \n#> ── Model ─────────────────────────────────────────────────────────────\n#> Logistic Regression Model Specification (classification)\n#> \n#> Computational engine: glm"
   },
   {
-    "objectID": "slides/06-tuning-hyperparameters.html#the-final-fit",
-    "href": "slides/06-tuning-hyperparameters.html#the-final-fit",
+    "objectID": "slides/06-tuning-hyperparameters.html#the-final-fit-to-the-nhl-data",
+    "href": "slides/06-tuning-hyperparameters.html#the-final-fit-to-the-nhl-data",
     "title": "6 - Tuning Hyperparameters",
-    "section": "The final fit  ",
-    "text": "The final fit  \n\ntest_res <- \n  glm_spline_wflow %>% \n  last_fit(split = nhl_split)\ntest_res\n#> # Resampling results\n#> # Manual resampling \n#> # A tibble: 1 × 6\n#>   splits              id               .metrics         .notes           .predictions         .workflow \n#>   <list>              <chr>            <list>           <list>           <list>               <list>    \n#> 1 <split [9110/3037]> train/test split <tibble [2 × 4]> <tibble [1 × 3]> <tibble [3,037 × 6]> <workflow>\n#> \n#> There were issues with some computations:\n#> \n#>   - Warning(s) x1: prediction from a rank-deficient fit may be misleading\n#> \n#> Run `show_notes(.Last.tune.result)` for more information.\n\n\nRemember that last_fit() fits one time with the non-training set and evaluates one time with the testing set."
+    "section": "The final fit to the NHL data  ",
+    "text": "The final fit to the NHL data  \n\ntest_res <- \n  glm_spline_wflow %>% \n  last_fit(split = nhl_split)\ntest_res\n#> # Resampling results\n#> # Manual resampling \n#> # A tibble: 1 × 6\n#>   splits              id               .metrics         .notes           .predictions         .workflow \n#>   <list>              <chr>            <list>           <list>           <list>               <list>    \n#> 1 <split [9110/3037]> train/test split <tibble [2 × 4]> <tibble [1 × 3]> <tibble [3,037 × 6]> <workflow>\n#> \n#> There were issues with some computations:\n#> \n#>   - Warning(s) x1: prediction from a rank-deficient fit may be misleading\n#> \n#> Run `show_notes(.Last.tune.result)` for more information.\n\n\nRemember that last_fit() fits one time with the non-training set and evaluates one time with the testing set."
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#your-turn-6",
@@ -1785,6 +1785,13 @@
     "text": "Where are the fitted models?\nThe primary purpose of resampling is to estimate model performance. The models are almost never needed again.\nAlso, if the data set is large, the model object may require a lot of memory to save so, by default, we don’t keep them.\nFor more advanced use cases, you can extract and save them. See:\n\nhttps://www.tmwr.org/resampling.html#extract\nhttps://www.tidymodels.org/learn/models/coefficients/ (an example)"
   },
   {
+    "objectID": "slides/annotations.html#the-final-fit",
+    "href": "slides/annotations.html#the-final-fit",
+    "title": "Annotations",
+    "section": "The final fit",
+    "text": "The final fit\nSince our data spending scheme created the resamples from the training set, last_fit() will use all of the training data to fit the final workflow.\nAs shown in the Whole Game slides, there is a slightly different scheme used when we have a validation set (instead of multiple resamples like 10-fold CV)."
+  },
+  {
     "objectID": "slides/annotations.html#where-is-the-shot-coming-from",
     "href": "slides/annotations.html#where-is-the-shot-coming-from",
     "title": "Annotations",
@@ -1806,18 +1813,18 @@
     "text": "Spline grid search\nWhat’s going on with the\n\nprediction from a rank-deficient fit may be misleading\n\nwarnings?\nFor linear regression, a computation is used called matrix inversion. The matrix in question is called the “model matrix” and it contains the predictor set for the training data.\nMatrix inverse can fail if two or model columns:\n\nare identical, or\nadd up to some other column.\n\nThese situations are called linear dependencies.\nWhen this happens, lm() is pretty tolerant. It does not fail but does not compute regression coefficients for a minimal number of predictors involved in the dependency (and issues the warning above).\nFor these data, there are three dependencies between:\n\ndefense_team_PIT and offense_team_PIT\nstrength_short_handed, player_diff, and strength_power_play\nyear, month_Oct, month_Nov, and month_Dec\n\nThe first one is easy to explain. For each row, when one these two PIT column has a one, the other must have a zero. The linear regression intercept is represented in the model matrix as a column of all ones. The dependency is\n(Intercept) = defense_team_PIT + offense_team_PIT\nThe way to avoid this problem is to use step_lincomb(all_numeric_predictors()) in the recipe. This step removes the minimum number of columns to avoid the issue.\ntl;dr\nLinear regression detects some redundancies in the predictor set. We can ignore the warnings since lm() can deal with it or use step_lincomb() to avoid the warnings."
   },
   {
-    "objectID": "slides/06-tuning-hyperparameters.html#the-final-fit-to-the-nhl-data",
-    "href": "slides/06-tuning-hyperparameters.html#the-final-fit-to-the-nhl-data",
-    "title": "6 - Tuning Hyperparameters",
-    "section": "The final fit to the NHL data  ",
-    "text": "The final fit to the NHL data  \n\ntest_res <- \n  glm_spline_wflow %>% \n  last_fit(split = nhl_split)\ntest_res\n#> # Resampling results\n#> # Manual resampling \n#> # A tibble: 1 × 6\n#>   splits              id               .metrics         .notes           .predictions         .workflow \n#>   <list>              <chr>            <list>           <list>           <list>               <list>    \n#> 1 <split [9110/3037]> train/test split <tibble [2 × 4]> <tibble [1 × 3]> <tibble [3,037 × 6]> <workflow>\n#> \n#> There were issues with some computations:\n#> \n#>   - Warning(s) x1: prediction from a rank-deficient fit may be misleading\n#> \n#> Run `show_notes(.Last.tune.result)` for more information.\n\n\nRemember that last_fit() fits one time with the non-training set and evaluates one time with the testing set."
+    "objectID": "slides/annotations.html#boosted-tree-tuning-parameters",
+    "href": "slides/annotations.html#boosted-tree-tuning-parameters",
+    "title": "Annotations",
+    "section": "Boosted tree tuning parameters",
+    "text": "Boosted tree tuning parameters\nWhen the deciding on number of boosting iterations, there are two main strategies:\n\nDirectly tune it (trees = tune())\nSet it to one value and tune the number of early stopping iterations (trees = 500, stop_iter = tune()).\n\nEarly stopping is when we monitor the performance of the model. If the model gets worse for at least stop_iter iterations, training stops.\nHere’s an example where, after eleven iterations, performance starts to get worse.\n\n\n\n\n\nThis is likely do to over-fitting so we stop the model at eleven boosting iterations.\nEarly stopping usually has good results and takes far less time."
   },
   {
-    "objectID": "slides/annotations.html#the-final-fit",
-    "href": "slides/annotations.html#the-final-fit",
+    "objectID": "slides/annotations.html#boosted-tree-code",
+    "href": "slides/annotations.html#boosted-tree-code",
     "title": "Annotations",
-    "section": "The final fit",
-    "text": "The final fit\nSince our data spending scheme created the resamples from the training set, last_fit() will use all of the training data to fit the final workflow.\nAs shown in the Whole Game slides, there is a slightly different scheme used when we have a validation set (instead of multiple resamples like 10-fold CV)."
+    "section": "Boosted tree code",
+    "text": "Boosted tree code\nWe set an engine argument called validation here. That’s not an argument to any function in the xgboost package.\nparsnip has its own wrapper around (xgboost::xgb.train()) called xgb_train(). We use that here and it has a validation argument.\nHow would you know that? There are a few different ways:\n\nLook at the documentation in ?boost_tree and click on the xgboost entry in the engine list.\nCheck out the pkgdown reference website https://parsnip.tidymodels.org/reference/index.html\nRun the translate() function on the parsnip specification object.\n\nThe first two options are best since they tell you a lot more about the particularities of each model engine (there are a lot for xgboost)."
   },
   {
     "objectID": "slides/annotations.html#the-final-fit-to-the-nhl-data",
@@ -1825,26 +1832,5 @@
     "title": "Annotations",
     "section": "The final fit to the NHL data",
     "text": "The final fit to the NHL data\nRecall that last_fit() uses the objects produced by initial_fit() to determine what data are used for the final model fit and which are used as the test set.\nFor the validation set, last_fit() will use the non-testing data to create the final model fit. This includes the training and validation set.\nThere is no agreement in the community on whether this is the best approach or if we should just use the training set. There are good arguments either way.\nIf you only want to use the training set for the final model, you can do this via:\n\n# Use `fit()` to train the model on just the training set\nfinal_glm_spline_wflow <- \n  glm_spline_wflow %>% \n  fit(data = analysis(nhl_split))\n\n# Create test set predictions\ntest_set_pred <- augment(final_glm_spline_wflow, nhl_test)\n\n# Setup and compute the test set metrics\ncls_metrics <- metric_set(roc_auc, accuracy)\n\ntest_res <- \n  test_set_pred %>% \n  cls_metrics(on_goal, estimate = .pred_class, .pred_yes)\ntest_res"
-  },
-  {
-    "objectID": "slides/06-tuning-hyperparameters.html#boosted-trees-tuning-parameters",
-    "href": "slides/06-tuning-hyperparameters.html#boosted-trees-tuning-parameters",
-    "title": "6 - Tuning Hyperparameters",
-    "section": "Boosted trees tuning parameters",
-    "text": "Boosted trees tuning parameters\nMost modern boosting methods have a lot of tuning parameters!\n\n\nFor tree growth and pruning (min_n, max_depth, etc)\nFor boosting (trees, stop_iter, learn_rate)\n\n\n\nWe’ll use early stopping to stop boosting when a few iterations produce consecutively worse results."
-  },
-  {
-    "objectID": "slides/06-tuning-hyperparameters.html#boosted-tree-tuning-parameters",
-    "href": "slides/06-tuning-hyperparameters.html#boosted-tree-tuning-parameters",
-    "title": "6 - Tuning Hyperparameters",
-    "section": "Boosted tree tuning parameters",
-    "text": "Boosted tree tuning parameters\nMost modern boosting methods have a lot of tuning parameters!\n\n\nFor tree growth and pruning (min_n, max_depth, etc)\nFor boosting (trees, stop_iter, learn_rate)\n\n\n\nWe’ll use early stopping to stop boosting when a few iterations produce consecutively worse results."
-  },
-  {
-    "objectID": "slides/annotations.html#boosted-tree-tuning-parameters",
-    "href": "slides/annotations.html#boosted-tree-tuning-parameters",
-    "title": "Annotations",
-    "section": "Boosted tree tuning parameters",
-    "text": "Boosted tree tuning parameters\nWhen the deciding on number of boosting iterations, there are two main strategies:\n\nDirectly tune it (trees = tune())\nSet it to one value and tune the number of early stopping iterations (trees = 500, stop_iter = tune()).\n\nEarly stopping is when we monitor the performance of the model. If the model gets worse for at least stop_iter iterations, training stops.\nHere’s an example where, after eleven iterations, performance starts to get worse.\n\n\n\n\n\nThis is likely do to over-fitting so we stop the model at eleven boosting iterations.\nEarly stopping usually has good results and takes far less time."
   }
 ]
