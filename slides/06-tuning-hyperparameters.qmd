@@ -261,7 +261,12 @@ grid <-
 grid
 ```
 
-## Update parameter ranges `r hexes(c("dials", "workflows"))`   {.annotation}
+:::notes
+Note that even though we requested 25x25=625 rows, we only got 15x15=225 back, since the `deg_free` parameters only have a range of `1->15`.
+:::
+
+## Update parameter ranges `r hexes(c("dials", "workflows"))` {.annotation}
+
 
 ```{r mod-grid-code}
 #| code-line-numbers: "5-6"
@@ -275,6 +280,10 @@ grid <-
 
 grid
 ```
+
+::: notes
+Even though `angle` is a `deg_free` parameter in `step_ns()`, we don't use the dials `deg_free()` object here. We have a special `spline_degree()` function that has better defaults for splines.
+:::
 
 ## The results `r hexes(c("dials", "workflows"))`
 
@@ -294,12 +303,13 @@ grid %>%
 
 ```{r tuning} 
 #| cache: true
+set.seed(9)
 ctrl <- control_grid(save_pred = TRUE, parallel_over = "everything")
 
-set.seed(9)
 glm_spline_res <-
   glm_spline_wflow %>%
   tune_grid(resamples = nhl_val, grid = grid, control = ctrl)
+
 glm_spline_res
 ```
 
@@ -314,7 +324,7 @@ glm_spline_res
 
 *Tune our `glm_wflow`.*
 
-*What happens if you change `grid` to use the default?*
+*What happens if you don't supply a `grid` argument to `tune_grid()`?*
 
 ```{r}
 #| echo: false
@@ -465,6 +475,12 @@ xgb_wflow <-
   add_recipe(xgb_rec)
 ```
 
+:::notes
+`validation` is an argument to `parsnip::xgb_train()`, not directly to xgboost. It generates a validation set that is used by xgboost when evaluating model performance. It is eventually assigned to `xgb.train(watchlist = list(validation = data))`.
+
+See `translate(xgb_spec)` to see where it is passed to `parsnip::xgb_train()`.
+:::
+
 ## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
@@ -490,6 +506,8 @@ We can use a *parallel backend* to do this:
 cores <- parallel::detectCores(logical = FALSE)
 cl <- parallel::makePSOCKcluster(cores)
 doParallel::registerDoParallel(cl)
+
+# Now call `tune_grid()`!
 
 # Shut it down with:
 foreach::registerDoSEQ()
@@ -519,7 +537,7 @@ resamples_times %>%
 
 ## Running in parallel
 
-Speed-ups are fairly linear up to the number of physical cores.
+Speed-ups are fairly linear up to the number of physical cores (10 here).
 
 ```{r}
 #| echo: false
@@ -540,6 +558,10 @@ ggplot(times, aes(x = num_cores, y = speed_up, color = parallel_over, shape = pa
   theme(legend.position = "top")
 ```
 
+:::notes
+Faceted on the expensiveness of preprocessing used.
+:::
+
 ## Tuning `r hexes(c("tune"))`
 
 This will take some time to run ⏳
@@ -547,9 +569,11 @@ This will take some time to run ⏳
 ```{r xgboost-tune}
 #| cache: true
 set.seed(9)
+
 xgb_res <-
   xgb_wflow %>%
   tune_grid(resamples = nhl_val, grid = 20, control = ctrl) # automatic grid now!
+
 xgb_res
 ```
 
@@ -665,6 +689,7 @@ glm_spline_wflow
 test_res <- 
   glm_spline_wflow %>% 
   last_fit(split = nhl_split)
+
 test_res
 ```
 
