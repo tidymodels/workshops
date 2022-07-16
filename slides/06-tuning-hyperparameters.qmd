@@ -48,11 +48,13 @@ set.seed(23)
 nhl_split <- initial_split(season_2015, prop = 3/4)
 nhl_split
 
-nhl_train <- training(nhl_split)
+nhl_train_and_val <- training(nhl_split)
 nhl_test  <- testing(nhl_split)
 
 set.seed(234)
-nhl_val <- validation_split(nhl_train, prop = 0.80)
+nhl_val <- validation_split(nhl_train_and_val, prop = 0.80)
+
+nhl_train <- analysis(nhl_val$splits[[1]])
 
 nhl_distance_rec <-
   recipe(on_goal ~ ., data = nhl_train) %>%
@@ -452,6 +454,31 @@ Most modern boosting methods have *a lot* of tuning parameters!
 
 We'll use *early stopping* to stop boosting when a few iterations produce consecutively worse results.
 
+## Comparing tree ensembles
+
+::: columns
+::: {.column width="50%"}
+Random forest
+
+* Independent trees
+* Bootstrapped data
+* No pruning
+* 1000's of trees
+:::
+
+::: {.column width="50%"}
+Boosting
+
+* Dependent trees
+* Different case weights
+* Tune tree parameters
+* Far fewer trees
+:::
+:::
+
+The general consensus for tree-based models is, in terms of performance: boosting > random forest > bagging > single trees.
+
+
 ## Boosted tree code {.annotation}
 
 ```{r xgboost-specs}
@@ -695,7 +722,7 @@ test_res
 
 . . .
 
-Remember that `last_fit()` **fits** one time with the non-training set and **evaluates** one time with the testing set.
+Remember that `last_fit()` fits one time with the combined training and validation set, then evaluates one time with the testing set.
 
 ## Your turn {transition="slide-in"}
 

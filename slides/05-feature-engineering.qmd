@@ -6,7 +6,6 @@ format:
     slide-number: true
     footer: <https://workshops.tidymodels.org>
     include-before-body: header.html
-    include-after-body: footer-annotations.html
     theme: [default, tidymodels.scss]
     width: 1280
     height: 720
@@ -140,18 +139,53 @@ tidymodels_prefer()
 glimpse(season_2015)
 ```
 
-## Splitting the NHL data `r hexes("rsample")` {.annotation}
+## Data splitting strategy
+
+```{r spending-diagram, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-split.svg")
+```
+
+
+## Why a validation set?
+
+Recall that resampling gives us performance measures without using the test set. 
+
+It's important to get good resampling statistics (e.g. $R^2$). 
+
+ - That usually means having enough data to estimate performance. 
+
+When you have "a lot" of data, a validation set can be an efficient way to do this. 
+
+
+## Splitting the NHL data `r hexes("rsample")`
 
 ```{r split}
 set.seed(23)
 nhl_split <- initial_split(season_2015, prop = 3/4)
 nhl_split
 
-nhl_train <- training(nhl_split)
+nhl_train_and_val <- training(nhl_split)
 nhl_test  <- testing(nhl_split)
 
-c(training = nrow(nhl_train), testing = nrow(nhl_test))
+c(`not testing` = nrow(nhl_train_and_val), testing = nrow(nhl_test))
 ```
+
+## Validation split `r hexes("rsample")`
+
+Since there are a lot of observations, we'll use a validation set: 
+
+```{r val}
+set.seed(234)
+nhl_val <- validation_split(nhl_train_and_val, prop = 0.80)
+nhl_val
+```
+
+. . .
+
+Remember that a validation split is a type of resample. 
+
 
 ## Your turn {transition="slide-in"}
 
@@ -164,6 +198,8 @@ c(training = nrow(nhl_train), testing = nrow(nhl_test))
 ::: columns
 ::: {.column width="50%"}
 ```{r rink-code}
+nhl_train <- analysis(nhl_val$splits[[1]])
+
 set.seed(100)
 nhl_train %>% 
   sample_n(200) %>%
@@ -179,19 +215,7 @@ countdown(minutes = 15, id = "nhl-explore")
 :::
 :::
 
-## Validation split `r hexes("rsample")`
 
-Since there are a lot of observations, we'll use a validation set: 
-
-```{r val}
-set.seed(234)
-nhl_val <- validation_split(nhl_train, prop = 0.80)
-nhl_val
-```
-
-. . .
-
-Remember that a validation split is a type of resample. 
 
 ## Prepare your data for modeling `r hexes("recipes")`
 
@@ -661,7 +685,7 @@ nhl_effect_res <-
 collect_metrics(nhl_effect_res)
 ```
 
-# Where is the shot coming from? 🏒🧐 {.annotation}
+# Where is the shot coming from? 🏒🧐
 
 ##
 
@@ -686,7 +710,7 @@ example_data <-
   nhl_train %>% 
   mutate(
     angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
-    distance = sqrt((89 - abs(coord_x))^2 + coord_y^2),
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
     behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
   )
 
@@ -709,7 +733,7 @@ Note the danger of using `step_mutate()` -- easy to have data leakage
 nhl_distance_rec <-
   nhl_angle_rec %>%
   step_mutate(
-    distance = sqrt((89 - abs(coord_x))^2 + coord_y^2),
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
     distance = log(distance)
   )
 ```
