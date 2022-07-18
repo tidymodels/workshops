@@ -16,7 +16,7 @@ library(ongoal)
 tidymodels_prefer()
 ggplot2::theme_set(ggplot2::theme_bw())
 
-str(season_2015)
+glimpse(season_2015)
 ```
 
 ## Splitting the NHL data
@@ -98,7 +98,7 @@ nhl_rec <-
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
-  step_umap(all_numeric_predictors(), outcome = on_goal)
+  embed::step_umap(all_numeric_predictors(), outcome = on_goal)
 
 # Natural splines
 nhl_rec <- 
@@ -169,10 +169,10 @@ glm_val_pred %>% slice(1:7)
 
 ```{r}
 # Assumes _first_ factor level is event; there are options to change that
-roc_curve_points <- glm_val_pred %>% roc_curve(truth = on_goal, .pred_yes)
+roc_curve_points <- glm_val_pred %>% roc_curve(truth = on_goal, estimate = .pred_yes)
 roc_curve_points %>% slice(1, 50, 100)
 
-glm_val_pred %>% roc_auc(truth = on_goal, .pred_yes)
+glm_val_pred %>% roc_auc(truth = on_goal, estimate = .pred_yes)
 ```
 
 ## ROC curve plot 
