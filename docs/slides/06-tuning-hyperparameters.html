@@ -8,7 +8,7 @@
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.0.28">
+  <meta name="generator" content="quarto-1.0.27">
 
   <title>Machine learning with tidymodels - 6 - Tuning Hyperparameters</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -429,7 +429,6 @@
 </div>
 </section>
 
-<section>
 <section id="covariancecorrelation-matrix-structure-in-mixed-models" class="title-slide slide level1 center">
 <h1>Covariance/correlation matrix structure in mixed models?</h1>
 <div class="fragment">
@@ -437,6 +436,14 @@
 </div>
 <div class="fragment">
 <p>It will impact inference though. 🤔</p>
+</div>
+</section>
+
+<section>
+<section id="is-the-random-seed-a-tuning-parameter" class="title-slide slide level1 center">
+<h1>Is the random seed a tuning parameter?</h1>
+<div class="fragment">
+<p>Nope. It is not. ❌</p>
 </div>
 </section>
 <section id="optimize-tuning-parameters" class="slide level2">
@@ -475,7 +482,7 @@
 <span id="cb1-4"><a href="#cb1-4"></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span></span>
 <span id="cb1-5"><a href="#cb1-5"></a>  <span class="fu">step_mutate</span>(</span>
 <span id="cb1-6"><a href="#cb1-6"></a>    <span class="at">angle =</span> <span class="fu">abs</span>(<span class="fu">atan2</span>(<span class="fu">abs</span>(coord_y), (<span class="dv">89</span> <span class="sc">-</span> <span class="fu">abs</span>(coord_x))) <span class="sc">*</span> (<span class="dv">180</span> <span class="sc">/</span> pi)),</span>
-<span id="cb1-7"><a href="#cb1-7"></a>    <span class="at">distance =</span> <span class="fu">sqrt</span>((<span class="dv">89</span> <span class="sc">-</span> <span class="fu">abs</span>(coord_x))<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> <span class="fu">abs</span>(coord_y)<span class="sc">^</span><span class="dv">2</span>),</span>
+<span id="cb1-7"><a href="#cb1-7"></a>    <span class="at">distance =</span> <span class="fu">sqrt</span>((<span class="dv">89</span> <span class="sc">-</span> <span class="fu">abs</span>(coord_x))<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> coord_y<span class="sc">^</span><span class="dv">2</span>),</span>
 <span id="cb1-8"><a href="#cb1-8"></a>    <span class="at">distance =</span> <span class="fu">log</span>(distance),</span>
 <span id="cb1-9"><a href="#cb1-9"></a>    <span class="at">behind_goal_line =</span> <span class="fu">ifelse</span>(<span class="fu">abs</span>(coord_x) <span class="sc">&gt;=</span> <span class="dv">89</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
 <span id="cb1-10"><a href="#cb1-10"></a>  ) <span class="sc">%&gt;%</span></span>
@@ -623,7 +630,7 @@
           display:block!important;
       }</style></aside>
 </section>
-<section id="update-parameter-ranges" class="slide level2">
+<section id="update-parameter-ranges" class="slide level2 annotation">
 <h2>Update parameter ranges <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5" data-code-line-numbers="5-6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
@@ -835,7 +842,7 @@
 <div class="cell">
 <div class="cell-output-display">
 <div class="countdown" id="select-by-pct-loss" style="right:0;bottom:0;" data-warnwhen="0">
-<code class="countdown-time"><span class="countdown-digits minutes">03</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
 </div>
 </div>
 </div>
@@ -889,8 +896,8 @@
 </ul>
 </div>
 </section>
-<section id="boosted-trees-3" class="slide level2">
-<h2>Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵</h2>
+<section id="boosted-tree-tuning-parameters" class="slide level2 annotation">
+<h2>Boosted tree tuning parameters</h2>
 <p>Most modern boosting methods have <em>a lot</em> of tuning parameters!</p>
 <div class="fragment">
 <ul>
@@ -925,8 +932,8 @@
 </div>
 <p>The general consensus for tree-based models is, in terms of performance: boosting &gt; random forest &gt; bagging &gt; single trees.</p>
 </section>
-<section id="boosted-trees-4" class="slide level2">
-<h2>Boosted trees <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "></h2>
+<section id="boosted-tree-code" class="slide level2 annotation">
+<h2>Boosted tree code</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>xgb_spec <span class="ot">&lt;-</span></span>
 <span id="cb14-2"><a href="#cb14-2"></a>  <span class="fu">boost_tree</span>(</span>
@@ -1036,12 +1043,12 @@
 <section id="tuning" class="slide level2">
 <h2>Tuning <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <p>This will take some time to run ⏳</p>
-<div class="cell" data-hash="06-tuning-hyperparameters_cache/revealjs/xgboost-tune_c27549f41d5d5e174d2846143d0b3eb7">
+<div class="cell" data-hash="06-tuning-hyperparameters_cache/revealjs/xgboost-tune_a9e0f24b638cddd08e5beebd4558b6f4">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
 <span id="cb16-2"><a href="#cb16-2"></a></span>
 <span id="cb16-3"><a href="#cb16-3"></a>xgb_res <span class="ot">&lt;-</span></span>
 <span id="cb16-4"><a href="#cb16-4"></a>  xgb_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb16-5"><a href="#cb16-5"></a>  <span class="fu">tune_grid</span>(<span class="at">resamples =</span> nhl_val, <span class="at">grid =</span> <span class="dv">20</span>, <span class="at">control =</span> ctrl) <span class="co"># automatic grid now!</span></span>
+<span id="cb16-5"><a href="#cb16-5"></a>  <span class="fu">tune_grid</span>(<span class="at">resamples =</span> nhl_val, <span class="at">grid =</span> <span class="dv">15</span>, <span class="at">control =</span> ctrl) <span class="co"># automatic grid now!</span></span>
 <span id="cb16-6"><a href="#cb16-6"></a></span>
 <span id="cb16-7"><a href="#cb16-7"></a>xgb_res</span>
 <span id="cb16-8"><a href="#cb16-8"></a><span class="co">#&gt; # Tuning results</span></span>
@@ -1049,7 +1056,7 @@
 <span id="cb16-10"><a href="#cb16-10"></a><span class="co">#&gt; # A tibble: 1 × 5</span></span>
 <span id="cb16-11"><a href="#cb16-11"></a><span class="co">#&gt;   splits              id         .metrics          .notes           .predictions          </span></span>
 <span id="cb16-12"><a href="#cb16-12"></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;      &lt;list&gt;            &lt;list&gt;           &lt;list&gt;                </span></span>
-<span id="cb16-13"><a href="#cb16-13"></a><span class="co">#&gt; 1 &lt;split [7288/1822]&gt; validation &lt;tibble [40 × 9]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [36,440 × 11]&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb16-13"><a href="#cb16-13"></a><span class="co">#&gt; 1 &lt;split [7288/1822]&gt; validation &lt;tibble [30 × 9]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [27,330 × 11]&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="your-turn-4" class="slide level2" data-transition="slide-in">
@@ -1085,7 +1092,7 @@
 <span id="cb18-2"><a href="#cb18-2"></a>  xgb_rec <span class="sc">%&gt;%</span></span>
 <span id="cb18-3"><a href="#cb18-3"></a>  <span class="fu">step_mutate</span>(</span>
 <span id="cb18-4"><a href="#cb18-4"></a>    <span class="at">angle =</span> <span class="fu">abs</span>(<span class="fu">atan2</span>(<span class="fu">abs</span>(coord_y), (<span class="dv">89</span> <span class="sc">-</span> <span class="fu">abs</span>(coord_x))) <span class="sc">*</span> (<span class="dv">180</span> <span class="sc">/</span> pi)),</span>
-<span id="cb18-5"><a href="#cb18-5"></a>    <span class="at">distance =</span> <span class="fu">sqrt</span>((<span class="dv">89</span> <span class="sc">-</span> <span class="fu">abs</span>(coord_x))<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> <span class="fu">abs</span>(coord_y)<span class="sc">^</span><span class="dv">2</span>),</span>
+<span id="cb18-5"><a href="#cb18-5"></a>    <span class="at">distance =</span> <span class="fu">sqrt</span>((<span class="dv">89</span> <span class="sc">-</span> <span class="fu">abs</span>(coord_x))<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> coord_y<span class="sc">^</span><span class="dv">2</span>),</span>
 <span id="cb18-6"><a href="#cb18-6"></a>    <span class="at">distance =</span> <span class="fu">log</span>(distance),</span>
 <span id="cb18-7"><a href="#cb18-7"></a>    <span class="at">behind_goal_line =</span> <span class="fu">ifelse</span>(<span class="fu">abs</span>(coord_x) <span class="sc">&gt;=</span> <span class="dv">89</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
 <span id="cb18-8"><a href="#cb18-8"></a>  ) <span class="sc">%&gt;%</span> </span>
@@ -1109,11 +1116,11 @@
 <span id="cb19-2"><a href="#cb19-2"></a><span class="co">#&gt; # A tibble: 5 × 11</span></span>
 <span id="cb19-3"><a href="#cb19-3"></a><span class="co">#&gt;   min_n tree_depth learn_rate loss_reduction stop_iter .metric .estimator  mean     n std_err .config              </span></span>
 <span id="cb19-4"><a href="#cb19-4"></a><span class="co">#&gt;   &lt;int&gt;      &lt;int&gt;      &lt;dbl&gt;          &lt;dbl&gt;     &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
-<span id="cb19-5"><a href="#cb19-5"></a><span class="co">#&gt; 1    31         14     0.0174  0.00000231           15 roc_auc binary     0.632     1      NA Preprocessor1_Model15</span></span>
-<span id="cb19-6"><a href="#cb19-6"></a><span class="co">#&gt; 2    30         13     0.0578  0.00000000141        18 roc_auc binary     0.630     1      NA Preprocessor1_Model07</span></span>
-<span id="cb19-7"><a href="#cb19-7"></a><span class="co">#&gt; 3    14          2     0.146   0.00244              19 roc_auc binary     0.630     1      NA Preprocessor1_Model14</span></span>
-<span id="cb19-8"><a href="#cb19-8"></a><span class="co">#&gt; 4    12          7     0.191   0.351                 7 roc_auc binary     0.629     1      NA Preprocessor1_Model09</span></span>
-<span id="cb19-9"><a href="#cb19-9"></a><span class="co">#&gt; 5    26         15     0.0365  2.51                 17 roc_auc binary     0.629     1      NA Preprocessor1_Model11</span></span>
+<span id="cb19-5"><a href="#cb19-5"></a><span class="co">#&gt; 1    19          2    0.311         1.46e- 4        14 roc_auc binary     0.633     1      NA Preprocessor1_Model12</span></span>
+<span id="cb19-6"><a href="#cb19-6"></a><span class="co">#&gt; 2    11          3    0.0255        5.61e- 7        19 roc_auc binary     0.628     1      NA Preprocessor1_Model05</span></span>
+<span id="cb19-7"><a href="#cb19-7"></a><span class="co">#&gt; 3    27          5    0.0120        6.04e- 6        12 roc_auc binary     0.627     1      NA Preprocessor1_Model07</span></span>
+<span id="cb19-8"><a href="#cb19-8"></a><span class="co">#&gt; 4    25         14    0.0379        3.62e- 5         8 roc_auc binary     0.626     1      NA Preprocessor1_Model13</span></span>
+<span id="cb19-9"><a href="#cb19-9"></a><span class="co">#&gt; 5    31         11    0.00585       1.02e-10         7 roc_auc binary     0.625     1      NA Preprocessor1_Model08</span></span>
 <span id="cb19-10"><a href="#cb19-10"></a></span>
 <span id="cb19-11"><a href="#cb19-11"></a><span class="fu">show_best</span>(xgb_coord_res, <span class="at">metric =</span> <span class="st">"roc_auc"</span>)</span>
 <span id="cb19-12"><a href="#cb19-12"></a><span class="co">#&gt; # A tibble: 5 × 11</span></span>
@@ -1159,7 +1166,7 @@
 <div class="cell">
 <div class="cell-output-display">
 <div class="countdown" id="improve-xgb" style="right:0;bottom:0;" data-warnwhen="0">
-<code class="countdown-time"><span class="countdown-digits minutes">20</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+<code class="countdown-time"><span class="countdown-digits minutes">08</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
 </div>
 </div>
 </div>
@@ -1172,7 +1179,7 @@
 <span id="cb22-3"><a href="#cb22-3"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
 <span id="cb22-4"><a href="#cb22-4"></a><span class="co">#&gt;   angle distance .config              </span></span>
 <span id="cb22-5"><a href="#cb22-5"></a><span class="co">#&gt;   &lt;int&gt;    &lt;int&gt; &lt;chr&gt;                </span></span>
-<span id="cb22-6"><a href="#cb22-6"></a><span class="co">#&gt; 1     3       15 Preprocessor13_Model1</span></span>
+<span id="cb22-6"><a href="#cb22-6"></a><span class="co">#&gt; 1     5        8 Preprocessor12_Model1</span></span>
 <span id="cb22-7"><a href="#cb22-7"></a></span>
 <span id="cb22-8"><a href="#cb22-8"></a>glm_spline_wflow <span class="ot">&lt;-</span></span>
 <span id="cb22-9"><a href="#cb22-9"></a>  glm_spline_wflow <span class="sc">%&gt;%</span> </span>
@@ -1201,8 +1208,8 @@
 <span id="cb22-32"><a href="#cb22-32"></a><span class="co">#&gt; Computational engine: glm</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="the-final-fit" class="slide level2">
-<h2>The final fit <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<section id="the-final-fit-to-the-nhl-data" class="slide level2 annotation">
+<h2>The final fit to the NHL data <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell" data-hash="06-tuning-hyperparameters_cache/revealjs/final-last-fit_9d92988e4c910b489e50e69d77ea67b4">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a>test_res <span class="ot">&lt;-</span> </span>
 <span id="cb23-2"><a href="#cb23-2"></a>  glm_spline_wflow <span class="sc">%&gt;%</span> </span>
@@ -1258,8 +1265,8 @@
 <span id="cb25-2"><a href="#cb25-2"></a><span class="co">#&gt; # A tibble: 2 × 4</span></span>
 <span id="cb25-3"><a href="#cb25-3"></a><span class="co">#&gt;   .metric  .estimator .estimate .config             </span></span>
 <span id="cb25-4"><a href="#cb25-4"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               </span></span>
-<span id="cb25-5"><a href="#cb25-5"></a><span class="co">#&gt; 1 accuracy binary         0.610 Preprocessor1_Model1</span></span>
-<span id="cb25-6"><a href="#cb25-6"></a><span class="co">#&gt; 2 roc_auc  binary         0.655 Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb25-5"><a href="#cb25-5"></a><span class="co">#&gt; 1 accuracy binary         0.616 Preprocessor1_Model1</span></span>
+<span id="cb25-6"><a href="#cb25-6"></a><span class="co">#&gt; 2 roc_auc  binary         0.656 Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </section>
