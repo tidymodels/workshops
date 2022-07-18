@@ -90,14 +90,14 @@ cat(paste0("set.seed(", sample.int(10000, 5), ")", collapse = "\n"))
 
 If we treat the preprocessing as a separate task, it raises the risk that we might accidentally overfit to the data at hand. 
 
-For example, someone might estimate something from the entire data set (such as the principle components) and treat that data as if it were know (and not estimated). Depending on the what was done with the data, consequences in doing that could be:
+For example, someone might estimate something from the entire data set (such as the principle components) and treat that data as if it were known (and not estimated). Depending on the what was done with the data, consequences in doing that could be:
 
-* You performance metrics are slightly-to-moderately optimistic (e.g. you might think your accuracy us 85% when it is actually 75%)
-* A consequential component of the analysis not right and the model just doesn’t work. 
+* Your performance metrics are slightly-to-moderately optimistic (e.g. you might think your accuracy is 85% when it is actually 75%)
+* A consequential component of the analysis is not right and the model just doesn’t work. 
 
 The big issue here is that you won’t be able to figure this out until you get a new piece of data, such as the test set. 
 
-A really good example of this is in [‘Selection bias in gene extraction on the basis of microarray gene-expression data’](https://pubmed.ncbi.nlm.nih.gov/11983868/). The authors re-analyze a previous publication and show that the original researchers did not include feature selection in the workflow. Because of that, their performance statistics were extremely optimistic. In one case, they could do the original analysis of complete noise and achieve zero errors. 
+A really good example of this is in [‘Selection bias in gene extraction on the basis of microarray gene-expression data’](https://pubmed.ncbi.nlm.nih.gov/11983868/). The authors re-analyze a previous publication and show that the original researchers did not include feature selection in the workflow. Because of that, their performance statistics were extremely optimistic. In one case, they could do the original analysis on complete noise and still achieve zero errors. 
 
 Generally speaking, this problem is referred to as [data leakage](https://en.wikipedia.org/wiki/Leakage_(machine_learning)). Some other references: 
 
@@ -245,13 +245,13 @@ Linear regression detects some redundancies in the predictor set. We can ignore 
 
 ## Boosted tree tuning parameters
 
-When the deciding on number of boosting iterations, there are two main strategies:
+When deciding on the number of boosting iterations, there are two main strategies:
 
  * Directly tune it (`trees = tune()`)
  
  * Set it to one value and tune the number of early stopping iterations (`trees = 500`, `stop_iter = tune()`).
 
-Early stopping is when we monitor the performance of the model. If the model gets worse for at least `stop_iter` iterations, training stops. 
+Early stopping is when we monitor the performance of the model. If the model doesn't make any improvements for `stop_iter` iterations, training stops. 
 
 Here's an example where, after eleven iterations, performance starts to get worse. 
 
@@ -290,7 +290,7 @@ The first two options are best since they tell you a lot more about the particul
 
 ## The final fit to the NHL data
 
-Recall that `last_fit()` uses the objects produced by `initial_fit()` to determine what data are used for the final model fit and which are used as the test set. 
+Recall that `last_fit()` uses the objects produced by `initial_split()` to determine what data are used for the final model fit and which are used as the test set. 
 
 For the validation set, `last_fit()` will use the non-testing data to create the final model fit. This includes the training and validation set. 
 
