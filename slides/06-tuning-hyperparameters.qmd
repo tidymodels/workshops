@@ -64,7 +64,7 @@ nhl_distance_rec <-
   step_zv(all_predictors()) %>%
   step_mutate(
     angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
-    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    distance = sqrt((89 - abs(coord_x))^2 + coord_y^2),
     distance = log(distance)
   )
 
@@ -124,6 +124,15 @@ It will impact inference though.
 🤔
 :::
 
+
+
+# Is the random seed a tuning parameter?
+
+::: fragment
+Nope. It is not. 
+❌
+:::
+
 ## Optimize tuning parameters
 
 -   Try different values and measure their performance.
@@ -158,7 +167,7 @@ glm_rec <-
   step_dummy(all_nominal_predictors()) %>%
   step_mutate(
     angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
-    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    distance = sqrt((89 - abs(coord_x))^2 + coord_y^2),
     distance = log(distance),
     behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
   ) %>%
@@ -258,7 +267,8 @@ grid
 Note that even though we requested 25x25=625 rows, we only got 15x15=225 back, since the `deg_free` parameters only have a range of `1->15`.
 :::
 
-## Update parameter ranges `r hexes(c("dials", "workflows"))`
+## Update parameter ranges `r hexes(c("dials", "workflows"))` {.annotation}
+
 
 ```{r mod-grid-code}
 #| code-line-numbers: "5-6"
@@ -430,7 +440,7 @@ Boosting methods fit a *sequence* of tree-based models.
 
 -   This is like gradient-based steepest ascent methods from calculus.
 
-## Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵
+## Boosted tree tuning parameters  {.annotation}
 
 Most modern boosting methods have *a lot* of tuning parameters!
 
@@ -469,8 +479,7 @@ Boosting
 The general consensus for tree-based models is, in terms of performance: boosting > random forest > bagging > single trees.
 
 
-
-## Boosted trees `r hexes(c("recipes", "workflows", "parsnip", "tune"))`
+## Boosted tree code {.annotation}
 
 ```{r xgboost-specs}
 xgb_spec <-
@@ -626,7 +635,7 @@ coord_rec <-
   xgb_rec %>%
   step_mutate(
     angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
-    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    distance = sqrt((89 - abs(coord_x))^2 + coord_y^2),
     distance = log(distance),
     behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
   ) %>% 
@@ -700,7 +709,7 @@ glm_spline_wflow <-
 glm_spline_wflow
 ```
 
-## The final fit `r hexes(c("workflows", "tune"))`
+## The final fit to the NHL data `r hexes(c("workflows", "tune"))`  {.annotation}
 
 ```{r final-last-fit}
 #| cache: true

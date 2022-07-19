@@ -8,7 +8,7 @@
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.0.18">
+  <meta name="generator" content="quarto-1.0.27">
 
   <title>Machine learning with tidymodels - 6 - Tuning Hyperparameters</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -429,7 +429,6 @@
 </div>
 </section>
 
-<section>
 <section id="covariancecorrelation-matrix-structure-in-mixed-models" class="title-slide slide level1 center">
 <h1>Covariance/correlation matrix structure in mixed models?</h1>
 <div class="fragment">
@@ -437,6 +436,14 @@
 </div>
 <div class="fragment">
 <p>It will impact inference though. 🤔</p>
+</div>
+</section>
+
+<section>
+<section id="is-the-random-seed-a-tuning-parameter" class="title-slide slide level1 center">
+<h1>Is the random seed a tuning parameter?</h1>
+<div class="fragment">
+<p>Nope. It is not. ❌</p>
 </div>
 </section>
 <section id="optimize-tuning-parameters" class="slide level2">
@@ -475,7 +482,7 @@
 <span id="cb1-4"><a href="#cb1-4"></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span></span>
 <span id="cb1-5"><a href="#cb1-5"></a>  <span class="fu">step_mutate</span>(</span>
 <span id="cb1-6"><a href="#cb1-6"></a>    <span class="at">angle =</span> <span class="fu">abs</span>(<span class="fu">atan2</span>(<span class="fu">abs</span>(coord_y), (<span class="dv">89</span> <span class="sc">-</span> <span class="fu">abs</span>(coord_x))) <span class="sc">*</span> (<span class="dv">180</span> <span class="sc">/</span> pi)),</span>
-<span id="cb1-7"><a href="#cb1-7"></a>    <span class="at">distance =</span> <span class="fu">sqrt</span>((<span class="dv">89</span> <span class="sc">-</span> <span class="fu">abs</span>(coord_x))<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> <span class="fu">abs</span>(coord_y)<span class="sc">^</span><span class="dv">2</span>),</span>
+<span id="cb1-7"><a href="#cb1-7"></a>    <span class="at">distance =</span> <span class="fu">sqrt</span>((<span class="dv">89</span> <span class="sc">-</span> <span class="fu">abs</span>(coord_x))<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> coord_y<span class="sc">^</span><span class="dv">2</span>),</span>
 <span id="cb1-8"><a href="#cb1-8"></a>    <span class="at">distance =</span> <span class="fu">log</span>(distance),</span>
 <span id="cb1-9"><a href="#cb1-9"></a>    <span class="at">behind_goal_line =</span> <span class="fu">ifelse</span>(<span class="fu">abs</span>(coord_x) <span class="sc">&gt;=</span> <span class="dv">89</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
 <span id="cb1-10"><a href="#cb1-10"></a>  ) <span class="sc">%&gt;%</span></span>
@@ -623,7 +630,7 @@
           display:block!important;
       }</style></aside>
 </section>
-<section id="update-parameter-ranges" class="slide level2">
+<section id="update-parameter-ranges" class="slide level2 annotation">
 <h2>Update parameter ranges <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5" data-code-line-numbers="5-6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
@@ -889,8 +896,8 @@
 </ul>
 </div>
 </section>
-<section id="boosted-trees-3" class="slide level2">
-<h2>Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵</h2>
+<section id="boosted-tree-tuning-parameters" class="slide level2 annotation">
+<h2>Boosted tree tuning parameters</h2>
 <p>Most modern boosting methods have <em>a lot</em> of tuning parameters!</p>
 <div class="fragment">
 <ul>
@@ -925,8 +932,8 @@
 </div>
 <p>The general consensus for tree-based models is, in terms of performance: boosting &gt; random forest &gt; bagging &gt; single trees.</p>
 </section>
-<section id="boosted-trees-4" class="slide level2">
-<h2>Boosted trees <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "></h2>
+<section id="boosted-tree-code" class="slide level2 annotation">
+<h2>Boosted tree code</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>xgb_spec <span class="ot">&lt;-</span></span>
 <span id="cb14-2"><a href="#cb14-2"></a>  <span class="fu">boost_tree</span>(</span>
@@ -1085,7 +1092,7 @@
 <span id="cb18-2"><a href="#cb18-2"></a>  xgb_rec <span class="sc">%&gt;%</span></span>
 <span id="cb18-3"><a href="#cb18-3"></a>  <span class="fu">step_mutate</span>(</span>
 <span id="cb18-4"><a href="#cb18-4"></a>    <span class="at">angle =</span> <span class="fu">abs</span>(<span class="fu">atan2</span>(<span class="fu">abs</span>(coord_y), (<span class="dv">89</span> <span class="sc">-</span> <span class="fu">abs</span>(coord_x))) <span class="sc">*</span> (<span class="dv">180</span> <span class="sc">/</span> pi)),</span>
-<span id="cb18-5"><a href="#cb18-5"></a>    <span class="at">distance =</span> <span class="fu">sqrt</span>((<span class="dv">89</span> <span class="sc">-</span> <span class="fu">abs</span>(coord_x))<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> <span class="fu">abs</span>(coord_y)<span class="sc">^</span><span class="dv">2</span>),</span>
+<span id="cb18-5"><a href="#cb18-5"></a>    <span class="at">distance =</span> <span class="fu">sqrt</span>((<span class="dv">89</span> <span class="sc">-</span> <span class="fu">abs</span>(coord_x))<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> coord_y<span class="sc">^</span><span class="dv">2</span>),</span>
 <span id="cb18-6"><a href="#cb18-6"></a>    <span class="at">distance =</span> <span class="fu">log</span>(distance),</span>
 <span id="cb18-7"><a href="#cb18-7"></a>    <span class="at">behind_goal_line =</span> <span class="fu">ifelse</span>(<span class="fu">abs</span>(coord_x) <span class="sc">&gt;=</span> <span class="dv">89</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
 <span id="cb18-8"><a href="#cb18-8"></a>  ) <span class="sc">%&gt;%</span> </span>
@@ -1201,8 +1208,8 @@
 <span id="cb22-32"><a href="#cb22-32"></a><span class="co">#&gt; Computational engine: glm</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="the-final-fit" class="slide level2">
-<h2>The final fit <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<section id="the-final-fit-to-the-nhl-data" class="slide level2 annotation">
+<h2>The final fit to the NHL data <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell" data-hash="06-tuning-hyperparameters_cache/revealjs/final-last-fit_9d92988e4c910b489e50e69d77ea67b4">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a>test_res <span class="ot">&lt;-</span> </span>
 <span id="cb23-2"><a href="#cb23-2"></a>  glm_spline_wflow <span class="sc">%&gt;%</span> </span>
@@ -1604,7 +1611,10 @@
         }
       }
       const toggleBodyColorPrimary = () => {
-        toggleBodyColorMode(window.document.querySelector("link#quarto-bootstrap"));
+        const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+        if (bsSheetEl) {
+          toggleBodyColorMode(bsSheetEl);
+        }
       }
       toggleBodyColorPrimary();  
       const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")

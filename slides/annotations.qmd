@@ -5,6 +5,9 @@ title: "Annotations"
 ```{r startup}
 #| include: false
 
+library(tidymodels)
+tidymodels_prefer()
+
 # To get `hexes()`
 source("setup.R")
 ```
@@ -17,13 +20,15 @@ This page contains _annotations_ for selected slides.
 
 There's a lot that we want to tell you. We don't want people to have to frantically scribble down things that we say that are not on the slides. 
 
-We'll add sections to this document with longer explanations and links to other resources. 
+We've added sections to this document with longer explanations and links to other resources. 
 
 
 
 ## Finalize and verify
 
 This is a pretty complex data usage scheme. That is mostly because of the validation set. In every other case, the situation is much more simple.
+
+The important point here is that: **tidymodels does most of this work for you**. In other words, you don't have to directly specify which data are being used where. 
 
 In a later section, we will talk about methods of [resampling](https://www.tmwr.org/resampling.html). These methods are like repeated validation sets. As an example, the popular 10-fold cross-validation method is one such type of resampling. Validation sets are [special cases of resampling](https://www.tmwr.org/resampling.html#validation) where there is a single "resample". 
 
@@ -38,8 +43,168 @@ knitr::include_graphics("images/whole-game-final-resamples.svg")
 
 In this case there is just "testing" and "training". Once the final model is determined, the entire training set is used for the last fit. 
 
+This is the process that will be used for the tree frog data. 
+
+# 02 - Data Budget
+
+## Data splitting and spending
+
+What does `set.seed()` do? 
+
+We’ll use pseudo-random numbers (PRN) to partition the data into training and testing. PRN are numbers that emulate truly random numbers (but really are not truly random). 
+
+Think of PRN as a box that takes a starting value (the "seed") that produces random numbers using that starting value as an input into its process. 
+
+If we know a seed value, we can reproduce our "random" numbers. To use a different set of random numbers, choose a different seed value. 
+
+For example: 
+
+```{r}
+set.seed(1)
+runif(3)
+
+# Get a new set of random numbers:
+set.seed(2)
+runif(3)
+
+# We can reproduce the old ones with the same seed
+set.seed(1)
+runif(3)
+```
+
+If we _don’t_ set the seed, R uses the clock time and the process ID to create a seed. This isn’t reproducible. 
+
+Since we want our code to be reproducible, we set the seeds before random numbers are used. 
+
+In theory, you can set the seed once at the start of a script. However, if we do interactive data analysis, we might unwittingly use random numbers while coding. In that case, the stream is not the same and we don’t get reproducible results. 
+
+The value of the seed is an integer and really has no meaning. Max has a script to generate random integers to use as seeds to "spread the randomness around". It is basically:
+
+```{r}
+cat(paste0("set.seed(", sample.int(10000, 5), ")", collapse = "\n"))
+```
+
+# 03 - What  Makes A Model?
+
+## What is wrong with this? 
+
+If we treat the preprocessing as a separate task, it raises the risk that we might accidentally overfit to the data at hand. 
+
+For example, someone might estimate something from the entire data set (such as the principle components) and treat that data as if it were known (and not estimated). Depending on the what was done with the data, consequences in doing that could be:
+
+* Your performance metrics are slightly-to-moderately optimistic (e.g. you might think your accuracy is 85% when it is actually 75%)
+* A consequential component of the analysis is not right and the model just doesn’t work. 
+
+The big issue here is that you won’t be able to figure this out until you get a new piece of data, such as the test set. 
+
+A really good example of this is in [‘Selection bias in gene extraction on the basis of microarray gene-expression data’](https://pubmed.ncbi.nlm.nih.gov/11983868/). The authors re-analyze a previous publication and show that the original researchers did not include feature selection in the workflow. Because of that, their performance statistics were extremely optimistic. In one case, they could do the original analysis on complete noise and still achieve zero errors. 
+
+Generally speaking, this problem is referred to as [data leakage](https://en.wikipedia.org/wiki/Leakage_(machine_learning)). Some other references: 
+
+ * [Overfitting to Predictors and External Validation](https://bookdown.org/max/FES/selection-overfitting.html)
+ * [Are We Learning Yet? A Meta Review of Evaluation Failures Across Machine Learning](https://datasets-benchmarks-proceedings.neurips.cc/paper/2021/hash/757b505cfd34c64c85ca5b5690ee5293-Abstract-round2.html)
+ * [Navigating the pitfalls of applying machine learning in genomics](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=Navigating+the+pitfalls+of+applying+machine+learning+in+genomics&btnG=)
+ * [A review of feature selection techniques in bioinformatics](https://academic.oup.com/bioinformatics/article/23/19/2507/185254)
+ * [On Over-fitting in Model Selection and Subsequent Selection Bias in Performance Evaluation](https://www.jmlr.org/papers/volume11/cawley10a/cawley10a.pdf)
+
+
+
+## Where are the fitted models?
+
+The primary purpose of resampling is to estimate model performance. The models are almost never needed again. 
+
+Also, if the data set is large, the model object may require a lot of memory to save so, by default, we don't keep them. 
+
+For more advanced use cases, you can extract and save them. See:
+
+ * <https://www.tmwr.org/resampling.html#extract>
+ * <https://www.tidymodels.org/learn/models/coefficients/> (an example)
+
+
+# 04 - Evaluating Models
+
+
+## The final fit
+
+Since our data spending scheme created the resamples from the training set, `last_fit()` will use all of the training data to fit the final workflow. 
+
+As shown in the Whole Game slides, there is a slightly different scheme used when we have a validation set (instead of multiple resamples like 10-fold CV). 
+
+
+# 05 - Feature Engineering
+
+## Splitting the NHL data 
+
+`nhl_train` isn't really the right name for these data. 
+
+In a little bit, we'll use the `validation_split()` function to take the rows in `nhl_train` and make a validation set. The data that are not used in the validation set are the data that we will use to build the models during tuning. 
+
+Recall the Whole Game slide had: 
+
+```{r spending-diagram, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-split.svg")
+```
+
+`nhl_train` has the "Not Testing" data. 
+
+## Angle
+
+About these formulas... 
+
+The coordinates for the rink are centered at `(0, 0)` and the goal lines are both 89 ft from center. The center of the goal on the left is at `(-89, 0)` and the right-hand goal is centered at `(89, 0)`. 
+
+For the distance to center ice, the formula is 
+
+$$d_{center} = \sqrt{x^2 + y^2}$$ 
+
+We want distance to the goal line(s), so we first use `x* = (89 - abs(coord_x))` to make the side of the rink irrelevant and then compute 
+
+$$d_{goal} = \sqrt{x^{*2} + y^2}$$ 
+In the code, we log the distance value to help its distribution become more symmetric. 
+
+For angle to center, the formula is 
+
+$$a = \tan^{-1}\left(\frac{y}{x}\right)$$
+This is in radian units and we can convert to degrees using 
+
+$$a = \frac{180}{\pi}\tan^{-1}\left(\frac{y}{x}\right)$$
+For the angle to the goal, we need to alter $x$ and $y$ again. We'll use $x^*$ from above and also use the absolute value of $y$ so that the degrees range from 0 to 180.
+
 
 # 06 - Tuning Hyperparameters
+
+## Update parameter ranges
+
+In about 90% of the cases, the dials function that you use to update the parameter range has the same name as the argument. For example, if you were to update the `mtry` parameter in a random forests model, the code would look like
+
+```{r}
+#| eval: false
+
+parameter_object %>% 
+  update(mtry = mtry(c(1, 100)))
+```
+
+In our case, the argument name is `deg_free` but we update it with `spline_degree`. 
+
+`deg_free` represents the general concept of degrees of freedom and could be associated with many different things. For example, if we ever had an argument that was the number of degrees of freedom for a $t$ distribution, we would call that argument `deg_free`. 
+
+For splines, we probably want a wider range for the degrees of freedom. We made a specialized function called `spline_degree()` to be used in these cases. 
+
+How can you tell when this happens? There is a helper function called `tunable()` and that gives information on how we make the default ranges for parameters. There is a column in these objects names `call_info`:
+
+```{r}
+library(tidymodels)
+ns_tunable <- 
+  recipe(mpg ~ ., data = mtcars) %>% 
+  step_ns(dis, deg_free = tune()) %>% 
+  tunable()
+
+ns_tunable
+ns_tunable$call_info
+```
+
 
 ## Spline grid search 
 
@@ -78,5 +243,81 @@ The way to avoid this problem is to use `step_lincomb(all_numeric_predictors())`
 
 Linear regression detects some redundancies in the predictor set. We can ignore the warnings since `lm()` can deal with it or use [`step_lincomb()`](https://recipes.tidymodels.org/reference/step_lincomb.html) to avoid the warnings. 
 
+## Boosted tree tuning parameters
+
+When deciding on the number of boosting iterations, there are two main strategies:
+
+ * Directly tune it (`trees = tune()`)
+ 
+ * Set it to one value and tune the number of early stopping iterations (`trees = 500`, `stop_iter = tune()`).
+
+Early stopping is when we monitor the performance of the model. If the model doesn't make any improvements for `stop_iter` iterations, training stops. 
+
+Here's an example where, after eleven iterations, performance starts to get worse. 
+
+
+```{r early-stopping}
+#| echo: false
+
+roc_vals <- c(0.4994, 0.5075, 0.6131, 0.7077, 0.7376, 0.752, 0.7807, 0.7927, 
+              0.7969, 0.7915, 0.8118, 0.8019, 0.7926, 0.7772, 0.776)
+iterations <- seq_along(roc_vals)
+
+early_stop <- tibble(iterations = iterations, `ROC AUC` = roc_vals)
+
+early_stop %>% ggplot(aes(iterations, `ROC AUC`)) + geom_point() + theme_bw()
+```
+
+This is likely do to over-fitting so we stop the model at eleven boosting iterations.  
+
+Early stopping usually has good results and takes far less time. 
+
+
+## Boosted tree code
+
+We set an engine argument called `validation` here. That's not an argument to any function in the xgboost package. 
+
+parsnip has its own wrapper around (`xgboost::xgb.train()`) called `xgb_train()`. We use that here and it has a `validation` argument.
+
+How would you know that? There are a few different ways:
+
+ * Look at the documentation in `?boost_tree` and click on the `xgboost` entry in the engine list. 
+ * Check out the pkgdown reference website <https://parsnip.tidymodels.org/reference/index.html>
+ * Run the `translate()` function on the parsnip specification object. 
+
+The first two options are best since they tell you a lot more about the particularities of each model engine (there are a lot for xgboost). 
+
+
+## The final fit to the NHL data
+
+Recall that `last_fit()` uses the objects produced by `initial_split()` to determine what data are used for the final model fit and which are used as the test set. 
+
+For the validation set, `last_fit()` will use the non-testing data to create the final model fit. This includes the training and validation set. 
+
+There is no agreement in the community on whether this is the best approach or if we should just use the training set. There are good arguments either way. 
+
+If you only want to use the training set for the final model, you can do this via: 
+
+```{r}
+#| eval: false
+
+training_data <- nhl_val$splits[[1]] %>% analysis()
+
+# Use `fit()` to train the model on just the training set
+final_glm_spline_wflow <- 
+  glm_spline_wflow %>% 
+  fit(data = training_data)
+
+# Create test set predictions
+test_set_pred <- augment(final_glm_spline_wflow, nhl_test)
+
+# Setup and compute the test set metrics
+cls_metrics <- metric_set(roc_auc, accuracy)
+
+test_res <- 
+  test_set_pred %>% 
+  cls_metrics(on_goal, estimate = .pred_class, .pred_yes)
+test_res
+```
 
 

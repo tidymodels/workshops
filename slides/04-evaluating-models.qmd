@@ -6,6 +6,7 @@ format:
     slide-number: true
     footer: <https://workshops.tidymodels.org>
     include-before-body: header.html
+    include-after-body: footer-annotations.html
     theme: [default, tidymodels.scss]
     width: 1280
     height: 720
@@ -330,7 +331,7 @@ frog_folds
 
 Set the seed when creating resamples
 
-## Evaluating model performance `r hexes("tune")`
+## Where are the fitted models? `r hexes("tune")`  {.annotation}
 
 ```{r}
 tree_res <- fit_resamples(tree_wflow, frog_folds)
@@ -339,21 +340,8 @@ tree_res
 
 . . .
 
-Where are the fitted models??!??
-
-## Evaluating model performance `r hexes("tune")`
-
-```{r}
-tree_res <- fit_resamples(tree_wflow, frog_folds)
-tree_res
-```
-
-Where are the fitted models??!??
 🗑️
 
-. . .
-
-For more advanced use cases, you can extract and save them: <https://www.tmwr.org/resampling.html#extract>
 
 ## Evaluating model performance `r hexes("tune")`
 
@@ -542,11 +530,11 @@ Lots more available with workflow sets, like `collect_metrics()`, `autoplot()` m
 countdown(minutes = 3, id = "discuss-workflow-sets")
 ```
 
-## The final fit `r hexes("tune")`
+## The final fit `r hexes("tune")`  {.annotation}
 
 Suppose that we are happy with our random forest model.
 
-Let's verify our performance using the test set.
+Let's fit the model on the training set and verify our performance using the test set.
 
 . . .
 
@@ -710,9 +698,9 @@ rf_res
 <!-- point out analogy with `ggplot()` constructor -->
 
 ```{r}
-st <- stacks()
+frog_st <- stacks()
 
-st
+frog_st
 ```
 
 ## Building a model stack `r hexes("stacks")`
@@ -720,12 +708,16 @@ st
 3) Iteratively add candidate ensemble members to the data stack
 
 ```{r}
-st <- st %>%
+frog_st <- frog_st %>%
   add_candidates(lr_res) %>%
   add_candidates(rf_res)
 
-st
+frog_st
 ```
+
+Tomorrow we'll discuss _tuning parameters_ where there are different configurations of models (e.g. 10 different variations of the random forest model). 
+
+These configurations can greatly improve the performance of the stacking ensemble. 
 
 
 ## Building a model stack `r hexes("stacks")`
@@ -733,10 +725,10 @@ st
 4) Evaluate how to combine their predictions
 
 ```{r}
-st <- st %>%
+frog_st_res <- frog_st %>%
   blend_predictions()
 
-st
+frog_st_res
 ```
 
 ## Building a model stack `r hexes("stacks")`
@@ -744,10 +736,10 @@ st
 5) Fit candidate ensemble members with non-zero stacking coefficients
 
 ```{r}
-st <- st %>%
+frog_st_res <- frog_st_res %>%
   fit_members()
 
-st
+frog_st_res
 ```
 
 ## Building a model stack `r hexes("stacks")`
@@ -763,7 +755,7 @@ st
 #| fig-align: 'center'
 frog_test %>%
   select(latency) %>%
-  bind_cols(predict(st, frog_test)) %>%
+  bind_cols(predict(frog_st_res, frog_test)) %>%
   ggplot(aes(latency, .pred)) + 
   geom_abline(lty = 2, 
               col = "deeppink4", 
