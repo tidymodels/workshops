@@ -230,7 +230,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="cell-output cell-output-stdout">
 <pre><code>#&gt; [1] 0.2655087 0.3721239 0.5728534</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get a new set or random numbers:</span></span>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get a new set of random numbers:</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">runif</span>(<span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -243,7 +243,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <pre><code>#&gt; [1] 0.2655087 0.3721239 0.5728534</code></pre>
 </div>
 </div>
-<p>If we <em>don’t</em> set the seeds, programs use the clock time as the seed. This isn’t reproducible.</p>
+<p>If we <em>don’t</em> set the seed, R uses the clock time and the process ID to create a seed. This isn’t reproducible.</p>
 <p>Since we want our code to be reproducible, we set the seeds before random numbers are used.</p>
 <p>In theory, you can set the seed once at the start of a script. However, if we do interactive data analysis, we might unwittingly use random numbers while coding. In that case, the stream is not the same and we don’t get reproducible results.</p>
 <p>The value of the seed is an integer and really has no meaning. Max has a script to generate random integers to use as seeds to “spread the randomness around”. It is basically:</p>
@@ -264,13 +264,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <section id="what-is-wrong-with-this" class="level2">
 <h2 class="anchored" data-anchor-id="what-is-wrong-with-this">What is wrong with this?</h2>
 <p>If we treat the preprocessing as a separate task, it raises the risk that we might accidentally overfit to the data at hand.</p>
-<p>For example, someone might estimate something from the entire data set (such as the principle components) and treat that data as if it were know (and not estimated). Depending on the what was done with the data, consequences in doing that could be:</p>
+<p>For example, someone might estimate something from the entire data set (such as the principle components) and treat that data as if it were known (and not estimated). Depending on the what was done with the data, consequences in doing that could be:</p>
 <ul>
-<li>You performance metrics are slightly-to-moderately optimistic (e.g.&nbsp;you might think your accuracy us 85% when it is actually 75%)</li>
-<li>A consequential component of the analysis not right and the model just doesn’t work.</li>
+<li>Your performance metrics are slightly-to-moderately optimistic (e.g.&nbsp;you might think your accuracy is 85% when it is actually 75%)</li>
+<li>A consequential component of the analysis is not right and the model just doesn’t work.</li>
 </ul>
 <p>The big issue here is that you won’t be able to figure this out until you get a new piece of data, such as the test set.</p>
-<p>A really good example of this is in <a href="https://pubmed.ncbi.nlm.nih.gov/11983868/">‘Selection bias in gene extraction on the basis of microarray gene-expression data’</a>. The authors re-analyze a previous publication and show that the original researchers did not include feature selection in the workflow. Because of that, their performance statistics were extremely optimistic. In one case, they could do the original analysis of complete noise and achieve zero errors.</p>
+<p>A really good example of this is in <a href="https://pubmed.ncbi.nlm.nih.gov/11983868/">‘Selection bias in gene extraction on the basis of microarray gene-expression data’</a>. The authors re-analyze a previous publication and show that the original researchers did not include feature selection in the workflow. Because of that, their performance statistics were extremely optimistic. In one case, they could do the original analysis on complete noise and still achieve zero errors.</p>
 <p>Generally speaking, this problem is referred to as <a href="https://en.wikipedia.org/wiki/Leakage_(machine_learning)">data leakage</a>. Some other references:</p>
 <ul>
 <li><a href="https://bookdown.org/max/FES/selection-overfitting.html">Overfitting to Predictors and External Validation</a></li>
@@ -403,12 +403,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </section>
 <section id="boosted-tree-tuning-parameters" class="level2">
 <h2 class="anchored" data-anchor-id="boosted-tree-tuning-parameters">Boosted tree tuning parameters</h2>
-<p>When the deciding on number of boosting iterations, there are two main strategies:</p>
+<p>When deciding on the number of boosting iterations, there are two main strategies:</p>
 <ul>
 <li><p>Directly tune it (<code>trees = tune()</code>)</p></li>
 <li><p>Set it to one value and tune the number of early stopping iterations (<code>trees = 500</code>, <code>stop_iter = tune()</code>).</p></li>
 </ul>
-<p>Early stopping is when we monitor the performance of the model. If the model gets worse for at least <code>stop_iter</code> iterations, training stops.</p>
+<p>Early stopping is when we monitor the performance of the model. If the model doesn’t make any improvements for <code>stop_iter</code> iterations, training stops.</p>
 <p>Here’s an example where, after eleven iterations, performance starts to get worse.</p>
 <div class="cell">
 <div class="cell-output-display">
@@ -432,7 +432,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </section>
 <section id="the-final-fit-to-the-nhl-data" class="level2">
 <h2 class="anchored" data-anchor-id="the-final-fit-to-the-nhl-data">The final fit to the NHL data</h2>
-<p>Recall that <code>last_fit()</code> uses the objects produced by <code>initial_fit()</code> to determine what data are used for the final model fit and which are used as the test set.</p>
+<p>Recall that <code>last_fit()</code> uses the objects produced by <code>initial_split()</code> to determine what data are used for the final model fit and which are used as the test set.</p>
 <p>For the validation set, <code>last_fit()</code> will use the non-testing data to create the final model fit. This includes the training and validation set.</p>
 <p>There is no agreement in the community on whether this is the best approach or if we should just use the training set. There are good arguments either way.</p>
 <p>If you only want to use the training set for the final model, you can do this via:</p>
