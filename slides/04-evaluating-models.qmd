@@ -101,7 +101,7 @@ tree_fit %>%
   augment(frog_train)
 ```
 
-We call this "resubstition" or "repredicting the training set"
+We call this "resubstitution" or "repredicting the training set"
 
 ## Dangers of overfitting ⚠️ `r hexes("yardstick")`
 
@@ -111,7 +111,7 @@ tree_fit %>%
   rmse(latency, .pred)
 ```
 
-We call this a "resubstition metric"
+We call this a "resubstitution estimate"
 
 ## Dangers of overfitting ⚠️ `r hexes("yardstick")`
 
@@ -163,7 +163,7 @@ tree_fit %>%
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Use `augment()` and `metrics()` to compute regression metrics.*
+*Use `augment()` and `metrics()` to compute a regression metric like `mae()`.*
 
 *Compute the metrics for both training and testing data.*
 
@@ -286,7 +286,9 @@ bootstraps(frog_train)
 
 -   *cross-validation folds with stratification*
 -   *bootstrap folds (change `times` from the default)*
--   *validation resample*
+-   *validation set*
+
+*Don't forget to set a seed when you resample!*
 
 ```{r}
 #| echo: false
@@ -331,17 +333,14 @@ frog_folds
 
 Set the seed when creating resamples
 
-## Where are the fitted models? `r hexes("tune")`  {.annotation}
+# Now we have metrics and resamples!
+
+## Fit our model to the resamples
 
 ```{r}
 tree_res <- fit_resamples(tree_wflow, frog_folds)
 tree_res
 ```
-
-. . .
-
-🗑️
-
 
 ## Evaluating model performance `r hexes("tune")`
 
@@ -421,6 +420,16 @@ tree_preds %>%
   coord_obs_pred()
 ```
 
+## Where are the fitted models? `r hexes("tune")`  {.annotation}
+
+```{r}
+tree_res
+```
+
+. . .
+
+🗑️
+
 # Decision tree 🌳
 
 # Random forest 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌵🌴🌲🌳🌴🌵🌳🌴🌳
@@ -431,7 +440,7 @@ tree_preds %>%
 
 - All the trees vote! 🗳️
 
-- Bootstrap aggregating + random feature selection
+- Bootstrap aggregating + random predictor sampling
 
 . . .
 
