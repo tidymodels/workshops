@@ -1775,7 +1775,7 @@
     "href": "slides/06-tuning-hyperparameters.html#next-steps",
     "title": "6 - Tuning Hyperparameters",
     "section": "Next steps",
-    "text": "Next steps\n\nUse explainers to characterize the model and the predictions.\n\n\n\nDocument the model.\n\n\n\n\nCreate an applicability domain model to help monitor our data over time.\n\n\n\n\nDeploy the model.\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Next steps\n\nDocument the model.\n\n\n\nDeploy the model.\n\n\n\n\nCreate an applicability domain model to help monitor our data over time.\n\n\n\n\nUse explainers to characterize the model and the predictions."
   },
   {
     "objectID": "slides/07-wrapping-up.html#resources-to-keep-learning",
@@ -1867,5 +1867,54 @@
     "title": "Annotations",
     "section": "The final fit to the NHL data",
     "text": "The final fit to the NHL data\nRecall that last_fit() uses the objects produced by initial_split() to determine what data are used for the final model fit and which are used as the test set.\nFor the validation set, last_fit() will use the non-testing data to create the final model fit. This includes the training and validation set.\nThere is no agreement in the community on whether this is the best approach or if we should just use the training set. There are good arguments either way.\nIf you only want to use the training set for the final model, you can do this via:\n\ntraining_data <- nhl_val$splits[[1]] %>% analysis()\n\n# Use `fit()` to train the model on just the training set\nfinal_glm_spline_wflow <- \n  glm_spline_wflow %>% \n  fit(data = training_data)\n\n# Create test set predictions\ntest_set_pred <- augment(final_glm_spline_wflow, nhl_test)\n\n# Setup and compute the test set metrics\ncls_metrics <- metric_set(roc_auc, accuracy)\n\ntest_res <- \n  test_set_pred %>% \n  cls_metrics(on_goal, estimate = .pred_class, .pred_yes)\ntest_res"
+  },
+  {
+    "objectID": "slides/07-wrapping-up.html#your-turn",
+    "href": "slides/07-wrapping-up.html#your-turn",
+    "title": "7 - Wrapping up",
+    "section": "Your turn",
+    "text": "Your turn\n\nWhat is one thing you learned that surprised you?\nWhat is one thing you learned that you plan to use?\n\n\n\n05:00"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#explain-yourself",
+    "href": "slides/06-tuning-hyperparameters.html#explain-yourself",
+    "title": "6 - Tuning Hyperparameters",
+    "section": "Explain yourself",
+    "text": "Explain yourself\nThere are two categories of model explanations, global and local.\n\n\nGlobal model explanations provide an overall understanding aggregated over a whole set of observations.\nLocal model explanations provide information about a prediction for a single observation.\n\n\n\nYou can also build global model explanations by aggregating local model explanations."
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#explain-yourself-1",
+    "href": "slides/06-tuning-hyperparameters.html#explain-yourself-1",
+    "title": "6 - Tuning Hyperparameters",
+    "section": "Explain yourself",
+    "text": "Explain yourself\nWe can build explainers using:\n\noriginal, basic predictors\nderived features\n\n\nlibrary(DALEXtra)\n\nglm_explainer <- explain_tidymodels(\n  final_glm_spline_wflow,\n  data = dplyr::select(nhl_train, -on_goal),\n  y = as.integer(nhl_train$on_goal),\n  verbose = FALSE\n)"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#explain-yourself-2",
+    "href": "slides/06-tuning-hyperparameters.html#explain-yourself-2",
+    "title": "6 - Tuning Hyperparameters",
+    "section": "Explain yourself",
+    "text": "Explain yourself\nWith our explainer, let’s create partial dependence profiles:\n\nset.seed(123)\npdp_coord_x <- model_profile(\n  glm_explainer,\n  variables = \"coord_x\",\n  N = 500,\n  groups = \"position\"\n)\n\n\nYou can use the default plot() method or create your own visualization."
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#explain-yourself-3",
+    "href": "slides/06-tuning-hyperparameters.html#explain-yourself-3",
+    "title": "6 - Tuning Hyperparameters",
+    "section": "Explain yourself",
+    "text": "Explain yourself"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#explain-yourself-4",
+    "href": "slides/06-tuning-hyperparameters.html#explain-yourself-4",
+    "title": "6 - Tuning Hyperparameters",
+    "section": "Explain yourself",
+    "text": "Explain yourself"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#your-turn-7",
+    "href": "slides/06-tuning-hyperparameters.html#your-turn-7",
+    "title": "6 - Tuning Hyperparameters",
+    "section": "Your turn",
+    "text": "Your turn\n\nCreate an explainer for our glm model.\nTry grouping by another variable, like game_type or dow.\n\n\n\n05:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   }
 ]

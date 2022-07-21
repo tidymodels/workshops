@@ -1291,11 +1291,11 @@
 <section id="next-steps" class="slide level2">
 <h2>Next steps</h2>
 <ul>
-<li>Use <a href="https://www.tmwr.org/explain.html">explainers</a> to characterize the model and the predictions.</li>
+<li><a href="https://vetiver.rstudio.com/learn-more/model-card.html">Document the model</a>.</li>
 </ul>
 <div class="fragment">
 <ul>
-<li><a href="https://vetiver.rstudio.com/learn-more/model-card.html">Document the model</a>.</li>
+<li><a href="https://vetiver.rstudio.com/get-started/">Deploy the model</a>.</li>
 </ul>
 </div>
 <div class="fragment">
@@ -1305,12 +1305,85 @@
 </div>
 <div class="fragment">
 <ul>
-<li><a href="https://vetiver.rstudio.com/get-started/">Deploy the model</a>.</li>
+<li>Use <a href="https://www.tmwr.org/explain.html">explainers</a> to characterize the model and the predictions.</li>
 </ul>
+</div>
+</section>
+<section id="explain-yourself" class="slide level2">
+<h2>Explain yourself</h2>
+<p>There are two categories of model explanations, <strong>global</strong> and <strong>local</strong>.</p>
+<div class="fragment">
+<ul>
+<li><p>Global model explanations provide an overall understanding aggregated over a <em>whole set</em> of observations.</p></li>
+<li><p>Local model explanations provide information about a prediction for a <em>single</em> observation.</p></li>
+</ul>
+</div>
+<div class="fragment">
+<p>You can also build global model explanations by aggregating local model explanations.</p>
+</div>
+</section></section>
+<section>
+<section id="tidymodels-integrates-with-model-explainability-frameworks" class="title-slide slide level1 center">
+<h1>tidymodels integrates with model explainability frameworks</h1>
+<p><img data-src="https://dalex.drwhy.ai/misc/dalex_even.png" class="absolute" style="bottom: -300px; right: 0px; width: 300px; "></p>
+</section>
+<section id="explain-yourself-1" class="slide level2">
+<h2>Explain yourself</h2>
+<p>We can build explainers using:</p>
+<ul>
+<li>original, basic predictors</li>
+<li>derived features</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1"></a><span class="fu">library</span>(DALEXtra)</span>
+<span id="cb27-2"><a href="#cb27-2"></a></span>
+<span id="cb27-3"><a href="#cb27-3"></a>glm_explainer <span class="ot">&lt;-</span> <span class="fu">explain_tidymodels</span>(</span>
+<span id="cb27-4"><a href="#cb27-4"></a>  final_glm_spline_wflow,</span>
+<span id="cb27-5"><a href="#cb27-5"></a>  <span class="at">data =</span> dplyr<span class="sc">::</span><span class="fu">select</span>(nhl_train, <span class="sc">-</span>on_goal),</span>
+<span id="cb27-6"><a href="#cb27-6"></a>  <span class="at">y =</span> <span class="fu">as.integer</span>(nhl_train<span class="sc">$</span>on_goal),</span>
+<span id="cb27-7"><a href="#cb27-7"></a>  <span class="at">verbose =</span> <span class="cn">FALSE</span></span>
+<span id="cb27-8"><a href="#cb27-8"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="explain-yourself-2" class="slide level2">
+<h2>Explain yourself</h2>
+<p>With our explainer, let’s create <a href="https://ema.drwhy.ai/partialDependenceProfiles.html">partial dependence profiles</a>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb28-2"><a href="#cb28-2"></a>pdp_coord_x <span class="ot">&lt;-</span> <span class="fu">model_profile</span>(</span>
+<span id="cb28-3"><a href="#cb28-3"></a>  glm_explainer,</span>
+<span id="cb28-4"><a href="#cb28-4"></a>  <span class="at">variables =</span> <span class="st">"coord_x"</span>,</span>
+<span id="cb28-5"><a href="#cb28-5"></a>  <span class="at">N =</span> <span class="dv">500</span>,</span>
+<span id="cb28-6"><a href="#cb28-6"></a>  <span class="at">groups =</span> <span class="st">"position"</span></span>
+<span id="cb28-7"><a href="#cb28-7"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="fragment">
+<p>You can use the default <code>plot()</code> method or create your own visualization.</p>
+</div>
+</section>
+<section id="explain-yourself-3" class="slide level2">
+<h2>Explain yourself</h2>
+
+<img data-src="06-tuning-hyperparameters_files/figure-revealjs/pdp-1.svg" class="r-stretch quarto-figure-center"></section>
+<section id="explain-yourself-4" class="slide level2">
+<h2>Explain yourself</h2>
+
+<img data-src="06-tuning-hyperparameters_files/figure-revealjs/pdp-grouped-1.svg" class="r-stretch quarto-figure-center"></section>
+<section id="your-turn-7" class="slide level2" data-transition="slide-in">
+<h2>Your turn</h2>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
+<p><em>Create an explainer for our glm model.</em></p>
+<p><em>Try grouping by another variable, like <code>game_type</code> or <code>dow</code>.</em></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="explainer" style="right:0;bottom:0;" data-warnwhen="0">
+<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
 
 <div class="footer footer-default">
 <p><a href="https://workshops.tidymodels.org" class="uri">https://workshops.tidymodels.org</a></p>
-</div>
 </div>
 </section></section>
     </div>
