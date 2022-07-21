@@ -357,6 +357,38 @@ final_glm_spline_wflow <-
 predict(final_glm_spline_wflow, nhl_test[1:3,])
 ```
 
+## Explain yourself
+
+Create an explainer for our glm model.
+
+```{r}
+library(DALEXtra)
+
+glm_explainer <- explain_tidymodels(
+  final_glm_spline_wflow,
+  data = dplyr::select(nhl_train, -on_goal),
+  y = as.integer(nhl_train$on_goal),
+  verbose = FALSE
+)
+```
+
+## Your turn 
+
+Try grouping by another variable, like `game_type` or `dow`.
+
+```{r}
+set.seed(123)
+pdp_coord_x <- model_profile(
+  glm_explainer,
+  variables = "coord_x",
+  N = 500,
+  groups = "position"
+)
+
+plot(pdp_coord_x)
+```
+
+
 ```{r}
 # turn off parallel backend
 foreach::registerDoSEQ()
