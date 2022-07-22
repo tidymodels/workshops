@@ -569,7 +569,77 @@ We could:
 
 Let's use an _effect encoding_.
 
-## Per-player statistics
+
+```{r effects-calcs}
+#| include: false
+
+player_stats <- 
+  nhl_train %>%
+  group_by(player) %>%
+  summarize(
+    rate = mean(on_goal == "yes"), 
+    num_shots = n(),
+    .groups = "drop"
+    ) %>%
+  mutate(player = reorder(player, rate))
+
+library(embed)
+
+estimates <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_lencode_mixed(player, outcome = vars(on_goal), id = "encoding") %>%   #<<
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  prep() %>% 
+  tidy(id = "encoding") %>% 
+  select(player = level, estimate = value)
+
+before <- nhl_train %>% select(on_goal, player) %>% slice(1:7) %>% add_rowindex()
+after <- left_join(before, estimates, by = "player") %>% 
+  select(on_goal, player = estimate, .row)
+```
+
+## What is an effect encoding?
+
+We replace the qualitative’s predictor data with their _effect on the outcome_. 
+
+::: columns
+::: {.column width="50%"}
+Data before:
+
+```{r before}
+before
+```
+
+:::
+
+::: {.column width="50%"}
+
+Data after:
+
+```{r after}
+after
+```
+
+:::
+:::
+
+The `player` column is replaced with the log-odds of being on goal. 
+
+:::notes
+As a reminder:
+
+$$\text{log-odds} = log\left(\frac{\hat{p}}{1 - \hat{p}}\right)$$ 
+
+where $\hat{p}$ is the on goal rate estimate. 
+
+For logistic regression, this is what the predictors are modeling. The log-odds are more likely to be linear with the outcome. 
+
+:::
+
+
+## Per-player statistics {.annotation}
 
 ::: columns
 ::: {.column width="50%"}
@@ -581,15 +651,6 @@ Let's use an _effect encoding_.
 #| fig-align: 'center'
 #| dev: 'svg'
 #| dev-args: list(bg = "transparent")
-player_stats <- 
-  nhl_train %>%
-  group_by(player) %>%
-  summarize(
-    rate = mean(on_goal == "yes"), 
-    num_shots = n(),
-    .groups = "drop"
-    ) %>%
-  mutate(player = reorder(player, rate))
   
 player_stats %>%   
   ggplot(aes(x = num_shots)) +
@@ -616,6 +677,13 @@ player_stats %>%
 :::
 :::
 
+
+:::notes
+Partial pooling gives better estimates for players with fewer shots by shrinking the estimate to the overall on-goal rate (`r round(mean(on_goal$on_goal == "yes") * 100, 1)`%)
+
+
+:::
+
 ## Partial pooling
 
 ```{r effect-compare}
@@ -625,17 +693,6 @@ player_stats %>%
 #| fig-align: 'center'
 #| dev: 'svglite'
 #| dev-args: list(bg = "transparent")
-library(embed)
-
-estimates <- 
-  recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_lencode_mixed(player, outcome = vars(on_goal), id = "encoding") %>%   #<<
-  step_dummy(all_nominal_predictors()) %>% 
-  step_zv(all_predictors()) %>% 
-  step_normalize(all_numeric_predictors()) %>% 
-  prep() %>% 
-  tidy(id = "encoding") %>% 
-  select(player = level, estimate = value)
 
 inner_join(player_stats, estimates, by = "player") %>% 
   mutate(estimate = binomial()$linkinv(estimate)) %>% 
@@ -648,7 +705,7 @@ inner_join(player_stats, estimates, by = "player") %>%
   labs(x = "Raw Rate", y = "Estimated via Effects Encoding")
 ```
 
-## Player effects `r hexes("recipes","embed")`
+## Player effects `r hexes("recipes","embed")` {.annotation}
 
 ```{r}
 #| code-line-numbers: "1,5"

@@ -149,6 +149,27 @@ knitr::include_graphics("images/whole-game-split.svg")
 
 `nhl_train` has the "Not Testing" data. 
 
+## Per-player statistics
+
+The effect encoding method essentially takes the effect of a variable, like player, and makes a data column for that effect. In our example, the ability of a player to have an on-goal shot is quantified by a model and then added as a data column to be used in the model. 
+
+Suppose NHL rookie Max has a single shot in the data and it was on goal. If we used a naive estimate for Max’s effect, the model is being told that Max should have a 100% chance of being on goal. That’s a very poor estimate since it is from a single data point. 
+
+Contrast this with seasoned player Davis, show has taken 250 shots and 75% of these were on goal. Davis’s proportion is more predictive because it is estimated with better data (i.e., more total shots). 
+Partial pooling leverages the entire data set and can borrow strength from all of the players. It is a common tool in Bayesian estimation and non-Bayesian mixed models. If a player’s data is of good quality, the partial pooling effect estimate is closer to the raw proportion. Max’s data is not great and is "shrunk" towards the center of the overall on goal proportion. Since there is so little known about Max’s shot history, this is a better effect estimate (until more data is available for him). 
+
+The Stan documentation has a pretty good vignette on this:  <https://cran.r-project.org/web/packages/rstanarm/vignettes/pooling.html>
+
+Also, _Bayes Rules!_ has a nice section on this: <https://www.bayesrulesbook.com/chapter-15.html>
+
+If the outcome were numeric, the effect would be the mean of the outcome per player. In this case, partial pooling is very similar to the James–Stein estimator: https://en.wikipedia.org/wiki/James–Stein_estimator
+
+## Player effects
+
+Effect encoding might result in a somewhat circular argument: the column is more likely to be important to the model since it is the output of a separate model. The risk here is that we might over-fit the effect to the data. For this reason, it is super important to make sure that we verify that we aren’t overfitting by checking with resampling (or a validation set). 
+
+Partial pooling somewhat lowers the risk of overfitting since it tends to correct for players with small sample sizes. It can’t correct for improper data usage or data leakage though. 
+
 ## Angle
 
 About these formulas... 
