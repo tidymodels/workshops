@@ -8,7 +8,7 @@
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.0.18">
+  <meta name="generator" content="quarto-1.0.35">
 
   <title>Machine learning with tidymodels - 5 - Feature engineering</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -560,9 +560,13 @@
 <span id="cb2-7"><a href="#cb2-7"></a>nhl_train_and_val <span class="ot">&lt;-</span> <span class="fu">training</span>(nhl_split)</span>
 <span id="cb2-8"><a href="#cb2-8"></a>nhl_test  <span class="ot">&lt;-</span> <span class="fu">testing</span>(nhl_split)</span>
 <span id="cb2-9"><a href="#cb2-9"></a></span>
-<span id="cb2-10"><a href="#cb2-10"></a><span class="fu">c</span>(<span class="st">`</span><span class="at">not testing</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">nrow</span>(nhl_train_and_val), <span class="at">testing =</span> <span class="fu">nrow</span>(nhl_test))</span>
-<span id="cb2-11"><a href="#cb2-11"></a><span class="co">#&gt; not testing     testing </span></span>
-<span id="cb2-12"><a href="#cb2-12"></a><span class="co">#&gt;        9110        3037</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-10"><a href="#cb2-10"></a><span class="do">## not testing</span></span>
+<span id="cb2-11"><a href="#cb2-11"></a><span class="fu">nrow</span>(nhl_train_and_val)</span>
+<span id="cb2-12"><a href="#cb2-12"></a><span class="co">#&gt; [1] 9110</span></span>
+<span id="cb2-13"><a href="#cb2-13"></a> </span>
+<span id="cb2-14"><a href="#cb2-14"></a><span class="do">## testing</span></span>
+<span id="cb2-15"><a href="#cb2-15"></a><span class="fu">nrow</span>(nhl_test)</span>
+<span id="cb2-16"><a href="#cb2-16"></a><span class="co">#&gt; [1] 3037</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="validation-split" class="slide level2">
@@ -604,7 +608,7 @@
 <div class="cell">
 <div class="cell-output-display">
 <div class="countdown" id="nhl-explore" style="right:0;bottom:0;" data-warnwhen="0">
-<code class="countdown-time"><span class="countdown-digits minutes">10</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+<code class="countdown-time"><span class="countdown-digits minutes">08</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
 </div>
 </div>
 </div>
@@ -765,6 +769,19 @@
 </div>
 <div class="fragment">
 <p>A fancy machine learning supervised dimension reduction technique…</p>
+<aside class="notes">
+<p>Note that this uses the outcome, and it is from an extension package</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </div>
 </section>
 <section id="other-possible-steps-2" class="slide level2">
@@ -792,13 +809,13 @@
 <p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
 <p><em>Create a <code>recipe()</code> for the on-goal data to :</em></p>
 <ul>
-<li><em>create dummy variables</em></li>
+<li><em>create one-hot indicator variables</em></li>
 <li><em>remove zero-variance variables</em></li>
 </ul>
 <div class="cell">
 <div class="cell-output-display">
 <div class="countdown" id="make-recipe" style="right:0;bottom:0;" data-warnwhen="0">
-<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+<code class="countdown-time"><span class="countdown-digits minutes">03</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
 </div>
 </div>
 </div>
@@ -814,23 +831,25 @@
 </section>
 <section id="using-a-workflow" class="slide level2">
 <h2>Using a workflow <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "></h2>
-<div class="cell" data-hash="05-feature-engineering_cache/revealjs/unnamed-chunk-10_d634a7eb271a3d55fc941f12a7105c0e">
-<div class="sourceCode cell-code" id="cb15" data-code-line-numbers="3|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>nhl_glm_wflow <span class="ot">&lt;-</span></span>
-<span id="cb15-2"><a href="#cb15-2"></a>  <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb15-3"><a href="#cb15-3"></a>  <span class="fu">add_recipe</span>(nhl_indicators) <span class="sc">%&gt;%</span></span>
-<span id="cb15-4"><a href="#cb15-4"></a>  <span class="fu">add_model</span>(<span class="fu">logistic_reg</span>())</span>
-<span id="cb15-5"><a href="#cb15-5"></a> </span>
-<span id="cb15-6"><a href="#cb15-6"></a>ctrl <span class="ot">&lt;-</span> <span class="fu">control_resamples</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb15-7"><a href="#cb15-7"></a>nhl_glm_res <span class="ot">&lt;-</span></span>
-<span id="cb15-8"><a href="#cb15-8"></a>  nhl_glm_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb15-9"><a href="#cb15-9"></a>  <span class="fu">fit_resamples</span>(nhl_val, <span class="at">control =</span> ctrl)</span>
-<span id="cb15-10"><a href="#cb15-10"></a></span>
-<span id="cb15-11"><a href="#cb15-11"></a><span class="fu">collect_metrics</span>(nhl_glm_res)</span>
-<span id="cb15-12"><a href="#cb15-12"></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
-<span id="cb15-13"><a href="#cb15-13"></a><span class="co">#&gt;   .metric  .estimator  mean     n std_err .config             </span></span>
-<span id="cb15-14"><a href="#cb15-14"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
-<span id="cb15-15"><a href="#cb15-15"></a><span class="co">#&gt; 1 accuracy binary     0.555     1      NA Preprocessor1_Model1</span></span>
-<span id="cb15-16"><a href="#cb15-16"></a><span class="co">#&gt; 2 roc_auc  binary     0.558     1      NA Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-hash="05-feature-engineering_cache/revealjs/unnamed-chunk-10_2c7f25fc53b47d4c2e51af0db3a8481a">
+<div class="sourceCode cell-code" id="cb15" data-code-line-numbers="3|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
+<span id="cb15-2"><a href="#cb15-2"></a></span>
+<span id="cb15-3"><a href="#cb15-3"></a>nhl_glm_wflow <span class="ot">&lt;-</span></span>
+<span id="cb15-4"><a href="#cb15-4"></a>  <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb15-5"><a href="#cb15-5"></a>  <span class="fu">add_recipe</span>(nhl_indicators) <span class="sc">%&gt;%</span></span>
+<span id="cb15-6"><a href="#cb15-6"></a>  <span class="fu">add_model</span>(<span class="fu">logistic_reg</span>())</span>
+<span id="cb15-7"><a href="#cb15-7"></a> </span>
+<span id="cb15-8"><a href="#cb15-8"></a>ctrl <span class="ot">&lt;-</span> <span class="fu">control_resamples</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb15-9"><a href="#cb15-9"></a>nhl_glm_res <span class="ot">&lt;-</span></span>
+<span id="cb15-10"><a href="#cb15-10"></a>  nhl_glm_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb15-11"><a href="#cb15-11"></a>  <span class="fu">fit_resamples</span>(nhl_val, <span class="at">control =</span> ctrl)</span>
+<span id="cb15-12"><a href="#cb15-12"></a></span>
+<span id="cb15-13"><a href="#cb15-13"></a><span class="fu">collect_metrics</span>(nhl_glm_res)</span>
+<span id="cb15-14"><a href="#cb15-14"></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
+<span id="cb15-15"><a href="#cb15-15"></a><span class="co">#&gt;   .metric  .estimator  mean     n std_err .config             </span></span>
+<span id="cb15-16"><a href="#cb15-16"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb15-17"><a href="#cb15-17"></a><span class="co">#&gt; 1 accuracy binary     0.555     1      NA Preprocessor1_Model1</span></span>
+<span id="cb15-18"><a href="#cb15-18"></a><span class="co">#&gt; 2 roc_auc  binary     0.558     1      NA Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="your-turn-2" class="slide level2" data-transition="slide-in">
@@ -992,7 +1011,61 @@
 <p>Let’s use an <em>effect encoding</em>.</p>
 </div>
 </section>
-<section id="per-player-statistics" class="slide level2">
+<section id="what-is-an-effect-encoding" class="slide level2">
+<h2>What is an effect encoding?</h2>
+<p>We replace the qualitative’s predictor data with their <em>effect on the outcome</em>.</p>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p>Data before:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a>before</span>
+<span id="cb19-2"><a href="#cb19-2"></a><span class="co">#&gt; # A tibble: 7 × 3</span></span>
+<span id="cb19-3"><a href="#cb19-3"></a><span class="co">#&gt;   on_goal player            .row</span></span>
+<span id="cb19-4"><a href="#cb19-4"></a><span class="co">#&gt;   &lt;fct&gt;   &lt;fct&gt;            &lt;int&gt;</span></span>
+<span id="cb19-5"><a href="#cb19-5"></a><span class="co">#&gt; 1 yes     brian_dumoulin       1</span></span>
+<span id="cb19-6"><a href="#cb19-6"></a><span class="co">#&gt; 2 yes     patric_hornqvist     2</span></span>
+<span id="cb19-7"><a href="#cb19-7"></a><span class="co">#&gt; 3 yes     nikita_nesterov      3</span></span>
+<span id="cb19-8"><a href="#cb19-8"></a><span class="co">#&gt; 4 yes     jack_eichel          4</span></span>
+<span id="cb19-9"><a href="#cb19-9"></a><span class="co">#&gt; 5 yes     justin_williams      5</span></span>
+<span id="cb19-10"><a href="#cb19-10"></a><span class="co">#&gt; 6 yes     seth_jones           6</span></span>
+<span id="cb19-11"><a href="#cb19-11"></a><span class="co">#&gt; 7 yes     kris_letang          7</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div><div class="column" style="width:50%;">
+<p>Data after:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a>after</span>
+<span id="cb20-2"><a href="#cb20-2"></a><span class="co">#&gt; # A tibble: 7 × 3</span></span>
+<span id="cb20-3"><a href="#cb20-3"></a><span class="co">#&gt;   on_goal  player  .row</span></span>
+<span id="cb20-4"><a href="#cb20-4"></a><span class="co">#&gt;   &lt;fct&gt;     &lt;dbl&gt; &lt;int&gt;</span></span>
+<span id="cb20-5"><a href="#cb20-5"></a><span class="co">#&gt; 1 yes     -0.114      1</span></span>
+<span id="cb20-6"><a href="#cb20-6"></a><span class="co">#&gt; 2 yes      0.631      2</span></span>
+<span id="cb20-7"><a href="#cb20-7"></a><span class="co">#&gt; 3 yes      0.142      3</span></span>
+<span id="cb20-8"><a href="#cb20-8"></a><span class="co">#&gt; 4 yes      0.220      4</span></span>
+<span id="cb20-9"><a href="#cb20-9"></a><span class="co">#&gt; 5 yes      0.248      5</span></span>
+<span id="cb20-10"><a href="#cb20-10"></a><span class="co">#&gt; 6 yes      0.0733     6</span></span>
+<span id="cb20-11"><a href="#cb20-11"></a><span class="co">#&gt; 7 yes      0.0774     7</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<p>The <code>player</code> column is replaced with the log-odds of being on goal.</p>
+<aside class="notes">
+<p>As a reminder:</p>
+<p><span class="math display">\[\text{log-odds} = log\left(\frac{\hat{p}}{1 - \hat{p}}\right)\]</span></p>
+<p>where <span class="math inline">\(\hat{p}\)</span> is the on goal rate estimate.</p>
+<p>For logistic regression, this is what the predictors are modeling. The log-odds are more likely to be linear with the outcome.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="per-player-statistics" class="slide level2 annotation">
 <h2>Per-player statistics</h2>
 <div class="columns">
 <div class="column" style="width:50%;">
@@ -1020,21 +1093,34 @@
 </ul>
 </div>
 </div>
+<aside class="notes">
+<p>Partial pooling gives better estimates for players with fewer shots by shrinking the estimate to the overall on-goal rate (55.2%)</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 </section>
 <section id="partial-pooling" class="slide level2">
 <h2>Partial pooling</h2>
 
 <img data-src="05-feature-engineering_files/figure-revealjs/effect-compare-1.svg" class="r-stretch quarto-figure-center"></section>
-<section id="player-effects" class="slide level2">
+<section id="player-effects" class="slide level2 annotation">
 <h2>Player effects <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19" data-code-line-numbers="1,5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a><span class="fu">library</span>(embed)</span>
-<span id="cb19-2"><a href="#cb19-2"></a></span>
-<span id="cb19-3"><a href="#cb19-3"></a>nhl_effect_rec <span class="ot">&lt;-</span></span>
-<span id="cb19-4"><a href="#cb19-4"></a>  <span class="fu">recipe</span>(on_goal <span class="sc">~</span> ., <span class="at">data =</span> nhl_train) <span class="sc">%&gt;%</span></span>
-<span id="cb19-5"><a href="#cb19-5"></a>  <span class="fu">step_lencode_mixed</span>(player, <span class="at">outcome =</span> <span class="fu">vars</span>(on_goal)) <span class="sc">%&gt;%</span></span>
-<span id="cb19-6"><a href="#cb19-6"></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span></span>
-<span id="cb19-7"><a href="#cb19-7"></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21" data-code-line-numbers="1,5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a><span class="fu">library</span>(embed)</span>
+<span id="cb21-2"><a href="#cb21-2"></a></span>
+<span id="cb21-3"><a href="#cb21-3"></a>nhl_effect_rec <span class="ot">&lt;-</span></span>
+<span id="cb21-4"><a href="#cb21-4"></a>  <span class="fu">recipe</span>(on_goal <span class="sc">~</span> ., <span class="at">data =</span> nhl_train) <span class="sc">%&gt;%</span></span>
+<span id="cb21-5"><a href="#cb21-5"></a>  <span class="fu">step_lencode_mixed</span>(player, <span class="at">outcome =</span> <span class="fu">vars</span>(on_goal)) <span class="sc">%&gt;%</span></span>
+<span id="cb21-6"><a href="#cb21-6"></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb21-7"><a href="#cb21-7"></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="fragment">
 <p>It is very important to appropriately validate the effect encoding step to make sure that we are not overfitting.</p>
@@ -1060,20 +1146,20 @@
 <section id="effect-encoding-results" class="slide level2">
 <h2>Effect encoding results <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20" data-code-line-numbers="3|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a>nhl_effect_wflow <span class="ot">&lt;-</span></span>
-<span id="cb20-2"><a href="#cb20-2"></a>  nhl_glm_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb20-3"><a href="#cb20-3"></a>  <span class="fu">update_recipe</span>(nhl_effect_rec)</span>
-<span id="cb20-4"><a href="#cb20-4"></a></span>
-<span id="cb20-5"><a href="#cb20-5"></a>nhl_effect_res <span class="ot">&lt;-</span></span>
-<span id="cb20-6"><a href="#cb20-6"></a>  nhl_effect_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb20-7"><a href="#cb20-7"></a>  <span class="fu">fit_resamples</span>(nhl_val)</span>
-<span id="cb20-8"><a href="#cb20-8"></a></span>
-<span id="cb20-9"><a href="#cb20-9"></a><span class="fu">collect_metrics</span>(nhl_effect_res)</span>
-<span id="cb20-10"><a href="#cb20-10"></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
-<span id="cb20-11"><a href="#cb20-11"></a><span class="co">#&gt;   .metric  .estimator  mean     n std_err .config             </span></span>
-<span id="cb20-12"><a href="#cb20-12"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
-<span id="cb20-13"><a href="#cb20-13"></a><span class="co">#&gt; 1 accuracy binary     0.540     1      NA Preprocessor1_Model1</span></span>
-<span id="cb20-14"><a href="#cb20-14"></a><span class="co">#&gt; 2 roc_auc  binary     0.551     1      NA Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22" data-code-line-numbers="3|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a>nhl_effect_wflow <span class="ot">&lt;-</span></span>
+<span id="cb22-2"><a href="#cb22-2"></a>  nhl_glm_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb22-3"><a href="#cb22-3"></a>  <span class="fu">update_recipe</span>(nhl_effect_rec)</span>
+<span id="cb22-4"><a href="#cb22-4"></a></span>
+<span id="cb22-5"><a href="#cb22-5"></a>nhl_effect_res <span class="ot">&lt;-</span></span>
+<span id="cb22-6"><a href="#cb22-6"></a>  nhl_effect_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb22-7"><a href="#cb22-7"></a>  <span class="fu">fit_resamples</span>(nhl_val)</span>
+<span id="cb22-8"><a href="#cb22-8"></a></span>
+<span id="cb22-9"><a href="#cb22-9"></a><span class="fu">collect_metrics</span>(nhl_effect_res)</span>
+<span id="cb22-10"><a href="#cb22-10"></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
+<span id="cb22-11"><a href="#cb22-11"></a><span class="co">#&gt;   .metric  .estimator  mean     n std_err .config             </span></span>
+<span id="cb22-12"><a href="#cb22-12"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb22-13"><a href="#cb22-13"></a><span class="co">#&gt; 1 accuracy binary     0.540     1      NA Preprocessor1_Model1</span></span>
+<span id="cb22-14"><a href="#cb22-14"></a><span class="co">#&gt; 2 roc_auc  binary     0.551     1      NA Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section></section>
 <section>
@@ -1084,11 +1170,11 @@
 <section id="angle" class="slide level2">
 <h2>Angle</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a>nhl_angle_rec <span class="ot">&lt;-</span></span>
-<span id="cb21-2"><a href="#cb21-2"></a>  nhl_indicators <span class="sc">%&gt;%</span></span>
-<span id="cb21-3"><a href="#cb21-3"></a>  <span class="fu">step_mutate</span>(</span>
-<span id="cb21-4"><a href="#cb21-4"></a>    <span class="at">angle =</span> <span class="fu">abs</span>(<span class="fu">atan2</span>(<span class="fu">abs</span>(coord_y), (<span class="dv">89</span> <span class="sc">-</span> <span class="fu">abs</span>(coord_x))) <span class="sc">*</span> (<span class="dv">180</span> <span class="sc">/</span> pi))</span>
-<span id="cb21-5"><a href="#cb21-5"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a>nhl_angle_rec <span class="ot">&lt;-</span></span>
+<span id="cb23-2"><a href="#cb23-2"></a>  nhl_indicators <span class="sc">%&gt;%</span></span>
+<span id="cb23-3"><a href="#cb23-3"></a>  <span class="fu">step_mutate</span>(</span>
+<span id="cb23-4"><a href="#cb23-4"></a>    <span class="at">angle =</span> <span class="fu">abs</span>(<span class="fu">atan2</span>(<span class="fu">abs</span>(coord_y), (<span class="dv">89</span> <span class="sc">-</span> <span class="fu">abs</span>(coord_x))) <span class="sc">*</span> (<span class="dv">180</span> <span class="sc">/</span> pi))</span>
+<span id="cb23-5"><a href="#cb23-5"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
@@ -1117,45 +1203,46 @@
 <section id="distance" class="slide level2 annotation">
 <h2>Distance</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a>nhl_distance_rec <span class="ot">&lt;-</span></span>
-<span id="cb22-2"><a href="#cb22-2"></a>  nhl_angle_rec <span class="sc">%&gt;%</span></span>
-<span id="cb22-3"><a href="#cb22-3"></a>  <span class="fu">step_mutate</span>(</span>
-<span id="cb22-4"><a href="#cb22-4"></a>    <span class="at">distance =</span> <span class="fu">sqrt</span>((<span class="dv">89</span> <span class="sc">-</span> <span class="fu">abs</span>(coord_x))<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> <span class="fu">abs</span>(coord_y)<span class="sc">^</span><span class="dv">2</span>),</span>
-<span id="cb22-5"><a href="#cb22-5"></a>    <span class="at">distance =</span> <span class="fu">log</span>(distance)</span>
-<span id="cb22-6"><a href="#cb22-6"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a>nhl_distance_rec <span class="ot">&lt;-</span></span>
+<span id="cb24-2"><a href="#cb24-2"></a>  nhl_angle_rec <span class="sc">%&gt;%</span></span>
+<span id="cb24-3"><a href="#cb24-3"></a>  <span class="fu">step_mutate</span>(</span>
+<span id="cb24-4"><a href="#cb24-4"></a>    <span class="at">distance =</span> <span class="fu">sqrt</span>((<span class="dv">89</span> <span class="sc">-</span> <span class="fu">abs</span>(coord_x))<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> <span class="fu">abs</span>(coord_y)<span class="sc">^</span><span class="dv">2</span>),</span>
+<span id="cb24-5"><a href="#cb24-5"></a>    <span class="at">distance =</span> <span class="fu">log</span>(distance)</span>
+<span id="cb24-6"><a href="#cb24-6"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 <img data-src="05-feature-engineering_files/figure-revealjs/distance-1.svg" style="width:50.0%" class="r-stretch quarto-figure-center"></section>
 <section id="behind-goal-line" class="slide level2">
 <h2>Behind goal line</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a>nhl_behind_rec <span class="ot">&lt;-</span></span>
-<span id="cb23-2"><a href="#cb23-2"></a>  nhl_distance_rec <span class="sc">%&gt;%</span></span>
-<span id="cb23-3"><a href="#cb23-3"></a>  <span class="fu">step_mutate</span>(</span>
-<span id="cb23-4"><a href="#cb23-4"></a>    <span class="at">behind_goal_line =</span> <span class="fu">ifelse</span>(<span class="fu">abs</span>(coord_x) <span class="sc">&gt;=</span> <span class="dv">89</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
-<span id="cb23-5"><a href="#cb23-5"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a>nhl_behind_rec <span class="ot">&lt;-</span></span>
+<span id="cb25-2"><a href="#cb25-2"></a>  nhl_distance_rec <span class="sc">%&gt;%</span></span>
+<span id="cb25-3"><a href="#cb25-3"></a>  <span class="fu">step_mutate</span>(</span>
+<span id="cb25-4"><a href="#cb25-4"></a>    <span class="at">behind_goal_line =</span> <span class="fu">ifelse</span>(<span class="fu">abs</span>(coord_x) <span class="sc">&gt;=</span> <span class="dv">89</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb25-5"><a href="#cb25-5"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 <img data-src="05-feature-engineering_files/figure-revealjs/goal-line-1.svg" style="width:50.0%" class="r-stretch quarto-figure-center"></section>
 <section id="fit-different-recipes" class="slide level2">
 <h2>Fit different recipes <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "></h2>
 <p>A workflow set can cross models and/or preprocessors and then resample them <em>en masse</em>.</p>
-<div class="cell" data-hash="05-feature-engineering_cache/revealjs/nhl-feature-sets_37fb109cf742bc312cd647efb2dd9656">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a></span>
-<span id="cb24-2"><a href="#cb24-2"></a>nhl_glm_set_res <span class="ot">&lt;-</span></span>
-<span id="cb24-3"><a href="#cb24-3"></a>  <span class="fu">workflow_set</span>(</span>
-<span id="cb24-4"><a href="#cb24-4"></a>    <span class="fu">list</span>(<span class="at">dummy =</span> nhl_indicators, <span class="at">encoded =</span> nhl_effect_rec,</span>
-<span id="cb24-5"><a href="#cb24-5"></a>         <span class="at">angle =</span> nhl_angle_rec, <span class="at">dist =</span> nhl_distance_rec, </span>
-<span id="cb24-6"><a href="#cb24-6"></a>         <span class="at">bgl =</span> nhl_behind_rec),</span>
-<span id="cb24-7"><a href="#cb24-7"></a>    <span class="fu">list</span>(<span class="at">logistic =</span> <span class="fu">logistic_reg</span>())</span>
-<span id="cb24-8"><a href="#cb24-8"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb24-9"><a href="#cb24-9"></a>  <span class="fu">workflow_map</span>(<span class="at">fn =</span> <span class="st">"fit_resamples"</span>, <span class="at">resamples =</span> nhl_val, <span class="at">verbose =</span> <span class="cn">TRUE</span>, <span class="at">control =</span> ctrl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-hash="05-feature-engineering_cache/revealjs/nhl-feature-sets_66f2052b57a2e56db808c69ad028522a">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
+<span id="cb26-2"><a href="#cb26-2"></a></span>
+<span id="cb26-3"><a href="#cb26-3"></a>nhl_glm_set_res <span class="ot">&lt;-</span></span>
+<span id="cb26-4"><a href="#cb26-4"></a>  <span class="fu">workflow_set</span>(</span>
+<span id="cb26-5"><a href="#cb26-5"></a>    <span class="fu">list</span>(<span class="st">`</span><span class="at">1_dummy</span><span class="st">`</span> <span class="ot">=</span> nhl_indicators, <span class="st">`</span><span class="at">2_angle</span><span class="st">`</span> <span class="ot">=</span> nhl_angle_rec, </span>
+<span id="cb26-6"><a href="#cb26-6"></a>         <span class="st">`</span><span class="at">3_dist</span><span class="st">`</span> <span class="ot">=</span> nhl_distance_rec, <span class="st">`</span><span class="at">4_bgl</span><span class="st">`</span> <span class="ot">=</span> nhl_behind_rec),</span>
+<span id="cb26-7"><a href="#cb26-7"></a>    <span class="fu">list</span>(<span class="at">logistic =</span> <span class="fu">logistic_reg</span>())</span>
+<span id="cb26-8"><a href="#cb26-8"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb26-9"><a href="#cb26-9"></a>  <span class="fu">workflow_map</span>(<span class="at">fn =</span> <span class="st">"fit_resamples"</span>, <span class="at">resamples =</span> nhl_val, <span class="at">verbose =</span> <span class="cn">TRUE</span>, <span class="at">control =</span> ctrl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="your-turn-5" class="slide level2" data-transition="slide-in">
 <h2>Your turn</h2>
 <p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
 <p><em>Create a workflow set with 2 or 3 recipes.</em></p>
+<p><em>(Consider using recipes we’ve already created.)</em></p>
 <p><em>Use <code>workflow_map()</code> to resample the workflow set.</em></p>
 <div class="cell">
 <div class="cell-output-display">
@@ -1168,16 +1255,16 @@
 <section id="compare-recipes" class="slide level2">
 <h2>Compare recipes</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1"></a><span class="fu">library</span>(forcats)</span>
-<span id="cb25-2"><a href="#cb25-2"></a><span class="fu">collect_metrics</span>(nhl_glm_set_res) <span class="sc">%&gt;%</span></span>
-<span id="cb25-3"><a href="#cb25-3"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"roc_auc"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb25-4"><a href="#cb25-4"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb25-5"><a href="#cb25-5"></a>    <span class="at">features =</span> <span class="fu">gsub</span>(<span class="st">"_logistic"</span>, <span class="st">""</span>, wflow_id), </span>
-<span id="cb25-6"><a href="#cb25-6"></a>    <span class="at">features =</span> <span class="fu">fct_reorder</span>(features, mean)</span>
-<span id="cb25-7"><a href="#cb25-7"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb25-8"><a href="#cb25-8"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> mean, <span class="at">y =</span> features)) <span class="sc">+</span></span>
-<span id="cb25-9"><a href="#cb25-9"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
-<span id="cb25-10"><a href="#cb25-10"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">x =</span> <span class="st">"ROC AUC (validation set)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1"></a><span class="fu">library</span>(forcats)</span>
+<span id="cb27-2"><a href="#cb27-2"></a><span class="fu">collect_metrics</span>(nhl_glm_set_res) <span class="sc">%&gt;%</span></span>
+<span id="cb27-3"><a href="#cb27-3"></a>  <span class="fu">filter</span>(.metric <span class="sc">==</span> <span class="st">"roc_auc"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb27-4"><a href="#cb27-4"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb27-5"><a href="#cb27-5"></a>    <span class="at">features =</span> <span class="fu">gsub</span>(<span class="st">"_logistic"</span>, <span class="st">""</span>, wflow_id), </span>
+<span id="cb27-6"><a href="#cb27-6"></a>    <span class="at">features =</span> <span class="fu">fct_reorder</span>(features, mean)</span>
+<span id="cb27-7"><a href="#cb27-7"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb27-8"><a href="#cb27-8"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> mean, <span class="at">y =</span> features)) <span class="sc">+</span></span>
+<span id="cb27-9"><a href="#cb27-9"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb27-10"><a href="#cb27-10"></a>  <span class="fu">labs</span>(<span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">x =</span> <span class="st">"ROC AUC (validation set)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="compare-recipes-1" class="slide level2">
@@ -1523,7 +1610,10 @@
         }
       }
       const toggleBodyColorPrimary = () => {
-        toggleBodyColorMode(window.document.querySelector("link#quarto-bootstrap"));
+        const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+        if (bsSheetEl) {
+          toggleBodyColorMode(bsSheetEl);
+        }
       }
       toggleBodyColorPrimary();  
       const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
