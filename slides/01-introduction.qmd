@@ -143,6 +143,54 @@ Many thanks to Julie Jung, Alison Hill, and Desirée De Leon for their role in c
     - Tuning hyperparameters
     - Wrapping up!
 
+## Today's data: frog hatching
+
+::: columns
+::: {.column width="60%"}
+```{r}
+#| echo: false
+#| out-width: '50%'
+
+library(dplyr)
+
+data("tree_frogs", package = "stacks")
+tree_frogs <- tree_frogs %>%
+  mutate(t_o_d = factor(t_o_d)) %>%
+  filter(!is.na(latency)) %>%
+  select(-c(clutch, hatched))
+
+# TODO: decrease font size
+tree_frogs %>%
+  head(8) %>%
+  knitr::kable()
+```
+:::
+
+::: {.column width="40%"}
+![](images/Ac_2tads.jpg)
+:::
+
+:::
+
+## Tomorrow's data: hockey shots on goal
+
+```{r rink-shots}
+#| echo: false
+#| out-width: '90%'
+#| fig-width: 7
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+library(tidyverse)
+library(ongoal)
+set.seed(100)
+on_goal %>% 
+  sample_n(500) %>%
+  plot_nhl_shots(emphasis = on_goal)
+```
+
 ##  {.center}
 
 ### Introduce yourself to your neighbors 👋
@@ -209,34 +257,7 @@ library(tidymodels)
 
 ##  {background-image="images/tm-org.png" background-size="contain"}
 
-## The whole game
-
-- Tomorrow we will walk through a case study in detail to illustrate feature engineering and model tuning. 
-
-- Today we will walk through the analysis at a higher level to show the model development process as a whole and give you an introduction to the data set.
-
-- The data are from the NHL where we want to predict whether a shot was on-goal or not! `r emo::ji("ice_hockey")`
-
-- It’s a good example to show how model development works. 
-
-## Shots on goal
-
-```{r rink-shots}
-#| echo: false
-#| out-width: '90%'
-#| fig-width: 7
-#| fig-height: 4
-#| fig-align: 'center'
-#| dev: 'svg'
-#| dev-args: list(bg = "transparent")
-
-library(ongoal)
-set.seed(100)
-on_goal %>% 
-  sample_n(500) %>%
-  plot_nhl_shots(emphasis = on_goal)
-```
-
+# The whole game
 
 ## Data spending
 
@@ -246,156 +267,7 @@ on_goal %>%
 knitr::include_graphics("images/whole-game-split.svg")
 ```
 
-## A first model
-
-```{r logistic-diagram, echo = FALSE}
-#| fig-align: "center"
-
-knitr::include_graphics("images/whole-game-logistic.svg")
-```
-
-## Starting point: logistic regression
-
-- We'll start by using basic logistic regression to predict our binary outcome. 
-
-- Our first model will have `r ncol(season_2015) - 1` simple predictor columns. 
-
-- One initial question: there are `r length(unique(season_2015$player))` players taking shots. 
-
-- For logistic regression, do we convert these to binary indicators (a.k.a. "dummies")? 
-
-
-
-## Basic features (inc dummy variables)
-
-```{r basic-features}
-#| echo: false
-#| out-width: '70%'
-#| fig-width: 6
-#| fig-height: 5
-#| fig-align: 'center'
-#| dev: 'svg'
-#| dev-args: list(bg = "transparent")
-
-plot_roc <- function(x, highlight = "dummy_logistic") {
-  emphasize <- dplyr::filter(x, wflow_id == highlight)
-  
-  lvls <- levels(x$wflow_id)
-  hl_lvl <- which(lvls == highlight)
-  if (hl_lvl > 1) {
-    prev_lvls <- lvls[1:(hl_lvl - 1)]
-    others    <- dplyr::filter(x, wflow_id %in% prev_lvls)
-  } else {
-    others <- x[0,]
-  }
-  
-  p <- 
-    ggplot(others, aes(x = 1 - specificity, y = sensitivity)) + 
-    geom_abline(col = "red", lty = 3) +
-    geom_step(aes(group = wflow_id, col = wflow_id), alpha = 1/4, lwd = 1, show.legend = FALSE) + 
-    geom_step(aes(group = wflow_id, col = wflow_id), data = emphasize, alpha = 1, lwd = 1, show.legend = FALSE) +
-    scale_colour_viridis_d(drop = FALSE) +
-    coord_fixed()
-  
-  p
-}
-
-lvls <- c("dummy_logistic", "encoded_logistic", "angle_logistic", "dist_logistic", 
-          "bgl_logistic", "splines", "xgboost", "xgboost-coords")
-
-load("roc_curves_part_5.RData")
-load("roc_curves_part_6.RData")
-
-roc_curves <- 
-  bind_rows(roc_curves_part_5, roc_curves_part_6) %>%
-  mutate(wflow_id = factor(wflow_id, levels = lvls))
-
-plot_roc(roc_curves, "dummy_logistic") + theme_bw()
-```
-
-
-## Different player encoding
-
-```{r player-encoding}
-#| echo: false
-#| out-width: '70%'
-#| fig-width: 6
-#| fig-height: 5
-#| fig-align: 'center'
-#| dev: 'svg'
-#| dev-args: list(bg = "transparent")
-
-plot_roc(roc_curves, "encoded_logistic") + theme_bw()
-```
-
-## What about location
-
-The previous models used the x/y coordinates. 
-
-Are there better ways to represent shot location? 
-
-How can we make location more usable for the model? 
-
-
-## Add shot angle? 
-
-```{r shot-angle}
-#| echo: false
-#| out-width: '70%'
-#| fig-width: 6
-#| fig-height: 5
-#| fig-align: 'center'
-#| dev: 'svg'
-#| dev-args: list(bg = "transparent")
-
-plot_roc(roc_curves, "angle_logistic") + theme_bw()
-```
-
-## Add shot distance? 
-
-```{r shot-dist}
-#| echo: false
-#| out-width: '70%'
-#| fig-width: 6
-#| fig-height: 5
-#| fig-align: 'center'
-#| dev: 'svg'
-#| dev-args: list(bg = "transparent")
-
-plot_roc(roc_curves, "dist_logistic") + theme_bw()
-```
-
-## Add shot behind goal line? 
-
-```{r shot-behind-goal}
-#| echo: false
-#| out-width: '70%'
-#| fig-width: 6
-#| fig-height: 5
-#| fig-align: 'center'
-#| dev: 'svg'
-#| dev-args: list(bg = "transparent")
-
-plot_roc(roc_curves, "bgl_logistic") + theme_bw()
-```
-
-
-## Nonlinear terms for angle and distance 
-
-```{r splines}
-#| echo: false
-#| out-width: '70%'
-#| fig-width: 6
-#| fig-height: 5
-#| fig-align: 'center'
-#| dev: 'svg'
-#| dev-args: list(bg = "transparent")
-
-plot_roc(roc_curves, "splines") + theme_bw()
-```
-
-
-## Try another model
+## Fit several models
 
 ```{r boost-diagram, echo = FALSE}
 #| fig-align: "center"
@@ -403,39 +275,7 @@ plot_roc(roc_curves, "splines") + theme_bw()
 knitr::include_graphics("images/whole-game-boost.svg")
 ```
 
-
-## Switch to boosting and basic features
-
-```{r xgboost-model}
-#| echo: false
-#| out-width: '70%'
-#| fig-width: 6
-#| fig-height: 5
-#| fig-align: 'center'
-#| dev: 'svg'
-#| dev-args: list(bg = "transparent")
-
-plot_roc(roc_curves, "xgboost") + theme_bw()
-```
-
-
-## Boosting with location features
-
-```{r xgboost-coord-model}
-#| echo: false
-#| out-width: '70%'
-#| fig-width: 6
-#| fig-height: 5
-#| fig-align: 'center'
-#| dev: 'svg'
-#| dev-args: list(bg = "transparent")
-
-plot_roc(roc_curves, "xgboost-coords") + theme_bw()
-```
-
-
-
-## Choose wisely...
+## Select a model
 
 ```{r select-diagram, echo = FALSE}
 #| fig-align: "center"
@@ -452,15 +292,15 @@ knitr::include_graphics("images/whole-game-select.svg")
 knitr::include_graphics("images/whole-game-final.svg")
 ```
 
-
-## ... and so on
+::: notes
 
 Once we find an acceptable model and feature set, the process is to 
 
  * Confirm our results on the test set. 
  * Document the data and model development process. 
  * Deploy, monitor, etc. 
- 
+
+:::
 
 ## Let's install some packages
 
