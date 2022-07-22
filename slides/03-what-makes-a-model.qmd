@@ -37,7 +37,7 @@ countdown(minutes = 3, id = "how-to-fit-linear-model")
 
 . . .
 
--   `lm` for generalized linear model
+-   `lm` for linear model
 
 -   `glmnet` for regularized regression
 
@@ -84,6 +84,11 @@ frog_test <- testing(frog_split)
 linear_reg()
 ```
 
+
+:::notes
+Models have default engines
+:::
+
 ## To specify a model `r hexes("parsnip")`
 
 ::: columns
@@ -126,11 +131,16 @@ linear_reg() %>%
 :::
 :::
 
+
 ## To specify a model `r hexes("parsnip")`
 
 ```{r}
 decision_tree()
 ```
+
+:::notes
+Some models have a default mode
+:::
 
 ## To specify a model `r hexes("parsnip")`
 
@@ -329,8 +339,6 @@ ggplot(data = tree_preds, aes(age, latency)) +
 
 # A model workflow
 
-##  {background-image="https://media.giphy.com/media/xUA7b0Klw8Wfor7FWo/giphy.gif" background-size="50%"}
-
 ## Workflows bind preprocessors and models
 
 ```{r good-workflow}
@@ -339,6 +347,11 @@ ggplot(data = tree_preds, aes(age, latency)) +
 #| fig-aling: 'center'
 knitr::include_graphics("images/good_workflow.png")
 ```
+
+:::notes
+Explain that PCA that is a preprocessor / dimensionality reduction, used to decorrelate data
+:::
+
 
 ## What is wrong with this? {.annotation}
 
@@ -353,7 +366,7 @@ knitr::include_graphics("images/bad_workflow.png")
 
 . . .
 
--   Workflows handle new data better than `model.matrix()` in terms of new factor levels
+-   Workflows handle new data better than base R tools in terms of new factor levels
 
 . . .
 
@@ -368,7 +381,7 @@ knitr::include_graphics("images/bad_workflow.png")
 -   [Most importantly]{.underline}, a workflow captures the entire modeling process: `fit()` and `predict()` apply to the preprocessing steps in addition to the actual model fit
 
 ::: notes
-Two ways workflows handle levels better than `model.matrix()`:
+Two ways workflows handle levels better than base R:
 
 -   Enforces that new levels are not allowed at prediction time (this is an optional check that can be turned off)
 
@@ -406,19 +419,6 @@ tree_spec <-
   decision_tree() %>% 
   set_mode("regression")
 
-workflow() %>%
-  add_variables(outcomes = latency, predictors = everything()) %>%
-  add_model(tree_spec) %>%
-  fit(data = frog_train) 
-```
-
-## A model workflow `r hexes("parsnip", "workflows")`
-
-```{r}
-tree_spec <-
-  decision_tree() %>% 
-  set_mode("regression")
-
 workflow(latency ~ ., tree_spec) %>% 
   fit(data = frog_train) 
 ```
@@ -429,14 +429,11 @@ workflow(latency ~ ., tree_spec) %>%
 
 *Run the `tree_wflow` chunk in your `.qmd`.*
 
-*Edit this code so it:*
-
--   *creates a different model*
--   *uses one of the other `workflow()` interfaces*
+*Edit this code so it uses a linear model.*
 
 ```{r}
 #| echo: false
-countdown(minutes = 8, id = "explore-tree-workflow")
+countdown(minutes = 5, id = "explore-tree-workflow")
 ```
 
 ## Predict with your model `r hexes("parsnip", "workflows")`
@@ -537,6 +534,10 @@ tree_fit %>%
 
 You can `extract_*()` several components of your fitted workflow.
 
+::: notes
+`roundint = FALSE` is only to quiet a warning
+:::
+
 ##  {background-iframe="https://hardhat.tidymodels.org/reference/hardhat-extract.html"}
 
 ::: footer
@@ -546,7 +547,7 @@ You can `extract_*()` several components of your fitted workflow.
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Read the [documentation for object extraction](https://hardhat.tidymodels.org/reference/hardhat-extract.html).*
+*Read the [documentation for object extraction](https://workflows.tidymodels.org/reference/extract-workflow.html).*
 
 *Try out some extraction methods on your trained workflow.*
 
