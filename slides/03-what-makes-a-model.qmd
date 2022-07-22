@@ -284,16 +284,24 @@ ggplot(data = NULL, aes(age, latency)) +
 #| echo: false
 #| fig.width: 8
 #| fig.height: 7
+age_rng <- range(frog_train$age)
+age_grid <- tibble(age = seq(age_rng[1], age_rng[2], length.out = 500))
+
 tree_preds <- 
   decision_tree(cost_complexity = 0.015, mode = "regression") %>%
   fit(latency ~ age, data = frog_train) %>%
-  augment(new_data = frog_test)
+  augment(new_data = frog_train)
+
+tree_line <- 
+  decision_tree(cost_complexity = 0.015, mode = "regression") %>%
+  fit(latency ~ age, data = frog_train) %>%
+  augment(new_data = age_grid)
 
 ggplot(data = tree_preds, aes(age, latency)) +
   geom_segment(aes(x = age, xend = age, 
                    y = latency, yend = .pred), 
                colour = train_color, alpha = 0.8) +
-  geom_line(aes(x = age, y = .pred), size = 2, alpha = 0.8, color = data_color) +
+  geom_line(data = tree_line, aes(x = age, y = .pred), size = 2, alpha = 0.8, color = data_color) +
   geom_point(data = tree_preds, color = test_color, size = 3) +
   theme_minimal(base_size = 18)
 ```
