@@ -176,11 +176,65 @@ glm_rec <-
   step_ns(angle, deg_free = tune("angle")) %>%
   step_ns(distance, deg_free = tune("distance")) %>%
   step_normalize(all_numeric_predictors())
+```
+
+. . .
+
+Let's `tune()` our spline terms!
+
+## Choosing tuning parameters `r hexes("recipes","parsnip", "workflows", "tune")`
+
+Let's take our previous recipe and add a few changes:
+
+```{r}
+#| code-line-numbers: "4"
 glm_spline_wflow <-
   workflow() %>%
   add_model(logistic_reg()) %>%
   add_recipe(glm_rec)
 ```
+
+
+## {background-image="https://www.tmwr.org/figures/ames-latitude-splines-1.png" background-size="contain"}
+
+:::notes
+Splines replace the existing numeric predictor with a set of columns that allow a model to emulate a flexible, nonlinear relationship.
+
+More spline terms = more "wiggly", i.e. flexibly model a nonlinear relationship
+
+How many spline terms? This is called *degrees of freedom*
+
+2 and 5 look like they underfit; 20 and 100 look like they overfit
+:::
+
+## Splines and nonlinear relationships
+
+```{r}
+#| echo: false
+#| fig-align: center
+example_data <- nhl_train %>% 
+  mutate(distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2))
+
+example_data %>%
+  group_by(distance = cut(distance, c(0, seq(10, 60, 5), 100))) %>%
+  summarize(pct_on_goal = mean(on_goal == "yes"), n = n()) %>%
+  mutate(distance = forcats::fct_recode(distance, "<10" = "(0,10]", ">60" = "(60,100]")) %>%
+  ggplot(aes(distance, pct_on_goal)) +
+  geom_line(group = 1, size = 2, alpha = 0.8, color = test_color) +
+  scale_y_continuous(labels = scales::percent) +
+  expand_limits(y = 0) +
+  labs(x = "Distance to goal (bucketed)",
+       y = "% of shots in this bucket that are on goal")
+
+```
+
+:::notes
+Our hockey data exhibits nonlinear relationships
+
+We can model nonlinearity like this via a *model* (later this afternoon) or *feature engineering*
+
+How do we decide how "wiggly" or flexible to make our spline features? TUNING 
+:::
 
 ## Grid search
 
