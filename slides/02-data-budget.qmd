@@ -153,14 +153,14 @@ countdown(minutes = 3, id = "when-to-split")
 
 ```{r}
 set.seed(123)
-frog_split <- initial_split(tree_frogs, strata = latency)
+frog_split <- initial_split(tree_frogs)
 frog_split
 ```
 
 :::notes
 How much data in training vs testing?
 This function uses a good default, but this depends on your specific goal/data
-We will talk about `strata` a little later
+We will talk about more powerful ways of splitting, like stratification, later
 :::
 
 ## Accessing the data `r hexes("rsample")`
@@ -199,7 +199,7 @@ countdown(minutes = 5, id = "try-splitting")
 
 ```{r}
 set.seed(123)
-frog_split <- initial_split(tree_frogs, prop = 0.8, strata = latency)
+frog_split <- initial_split(tree_frogs, prop = 0.8)
 frog_train <- training(frog_split)
 frog_test <- testing(frog_split)
 
@@ -219,6 +219,24 @@ We will use this tomorrow
 
 # Exploratory data analysis for ML 🧐
 
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Explore the `frog_train` data on your own!*
+
+* *What's the distribution of numeric variables like age?*
+* *How does latency differ across the categorical variables?*
+
+```{r}
+#| echo: false
+countdown(minutes = 8, id = "explore-frogs")
+```
+
+::: notes
+Make a plot or summary and then share with neighbor
+:::
+
 ## 
 
 ```{r}
@@ -228,23 +246,6 @@ ggplot(frog_train, aes(latency)) +
 ```
 
 . . .
-
-Remember how we used `strata = latency`?
-
-## 
-
-```{r}
-#| fig-align: 'center'
-quartiles <- quantile(frog_train$latency, probs = c(1:3)/4)
-ggplot(frog_train, aes(latency)) +
-  geom_histogram(bins = 20) +
-  geom_vline(xintercept = quartiles, color = train_color, 
-             size = 1.5, lty = 2)
-```
-
-. . .
-
-Stratification often helps, with very little downside
 
 ## 
 
@@ -267,26 +268,39 @@ frog_train %>%
 
 ```{r}
 #| fig-align: 'center'
-ggplot(frog_train, aes(reflex, age)) +
-  stat_summary_2d(aes(z = latency), 
-                  alpha = 0.7, binwidth = c(1, 5e3)) +
-  scale_fill_viridis_c() +
-  labs(fill = "mean latency")
+ggplot(frog_train, aes(age, latency, color = reflex)) +
+  geom_point(alpha = .8, size = 2)
 ```
 
-## Your turn {transition="slide-in"}
+# Split smarter
 
-![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+##
 
-*Explore the `frog_train` data on your own!*
+```{r echo = FALSE}
+#| fig-align: 'center'
+quartiles <- quantile(frog_train$latency, probs = c(1:3)/4)
+ggplot(frog_train, aes(latency)) +
+  geom_histogram(bins = 20) +
+  geom_vline(xintercept = quartiles, color = train_color, 
+             size = 1.5, lty = 2)
+```
 
-![](images/snake.png){width="400"}
+Stratified sampling would split within each quartile
+
+:::notes
+Based on our exploration, we realized that stratifying by latency might help get a consistent distribution. For instance, we'd include high and low latency in both the test and training
+:::
+
+## Stratification
+
+Use `strata = latency`
 
 ```{r}
-#| echo: false
-countdown(minutes = 5, id = "explore-frogs")
+set.seed(123)
+frog_split <- initial_split(tree_frogs, strata = latency)
+frog_split
 ```
 
-::: notes
-Make a plot or summary and then share with neighbor
-:::
+. . .
+
+Stratification often helps, with very little downside
