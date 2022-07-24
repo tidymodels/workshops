@@ -22,11 +22,13 @@ set.seed(23)
 nhl_split <- initial_split(season_2015, prop = 3/4)
 nhl_split
 
-nhl_train <- training(nhl_split)
+nhl_train_and_val <- training(nhl_split)
 nhl_test  <- testing(nhl_split)
 
 set.seed(234)
-nhl_val <- validation_split(nhl_train, prop = 0.80)
+nhl_val <- validation_split(nhl_train_and_val, prop = 0.80)
+
+nhl_train <- analysis(nhl_val$splits[[1]])
 
 nhl_distance_rec <-
   recipe(on_goal ~ ., data = nhl_train) %>%
@@ -128,7 +130,7 @@ glm_spline_res
 
 Tune our `glm_wflow`.
 
-What happens if you change `grid` to use the default?
+What happens if you don't supply a `grid` argument to `tune_grid()`?
 
 ```{r}
 # Your code here!
@@ -166,13 +168,6 @@ Try choosing a model that has a simpler (less "wiggly") relationship for `distan
 ```{r}
 # Your code here!
 
-```
-
-## Choose a parameter combination
-
-```{r}
-select_best(glm_spline_res, metric = "roc_auc")
-select_by_pct_loss(glm_spline_res, distance, metric = "roc_auc")
 ```
 
 ## Boosted trees
@@ -220,10 +215,10 @@ doParallel::registerDoParallel(cl)
 ```{r}
 # this will take some time to run
 set.seed(9)
+
 xgb_res <-
   xgb_wflow %>%
-  tune_grid(resamples = nhl_val, grid = 20, control = ctrl) # automatic grid now!
-xgb_res
+  tune_grid(resamples = nhl_val, grid = 15, control = ctrl) # automatic grid now!
 ```
 
 ## Your turn 
@@ -240,6 +235,8 @@ We won't wait for everyone's tuning to finish, but take this time to get it star
 ## Tuning results
 
 ```{r}
+xgb_res
+
 autoplot(xgb_res)
 ```
 
@@ -292,9 +289,9 @@ xgb_coord_res %>%
 
 ## Your turn
 
-Can you get better ROC results?
+Can you get better ROC results with xgboost?
 
-Try increasing `tree_depth` beyond the original range.
+Try increasing `learn_rate` beyond the original range.
 
 ```{r}
 # Your code here!
@@ -320,6 +317,7 @@ glm_spline_wflow
 test_res <- 
   glm_spline_wflow %>% 
   last_fit(split = nhl_split)
+
 test_res
 ```
 
@@ -367,14 +365,15 @@ library(DALEXtra)
 glm_explainer <- explain_tidymodels(
   final_glm_spline_wflow,
   data = dplyr::select(nhl_train, -on_goal),
+  # DALEX required an integer for factors:
   y = as.integer(nhl_train$on_goal),
   verbose = FALSE
 )
 ```
 
-## Your turn 
+Create partial dependence profiles
 
-Try grouping by another variable, like `game_type` or `dow`.
+https://ema.drwhy.ai/partialDependenceProfiles.html
 
 ```{r}
 set.seed(123)
@@ -384,8 +383,15 @@ pdp_coord_x <- model_profile(
   N = 500,
   groups = "position"
 )
+```
 
-plot(pdp_coord_x)
+## Your turn 
+
+Try grouping by another variable, like `game_type` or `dow`.
+
+```{r}
+# Your code here!
+
 ```
 
 

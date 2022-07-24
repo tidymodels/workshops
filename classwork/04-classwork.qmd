@@ -74,7 +74,7 @@ tree_fit %>%
   augment(frog_train)
 ```
 
-"Resubstitution metric" - This should be the best possible performance that you could ever achieve, but it can be very misleading!
+"Resubstitution estimate" - This should be the best possible performance that you could ever achieve, but it can be very misleading!
 
 ```{r}
 tree_fit %>%
@@ -92,10 +92,11 @@ tree_fit %>%
 
 ## Your turn
 
-Use `augment()` and `metrics()` to compute regression metrics on `tree_fit`. Compute the metrics on both training and testing data. Notice the evidence of overfitting!
+Use `augment()` and `metrics()` to compute a regression metric like `mae()`.
 
-If you have time, try out some other yardstick metrics:
-https://yardstick.tidymodels.org/reference/index.html
+Compute the metrics for both training and testing data.
+
+Notice the evidence of overfitting! ⚠️
 
 ```{r}
 # Your code here!
@@ -129,43 +130,21 @@ frog_folds <- vfold_cv(frog_train, v = 10)
 frog_folds$splits[1:3]
 ```
 
-For an individual split, `analysis()` and `assessment()` can be used to extract out the corresponding data sets
+Stratification often helps, with very little downside
 
 ```{r}
-analysis(frog_folds$splits[[1]])
-assessment(frog_folds$splits[[1]])
+vfold_cv(frog_train, strata = latency)
 ```
 
-Bootstraps
+We'll use this setup:
 
 ```{r}
-bootstraps(frog_train)
-```
-
-## Your turn
-
-Create:
-
-- V-fold cross validation with stratification
-- Bootstrap folds (change `times` from its default!)
-- A validation resample (what function is used for this?)
-
-https://rsample.tidymodels.org/reference/index.html
-
-```{r}
-# Your code here!
-
-```
-
-## Evaluating model performance
-
-```{r}
-# Don't forget the seed, for reproducibility
 set.seed(123)
-
 frog_folds <- vfold_cv(frog_train, v = 10, strata = latency)
 frog_folds
 ```
+
+## Evaluating model performance
 
 ```{r}
 # Fit the workflow on each analysis set,
@@ -201,6 +180,29 @@ tree_preds %>%
   coord_obs_pred()
 ```
 
+## Bootstrapping
+
+```{r}
+set.seed(3214)
+bootstraps(frog_train)
+```
+
+## Your turn
+
+Create:
+
+- Bootstrap folds (change `times` from its default!)
+- A validation resample (what function is used for this?)
+
+https://rsample.tidymodels.org/reference/index.html
+
+Don't forget to set a seed when you resample!
+
+```{r}
+# Your code here!
+
+```
+
 ## Create a random forest model
 
 ```{r}
@@ -217,9 +219,8 @@ rf_wflow
 
 Use `fit_resamples()` and `rf_wflow` to:
 
-- Fit the random forest on each resample
 - Keep predictions
-- Compute assessment set metrics
+- Compute metrics
 - Plot true vs predicted values
 
 ```{r}
@@ -293,7 +294,8 @@ Which model do you think you would decide to use?
 
 What surprised you the most?
 
-What is one thing you are looking forward to tomorrow?
+What is one thing you are looking forward to for tomorrow?
+
 
 ## Building a model stack
 
@@ -331,49 +333,49 @@ rf_res
 Initialize a data stack and add candidate members
 
 ```{r}
-st <- stacks()
+frog_st <- stacks()
 
-st
+frog_st
 
-st <- st %>%
+frog_st <- frog_st %>%
   add_candidates(lr_res) %>%
   add_candidates(rf_res)
 
-st
+frog_st
 ```
 
 Fit a model that determines the "best" way to weight their predictions:
 
 ```{r}
-st <- st %>%
+frog_st_res <- frog_st %>%
   blend_predictions()
 
-st
+frog_st_res
 ```
 
 Fit using the models with non-zero coefficients
 
 ```{r}
-st <- st %>%
+frog_st_res <- frog_st_res %>%
   fit_members()
 
-st
+frog_st_res
 ```
 
 Predict on new data to get "blended" predictions
 
 ```{r}
-st_predictions <- predict(st, frog_test)
-
-st_predictions <- frog_test %>%
+frog_st_predictions <- frog_test %>%
   select(latency) %>%
-  bind_cols(st_predictions)
+  bind_cols(
+    predict(frog_st_res, frog_test)
+    )
 
-st_predictions
+frog_st_predictions
 ```
 
 ```{r}
-ggplot(st_predictions, aes(latency, .pred)) + 
+ggplot(frog_st_predictions, aes(latency, .pred)) + 
   geom_abline(lty = 2, 
               col = "deeppink4", 
               size = 1.5) +
