@@ -26,8 +26,18 @@ set.seed(23)
 nhl_split <- initial_split(season_2015, prop = 3/4)
 nhl_split
 
-nhl_train <- training(nhl_split)
+nhl_train_and_val <- training(nhl_split)
 nhl_test  <- testing(nhl_split)
+```
+
+## Validation split
+
+Since there are a lot of observations, we'll use a validation set.
+
+```{r}
+set.seed(234)
+nhl_val <- validation_split(nhl_train_and_val, prop = 0.80)
+nhl_val
 ```
 
 ## Your turn
@@ -37,6 +47,8 @@ Let's explore the training set data.
 Use the function `plot_nhl_shots()` for nice spatial plots of the data.
 
 ```{r}
+nhl_train <- analysis(nhl_val$splits[[1]])
+
 set.seed(100)
 nhl_train %>% 
   sample_n(200) %>%
@@ -44,14 +56,6 @@ nhl_train %>%
 
 # Your code here!
 
-```
-
-## Validation split
-
-```{r}
-set.seed(234)
-nhl_val <- validation_split(nhl_train, prop = 0.80)
-nhl_val
 ```
 
 ## A first recipe
@@ -113,7 +117,7 @@ nhl_rec <-
 
 Create a `recipe()` for the on-goal data to :
 
--   create dummy variables
+-   create one-hot indicator variables
 -   remove zero-variance variables
 
 ```{r}
@@ -133,6 +137,8 @@ nhl_indicators <-
 ## Using a workflow
 
 ```{r}
+set.seed(9)
+
 nhl_glm_wflow <-
   workflow() %>%
   add_recipe(nhl_indicators) %>%
@@ -249,11 +255,12 @@ nhl_behind_rec <-
 ## Fit different recipes
 
 ```{r}
+set.seed(9)
+
 nhl_glm_set_res <-
   workflow_set(
-    list(dummy = nhl_indicators, encoded = nhl_effect_rec,
-         angle = nhl_angle_rec, dist = nhl_distance_rec, 
-         bgl = nhl_behind_rec),
+    list(`1_dummy` = nhl_indicators, `2_angle` = nhl_angle_rec, 
+         `3_dist` = nhl_distance_rec, `4_bgl` = nhl_behind_rec),
     list(logistic = logistic_reg())
   ) %>%
   workflow_map(fn = "fit_resamples", resamples = nhl_val, verbose = TRUE, control = ctrl)
@@ -262,6 +269,8 @@ nhl_glm_set_res <-
 ## Your turn
 
 Create a workflow set with 2 or 3 recipes.
+
+(Consider using recipes we've already created.)
 
 Use `workflow_map()` to resample the workflow set.
 
