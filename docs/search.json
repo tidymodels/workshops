@@ -18,7 +18,7 @@
     "href": "index.html#preparation",
     "title": "Machine learning with tidymodels",
     "section": "Preparation",
-    "text": "Preparation\nPlease join the workshop with a computer that has the following installed (all available for free):\n\nA recent version of R, available at https://cran.r-project.org/\nA recent version of RStudio Desktop (RStudio Desktop Open Source License, at least v2022.02), available at https://www.rstudio.com/download\nThe following R packages, which you can install from the R console:\n\n\ninstall.packages(c(\"doParallel\", \"embed\", \"forcats\",\n                   \"lme4\", \"ranger\", \"remotes\", \"rpart\", \n                   \"rpart.plot\", \"stacks\", \"tidymodels\",\n                   \"vetiver\", \"xgboost\"))\n\nremotes::install_github(\"topepo/ongoal@v0.0.2\")"
+    "text": "Preparation\nPlease join the workshop with a computer that has the following installed (all available for free):\n\nA recent version of R, available at https://cran.r-project.org/\nA recent version of RStudio Desktop (RStudio Desktop Open Source License, at least v2022.02), available at https://www.rstudio.com/download\nThe following R packages, which you can install from the R console:\n\n\ninstall.packages(c(\"DALEX\", \"doParallel\", \"embed\", \"forcats\",\n                   \"lme4\", \"ranger\", \"remotes\", \"rpart\", \n                   \"rpart.plot\", \"stacks\", \"tidymodels\",\n                   \"vetiver\", \"xgboost\"))\n\nremotes::install_github(\"topepo/ongoal@v0.0.2\")"
   },
   {
     "objectID": "index.html#slides",
@@ -151,7 +151,7 @@
     "href": "slides/01-introduction.html#what-is-tidymodels",
     "title": "1 - Introduction",
     "section": "What is tidymodels? ",
-    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n#> ── Attaching packages ──────────────────────────── tidymodels 1.0.0 ──\n#> ✔ broom        1.0.0     ✔ rsample      1.0.0\n#> ✔ dials        1.0.0     ✔ tibble       3.1.7\n#> ✔ dplyr        1.0.9     ✔ tidyr        1.2.0\n#> ✔ infer        1.0.2     ✔ tune         1.0.0\n#> ✔ modeldata    1.0.0     ✔ workflows    1.0.0\n#> ✔ parsnip      1.0.0     ✔ workflowsets 1.0.0\n#> ✔ purrr        0.3.4     ✔ yardstick    1.0.0\n#> ✔ recipes      1.0.1\n#> ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#> ✖ purrr::discard() masks scales::discard()\n#> ✖ dplyr::filter()  masks stats::filter()\n#> ✖ dplyr::lag()     masks stats::lag()\n#> ✖ recipes::step()  masks stats::step()\n#> • Learn how to get started at https://www.tidymodels.org/start/"
+    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n#> ── Attaching packages ──────────────────────────── tidymodels 1.0.0 ──\n#> ✔ broom        1.0.0     ✔ rsample      1.0.0\n#> ✔ dials        1.0.0     ✔ tibble       3.1.7\n#> ✔ dplyr        1.0.9     ✔ tidyr        1.2.0\n#> ✔ infer        1.0.2     ✔ tune         1.0.0\n#> ✔ modeldata    1.0.0     ✔ workflows    1.0.0\n#> ✔ parsnip      1.0.0     ✔ workflowsets 1.0.0\n#> ✔ purrr        0.3.4     ✔ yardstick    1.0.0\n#> ✔ recipes      1.0.1\n#> ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#> ✖ purrr::discard() masks scales::discard()\n#> ✖ dplyr::filter()  masks stats::filter()\n#> ✖ dplyr::lag()     masks stats::lag()\n#> ✖ recipes::step()  masks stats::step()\n#> • Use suppressPackageStartupMessages() to eliminate package startup messages"
   },
   {
     "objectID": "slides/01-introduction.html#the-whole-game",
@@ -392,6 +392,13 @@
     "text": "Data splitting and spending \n\nset.seed(123)\nfrog_split <- initial_split(tree_frogs, prop = 0.8, strata = latency)\nfrog_train <- training(frog_split)\nfrog_test <- testing(frog_split)\n\nnrow(frog_train)\n#> [1] 456\nnrow(frog_test)\n#> [1] 116"
   },
   {
+    "objectID": "slides/02-data-budget.html#section-1",
+    "href": "slides/02-data-budget.html#section-1",
+    "title": "2 - Your data budget",
+    "section": "",
+    "text": "We will use this tomorrow"
+  },
+  {
     "objectID": "slides/02-data-budget.html#section-3",
     "href": "slides/02-data-budget.html#section-3",
     "title": "2 - Your data budget",
@@ -588,13 +595,6 @@
     "text": "A model workflow  \n\ntree_spec <-\n  decision_tree() %>% \n  set_mode(\"regression\")\n\nworkflow(latency ~ ., tree_spec) %>% \n  fit(data = frog_train) \n#> ══ Workflow [trained] ════════════════════════════════════════════════\n#> Preprocessor: Formula\n#> Model: decision_tree()\n#> \n#> ── Preprocessor ──────────────────────────────────────────────────────\n#> latency ~ .\n#> \n#> ── Model ─────────────────────────────────────────────────────────────\n#> n= 456 \n#> \n#> node), split, n, deviance, yval\n#>       * denotes terminal node\n#> \n#>  1) root 456 2197966.00  92.90351  \n#>    2) age>=427505 256  252347.40  60.89844  \n#>      4) treatment=control 131   91424.06  48.42748 *\n#>      5) treatment=gentamicin 125  119197.90  73.96800 *\n#>    3) age< 427505 200 1347741.00 133.87000  \n#>      6) treatment=control 140  986790.70 118.25710  \n#>       12) reflex=mid,full 129  754363.70 111.56590 *\n#>       13) reflex=low 11  158918.20 196.72730 *\n#>      7) treatment=gentamicin 60  247194.60 170.30000  \n#>       14) age< 403007.5 30  102190.20 147.83330  \n#>         28) age>=394557.5 22   53953.86 129.77270 *\n#>         29) age< 394557.5 8   21326.00 197.50000 *\n#>       15) age>=403007.5 30  114719.40 192.76670 *"
   },
   {
-    "objectID": "slides/03-what-makes-a-model.html#a-model-workflow-4",
-    "href": "slides/03-what-makes-a-model.html#a-model-workflow-4",
-    "title": "3 - What makes a model?",
-    "section": "A model workflow  ",
-    "text": "A model workflow  \n\ntree_spec <-\n  decision_tree() %>% \n  set_mode(\"regression\")\n\nworkflow(latency ~ ., tree_spec) %>% \n  fit(data = frog_train) \n#> ══ Workflow [trained] ════════════════════════════════════════════════\n#> Preprocessor: Formula\n#> Model: decision_tree()\n#> \n#> ── Preprocessor ──────────────────────────────────────────────────────\n#> latency ~ .\n#> \n#> ── Model ─────────────────────────────────────────────────────────────\n#> n= 456 \n#> \n#> node), split, n, deviance, yval\n#>       * denotes terminal node\n#> \n#>  1) root 456 2197966.00  92.90351  \n#>    2) age>=427505 256  252347.40  60.89844  \n#>      4) treatment=control 131   91424.06  48.42748 *\n#>      5) treatment=gentamicin 125  119197.90  73.96800 *\n#>    3) age< 427505 200 1347741.00 133.87000  \n#>      6) treatment=control 140  986790.70 118.25710  \n#>       12) reflex=mid,full 129  754363.70 111.56590 *\n#>       13) reflex=low 11  158918.20 196.72730 *\n#>      7) treatment=gentamicin 60  247194.60 170.30000  \n#>       14) age< 403007.5 30  102190.20 147.83330  \n#>         28) age>=394557.5 22   53953.86 129.77270 *\n#>         29) age< 394557.5 8   21326.00 197.50000 *\n#>       15) age>=403007.5 30  114719.40 192.76670 *"
-  },
-  {
     "objectID": "slides/03-what-makes-a-model.html#your-turn-2",
     "href": "slides/03-what-makes-a-model.html#your-turn-2",
     "title": "3 - What makes a model?",
@@ -777,67 +777,46 @@
     "text": "Your turn\n\nIf we use 10 folds, what percent of the training data\n\nends up in analysis\nends up in assessment\n\nfor each fold?\n\n\n\n\n03:00"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#resampling",
-    "href": "slides/04-evaluating-models.html#resampling",
+    "objectID": "slides/04-evaluating-models.html#cross-validation-2",
+    "href": "slides/04-evaluating-models.html#cross-validation-2",
     "title": "4 - Evaluating models",
-    "section": "Resampling ",
-    "text": "Resampling \n\nvfold_cv(frog_train) ## v = 10 is default\n#> #  10-fold cross-validation \n#> # A tibble: 10 × 2\n#>    splits           id    \n#>    <list>           <chr> \n#>  1 <split [410/46]> Fold01\n#>  2 <split [410/46]> Fold02\n#>  3 <split [410/46]> Fold03\n#>  4 <split [410/46]> Fold04\n#>  5 <split [410/46]> Fold05\n#>  6 <split [410/46]> Fold06\n#>  7 <split [411/45]> Fold07\n#>  8 <split [411/45]> Fold08\n#>  9 <split [411/45]> Fold09\n#> 10 <split [411/45]> Fold10"
+    "section": "Cross-validation ",
+    "text": "Cross-validation \n\nvfold_cv(frog_train) # v = 10 is default\n#> #  10-fold cross-validation \n#> # A tibble: 10 × 2\n#>    splits           id    \n#>    <list>           <chr> \n#>  1 <split [410/46]> Fold01\n#>  2 <split [410/46]> Fold02\n#>  3 <split [410/46]> Fold03\n#>  4 <split [410/46]> Fold04\n#>  5 <split [410/46]> Fold05\n#>  6 <split [410/46]> Fold06\n#>  7 <split [411/45]> Fold07\n#>  8 <split [411/45]> Fold08\n#>  9 <split [411/45]> Fold09\n#> 10 <split [411/45]> Fold10"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#resampling-1",
-    "href": "slides/04-evaluating-models.html#resampling-1",
+    "objectID": "slides/04-evaluating-models.html#cross-validation-3",
+    "href": "slides/04-evaluating-models.html#cross-validation-3",
     "title": "4 - Evaluating models",
-    "section": "Resampling ",
-    "text": "Resampling \n\nvfold_cv(frog_train, v = 5)\n#> #  5-fold cross-validation \n#> # A tibble: 5 × 2\n#>   splits           id   \n#>   <list>           <chr>\n#> 1 <split [364/92]> Fold1\n#> 2 <split [365/91]> Fold2\n#> 3 <split [365/91]> Fold3\n#> 4 <split [365/91]> Fold4\n#> 5 <split [365/91]> Fold5"
+    "section": "Cross-validation ",
+    "text": "Cross-validation \nWhat is in this?\n\nfrog_folds <- vfold_cv(frog_train)\nfrog_folds$splits[1:3]\n#> [[1]]\n#> <Analysis/Assess/Total>\n#> <410/46/456>\n#> \n#> [[2]]\n#> <Analysis/Assess/Total>\n#> <410/46/456>\n#> \n#> [[3]]\n#> <Analysis/Assess/Total>\n#> <410/46/456>\n\n\nTalk about a list column, storing non-atomic types in dataframe"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#resampling-2",
-    "href": "slides/04-evaluating-models.html#resampling-2",
+    "objectID": "slides/04-evaluating-models.html#cross-validation-4",
+    "href": "slides/04-evaluating-models.html#cross-validation-4",
     "title": "4 - Evaluating models",
-    "section": "Resampling ",
-    "text": "Resampling \nWhat is in this?\n\nfrog_folds <- vfold_cv(frog_train, v = 10)\nfrog_folds$splits[1:3]\n#> [[1]]\n#> <Analysis/Assess/Total>\n#> <410/46/456>\n#> \n#> [[2]]\n#> <Analysis/Assess/Total>\n#> <410/46/456>\n#> \n#> [[3]]\n#> <Analysis/Assess/Total>\n#> <410/46/456>\n\n\nTalk about a list column, storing non-atomic types in dataframe"
+    "section": "Cross-validation ",
+    "text": "Cross-validation \n\nvfold_cv(frog_train, v = 5)\n#> #  5-fold cross-validation \n#> # A tibble: 5 × 2\n#>   splits           id   \n#>   <list>           <chr>\n#> 1 <split [364/92]> Fold1\n#> 2 <split [365/91]> Fold2\n#> 3 <split [365/91]> Fold3\n#> 4 <split [365/91]> Fold4\n#> 5 <split [365/91]> Fold5"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#bootstrapping",
-    "href": "slides/04-evaluating-models.html#bootstrapping",
+    "objectID": "slides/04-evaluating-models.html#cross-validation-5",
+    "href": "slides/04-evaluating-models.html#cross-validation-5",
     "title": "4 - Evaluating models",
-    "section": "Bootstrapping",
-    "text": "Bootstrapping"
+    "section": "Cross-validation ",
+    "text": "Cross-validation \n\nvfold_cv(frog_train, strata = latency)\n#> #  10-fold cross-validation using stratification \n#> # A tibble: 10 × 2\n#>    splits           id    \n#>    <list>           <chr> \n#>  1 <split [408/48]> Fold01\n#>  2 <split [408/48]> Fold02\n#>  3 <split [408/48]> Fold03\n#>  4 <split [409/47]> Fold04\n#>  5 <split [411/45]> Fold05\n#>  6 <split [412/44]> Fold06\n#>  7 <split [412/44]> Fold07\n#>  8 <split [412/44]> Fold08\n#>  9 <split [412/44]> Fold09\n#> 10 <split [412/44]> Fold10\n\n\nStratification often helps, with very little downside"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#resampling-3",
-    "href": "slides/04-evaluating-models.html#resampling-3",
+    "objectID": "slides/04-evaluating-models.html#cross-validation-6",
+    "href": "slides/04-evaluating-models.html#cross-validation-6",
     "title": "4 - Evaluating models",
-    "section": "Resampling ",
-    "text": "Resampling \n\nbootstraps(frog_train)\n#> # Bootstrap sampling \n#> # A tibble: 25 × 2\n#>    splits            id         \n#>    <list>            <chr>      \n#>  1 <split [456/159]> Bootstrap01\n#>  2 <split [456/168]> Bootstrap02\n#>  3 <split [456/175]> Bootstrap03\n#>  4 <split [456/176]> Bootstrap04\n#>  5 <split [456/162]> Bootstrap05\n#>  6 <split [456/169]> Bootstrap06\n#>  7 <split [456/161]> Bootstrap07\n#>  8 <split [456/169]> Bootstrap08\n#>  9 <split [456/177]> Bootstrap09\n#> 10 <split [456/174]> Bootstrap10\n#> # … with 15 more rows"
+    "section": "Cross-validation ",
+    "text": "Cross-validation \nWe’ll use this setup:\n\nset.seed(123)\nfrog_folds <- vfold_cv(frog_train, v = 10, strata = latency)\nfrog_folds\n#> #  10-fold cross-validation using stratification \n#> # A tibble: 10 × 2\n#>    splits           id    \n#>    <list>           <chr> \n#>  1 <split [408/48]> Fold01\n#>  2 <split [408/48]> Fold02\n#>  3 <split [408/48]> Fold03\n#>  4 <split [409/47]> Fold04\n#>  5 <split [411/45]> Fold05\n#>  6 <split [412/44]> Fold06\n#>  7 <split [412/44]> Fold07\n#>  8 <split [412/44]> Fold08\n#>  9 <split [412/44]> Fold09\n#> 10 <split [412/44]> Fold10\n\n\nSet the seed when creating resamples"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#your-turn-2",
-    "href": "slides/04-evaluating-models.html#your-turn-2",
+    "objectID": "slides/04-evaluating-models.html#fit-our-model-to-the-resamples",
+    "href": "slides/04-evaluating-models.html#fit-our-model-to-the-resamples",
     "title": "4 - Evaluating models",
-    "section": "Your turn",
-    "text": "Your turn\n\nCreate:\n\nbootstrap folds (change times from the default)\nvalidation set (use the reference guide to find the function)\n\nDon’t forget to set a seed when you resample!\n\n\n\n05:00"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#resampling-4",
-    "href": "slides/04-evaluating-models.html#resampling-4",
-    "title": "4 - Evaluating models",
-    "section": "Resampling ",
-    "text": "Resampling \n\nvfold_cv(frog_train, strata = latency)\n#> #  10-fold cross-validation using stratification \n#> # A tibble: 10 × 2\n#>    splits           id    \n#>    <list>           <chr> \n#>  1 <split [408/48]> Fold01\n#>  2 <split [408/48]> Fold02\n#>  3 <split [408/48]> Fold03\n#>  4 <split [409/47]> Fold04\n#>  5 <split [411/45]> Fold05\n#>  6 <split [412/44]> Fold06\n#>  7 <split [412/44]> Fold07\n#>  8 <split [412/44]> Fold08\n#>  9 <split [412/44]> Fold09\n#> 10 <split [412/44]> Fold10\n\n\nStratification often helps, with very little downside"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#resampling-5",
-    "href": "slides/04-evaluating-models.html#resampling-5",
-    "title": "4 - Evaluating models",
-    "section": "Resampling ",
-    "text": "Resampling \n\nbootstraps(frog_train, times = 10)\n#> # Bootstrap sampling \n#> # A tibble: 10 × 2\n#>    splits            id         \n#>    <list>            <chr>      \n#>  1 <split [456/162]> Bootstrap01\n#>  2 <split [456/165]> Bootstrap02\n#>  3 <split [456/159]> Bootstrap03\n#>  4 <split [456/169]> Bootstrap04\n#>  5 <split [456/168]> Bootstrap05\n#>  6 <split [456/171]> Bootstrap06\n#>  7 <split [456/175]> Bootstrap07\n#>  8 <split [456/168]> Bootstrap08\n#>  9 <split [456/166]> Bootstrap09\n#> 10 <split [456/156]> Bootstrap10"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#resampling-6",
-    "href": "slides/04-evaluating-models.html#resampling-6",
-    "title": "4 - Evaluating models",
-    "section": "Resampling ",
-    "text": "Resampling \n\nvalidation_split(frog_train, strata = latency)\n#> # Validation Set Split (0.75/0.25)  using stratification \n#> # A tibble: 1 × 2\n#>   splits            id        \n#>   <list>            <chr>     \n#> 1 <split [340/116]> validation\n\n\nA validation split is just another type of resample"
+    "section": "Fit our model to the resamples",
+    "text": "Fit our model to the resamples\n\ntree_res <- fit_resamples(tree_wflow, frog_folds)\ntree_res\n#> # Resampling results\n#> # 10-fold cross-validation using stratification \n#> # A tibble: 10 × 4\n#>    splits           id     .metrics         .notes          \n#>    <list>           <chr>  <list>           <list>          \n#>  1 <split [408/48]> Fold01 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  2 <split [408/48]> Fold02 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  3 <split [408/48]> Fold03 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  4 <split [409/47]> Fold04 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  5 <split [411/45]> Fold05 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  6 <split [412/44]> Fold06 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  7 <split [412/44]> Fold07 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  8 <split [412/44]> Fold08 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  9 <split [412/44]> Fold09 <tibble [2 × 4]> <tibble [0 × 3]>\n#> 10 <split [412/44]> Fold10 <tibble [2 × 4]> <tibble [0 × 3]>"
   },
   {
     "objectID": "slides/04-evaluating-models.html#evaluating-model-performance",
@@ -847,11 +826,11 @@
     "text": "Evaluating model performance \n\ntree_res %>%\n  collect_metrics()\n#> # A tibble: 2 × 6\n#>   .metric .estimator   mean     n std_err .config             \n#>   <chr>   <chr>       <dbl> <int>   <dbl> <chr>               \n#> 1 rmse    standard   59.6      10  2.31   Preprocessor1_Model1\n#> 2 rsq     standard    0.305    10  0.0342 Preprocessor1_Model1\n\n\nWe can reliably measure performance using only the training data 🎉"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#where-are-the-fitted-models",
-    "href": "slides/04-evaluating-models.html#where-are-the-fitted-models",
+    "objectID": "slides/04-evaluating-models.html#comparing-metrics",
+    "href": "slides/04-evaluating-models.html#comparing-metrics",
     "title": "4 - Evaluating models",
-    "section": "Where are the fitted models? ",
-    "text": "Where are the fitted models? \n\ntree_res\n#> # Resampling results\n#> # 10-fold cross-validation using stratification \n#> # A tibble: 10 × 5\n#>    splits           id     .metrics         .notes           .predictions     \n#>    <list>           <chr>  <list>           <list>           <list>           \n#>  1 <split [408/48]> Fold01 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [48 × 4]>\n#>  2 <split [408/48]> Fold02 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [48 × 4]>\n#>  3 <split [408/48]> Fold03 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [48 × 4]>\n#>  4 <split [409/47]> Fold04 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [47 × 4]>\n#>  5 <split [411/45]> Fold05 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [45 × 4]>\n#>  6 <split [412/44]> Fold06 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [44 × 4]>\n#>  7 <split [412/44]> Fold07 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [44 × 4]>\n#>  8 <split [412/44]> Fold08 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [44 × 4]>\n#>  9 <split [412/44]> Fold09 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [44 × 4]>\n#> 10 <split [412/44]> Fold10 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [44 × 4]>\n\n\n🗑️"
+    "section": "Comparing metrics ",
+    "text": "Comparing metrics \nHow do the metrics from resampling compare to the metrics from training and testing?\n\n\n\n\n\n\ntree_res %>%\n  collect_metrics() %>% \n  select(.metric, mean, n)\n#> # A tibble: 2 × 3\n#>   .metric   mean     n\n#>   <chr>    <dbl> <int>\n#> 1 rmse    59.6      10\n#> 2 rsq      0.305    10\n\n\nThe RMSE previously was\n\n49.36 for the training set\n59.16 for test set\n\n\n\n\nRemember that:\n⚠️ the training set gives you overly optimistic metrics\n⚠️ the test set is precious"
   },
   {
     "objectID": "slides/04-evaluating-models.html#evaluating-model-performance-1",
@@ -861,25 +840,53 @@
     "text": "Evaluating model performance \n\n# Save the assessment set results\nctrl_frog <- control_resamples(save_pred = TRUE)\ntree_res <- fit_resamples(tree_wflow, frog_folds, control = ctrl_frog)\n\ntree_preds <- collect_predictions(tree_res)\ntree_preds\n#> # A tibble: 456 × 5\n#>    id     .pred  .row latency .config             \n#>    <chr>  <dbl> <int>   <dbl> <chr>               \n#>  1 Fold01  39.6     1      33 Preprocessor1_Model1\n#>  2 Fold01  72.1     3       2 Preprocessor1_Model1\n#>  3 Fold01  63.8     9      30 Preprocessor1_Model1\n#>  4 Fold01  72.1    13      46 Preprocessor1_Model1\n#>  5 Fold01  43.3    28      11 Preprocessor1_Model1\n#>  6 Fold01  61.7    35      41 Preprocessor1_Model1\n#>  7 Fold01  39.6    51      43 Preprocessor1_Model1\n#>  8 Fold01 134.     70      20 Preprocessor1_Model1\n#>  9 Fold01  70.6    74      21 Preprocessor1_Model1\n#> 10 Fold01  39.6   106      14 Preprocessor1_Model1\n#> # … with 446 more rows\n#> # ℹ Use `print(n = ...)` to see more rows"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#comparing-metrics",
-    "href": "slides/04-evaluating-models.html#comparing-metrics",
-    "title": "4 - Evaluating models",
-    "section": "Comparing metrics ",
-    "text": "Comparing metrics \nHow do the metrics from resampling compare to the metrics from training and testing?\n\n\n\n\n\n\ntree_res %>%\n  collect_metrics() %>% \n  select(.metric, mean, n)\n#> # A tibble: 2 × 3\n#>   .metric   mean     n\n#>   <chr>    <dbl> <int>\n#> 1 rmse    59.6      10\n#> 2 rsq      0.305    10\n\n\nThe RMSE previously was\n\n49.36 for the training set\n59.16 for test set\n\n\n\n\nRemember that:\n⚠️ the training set gives you overly optimistic metrics\n⚠️ the test set is precious"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#evaluating-model-performance-2",
-    "href": "slides/04-evaluating-models.html#evaluating-model-performance-2",
-    "title": "4 - Evaluating models",
-    "section": "Evaluating model performance ",
-    "text": "Evaluating model performance \n\nctrl_frog <- control_resamples(save_pred = TRUE)\n\n# Random forest uses random numbers so set the seed first\n\nset.seed(2)\nrf_res <- fit_resamples(rf_wflow, frog_folds, control = ctrl_frog)\ncollect_metrics(rf_res)\n#> # A tibble: 2 × 6\n#>   .metric .estimator   mean     n std_err .config             \n#>   <chr>   <chr>       <dbl> <int>   <dbl> <chr>               \n#> 1 rmse    standard   55.9      10  1.71   Preprocessor1_Model1\n#> 2 rsq     standard    0.370    10  0.0306 Preprocessor1_Model1"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#section-4",
-    "href": "slides/04-evaluating-models.html#section-4",
+    "objectID": "slides/04-evaluating-models.html#section-3",
+    "href": "slides/04-evaluating-models.html#section-3",
     "title": "4 - Evaluating models",
     "section": "",
     "text": "tree_preds %>% \n  ggplot(aes(latency, .pred, color = id)) + \n  geom_abline(lty = 2, col = \"gray\", size = 1.5) +\n  geom_point(alpha = 0.5) +\n  coord_obs_pred()"
+  },
+  {
+    "objectID": "slides/04-evaluating-models.html#where-are-the-fitted-models",
+    "href": "slides/04-evaluating-models.html#where-are-the-fitted-models",
+    "title": "4 - Evaluating models",
+    "section": "Where are the fitted models? ",
+    "text": "Where are the fitted models? \n\ntree_res\n#> # Resampling results\n#> # 10-fold cross-validation using stratification \n#> # A tibble: 10 × 5\n#>    splits           id     .metrics         .notes           .predictions     \n#>    <list>           <chr>  <list>           <list>           <list>           \n#>  1 <split [408/48]> Fold01 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [48 × 4]>\n#>  2 <split [408/48]> Fold02 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [48 × 4]>\n#>  3 <split [408/48]> Fold03 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [48 × 4]>\n#>  4 <split [409/47]> Fold04 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [47 × 4]>\n#>  5 <split [411/45]> Fold05 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [45 × 4]>\n#>  6 <split [412/44]> Fold06 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [44 × 4]>\n#>  7 <split [412/44]> Fold07 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [44 × 4]>\n#>  8 <split [412/44]> Fold08 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [44 × 4]>\n#>  9 <split [412/44]> Fold09 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [44 × 4]>\n#> 10 <split [412/44]> Fold10 <tibble [2 × 4]> <tibble [0 × 3]> <tibble [44 × 4]>\n\n\n🗑️"
+  },
+  {
+    "objectID": "slides/04-evaluating-models.html#bootstrapping",
+    "href": "slides/04-evaluating-models.html#bootstrapping",
+    "title": "4 - Evaluating models",
+    "section": "Bootstrapping",
+    "text": "Bootstrapping"
+  },
+  {
+    "objectID": "slides/04-evaluating-models.html#bootstrapping-1",
+    "href": "slides/04-evaluating-models.html#bootstrapping-1",
+    "title": "4 - Evaluating models",
+    "section": "Bootstrapping ",
+    "text": "Bootstrapping \n\nset.seed(3214)\nbootstraps(frog_train)\n#> # Bootstrap sampling \n#> # A tibble: 25 × 2\n#>    splits            id         \n#>    <list>            <chr>      \n#>  1 <split [456/163]> Bootstrap01\n#>  2 <split [456/166]> Bootstrap02\n#>  3 <split [456/173]> Bootstrap03\n#>  4 <split [456/177]> Bootstrap04\n#>  5 <split [456/166]> Bootstrap05\n#>  6 <split [456/163]> Bootstrap06\n#>  7 <split [456/164]> Bootstrap07\n#>  8 <split [456/165]> Bootstrap08\n#>  9 <split [456/170]> Bootstrap09\n#> 10 <split [456/177]> Bootstrap10\n#> # … with 15 more rows\n#> # ℹ Use `print(n = ...)` to see more rows"
+  },
+  {
+    "objectID": "slides/04-evaluating-models.html#your-turn-2",
+    "href": "slides/04-evaluating-models.html#your-turn-2",
+    "title": "4 - Evaluating models",
+    "section": "Your turn",
+    "text": "Your turn\n\nCreate:\n\nbootstrap folds (change times from the default)\nvalidation set (use the reference guide to find the function)\n\nDon’t forget to set a seed when you resample!\n\n\n\n05:00"
+  },
+  {
+    "objectID": "slides/04-evaluating-models.html#bootstrapping-2",
+    "href": "slides/04-evaluating-models.html#bootstrapping-2",
+    "title": "4 - Evaluating models",
+    "section": "Bootstrapping ",
+    "text": "Bootstrapping \n\nset.seed(322)\nbootstraps(frog_train, times = 10)\n#> # Bootstrap sampling \n#> # A tibble: 10 × 2\n#>    splits            id         \n#>    <list>            <chr>      \n#>  1 <split [456/173]> Bootstrap01\n#>  2 <split [456/168]> Bootstrap02\n#>  3 <split [456/170]> Bootstrap03\n#>  4 <split [456/164]> Bootstrap04\n#>  5 <split [456/176]> Bootstrap05\n#>  6 <split [456/156]> Bootstrap06\n#>  7 <split [456/166]> Bootstrap07\n#>  8 <split [456/168]> Bootstrap08\n#>  9 <split [456/167]> Bootstrap09\n#> 10 <split [456/170]> Bootstrap10"
+  },
+  {
+    "objectID": "slides/04-evaluating-models.html#validation-set",
+    "href": "slides/04-evaluating-models.html#validation-set",
+    "title": "4 - Evaluating models",
+    "section": "Validation set ",
+    "text": "Validation set \n\nset.seed(853)\nvalidation_split(frog_train, strata = latency)\n#> # Validation Set Split (0.75/0.25)  using stratification \n#> # A tibble: 1 × 2\n#>   splits            id        \n#>   <list>            <chr>     \n#> 1 <split [340/116]> validation\n\n\nA validation set is just another type of resample"
   },
   {
     "objectID": "slides/04-evaluating-models.html#random-forest-1",
@@ -910,8 +917,8 @@
     "text": "Your turn\n\nUse fit_resamples() and rf_wflow to:\n\nkeep predictions\ncompute metrics\nplot true vs. predicted values\n\n\n\n\n08:00"
   },
   {
-    "objectID": "slides/04-evaluating-models.html#evaluating-model-performance-3",
-    "href": "slides/04-evaluating-models.html#evaluating-model-performance-3",
+    "objectID": "slides/04-evaluating-models.html#evaluating-model-performance-2",
+    "href": "slides/04-evaluating-models.html#evaluating-model-performance-2",
     "title": "4 - Evaluating models",
     "section": "Evaluating model performance ",
     "text": "Evaluating model performance \n\nctrl_frog <- control_resamples(save_pred = TRUE)\n\n# Random forest uses random numbers so set the seed first\n\nset.seed(2)\nrf_res <- fit_resamples(rf_wflow, frog_folds, control = ctrl_frog)\ncollect_metrics(rf_res)\n#> # A tibble: 2 × 6\n#>   .metric .estimator   mean     n std_err .config             \n#>   <chr>   <chr>       <dbl> <int>   <dbl> <chr>               \n#> 1 rmse    standard   55.9      10  1.71   Preprocessor1_Model1\n#> 2 rsq     standard    0.370    10  0.0306 Preprocessor1_Model1"
@@ -1120,67 +1127,32 @@
     "text": "Building a model stack \n\nPredict on new data!\n\n\n\nfrog_test %>%\n  select(latency) %>%\n  bind_cols(predict(frog_st_res, frog_test)) %>%\n  ggplot(aes(latency, .pred)) + \n  geom_abline(lty = 2, \n              col = \"deeppink4\", \n              size = 1.5) +\n  geom_point(alpha = 0.5) +\n  coord_obs_pred()\n\n\n\n\n\n\n\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
+    "objectID": "slides/05-feature-engineering.html#working-with-our-predictors",
+    "href": "slides/05-feature-engineering.html#working-with-our-predictors",
+    "title": "5 - Feature engineering",
+    "section": "Working with our predictors",
+    "text": "Working with our predictors\nWe might want to modify our predictors columns for a few reasons:\n\n\nThe model requires them in a different format (e.g. dummy variables for lm()).\nThe model needs certain data qualities (e.g. same units for K-NN).\nThe outcome is better predicted when one or more columns are transformed in some way (a.k.a “feature engineering”).\n\n\n\nThe first two reasons are fairly predictable (next page).\nThe last one depends on your modeling problem."
+  },
+  {
     "objectID": "slides/05-feature-engineering.html#what-is-feature-engineering",
     "href": "slides/05-feature-engineering.html#what-is-feature-engineering",
     "title": "5 - Feature engineering",
     "section": "What is feature engineering?",
-    "text": "What is feature engineering?\nThink of a feature as some representation of a predictor that will be used in a model.\n\nExample representations:\n\nInteractions\nPolynomial expansions/splines\nPCA feature extraction\n\n\n\n“Feature engineering” sounds pretty cool, but let’s take a minute to talk about preprocessing data."
+    "text": "What is feature engineering?\nThink of a feature as some representation of a predictor that will be used in a model.\n\nExample representations:\n\nInteractions\nPolynomial expansions/splines\nPCA feature extraction\n\nThere are a lot of examples in Feature Engineering and Selection."
   },
   {
-    "objectID": "slides/05-feature-engineering.html#two-types-of-preprocessing",
-    "href": "slides/05-feature-engineering.html#two-types-of-preprocessing",
+    "objectID": "slides/05-feature-engineering.html#example-dates",
+    "href": "slides/05-feature-engineering.html#example-dates",
     "title": "5 - Feature engineering",
-    "section": "Two types of preprocessing",
-    "text": "Two types of preprocessing"
-  },
-  {
-    "objectID": "slides/05-feature-engineering.html#two-types-of-preprocessing-1",
-    "href": "slides/05-feature-engineering.html#two-types-of-preprocessing-1",
-    "title": "5 - Feature engineering",
-    "section": "Two types of preprocessing",
-    "text": "Two types of preprocessing"
-  },
-  {
-    "objectID": "slides/05-feature-engineering.html#two-types-of-preprocessing-2",
-    "href": "slides/05-feature-engineering.html#two-types-of-preprocessing-2",
-    "title": "5 - Feature engineering",
-    "section": "Two types of preprocessing",
-    "text": "Two types of preprocessing\n\nWhere does creation of dummy variables belong on the diagram?"
-  },
-  {
-    "objectID": "slides/05-feature-engineering.html#two-types-of-preprocessing-3",
-    "href": "slides/05-feature-engineering.html#two-types-of-preprocessing-3",
-    "title": "5 - Feature engineering",
-    "section": "Two types of preprocessing",
-    "text": "Two types of preprocessing\n\nWhere does engineering a date column belong in the diagram?\n\nWhen a date column is used in its native format, it is usually converted by an R model to an integer.\n\n\nIt can be re-engineered as:\n\nDays since a reference date\nDay of the week\nMonth\nYear\nIndicators for holidays"
-  },
-  {
-    "objectID": "slides/05-feature-engineering.html#original-column",
-    "href": "slides/05-feature-engineering.html#original-column",
-    "title": "5 - Feature engineering",
-    "section": "Original column",
-    "text": "Original column"
-  },
-  {
-    "objectID": "slides/05-feature-engineering.html#features",
-    "href": "slides/05-feature-engineering.html#features",
-    "title": "5 - Feature engineering",
-    "section": "Features",
-    "text": "Features\n\n\n\n\n\n\nAt least that’s what we hope the difference looks like."
+    "section": "Example: Dates",
+    "text": "Example: Dates\nHow can we represent date columns for our model?\n\nWhen a date column is used in its native format, it is usually converted by an R model to an integer.\n\n\nIt can be re-engineered as:\n\nDays since a reference date\nDay of the week\nMonth\nYear\nIndicators for holidays\n\n\nThe main point is that we try to maximize performance with different versions of the predictors.\nMention that, for the Chicago data, the day or the week features are usually the most important ones in the model."
   },
   {
     "objectID": "slides/05-feature-engineering.html#general-definitions",
     "href": "slides/05-feature-engineering.html#general-definitions",
     "title": "5 - Feature engineering",
-    "section": "General definitions",
-    "text": "General definitions\n\nData preprocessing steps allow your model to fit.\nFeature engineering steps help the model do the least work to predict the outcome as well as possible.\n\n\nThese terms are often used interchangeably in the ML community but we want to distinguish them."
-  },
-  {
-    "objectID": "slides/05-feature-engineering.html#general-definitions-1",
-    "href": "slides/05-feature-engineering.html#general-definitions-1",
-    "title": "5 - Feature engineering",
     "section": "General definitions ",
-    "text": "General definitions \n\nData preprocessing steps allow your model to fit.\nFeature engineering steps help the model do the least work to predict the outcome as well as possible.\n\nThe recipes package can handle both!"
+    "text": "General definitions \n\nData preprocessing steps allow your model to fit.\nFeature engineering steps help the model do the least work to predict the outcome as well as possible.\n\nThe recipes package can handle both!\nIn a little bit, we’ll see successful (and unsuccessful) feature engineering methods for our example data.\n\nThese terms are often used interchangeably in the ML community but we want to distinguish them."
   },
   {
     "objectID": "slides/05-feature-engineering.html#the-nhl-data",
@@ -1386,6 +1358,13 @@
     "text": "What do we do with the player data? 🏒\nThere are 597 unique player values in our training set. How can we include this information in our model?\n\nWe could:\n\nmake the full set of indicator variables 😳\nuse feature hashing to create a smaller set of indicator variables\nuse effect encoding to replace the player column with the estimated effect of that predictor\n\n\n\nLet’s use an effect encoding."
   },
   {
+    "objectID": "slides/05-feature-engineering.html#what-is-an-effect-encoding",
+    "href": "slides/05-feature-engineering.html#what-is-an-effect-encoding",
+    "title": "5 - Feature engineering",
+    "section": "What is an effect encoding?",
+    "text": "What is an effect encoding?\nWe replace the qualitative’s predictor data with their effect on the outcome.\n\n\nData before:\n\nbefore\n#> # A tibble: 7 × 3\n#>   on_goal player            .row\n#>   <fct>   <fct>            <int>\n#> 1 yes     brian_dumoulin       1\n#> 2 yes     patric_hornqvist     2\n#> 3 yes     nikita_nesterov      3\n#> 4 yes     jack_eichel          4\n#> 5 yes     justin_williams      5\n#> 6 yes     seth_jones           6\n#> 7 yes     kris_letang          7\n\n\nData after:\n\nafter\n#> # A tibble: 7 × 3\n#>   on_goal  player  .row\n#>   <fct>     <dbl> <int>\n#> 1 yes     -0.114      1\n#> 2 yes      0.631      2\n#> 3 yes      0.142      3\n#> 4 yes      0.220      4\n#> 5 yes      0.248      5\n#> 6 yes      0.0733     6\n#> 7 yes      0.0774     7\n\n\n\nThe player column is replaced with the log-odds of being on goal.\n\nAs a reminder:\n\\[\\text{log-odds} = log\\left(\\frac{\\hat{p}}{1 - \\hat{p}}\\right)\\]\nwhere \\(\\hat{p}\\) is the on goal rate estimate.\nFor logistic regression, this is what the predictors are modeling. The log-odds are more likely to be linear with the outcome."
+  },
+  {
     "objectID": "slides/05-feature-engineering.html#per-player-statistics",
     "href": "slides/05-feature-engineering.html#per-player-statistics",
     "title": "5 - Feature engineering",
@@ -1509,7 +1488,28 @@
     "href": "slides/06-tuning-hyperparameters.html#choosing-tuning-parameters",
     "title": "6 - Tuning Hyperparameters",
     "section": "Choosing tuning parameters    ",
-    "text": "Choosing tuning parameters    \nLet’s take our previous recipe and add a few changes:\n\nglm_rec <-\n  recipe(on_goal ~ ., data = nhl_train) %>%\n  step_lencode_mixed(player, outcome = vars(on_goal)) %>%\n  step_dummy(all_nominal_predictors()) %>%\n  step_mutate(\n    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),\n    distance = sqrt((89 - abs(coord_x))^2 + coord_y^2),\n    distance = log(distance),\n    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)\n  ) %>%\n  step_rm(coord_x, coord_y) %>%\n  step_zv(all_predictors()) %>%\n  step_ns(angle, deg_free = tune(\"angle\")) %>%\n  step_ns(distance, deg_free = tune(\"distance\")) %>%\n  step_normalize(all_numeric_predictors())\nglm_spline_wflow <-\n  workflow() %>%\n  add_model(logistic_reg()) %>%\n  add_recipe(glm_rec)"
+    "text": "Choosing tuning parameters    \nLet’s take our previous recipe and add a few changes:\n\nglm_rec <-\n  recipe(on_goal ~ ., data = nhl_train) %>%\n  step_lencode_mixed(player, outcome = vars(on_goal)) %>%\n  step_dummy(all_nominal_predictors()) %>%\n  step_mutate(\n    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),\n    distance = sqrt((89 - abs(coord_x))^2 + coord_y^2),\n    distance = log(distance),\n    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)\n  ) %>%\n  step_rm(coord_x, coord_y) %>%\n  step_zv(all_predictors()) %>%\n  step_ns(angle, deg_free = tune(\"angle\")) %>%\n  step_ns(distance, deg_free = tune(\"distance\")) %>%\n  step_normalize(all_numeric_predictors())\n\n\nLet’s tune() our spline terms!"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#choosing-tuning-parameters-1",
+    "href": "slides/06-tuning-hyperparameters.html#choosing-tuning-parameters-1",
+    "title": "6 - Tuning Hyperparameters",
+    "section": "Choosing tuning parameters    ",
+    "text": "Choosing tuning parameters    \nLet’s take our previous recipe and add a few changes:\n\nglm_spline_wflow <-\n  workflow() %>%\n  add_model(logistic_reg()) %>%\n  add_recipe(glm_rec)"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#section",
+    "href": "slides/06-tuning-hyperparameters.html#section",
+    "title": "6 - Tuning Hyperparameters",
+    "section": "",
+    "text": "Splines replace the existing numeric predictor with a set of columns that allow a model to emulate a flexible, nonlinear relationship.\nMore spline terms = more “wiggly”, i.e. flexibly model a nonlinear relationship\nHow many spline terms? This is called degrees of freedom\n2 and 5 look like they underfit; 20 and 100 look like they overfit"
+  },
+  {
+    "objectID": "slides/06-tuning-hyperparameters.html#splines-and-nonlinear-relationships",
+    "href": "slides/06-tuning-hyperparameters.html#splines-and-nonlinear-relationships",
+    "title": "6 - Tuning Hyperparameters",
+    "section": "Splines and nonlinear relationships",
+    "text": "Splines and nonlinear relationships\n\n\n\n\n\n\n\n\n\n\nOur hockey data exhibits nonlinear relationships\nWe can model nonlinearity like this via a model (later this afternoon) or feature engineering\nHow do we decide how “wiggly” or flexible to make our spline features? TUNING"
   },
   {
     "objectID": "slides/06-tuning-hyperparameters.html#grid-search",
@@ -1708,6 +1708,13 @@
     "text": "Tuning results \n\nxgb_res\n#> # Tuning results\n#> # Validation Set Split (0.8/0.2)  \n#> # A tibble: 1 × 5\n#>   splits              id         .metrics          .notes           .predictions          \n#>   <list>              <chr>      <list>            <list>           <list>                \n#> 1 <split [7288/1822]> validation <tibble [30 × 9]> <tibble [0 × 3]> <tibble [27,330 × 11]>"
   },
   {
+    "objectID": "slides/06-tuning-hyperparameters.html#tuning-results-3",
+    "href": "slides/06-tuning-hyperparameters.html#tuning-results-3",
+    "title": "6 - Tuning Hyperparameters",
+    "section": "Tuning results ",
+    "text": "Tuning results \n\nautoplot(xgb_res)"
+  },
+  {
     "objectID": "slides/06-tuning-hyperparameters.html#again-with-the-location-features",
     "href": "slides/06-tuning-hyperparameters.html#again-with-the-location-features",
     "title": "6 - Tuning Hyperparameters",
@@ -1876,6 +1883,20 @@
     "text": "Splitting the NHL data\nnhl_train isn’t really the right name for these data.\nIn a little bit, we’ll use the validation_split() function to take the rows in nhl_train and make a validation set. The data that are not used in the validation set are the data that we will use to build the models during tuning.\nRecall the Whole Game slide had:\n\n\n\n\n\n\n\n\n\nnhl_train has the “Not Testing” data."
   },
   {
+    "objectID": "slides/annotations.html#per-player-statistics",
+    "href": "slides/annotations.html#per-player-statistics",
+    "title": "Annotations",
+    "section": "Per-player statistics",
+    "text": "Per-player statistics\nThe effect encoding method essentially takes the effect of a variable, like player, and makes a data column for that effect. In our example, the ability of a player to have an on-goal shot is quantified by a model and then added as a data column to be used in the model.\nSuppose NHL rookie Max has a single shot in the data and it was on goal. If we used a naive estimate for Max’s effect, the model is being told that Max should have a 100% chance of being on goal. That’s a very poor estimate since it is from a single data point.\nContrast this with seasoned player Davis, who has taken 250 shots and 75% of these were on goal. Davis’s proportion is more predictive because it is estimated with better data (i.e., more total shots). Partial pooling leverages the entire data set and can borrow strength from all of the players. It is a common tool in Bayesian estimation and non-Bayesian mixed models. If a player’s data is of good quality, the partial pooling effect estimate is closer to the raw proportion. Max’s data is not great and is “shrunk” towards the center of the overall on goal proportion. Since there is so little known about Max’s shot history, this is a better effect estimate (until more data is available for him).\nThe Stan documentation has a pretty good vignette on this: https://cran.r-project.org/web/packages/rstanarm/vignettes/pooling.html\nAlso, Bayes Rules! has a nice section on this: https://www.bayesrulesbook.com/chapter-15.html\nIf the outcome were numeric, the effect would be the mean of the outcome per player. In this case, partial pooling is very similar to the James–Stein estimator: https://en.wikipedia.org/wiki/James–Stein_estimator"
+  },
+  {
+    "objectID": "slides/annotations.html#player-effects",
+    "href": "slides/annotations.html#player-effects",
+    "title": "Annotations",
+    "section": "Player effects",
+    "text": "Player effects\nEffect encoding might result in a somewhat circular argument: the column is more likely to be important to the model since it is the output of a separate model. The risk here is that we might over-fit the effect to the data. For this reason, it is super important to make sure that we verify that we aren’t overfitting by checking with resampling (or a validation set).\nPartial pooling somewhat lowers the risk of overfitting since it tends to correct for players with small sample sizes. It can’t correct for improper data usage or data leakage though."
+  },
+  {
     "objectID": "slides/annotations.html#angle",
     "href": "slides/annotations.html#angle",
     "title": "Annotations",
@@ -1887,21 +1908,21 @@
     "href": "slides/annotations.html#update-parameter-ranges",
     "title": "Annotations",
     "section": "Update parameter ranges",
-    "text": "Update parameter ranges\nIn about 90% of the cases, the dials function that you use to update the parameter range has the same name as the argument. For example, if you were to update the mtry parameter in a random forests model, the code would look like\n\nparameter_object %>% \n  update(mtry = mtry(c(1, 100)))\n\nIn our case, the argument name is deg_free but we update it with spline_degree.\ndeg_free represents the general concept of degrees of freedom and could be associated with many different things. For example, if we ever had an argument that was the number of degrees of freedom for a \\(t\\) distribution, we would call that argument deg_free.\nFor splines, we probably want a wider range for the degrees of freedom. We made a specialized function called spline_degree() to be used in these cases.\nHow can you tell when this happens? There is a helper function called tunable() and that gives information on how we make the default ranges for parameters. There is a column in these objects names call_info:\n\nlibrary(tidymodels)\nns_tunable <- \n  recipe(mpg ~ ., data = mtcars) %>% \n  step_ns(dis, deg_free = tune()) %>% \n  tunable()\n\nns_tunable\n\n#> # A tibble: 1 × 5\n#>   name     call_info        source component component_id\n#>   <chr>    <list>           <chr>  <chr>     <chr>       \n#> 1 deg_free <named list [3]> recipe step_ns   ns_P1Tjg\n\nns_tunable$call_info\n\n#> [[1]]\n#> [[1]]$pkg\n#> [1] \"dials\"\n#> \n#> [[1]]$fun\n#> [1] \"spline_degree\"\n#> \n#> [[1]]$range\n#> [1]  1 15"
+    "text": "Update parameter ranges\nIn about 90% of the cases, the dials function that you use to update the parameter range has the same name as the argument. For example, if you were to update the mtry parameter in a random forests model, the code would look like\n\nparameter_object %>% \n  update(mtry = mtry(c(1, 100)))\n\nIn our case, the argument name is deg_free but we update it with spline_degree().\ndeg_free represents the general concept of degrees of freedom and could be associated with many different things. For example, if we ever had an argument that was the number of degrees of freedom for a \\(t\\) distribution, we would call that argument deg_free.\nFor splines, we probably want a wider range for the degrees of freedom. We made a specialized function called spline_degree() to be used in these cases.\nHow can you tell when this happens? There is a helper function called tunable() and that gives information on how we make the default ranges for parameters. There is a column in these objects names call_info:\n\nlibrary(tidymodels)\nns_tunable <- \n  recipe(mpg ~ ., data = mtcars) %>% \n  step_ns(dis, deg_free = tune()) %>% \n  tunable()\n\nns_tunable\n\n#> # A tibble: 1 × 5\n#>   name     call_info        source component component_id\n#>   <chr>    <list>           <chr>  <chr>     <chr>       \n#> 1 deg_free <named list [3]> recipe step_ns   ns_P1Tjg\n\nns_tunable$call_info\n\n#> [[1]]\n#> [[1]]$pkg\n#> [1] \"dials\"\n#> \n#> [[1]]$fun\n#> [1] \"spline_degree\"\n#> \n#> [[1]]$range\n#> [1]  1 15"
   },
   {
     "objectID": "slides/annotations.html#spline-grid-search",
     "href": "slides/annotations.html#spline-grid-search",
     "title": "Annotations",
     "section": "Spline grid search",
-    "text": "Spline grid search\nWhat’s going on with the\n\nprediction from a rank-deficient fit may be misleading\n\nwarnings?\nFor linear regression, a computation is used called matrix inversion. The matrix in question is called the “model matrix” and it contains the predictor set for the training data.\nMatrix inverse can fail if two or model columns:\n\nare identical, or\nadd up to some other column.\n\nThese situations are called linear dependencies.\nWhen this happens, lm() is pretty tolerant. It does not fail but does not compute regression coefficients for a minimal number of predictors involved in the dependency (and issues the warning above).\nFor these data, there are three dependencies between:\n\ndefense_team_PIT and offense_team_PIT\nstrength_short_handed, player_diff, and strength_power_play\nyear, month_Oct, month_Nov, and month_Dec\n\nThe first one is easy to explain. For each row, when one these two PIT column has a one, the other must have a zero. The linear regression intercept is represented in the model matrix as a column of all ones. The dependency is\n(Intercept) = defense_team_PIT + offense_team_PIT\nThe way to avoid this problem is to use step_lincomb(all_numeric_predictors()) in the recipe. This step removes the minimum number of columns to avoid the issue.\ntl;dr\nLinear regression detects some redundancies in the predictor set. We can ignore the warnings since lm() can deal with it or use step_lincomb() to avoid the warnings."
+    "text": "Spline grid search\nWhat’s going on with the\n\nprediction from a rank-deficient fit may be misleading\n\nwarnings?\nFor linear regression, a computation is used called matrix inversion. The matrix in question is called the “model matrix” and it contains the predictor set for the training data.\nMatrix inversion can fail if two or more columns:\n\nare identical, or\nadd up to some other column.\n\nThese situations are called linear dependencies.\nWhen this happens, lm() is pretty tolerant. It does not fail but does not compute regression coefficients for a minimal number of predictors involved in the dependency (and issues the warning above).\nFor these data, there are three dependencies between:\n\ndefense_team_PIT and offense_team_PIT\nstrength_short_handed, player_diff, and strength_power_play\nyear, month_Oct, month_Nov, and month_Dec\n\nThe first one is easy to explain. For each row, when one these two PIT column has a one, the other must have a zero. The linear regression intercept is represented in the model matrix as a column of all ones. The dependency is\n(Intercept) = defense_team_PIT + offense_team_PIT\nThe way to avoid this problem is to use step_lincomb(all_numeric_predictors()) in the recipe. This step removes the minimum number of columns to avoid the issue.\ntl;dr\nLinear regression detects some redundancies in the predictor set. We can ignore the warnings since lm() can deal with it or use step_lincomb() to avoid the warnings."
   },
   {
     "objectID": "slides/annotations.html#boosted-tree-tuning-parameters",
     "href": "slides/annotations.html#boosted-tree-tuning-parameters",
     "title": "Annotations",
     "section": "Boosted tree tuning parameters",
-    "text": "Boosted tree tuning parameters\nWhen deciding on the number of boosting iterations, there are two main strategies:\n\nDirectly tune it (trees = tune())\nSet it to one value and tune the number of early stopping iterations (trees = 500, stop_iter = tune()).\n\nEarly stopping is when we monitor the performance of the model. If the model doesn’t make any improvements for stop_iter iterations, training stops.\nHere’s an example where, after eleven iterations, performance starts to get worse.\n\n\n\n\n\nThis is likely do to over-fitting so we stop the model at eleven boosting iterations.\nEarly stopping usually has good results and takes far less time."
+    "text": "Boosted tree tuning parameters\nWhen deciding on the number of boosting iterations, there are two main strategies:\n\nDirectly tune it (trees = tune())\nSet it to one value and tune the number of early stopping iterations (trees = 500, stop_iter = tune()).\n\nEarly stopping is when we monitor the performance of the model. If the model doesn’t make any improvements for stop_iter iterations, training stops.\nHere’s an example where, after eleven iterations, performance starts to get worse.\n\n\n\n\n\nThis is likely due to over-fitting so we stop the model at eleven boosting iterations.\nEarly stopping usually has good results and takes far less time."
   },
   {
     "objectID": "slides/annotations.html#boosted-tree-code",
@@ -1930,110 +1951,5 @@
     "title": "Annotations",
     "section": "A tidymodels explainer",
     "text": "A tidymodels explainer\nFor our example, the angle was an original predictor. Recall that we made spline terms from this predictor, so there are derived features such as angle_ns_1 and so on.\nOriginal versus derived doesn’t affect local explainers since we are focused on a single prediction.\nFor global explainers, we should decide between:\n\nexplaining the overall affect of angle (lumping all its features into one importance score), or\nexplaining the effect of each term in the model (including angle_ns_1 and so on).\n\nThe choice depends on what you want. For example, if we have an original date predictor and make features for month and year, is it more informative to know if date is important (overall) or exactly how the date is important? You might want to look at it both ways."
-  },
-  {
-    "objectID": "slides/02-data-budget.html#section-1",
-    "href": "slides/02-data-budget.html#section-1",
-    "title": "2 - Your data budget",
-    "section": "",
-    "text": "We will use this tomorrow"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#cross-validation-2",
-    "href": "slides/04-evaluating-models.html#cross-validation-2",
-    "title": "4 - Evaluating models",
-    "section": "Cross-validation ",
-    "text": "Cross-validation \n\nvfold_cv(frog_train) # v = 10 is default\n#> #  10-fold cross-validation \n#> # A tibble: 10 × 2\n#>    splits           id    \n#>    <list>           <chr> \n#>  1 <split [410/46]> Fold01\n#>  2 <split [410/46]> Fold02\n#>  3 <split [410/46]> Fold03\n#>  4 <split [410/46]> Fold04\n#>  5 <split [410/46]> Fold05\n#>  6 <split [410/46]> Fold06\n#>  7 <split [411/45]> Fold07\n#>  8 <split [411/45]> Fold08\n#>  9 <split [411/45]> Fold09\n#> 10 <split [411/45]> Fold10"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#cross-validation-3",
-    "href": "slides/04-evaluating-models.html#cross-validation-3",
-    "title": "4 - Evaluating models",
-    "section": "Cross-validation ",
-    "text": "Cross-validation \nWhat is in this?\n\nfrog_folds <- vfold_cv(frog_train)\nfrog_folds$splits[1:3]\n#> [[1]]\n#> <Analysis/Assess/Total>\n#> <410/46/456>\n#> \n#> [[2]]\n#> <Analysis/Assess/Total>\n#> <410/46/456>\n#> \n#> [[3]]\n#> <Analysis/Assess/Total>\n#> <410/46/456>\n\n\nTalk about a list column, storing non-atomic types in dataframe"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#cross-validation-4",
-    "href": "slides/04-evaluating-models.html#cross-validation-4",
-    "title": "4 - Evaluating models",
-    "section": "Cross-validation ",
-    "text": "Cross-validation \n\nvfold_cv(frog_train, v = 5)\n#> #  5-fold cross-validation \n#> # A tibble: 5 × 2\n#>   splits           id   \n#>   <list>           <chr>\n#> 1 <split [364/92]> Fold1\n#> 2 <split [365/91]> Fold2\n#> 3 <split [365/91]> Fold3\n#> 4 <split [365/91]> Fold4\n#> 5 <split [365/91]> Fold5"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#cross-validation-5",
-    "href": "slides/04-evaluating-models.html#cross-validation-5",
-    "title": "4 - Evaluating models",
-    "section": "Cross-validation ",
-    "text": "Cross-validation \n\nvfold_cv(frog_train, strata = latency)\n#> #  10-fold cross-validation using stratification \n#> # A tibble: 10 × 2\n#>    splits           id    \n#>    <list>           <chr> \n#>  1 <split [408/48]> Fold01\n#>  2 <split [408/48]> Fold02\n#>  3 <split [408/48]> Fold03\n#>  4 <split [409/47]> Fold04\n#>  5 <split [411/45]> Fold05\n#>  6 <split [412/44]> Fold06\n#>  7 <split [412/44]> Fold07\n#>  8 <split [412/44]> Fold08\n#>  9 <split [412/44]> Fold09\n#> 10 <split [412/44]> Fold10\n\n\nStratification often helps, with very little downside"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#cross-validation-6",
-    "href": "slides/04-evaluating-models.html#cross-validation-6",
-    "title": "4 - Evaluating models",
-    "section": "Cross-validation ",
-    "text": "Cross-validation \nWe’ll use this setup:\n\nset.seed(123)\nfrog_folds <- vfold_cv(frog_train, v = 10, strata = latency)\nfrog_folds\n#> #  10-fold cross-validation using stratification \n#> # A tibble: 10 × 2\n#>    splits           id    \n#>    <list>           <chr> \n#>  1 <split [408/48]> Fold01\n#>  2 <split [408/48]> Fold02\n#>  3 <split [408/48]> Fold03\n#>  4 <split [409/47]> Fold04\n#>  5 <split [411/45]> Fold05\n#>  6 <split [412/44]> Fold06\n#>  7 <split [412/44]> Fold07\n#>  8 <split [412/44]> Fold08\n#>  9 <split [412/44]> Fold09\n#> 10 <split [412/44]> Fold10\n\n\nSet the seed when creating resamples"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#fit-our-model-to-the-resamples",
-    "href": "slides/04-evaluating-models.html#fit-our-model-to-the-resamples",
-    "title": "4 - Evaluating models",
-    "section": "Fit our model to the resamples",
-    "text": "Fit our model to the resamples\n\ntree_res <- fit_resamples(tree_wflow, frog_folds)\ntree_res\n#> # Resampling results\n#> # 10-fold cross-validation using stratification \n#> # A tibble: 10 × 4\n#>    splits           id     .metrics         .notes          \n#>    <list>           <chr>  <list>           <list>          \n#>  1 <split [408/48]> Fold01 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  2 <split [408/48]> Fold02 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  3 <split [408/48]> Fold03 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  4 <split [409/47]> Fold04 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  5 <split [411/45]> Fold05 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  6 <split [412/44]> Fold06 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  7 <split [412/44]> Fold07 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  8 <split [412/44]> Fold08 <tibble [2 × 4]> <tibble [0 × 3]>\n#>  9 <split [412/44]> Fold09 <tibble [2 × 4]> <tibble [0 × 3]>\n#> 10 <split [412/44]> Fold10 <tibble [2 × 4]> <tibble [0 × 3]>"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#section-3",
-    "href": "slides/04-evaluating-models.html#section-3",
-    "title": "4 - Evaluating models",
-    "section": "",
-    "text": "tree_preds %>% \n  ggplot(aes(latency, .pred, color = id)) + \n  geom_abline(lty = 2, col = \"gray\", size = 1.5) +\n  geom_point(alpha = 0.5) +\n  coord_obs_pred()"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#bootstrapping-1",
-    "href": "slides/04-evaluating-models.html#bootstrapping-1",
-    "title": "4 - Evaluating models",
-    "section": "Bootstrapping ",
-    "text": "Bootstrapping \n\nset.seed(3214)\nbootstraps(frog_train)\n#> # Bootstrap sampling \n#> # A tibble: 25 × 2\n#>    splits            id         \n#>    <list>            <chr>      \n#>  1 <split [456/163]> Bootstrap01\n#>  2 <split [456/166]> Bootstrap02\n#>  3 <split [456/173]> Bootstrap03\n#>  4 <split [456/177]> Bootstrap04\n#>  5 <split [456/166]> Bootstrap05\n#>  6 <split [456/163]> Bootstrap06\n#>  7 <split [456/164]> Bootstrap07\n#>  8 <split [456/165]> Bootstrap08\n#>  9 <split [456/170]> Bootstrap09\n#> 10 <split [456/177]> Bootstrap10\n#> # … with 15 more rows\n#> # ℹ Use `print(n = ...)` to see more rows"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#bootstrapping-2",
-    "href": "slides/04-evaluating-models.html#bootstrapping-2",
-    "title": "4 - Evaluating models",
-    "section": "Bootstrapping ",
-    "text": "Bootstrapping \n\nset.seed(322)\nbootstraps(frog_train, times = 10)\n#> # Bootstrap sampling \n#> # A tibble: 10 × 2\n#>    splits            id         \n#>    <list>            <chr>      \n#>  1 <split [456/173]> Bootstrap01\n#>  2 <split [456/168]> Bootstrap02\n#>  3 <split [456/170]> Bootstrap03\n#>  4 <split [456/164]> Bootstrap04\n#>  5 <split [456/176]> Bootstrap05\n#>  6 <split [456/156]> Bootstrap06\n#>  7 <split [456/166]> Bootstrap07\n#>  8 <split [456/168]> Bootstrap08\n#>  9 <split [456/167]> Bootstrap09\n#> 10 <split [456/170]> Bootstrap10"
-  },
-  {
-    "objectID": "slides/04-evaluating-models.html#validation-set",
-    "href": "slides/04-evaluating-models.html#validation-set",
-    "title": "4 - Evaluating models",
-    "section": "Validation set ",
-    "text": "Validation set \n\nset.seed(853)\nvalidation_split(frog_train, strata = latency)\n#> # Validation Set Split (0.75/0.25)  using stratification \n#> # A tibble: 1 × 2\n#>   splits            id        \n#>   <list>            <chr>     \n#> 1 <split [340/116]> validation\n\n\nA validation set is just another type of resample"
-  },
-  {
-    "objectID": "slides/05-feature-engineering.html#what-is-an-effect-encoding",
-    "href": "slides/05-feature-engineering.html#what-is-an-effect-encoding",
-    "title": "5 - Feature engineering",
-    "section": "What is an effect encoding?",
-    "text": "What is an effect encoding?\nWe replace the qualitative’s predictor data with their effect on the outcome.\n\n\nData before:\n\nbefore\n#> # A tibble: 7 × 3\n#>   on_goal player            .row\n#>   <fct>   <fct>            <int>\n#> 1 yes     brian_dumoulin       1\n#> 2 yes     patric_hornqvist     2\n#> 3 yes     nikita_nesterov      3\n#> 4 yes     jack_eichel          4\n#> 5 yes     justin_williams      5\n#> 6 yes     seth_jones           6\n#> 7 yes     kris_letang          7\n\n\nData after:\n\nafter\n#> # A tibble: 7 × 3\n#>   on_goal  player  .row\n#>   <fct>     <dbl> <int>\n#> 1 yes     -0.114      1\n#> 2 yes      0.631      2\n#> 3 yes      0.142      3\n#> 4 yes      0.220      4\n#> 5 yes      0.248      5\n#> 6 yes      0.0733     6\n#> 7 yes      0.0774     7\n\n\n\nThe player column is replaced with the log-odds of being on goal.\n\nAs a reminder:\n\\[\\text{log-odds} = log\\left(\\frac{\\hat{p}}{1 - \\hat{p}}\\right)\\]\nwhere \\(\\hat{p}\\) is the on goal rate estimate.\nFor logistic regression, this is what the predictors are modeling. The log-odds are more likely to be linear with the outcome."
-  },
-  {
-    "objectID": "slides/06-tuning-hyperparameters.html#tuning-results-3",
-    "href": "slides/06-tuning-hyperparameters.html#tuning-results-3",
-    "title": "6 - Tuning Hyperparameters",
-    "section": "Tuning results ",
-    "text": "Tuning results \n\nautoplot(xgb_res)"
-  },
-  {
-    "objectID": "slides/annotations.html#per-player-statistics",
-    "href": "slides/annotations.html#per-player-statistics",
-    "title": "Annotations",
-    "section": "Per-player statistics",
-    "text": "Per-player statistics\nThe effect encoding method essentially takes the effect of a variable, like player, and makes a data column for that effect. In our example, the ability of a player to have an on-goal shot is quantified by a model and then added as a data column to be used in the model.\nSuppose NHL rookie Max has a single shot in the data and it was on goal. If we used a naive estimate for Max’s effect, the model is being told that Max should have a 100% chance of being on goal. That’s a very poor estimate since it is from a single data point.\nContrast this with seasoned player Davis, show has taken 250 shots and 75% of these were on goal. Davis’s proportion is more predictive because it is estimated with better data (i.e., more total shots). Partial pooling leverages the entire data set and can borrow strength from all of the players. It is a common tool in Bayesian estimation and non-Bayesian mixed models. If a player’s data is of good quality, the partial pooling effect estimate is closer to the raw proportion. Max’s data is not great and is “shrunk” towards the center of the overall on goal proportion. Since there is so little known about Max’s shot history, this is a better effect estimate (until more data is available for him).\nThe Stan documentation has a pretty good vignette on this: https://cran.r-project.org/web/packages/rstanarm/vignettes/pooling.html\nAlso, Bayes Rules! has a nice section on this: https://www.bayesrulesbook.com/chapter-15.html\nIf the outcome were numeric, the effect would be the mean of the outcome per player. In this case, partial pooling is very similar to the James–Stein estimator: https://en.wikipedia.org/wiki/James–Stein_estimator"
-  },
-  {
-    "objectID": "slides/annotations.html#player-effects",
-    "href": "slides/annotations.html#player-effects",
-    "title": "Annotations",
-    "section": "Player effects",
-    "text": "Player effects\nEffect encoding might result in a somewhat circular argument: the column is more likely to be important to the model since it is the output of a separate model. The risk here is that we might over-fit the effect to the data. For this reason, it is super important to make sure that we verify that we aren’t overfitting by checking with resampling (or a validation set).\nPartial pooling somewhat lowers the risk of overfitting since it tends to correct for players with small sample sizes. It can’t correct for improper data usage or data leakage though."
   }
 ]
