@@ -8,7 +8,7 @@
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.0.35">
+  <meta name="generator" content="quarto-1.0.36">
 
   <title>Machine learning with tidymodels - 2 - Your data budget</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -415,9 +415,10 @@
 <span id="cb1-2"><a href="#cb1-2"></a></span>
 <span id="cb1-3"><a href="#cb1-3"></a><span class="fu">data</span>(<span class="st">"tree_frogs"</span>, <span class="at">package =</span> <span class="st">"stacks"</span>)</span>
 <span id="cb1-4"><a href="#cb1-4"></a>tree_frogs <span class="ot">&lt;-</span> tree_frogs <span class="sc">%&gt;%</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a>  <span class="fu">mutate</span>(<span class="at">t_o_d =</span> <span class="fu">factor</span>(t_o_d)) <span class="sc">%&gt;%</span></span>
-<span id="cb1-6"><a href="#cb1-6"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(latency)) <span class="sc">%&gt;%</span></span>
-<span id="cb1-7"><a href="#cb1-7"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(clutch, hatched))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-5"><a href="#cb1-5"></a>  <span class="fu">mutate</span>(<span class="at">t_o_d =</span> <span class="fu">factor</span>(t_o_d),</span>
+<span id="cb1-6"><a href="#cb1-6"></a>         <span class="at">age =</span> age <span class="sc">/</span> <span class="dv">86400</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(latency)) <span class="sc">%&gt;%</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(clutch, hatched))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="data-on-tree-frog-hatching-2" class="slide level2">
@@ -443,7 +444,7 @@
 <li><p>treatment: Whether or not they got gentamicin, a compound that knocks out the embryo’s lateral line (a sensory organ).</p></li>
 <li><p>reflex: A measure of ear function (low, mid, full)</p></li>
 <li><p>t_o_d: Time that the stimulus was applied (morning, afternoon, night)</p></li>
-<li><p>age: Age at the time it was stimulated (in seconds)</p></li>
+<li><p>age: Age at the time it was stimulated (in days)</p></li>
 </ul>
 <style type="text/css">
         span.MJX_Assistive_MathML {
@@ -462,18 +463,18 @@
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>tree_frogs</span>
 <span id="cb2-2"><a href="#cb2-2"></a><span class="co">#&gt; # A tibble: 572 × 5</span></span>
-<span id="cb2-3"><a href="#cb2-3"></a><span class="co">#&gt;    treatment  reflex    age t_o_d     latency</span></span>
-<span id="cb2-4"><a href="#cb2-4"></a><span class="co">#&gt;    &lt;chr&gt;      &lt;fct&gt;   &lt;dbl&gt; &lt;fct&gt;       &lt;dbl&gt;</span></span>
-<span id="cb2-5"><a href="#cb2-5"></a><span class="co">#&gt;  1 control    full   466965 morning        22</span></span>
-<span id="cb2-6"><a href="#cb2-6"></a><span class="co">#&gt;  2 control    low    361180 night         360</span></span>
-<span id="cb2-7"><a href="#cb2-7"></a><span class="co">#&gt;  3 control    full   401595 afternoon     106</span></span>
-<span id="cb2-8"><a href="#cb2-8"></a><span class="co">#&gt;  4 control    mid    357810 night         180</span></span>
-<span id="cb2-9"><a href="#cb2-9"></a><span class="co">#&gt;  5 control    full   397440 afternoon      60</span></span>
-<span id="cb2-10"><a href="#cb2-10"></a><span class="co">#&gt;  6 gentamicin full   463230 morning        39</span></span>
-<span id="cb2-11"><a href="#cb2-11"></a><span class="co">#&gt;  7 control    full   393900 afternoon     214</span></span>
-<span id="cb2-12"><a href="#cb2-12"></a><span class="co">#&gt;  8 control    full   469065 morning        50</span></span>
-<span id="cb2-13"><a href="#cb2-13"></a><span class="co">#&gt;  9 control    full   400240 afternoon     224</span></span>
-<span id="cb2-14"><a href="#cb2-14"></a><span class="co">#&gt; 10 control    full   466160 morning        63</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="co">#&gt;    treatment  reflex   age t_o_d     latency</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="co">#&gt;    &lt;chr&gt;      &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;       &lt;dbl&gt;</span></span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="co">#&gt;  1 control    full    5.40 morning        22</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a><span class="co">#&gt;  2 control    low     4.18 night         360</span></span>
+<span id="cb2-7"><a href="#cb2-7"></a><span class="co">#&gt;  3 control    full    4.65 afternoon     106</span></span>
+<span id="cb2-8"><a href="#cb2-8"></a><span class="co">#&gt;  4 control    mid     4.14 night         180</span></span>
+<span id="cb2-9"><a href="#cb2-9"></a><span class="co">#&gt;  5 control    full    4.6  afternoon      60</span></span>
+<span id="cb2-10"><a href="#cb2-10"></a><span class="co">#&gt;  6 gentamicin full    5.36 morning        39</span></span>
+<span id="cb2-11"><a href="#cb2-11"></a><span class="co">#&gt;  7 control    full    4.56 afternoon     214</span></span>
+<span id="cb2-12"><a href="#cb2-12"></a><span class="co">#&gt;  8 control    full    5.43 morning        50</span></span>
+<span id="cb2-13"><a href="#cb2-13"></a><span class="co">#&gt;  9 control    full    4.63 afternoon     224</span></span>
+<span id="cb2-14"><a href="#cb2-14"></a><span class="co">#&gt; 10 control    full    5.40 morning        63</span></span>
 <span id="cb2-15"><a href="#cb2-15"></a><span class="co">#&gt; # … with 562 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
@@ -562,18 +563,18 @@
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>frog_train</span>
 <span id="cb5-2"><a href="#cb5-2"></a><span class="co">#&gt; # A tibble: 429 × 5</span></span>
-<span id="cb5-3"><a href="#cb5-3"></a><span class="co">#&gt;    treatment  reflex    age t_o_d     latency</span></span>
-<span id="cb5-4"><a href="#cb5-4"></a><span class="co">#&gt;    &lt;chr&gt;      &lt;fct&gt;   &lt;dbl&gt; &lt;fct&gt;       &lt;dbl&gt;</span></span>
-<span id="cb5-5"><a href="#cb5-5"></a><span class="co">#&gt;  1 control    full   463125 morning        36</span></span>
-<span id="cb5-6"><a href="#cb5-6"></a><span class="co">#&gt;  2 gentamicin full   463665 morning        72</span></span>
-<span id="cb5-7"><a href="#cb5-7"></a><span class="co">#&gt;  3 gentamicin full   402090 afternoon     141</span></span>
-<span id="cb5-8"><a href="#cb5-8"></a><span class="co">#&gt;  4 control    full   468200 morning        27</span></span>
-<span id="cb5-9"><a href="#cb5-9"></a><span class="co">#&gt;  5 control    full   468790 morning        27</span></span>
-<span id="cb5-10"><a href="#cb5-10"></a><span class="co">#&gt;  6 gentamicin full   465110 morning        73</span></span>
-<span id="cb5-11"><a href="#cb5-11"></a><span class="co">#&gt;  7 gentamicin full   467950 morning        68</span></span>
-<span id="cb5-12"><a href="#cb5-12"></a><span class="co">#&gt;  8 gentamicin full   410040 afternoon     124</span></span>
-<span id="cb5-13"><a href="#cb5-13"></a><span class="co">#&gt;  9 control    full   432170 night          62</span></span>
-<span id="cb5-14"><a href="#cb5-14"></a><span class="co">#&gt; 10 control    full   465800 morning        25</span></span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="co">#&gt;    treatment  reflex   age t_o_d     latency</span></span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="co">#&gt;    &lt;chr&gt;      &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;       &lt;dbl&gt;</span></span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="co">#&gt;  1 control    full    5.36 morning        36</span></span>
+<span id="cb5-6"><a href="#cb5-6"></a><span class="co">#&gt;  2 gentamicin full    5.37 morning        72</span></span>
+<span id="cb5-7"><a href="#cb5-7"></a><span class="co">#&gt;  3 gentamicin full    4.65 afternoon     141</span></span>
+<span id="cb5-8"><a href="#cb5-8"></a><span class="co">#&gt;  4 control    full    5.42 morning        27</span></span>
+<span id="cb5-9"><a href="#cb5-9"></a><span class="co">#&gt;  5 control    full    5.43 morning        27</span></span>
+<span id="cb5-10"><a href="#cb5-10"></a><span class="co">#&gt;  6 gentamicin full    5.38 morning        73</span></span>
+<span id="cb5-11"><a href="#cb5-11"></a><span class="co">#&gt;  7 gentamicin full    5.42 morning        68</span></span>
+<span id="cb5-12"><a href="#cb5-12"></a><span class="co">#&gt;  8 gentamicin full    4.75 afternoon     124</span></span>
+<span id="cb5-13"><a href="#cb5-13"></a><span class="co">#&gt;  9 control    full    5.00 night          62</span></span>
+<span id="cb5-14"><a href="#cb5-14"></a><span class="co">#&gt; 10 control    full    5.39 morning        25</span></span>
 <span id="cb5-15"><a href="#cb5-15"></a><span class="co">#&gt; # … with 419 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
@@ -582,18 +583,18 @@
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>frog_test</span>
 <span id="cb6-2"><a href="#cb6-2"></a><span class="co">#&gt; # A tibble: 143 × 5</span></span>
-<span id="cb6-3"><a href="#cb6-3"></a><span class="co">#&gt;    treatment  reflex    age t_o_d     latency</span></span>
-<span id="cb6-4"><a href="#cb6-4"></a><span class="co">#&gt;    &lt;chr&gt;      &lt;fct&gt;   &lt;dbl&gt; &lt;fct&gt;       &lt;dbl&gt;</span></span>
-<span id="cb6-5"><a href="#cb6-5"></a><span class="co">#&gt;  1 control    full   466965 morning        22</span></span>
-<span id="cb6-6"><a href="#cb6-6"></a><span class="co">#&gt;  2 control    low    361180 night         360</span></span>
-<span id="cb6-7"><a href="#cb6-7"></a><span class="co">#&gt;  3 control    full   400240 afternoon     224</span></span>
-<span id="cb6-8"><a href="#cb6-8"></a><span class="co">#&gt;  4 gentamicin full   410660 afternoon     158</span></span>
-<span id="cb6-9"><a href="#cb6-9"></a><span class="co">#&gt;  5 control    mid    364850 night          91</span></span>
-<span id="cb6-10"><a href="#cb6-10"></a><span class="co">#&gt;  6 gentamicin full   422660 night         301</span></span>
-<span id="cb6-11"><a href="#cb6-11"></a><span class="co">#&gt;  7 control    full   464610 morning         2</span></span>
-<span id="cb6-12"><a href="#cb6-12"></a><span class="co">#&gt;  8 control    full   414375 afternoon      56</span></span>
-<span id="cb6-13"><a href="#cb6-13"></a><span class="co">#&gt;  9 control    full   462920 morning        11</span></span>
-<span id="cb6-14"><a href="#cb6-14"></a><span class="co">#&gt; 10 control    full   466130 morning        64</span></span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="co">#&gt;    treatment  reflex   age t_o_d     latency</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="co">#&gt;    &lt;chr&gt;      &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;       &lt;dbl&gt;</span></span>
+<span id="cb6-5"><a href="#cb6-5"></a><span class="co">#&gt;  1 control    full    5.40 morning        22</span></span>
+<span id="cb6-6"><a href="#cb6-6"></a><span class="co">#&gt;  2 control    low     4.18 night         360</span></span>
+<span id="cb6-7"><a href="#cb6-7"></a><span class="co">#&gt;  3 control    full    4.63 afternoon     224</span></span>
+<span id="cb6-8"><a href="#cb6-8"></a><span class="co">#&gt;  4 gentamicin full    4.75 afternoon     158</span></span>
+<span id="cb6-9"><a href="#cb6-9"></a><span class="co">#&gt;  5 control    mid     4.22 night          91</span></span>
+<span id="cb6-10"><a href="#cb6-10"></a><span class="co">#&gt;  6 gentamicin full    4.89 night         301</span></span>
+<span id="cb6-11"><a href="#cb6-11"></a><span class="co">#&gt;  7 control    full    5.38 morning         2</span></span>
+<span id="cb6-12"><a href="#cb6-12"></a><span class="co">#&gt;  8 control    full    4.80 afternoon      56</span></span>
+<span id="cb6-13"><a href="#cb6-13"></a><span class="co">#&gt;  9 control    full    5.36 morning        11</span></span>
+<span id="cb6-14"><a href="#cb6-14"></a><span class="co">#&gt; 10 control    full    5.40 morning        64</span></span>
 <span id="cb6-15"><a href="#cb6-15"></a><span class="co">#&gt; # … with 133 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
@@ -771,10 +772,10 @@
 <p>Use <code>strata = latency</code></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb12-2"><a href="#cb12-2"></a>frog_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(tree_frogs, <span class="at">strata =</span> latency)</span>
+<span id="cb12-2"><a href="#cb12-2"></a>frog_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(tree_frogs, <span class="at">prop =</span> <span class="fl">0.8</span>, <span class="at">strata =</span> latency)</span>
 <span id="cb12-3"><a href="#cb12-3"></a>frog_split</span>
 <span id="cb12-4"><a href="#cb12-4"></a><span class="co">#&gt; &lt;Training/Testing/Total&gt;</span></span>
-<span id="cb12-5"><a href="#cb12-5"></a><span class="co">#&gt; &lt;428/144/572&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb12-5"><a href="#cb12-5"></a><span class="co">#&gt; &lt;456/116/572&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="fragment">
 <p>Stratification often helps, with very little downside</p>
