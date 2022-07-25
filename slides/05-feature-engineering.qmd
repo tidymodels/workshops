@@ -748,7 +748,7 @@ nhl_effect_wflow <-
 
 nhl_effect_res <-
   nhl_effect_wflow %>%
-  fit_resamples(nhl_val)
+  fit_resamples(nhl_val, control = ctrl)
 
 collect_metrics(nhl_effect_res)
 ```
@@ -946,6 +946,13 @@ parallel::stopCluster(cl)
 roc_curves_part_5 <- 
   nhl_glm_set_res %>% 
   collect_predictions() %>% 
+  select(wflow_id, on_goal, .pred_yes) %>% 
+  bind_rows(
+    nhl_effect_res %>% 
+      collect_predictions() %>% 
+      mutate(wflow_id = "encoded_logistic") %>% 
+      select(wflow_id, on_goal, .pred_yes)
+  ) %>% 
   group_by(wflow_id) %>% 
   roc_curve(on_goal, .pred_yes)
 
