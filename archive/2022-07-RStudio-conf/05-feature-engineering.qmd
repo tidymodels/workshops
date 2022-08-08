@@ -1,0 +1,960 @@
+---
+title: "5 - Feature engineering"
+subtitle: "Machine learning with tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+```{r more-setup}
+#| include: false
+
+# pak::pak("gadenbuie/countdown")
+# pak::pak("hadley/emo")
+library(countdown)
+library(emo)
+
+library(doParallel)
+
+cores <- parallel::detectCores(logical = FALSE)
+cl <- makePSOCKcluster(cores)
+registerDoParallel(cl)
+
+ggplot2::theme_set(ggplot2::theme_bw())
+```
+
+
+## Working with our predictors
+
+We might want to modify our predictors columns for a few reasons: 
+
+::: {.incremental}
+- The model requires them in a different format (e.g. dummy variables for `lm()`).
+- The model needs certain data qualities (e.g. same units for K-NN).
+- The outcome is better predicted when one or more columns are transformed in some way (a.k.a "feature engineering"). 
+:::
+
+. . .
+
+The first two reasons are fairly predictable ([next page](https://www.tmwr.org/pre-proc-table.html#tab:preprocessing)).
+
+The last one depends on your modeling problem. 
+
+
+##  {background-iframe="https://www.tmwr.org/pre-proc-table.html#tab:preprocessing"}
+
+::: footer
+:::
+
+
+## What is feature engineering?
+
+Think of a feature as some *representation* of a predictor that will be used in a model.
+
+. . .
+
+Example representations:
+
+-   Interactions
+-   Polynomial expansions/splines
+-   PCA feature extraction
+
+There are a lot of examples in [_Feature Engineering and Selection_](https://bookdown.org/max/FES/).
+
+
+
+## Example: Dates
+
+How can we represent date columns for our model?
+
+. . .
+
+When a date column is used in its native format, it is usually converted by an R model to an integer.
+
+. . .
+
+It can be re-engineered as:
+
+-   Days since a reference date
+-   Day of the week
+-   Month
+-   Year
+-   Indicators for holidays
+
+::: notes
+The main point is that we try to maximize performance with different versions of the predictors. 
+
+Mention that, for the Chicago data, the day or the week features are usually the most important ones in the model.
+:::
+
+## General definitions `r hexes("recipes")`
+
+-   *Data preprocessing* steps allow your model to fit.
+
+-   *Feature engineering* steps help the model do the least work to predict the outcome as well as possible.
+
+The recipes package can handle both!
+
+In a little bit, we'll see successful (and unsuccessful) feature engineering methods for our example data. 
+
+
+::: notes
+These terms are often used interchangeably in the ML community but we want to distinguish them.
+:::
+
+## The NHL data 🏒
+
+-   From Pittsburgh Penguins games, `r format(nrow(ongoal::season_2015), big.mark = ",")` shots
+
+-   Data from the 2015-2016 season
+
+. . .
+
+Let's predict whether a shot is on-goal (a goal or blocked by goaltender) or not.
+
+## Case study
+
+```{r hello-tidymodels}
+library(tidymodels)
+library(ongoal)
+
+tidymodels_prefer()
+
+glimpse(season_2015)
+```
+
+## Data splitting strategy
+
+```{r spending-diagram, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-split.svg")
+```
+
+
+## Why a validation set?
+
+Recall that resampling gives us performance measures without using the test set. 
+
+It's important to get good resampling statistics (e.g. $R^2$). 
+
+ - That usually means having enough data to estimate performance. 
+
+When you have "a lot" of data, a validation set can be an efficient way to do this. 
+
+
+## Splitting the NHL data `r hexes("rsample")` {.annotation}
+
+```{r split}
+set.seed(23)
+nhl_split <- initial_split(season_2015, prop = 3/4)
+nhl_split
+
+nhl_train_and_val <- training(nhl_split)
+nhl_test  <- testing(nhl_split)
+
+## not testing
+nrow(nhl_train_and_val)
+ 
+## testing
+nrow(nhl_test)
+```
+
+## Validation split `r hexes("rsample")`
+
+Since there are a lot of observations, we'll use a validation set: 
+
+```{r val}
+set.seed(234)
+nhl_val <- validation_split(nhl_train_and_val, prop = 0.80)
+nhl_val
+```
+
+. . .
+
+Remember that a validation split is a type of resample. 
+
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Let's explore the training set data.*
+
+*Use the function `plot_nhl_shots()` for nice spatial plots of the data.*
+
+::: columns
+::: {.column width="50%"}
+```{r rink-code}
+nhl_train <- analysis(nhl_val$splits[[1]])
+
+set.seed(100)
+nhl_train %>% 
+  sample_n(200) %>%
+  plot_nhl_shots(emphasis = position)
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+#| echo: false
+countdown(minutes = 8, id = "nhl-explore")
+```
+:::
+:::
+
+
+
+## Prepare your data for modeling `r hexes("recipes")`
+
+- The recipes package is an extensible framework for pipeable sequences of feature engineering steps that provide preprocessing tools to be applied to data.
+
+. . .
+
+- Statistical parameters for the steps can be _estimated_ from an initial data set and then _applied_ to other data sets.
+
+. . .
+
+- The resulting processed output can be used as inputs for statistical or machine learning models.
+
+## A first recipe `r hexes("recipes")`
+
+```{r base-recipe}
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train)
+```
+
+. . .
+
+- The `recipe()` function assigns columns to roles of "outcome" or "predictor" using the formula
+
+## A first recipe `r hexes("recipes")`
+
+```{r rec-summary}
+summary(nhl_rec)
+```
+
+## Create indicator variables `r hexes("recipes")`
+
+```{r}
+#| code-line-numbers: "3"
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors())
+```
+
+. . .
+
+- For any factor or character predictors, make binary indicators.
+
+- There are *many* recipe steps that can convert categorical predictors to numeric columns.
+
+## Filter out constant columns `r hexes("recipes")`
+
+```{r}
+#| code-line-numbers: "4"
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors())
+```
+
+. . .
+
+In case there is a factor level that was never observed in the training data (resulting in a column of all `0`s), we can delete any *zero-variance* predictors that have a single unique value.
+
+:::notes
+Note that the selector chooses all columns with a role of "predictor"
+:::
+
+
+## Normalization `r hexes("recipes")`
+
+```{r rec-norm}
+#| eval: false
+#| code-line-numbers: "5"
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors())
+```
+
+. . .
+
+- This centers and scales the numeric predictors.
+
+
+- The recipe will use the _training_ set to estimate the means and standard deviations of the data.
+
+. . .
+
+- All data the recipe is applied to will be normalized using those statistics (there is no re-estimation).
+
+## Reduce correlation `r hexes("recipes")`
+
+```{r }
+#| code-line-numbers: "6"
+#| eval: false
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_corr(all_numeric_predictors(), threshold = 0.9)
+```
+
+. . .
+
+To deal with highly correlated predictors, find the minimum set of predictor columns that make the pairwise correlations less than the threshold.
+
+## Other possible steps `r hexes("recipes")`
+
+```{r}
+#| code-line-numbers: "6"
+#| eval: false
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_pca(all_numeric_predictors())
+```
+
+. . . 
+
+PCA feature extraction...
+
+## Other possible steps `r hexes("recipes", "embed")`
+
+```{r}
+#| code-line-numbers: "6"
+#| eval: false
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  embed::step_umap(all_numeric_predictors(), outcome = on_goal)
+```
+
+. . . 
+
+A fancy machine learning supervised dimension reduction technique...
+
+:::notes
+Note that this uses the outcome, and it is from an extension package
+:::
+
+
+## Other possible steps `r hexes("recipes")`
+
+```{r}
+#| eval: false
+#| code-line-numbers: "6"
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_ns(coord_y, coord_x, deg_free = 10)
+```
+
+. . . 
+
+Nonlinear transforms like natural splines, and so on!
+
+##  {background-iframe="https://recipes.tidymodels.org/reference/index.html"}
+
+::: footer
+:::
+
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Create a `recipe()` for the on-goal data to :*
+
+-   *create one-hot indicator variables*
+-   *remove zero-variance variables*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "make-recipe")
+```
+
+
+## Minimal recipe `r hexes("recipes")`
+
+```{r}
+nhl_indicators <-
+  recipe(on_goal ~ ., data = nhl_train) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+## Using a workflow `r hexes("recipes", "workflows", "parsnip", "tune")`
+
+```{r}
+#| cache: true
+
+set.seed(9)
+
+nhl_glm_wflow <-
+  workflow() %>%
+  add_recipe(nhl_indicators) %>%
+  add_model(logistic_reg())
+ 
+ctrl <- control_resamples(save_pred = TRUE)
+nhl_glm_res <-
+  nhl_glm_wflow %>%
+  fit_resamples(nhl_val, control = ctrl)
+
+collect_metrics(nhl_glm_res)
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Use `fit_resamples()` to fit your workflow with a recipe.*
+
+*Collect the predictions from the results.*
+
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "resample-recipe")
+```
+
+
+## Holdout predictions `r hexes("recipes", "workflows", "parsnip", "tune")`
+
+```{r}
+# Since we used `save_pred = TRUE`
+glm_val_pred <- collect_predictions(nhl_glm_res)
+glm_val_pred %>% slice(1:7)
+```
+
+# Two class data
+
+Let's say we can define one class as the "event", like a shot being on goal.
+
+. . .
+
+-   The **sensitivity** is the *true positive rate* (accuracy on actual events).
+
+-   The **specificity** is the *true negative rate* (accuracy on actual non-events, or 1 - *false positive rate*).
+
+## Two class data
+
+These definitions assume that we know the threshold for converting "soft" probability predictions into "hard" class predictions.
+
+. . .
+
+Is a 50% threshold good? 
+
+What happens if we say that we need to be 80% sure to declare an event?
+
+-   sensitivity ⬇️, specificity ⬆️
+
+. . .
+
+What happens for a 20% threshold?
+
+-   sensitivity ⬆️, specificity ⬇️
+
+## ROC curves
+
+To make an ROC (receiver operator characteristic) curve, we:
+
+- calculate the sensitivity and specificity for all possible thresholds
+
+- plot false positive rate (x-axis) versus true positive rate (y-axis)
+
+. . .
+
+We can use the area under the ROC curve as a classification metric: 
+
+- ROC AUC = 1 💯 
+- ROC AUC = 1/2 😢
+
+:::notes
+ROC curves are insensitive to class imbalance.
+:::
+
+## ROC curves `r hexes("yardstick")`
+
+```{r}
+# Assumes _first_ factor level is event; there are options to change that
+roc_curve_points <- glm_val_pred %>% roc_curve(truth = on_goal, estimate = .pred_yes)
+roc_curve_points %>% slice(1, 50, 100)
+
+glm_val_pred %>% roc_auc(truth = on_goal, estimate = .pred_yes)
+```
+
+## ROC curve plot `r hexes("yardstick")`
+
+```{r roc-curve}
+#| fig-width: 6
+#| fig-height: 6
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+autoplot(roc_curve_points)
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Compute and plot an ROC curve for your current model.*
+
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "roc-curve")
+```
+
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*What data are being used for this ROC curve plot?*
+
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "roc-curve-data")
+```
+
+
+
+## What do we do with the player data? 🏒
+
+There are `r length(unique(nhl_train$player))` unique player values in our training set. How can we include this information in our model?
+
+. . .
+
+We could:
+
+-   make the full set of indicator variables 😳
+
+-   use [feature hashing](https://www.tmwr.org/categorical.html#feature-hashing) to create a smaller set of indicator variables
+
+-   use effect encoding to replace the `player` column with the estimated effect of that predictor
+
+
+. . .
+
+Let's use an _effect encoding_.
+
+
+```{r effects-calcs}
+#| include: false
+
+player_stats <- 
+  nhl_train %>%
+  group_by(player) %>%
+  summarize(
+    rate = mean(on_goal == "yes"), 
+    num_shots = n(),
+    .groups = "drop"
+    ) %>%
+  mutate(player = reorder(player, rate))
+
+library(embed)
+
+estimates <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_lencode_mixed(player, outcome = vars(on_goal), id = "encoding") %>%   #<<
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  prep() %>% 
+  tidy(id = "encoding") %>% 
+  select(player = level, estimate = value)
+
+before <- nhl_train %>% select(on_goal, player) %>% slice(1:7) %>% add_rowindex()
+after <- left_join(before, estimates, by = "player") %>% 
+  select(on_goal, player = estimate, .row)
+```
+
+## What is an effect encoding?
+
+We replace the qualitative’s predictor data with their _effect on the outcome_. 
+
+::: columns
+::: {.column width="50%"}
+Data before:
+
+```{r before}
+before
+```
+
+:::
+
+::: {.column width="50%"}
+
+Data after:
+
+```{r after}
+after
+```
+
+:::
+:::
+
+The `player` column is replaced with the log-odds of being on goal. 
+
+:::notes
+As a reminder:
+
+$$\text{log-odds} = log\left(\frac{\hat{p}}{1 - \hat{p}}\right)$$ 
+
+where $\hat{p}$ is the on goal rate estimate. 
+
+For logistic regression, this is what the predictors are modeling. The log-odds are more likely to be linear with the outcome. 
+
+:::
+
+
+## Per-player statistics {.annotation}
+
+::: columns
+::: {.column width="50%"}
+```{r effects}
+#| echo: false
+#| out-width: '90%'
+#| fig-width: 6
+#| fig-height: 3
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+  
+player_stats %>%   
+  ggplot(aes(x = num_shots)) +
+  geom_histogram(bins = 30, col = "blue", fill = "blue", alpha = 1/3) +
+  scale_x_log10() +
+  labs(x = "Number of shots per player")
+player_stats %>%   
+  ggplot(aes(x = rate)) +
+  geom_histogram(binwidth = 1/40, col = "red", fill = "red", alpha = 1/3) +
+  labs(x = "On-goal rate per player")
+```
+:::
+
+::: {.column width="50%"}
+
+- Good statistical methods for estimating these rates use *partial pooling*.
+
+
+- Pooling borrows strength across players and shrinks extreme values (e.g. zero or one) towards the mean for players with very few shots.
+
+
+- The embed package has recipe steps for effect encodings.
+
+:::
+:::
+
+
+:::notes
+Partial pooling gives better estimates for players with fewer shots by shrinking the estimate to the overall on-goal rate (`r round(mean(on_goal$on_goal == "yes") * 100, 1)`%)
+
+
+:::
+
+## Partial pooling
+
+```{r effect-compare}
+#| echo: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-align: 'center'
+#| dev: 'svglite'
+#| dev-args: list(bg = "transparent")
+
+inner_join(player_stats, estimates, by = "player") %>% 
+  mutate(estimate = binomial()$linkinv(estimate)) %>% 
+  ggplot(aes(x = rate, y = estimate)) + 
+  geom_abline(col = "green", lty = 2) +
+  geom_point(aes(size = num_shots), alpha = 1/3) +
+  lims(x = 0:1, y = 0:1) +
+  coord_fixed() +
+  scale_size(range = c(1/3, 3)) +
+  labs(x = "Raw Rate", y = "Estimated via Effects Encoding")
+```
+
+## Player effects `r hexes("recipes","embed")` {.annotation}
+
+```{r}
+#| code-line-numbers: "1,5"
+library(embed)
+
+nhl_effect_rec <-
+  recipe(on_goal ~ ., data = nhl_train) %>%
+  step_lencode_mixed(player, outcome = vars(on_goal)) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+. . .
+
+It is very important to appropriately validate the effect encoding step to make sure that we are not overfitting.
+
+## Recipes are estimated `r hexes("recipes")`
+
+Preprocessing steps in a recipe use the *training set* to compute quantities.
+
+. . .
+
+What kind of quantities are computed for preprocessing?
+
+-   Levels of a factor
+-   Whether a column has zero variance
+-   Normalization
+-   Feature extraction
+-   Effect encodings
+
+. . .
+
+When a recipe is part of a workflow, this estimation occurs when `fit()` is called.
+
+## Effect encoding results `r hexes("recipes","embed", "workflows", "tune")`
+
+```{r resample-encoding}
+#| code-line-numbers: "3|"
+nhl_effect_wflow <-
+  nhl_glm_wflow %>%
+  update_recipe(nhl_effect_rec)
+
+nhl_effect_res <-
+  nhl_effect_wflow %>%
+  fit_resamples(nhl_val, control = ctrl)
+
+collect_metrics(nhl_effect_res)
+```
+
+# Where is the shot coming from? 🏒🧐 
+
+## Angle
+
+```{r}
+nhl_angle_rec <-
+  nhl_indicators %>%
+  step_mutate(
+    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi))
+  )
+```
+
+```{r angle}
+#| echo: false
+#| out-width: '50%'
+#| fig-width: 7
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+example_data <- 
+  nhl_train %>% 
+  mutate(
+    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
+  )
+
+set.seed(42)
+example_data %>% 
+  filter(angle <= 25) %>% 
+  sample_n(500) %>% 
+  plot_nhl_shots(emphasis = on_goal, alpha = 1/2) +
+  ggtitle("<= 25 degree angle")
+```
+
+:::notes
+Note the danger of using `step_mutate()` -- easy to have data leakage 
+
+`coord_x` is "distance from goal". We subtract it from `89` to get the distance from the center of the ice. The `abs()` calls account for the fact that the goals might be on either side of `(0, 0)`. The rest of it is the formula for going from `(x, y)` to angle in degrees.
+:::
+
+## Distance {.annotation}
+
+```{r}
+nhl_distance_rec <-
+  nhl_angle_rec %>%
+  step_mutate(
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    distance = log(distance)
+  )
+```
+
+```{r distance}
+#| echo: false
+#| out-width: '50%'
+#| fig-width: 7
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+set.seed(42)
+example_data %>% 
+  filter(distance <= 40) %>% 
+  sample_n(500) %>% 
+  plot_nhl_shots(emphasis = on_goal, alpha = 1/2) +
+  ggtitle("distance <= 40")
+```
+
+## Behind goal line
+
+```{r}
+nhl_behind_rec <-
+  nhl_distance_rec %>%
+  step_mutate(
+    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
+  )
+```
+
+```{r goal-line}
+#| echo: false
+#| out-width: '50%'
+#| fig-width: 7
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+example_data %>% 
+  filter(behind_goal_line == 1) %>% 
+  plot_nhl_shots(emphasis = on_goal, alpha = 1/2) +
+  ggtitle("behind goal line")
+```
+
+## Fit different recipes `r hexes("recipes","embed", "workflows", "tune")`
+
+A workflow set can cross models and/or preprocessors and then resample them *en masse*. 
+
+```{r nhl-feature-sets}
+#| cache: true
+#| results: 'markup'
+
+set.seed(9)
+
+nhl_glm_set_res <-
+  workflow_set(
+    list(`1_dummy` = nhl_indicators, `2_angle` = nhl_angle_rec, 
+         `3_dist` = nhl_distance_rec, `4_bgl` = nhl_behind_rec),
+    list(logistic = logistic_reg())
+  ) %>%
+  workflow_map(fn = "fit_resamples", resamples = nhl_val, verbose = TRUE, control = ctrl)
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Create a workflow set with 2 or 3 recipes.*
+
+*(Consider using recipes we've already created.)*
+
+*Use `workflow_map()` to resample the workflow set.* 
+
+```{r}
+#| echo: false
+countdown(minutes = 8, id = "hockey-wfset")
+```
+
+
+## Compare recipes
+
+```{r rank-res-code}
+#| eval: false
+
+library(forcats)
+collect_metrics(nhl_glm_set_res) %>%
+  filter(.metric == "roc_auc") %>%
+  mutate(
+    features = gsub("_logistic", "", wflow_id), 
+    features = fct_reorder(features, mean)
+  ) %>%
+  ggplot(aes(x = mean, y = features)) +
+  geom_point(size = 3) +
+  labs(y = NULL, x = "ROC AUC (validation set)")
+```
+
+## Compare recipes
+
+```{r}
+#| ref.label: 'rank-res-code'
+#| echo: false
+
+```
+
+## Debugging a recipe
+
+- Typically, you will want to use a workflow to estimate and apply a recipe.
+
+. . .
+
+- If you have an error and need to debug your recipe, the original recipe object (e.g. `encoded_players`) can be estimated manually with a function called `prep()`. It is analogous to `fit()`.
+
+. . .
+
+- Another function (`bake()`) is analogous to `predict()`, and gives you the processed data back.
+
+## More on recipes
+
+-   Once `fit()` is called on a workflow, changing the model does not re-fit the recipe.
+
+. . .
+
+-   A list of all known steps is at <https://www.tidymodels.org/find/recipes/>.
+
+. . .
+
+-   Some steps can be [skipped](https://recipes.tidymodels.org/articles/Skipping.html) when using `predict()`.
+
+. . .
+
+-   The [order](https://recipes.tidymodels.org/articles/Ordering.html) of the steps matters.
+
+```{r teardown}
+#| include: false
+
+parallel::stopCluster(cl)
+
+# Used in whole game slides in introduction
+roc_curves_part_5 <- 
+  nhl_glm_set_res %>% 
+  collect_predictions() %>% 
+  select(wflow_id, on_goal, .pred_yes) %>% 
+  bind_rows(
+    nhl_effect_res %>% 
+      collect_predictions() %>% 
+      mutate(wflow_id = "encoded_logistic") %>% 
+      select(wflow_id, on_goal, .pred_yes)
+  ) %>% 
+  group_by(wflow_id) %>% 
+  roc_curve(on_goal, .pred_yes)
+
+save(roc_curves_part_5, file = "roc_curves_part_5.RData", compress = TRUE)
+```
