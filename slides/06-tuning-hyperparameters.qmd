@@ -56,25 +56,24 @@ nhl_val <- validation_split(nhl_train_and_val, prop = 0.80)
 
 nhl_train <- analysis(nhl_val$splits[[1]])
 
-nhl_distance_rec <-
+nhl_position_rec <-
   recipe(on_goal ~ ., data = nhl_train) %>%
-  step_lencode_mixed(player, outcome = vars(on_goal)) %>%
+  step_lencode_mixed(shooter, goaltender, outcome = vars(on_goal)) %>%
   step_other(all_nominal_predictors()) %>% # TODO: keep this?
   step_dummy(all_nominal_predictors()) %>%
   step_zv(all_predictors()) %>%
   step_mutate(
-    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
-    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
-    distance = log(distance)
+    angle = abs( atan2(abs(coord_y), (89 - coord_x) ) * (180 / pi)),
+    behind_goal_line = ifelse(coord_x >= 89, 1, 0)
   )
 
-nhl_distance_wflow <-
+nhl_position_wflow <-
   workflow() %>%
-  add_recipe(nhl_distance_rec) %>%
+  add_recipe(nhl_position_rec) %>%
   add_model(logistic_reg())
 
-nhl_distance_res <-
-  nhl_distance_wflow %>%
+nhl_position_res <-
+  nhl_position_wflow %>%
   fit_resamples(nhl_val)
 ```
 
@@ -163,18 +162,15 @@ Let's take our previous recipe and add a few changes:
 #| code-line-numbers: "13-14"
 glm_rec <-
   recipe(on_goal ~ ., data = nhl_train) %>%
-  step_lencode_mixed(player, outcome = vars(on_goal)) %>%
+  step_lencode_mixed(shooter, goaltender, outcome = vars(on_goal)) %>%
   step_dummy(all_nominal_predictors()) %>%
   step_mutate(
-    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
-    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
-    distance = log(distance),
-    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
+    angle = abs( atan2(abs(coord_y), (89 - coord_x) ) * (180 / pi)),
+    behind_goal_line = ifelse(coord_x >= 89, 1, 0)
   ) %>%
-  step_rm(coord_x, coord_y) %>%
   step_zv(all_predictors()) %>%
   step_ns(angle, deg_free = tune("angle")) %>%
-  step_ns(distance, deg_free = tune("distance")) %>%
+  step_ns(coord_x, deg_free = tune("coord_x")) %>%
   step_normalize(all_numeric_predictors())
 ```
 
@@ -212,21 +208,24 @@ How many spline terms? This is called *degrees of freedom*
 ```{r}
 #| echo: false
 #| fig-align: center
-#| fig.width: 16
-#| fig.height: 8
-example_data <- nhl_train %>% 
-  mutate(distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2))
+#| fig.width: 10
+#| fig.height: 5
+#| out-width: 70%
+example_data <- nhl_train 
 
 example_data %>%
-  group_by(distance = cut(distance, c(0, seq(10, 60, 5), 100))) %>%
-  summarize(pct_on_goal = mean(on_goal == "yes"), n = n()) %>%
-  mutate(distance = forcats::fct_recode(distance, "<10" = "(0,10]", ">60" = "(60,100]")) %>%
-  ggplot(aes(distance, pct_on_goal)) +
-  geom_line(group = 1, size = 2, alpha = 0.8, color = test_color) +
+  group_by(coord_x = cut(coord_x, seq(-100, 100, by = 10))) %>%
+  summarize(
+    pct_on_goal = mean(on_goal == "yes"), 
+    n = n()
+  ) %>%
+  ggplot(aes(coord_x, pct_on_goal)) +
+  geom_point(aes(size = n)) +
   scale_y_continuous(labels = scales::percent) +
   expand_limits(y = 0) +
-  labs(x = "Distance to goal (bucketed)",
-       y = "% of shots in this bucket that are on goal")
+  labs(x = "x -position (bucketed)",
+       y = "% of shots in this bucket that are on goal") +
+  theme(axis.text.x =  element_text(angle = 90, vjust = 0.5, hjust=1))
 
 ```
 
@@ -275,7 +274,7 @@ A parameter set can be updated (e.g. to change the ranges).
 ::: columns
 ::: {.column width="50%"}
 ```{r get-grid}
-set.seed(2)
+set.seed(12)
 grid <- 
   glm_spline_wflow %>% 
   extract_parameter_set_dials() %>% 
@@ -310,7 +309,7 @@ countdown::countdown(minutes = 3, id = "make-grid")
 
 ```{r get-regular-grid}
 #| code-line-numbers: "5"
-set.seed(2)
+set.seed(12)
 grid <- 
   glm_spline_wflow %>% 
   extract_parameter_set_dials() %>% 
@@ -328,12 +327,12 @@ Note that even though we requested 25x25=625 rows, we only got 15x15=225 back, s
 
 ```{r mod-grid-code}
 #| code-line-numbers: "5-6"
-set.seed(2)
+set.seed(12)
 grid <- 
   glm_spline_wflow %>% 
   extract_parameter_set_dials() %>% 
-  update(angle = spline_degree(c(2L, 20L)),
-         distance = spline_degree(c(2L, 20L))) %>% 
+  update(angle = spline_degree(c(2L, 50L)),
+         coord_x = spline_degree(c(2L, 50L))) %>% 
   grid_latin_hypercube(size = 25)
 
 grid
@@ -351,7 +350,7 @@ Even though `angle` is a `deg_free` parameter in `step_ns()`, we don't use the d
 #| fig-height: 5.1
 #| fig-align: 'center'
 grid %>% 
-  ggplot(aes(angle, distance)) +
+  ggplot(aes(angle, coord_x)) +
   geom_point(size = 4)
 ```
 
@@ -428,29 +427,8 @@ select_best(glm_spline_res, metric = "roc_auc")
 This best result has:
 
 -   low-degree spline for `angle` (less "wiggly", less complex)
--   higher-degree spline for `distance` (more "wiggly", more complex)
+-   higher-degree spline for `coord_x` (more "wiggly", more complex)
 
-## Your turn {transition="slide-in"}
-
-![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
-
-*Try an alternative selection strategy.*
-
-*Read the docs for `select_by_pct_loss()`.*
-
-*Try choosing a model that has a simpler (less "wiggly") relationship for `distance`.*
-
-```{r}
-#| echo: false
-countdown::countdown(minutes = 5, id = "select-by-pct-loss")
-```
-
-## Choose a parameter combination `r hexes(c("tune"))`
-
-```{r}
-select_best(glm_spline_res, metric = "roc_auc")
-select_by_pct_loss(glm_spline_res, distance, metric = "roc_auc")
-```
 
 # Boosted trees 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌵🌴🌲🌳🌴🌵🌳🌴🌳
 
@@ -478,9 +456,9 @@ select_by_pct_loss(glm_spline_res, distance, metric = "roc_auc")
 #| dev-args: list(bg = "transparent")
 tree_mod <- 
     rpart::rpart(
-        on_goal ~ . - player - offense_team - defense_team - coord_x - coord_y,
+        on_goal ~ . - shooter - goaltender,
         data = nhl_train,
-        control = rpart::rpart.control(maxdepth = 3, cp = 0.001)
+        control = rpart::rpart.control(maxdepth = 5, cp = 0.0000001)
     ) %>% 
     partykit::as.party()
 plot(tree_mod)
@@ -540,15 +518,15 @@ The general consensus for tree-based models is, in terms of performance: boostin
 ```{r xgboost-specs}
 xgb_spec <-
   boost_tree(
-    trees = 500, min_n = tune(), stop_iter = tune(), tree_depth = tune(),
+    trees = tune(), min_n = tune(), tree_depth = tune(),
     learn_rate = tune(), loss_reduction = tune()
   ) %>%
   set_mode("classification") %>% 
-  set_engine("xgboost", validation = 1/10) # <- for better early stopping
+  set_engine("xgboost") 
 
 xgb_rec <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_lencode_mixed(player, outcome = vars(on_goal)) %>% 
+  step_lencode_mixed(shooter, goaltender, outcome = vars(on_goal)) %>% 
   step_dummy(all_nominal_predictors()) %>%
   step_zv(all_predictors())
 
@@ -655,7 +633,7 @@ set.seed(9)
 
 xgb_res <-
   xgb_wflow %>%
-  tune_grid(resamples = nhl_val, grid = 15, control = ctrl) # automatic grid now!
+  tune_grid(resamples = nhl_val, grid = 30, control = ctrl) # automatic grid now!
 ```
 
 ## Your turn {transition="slide-in"}
@@ -694,12 +672,9 @@ autoplot(xgb_res)
 coord_rec <- 
   xgb_rec %>%
   step_mutate(
-    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
-    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
-    distance = log(distance),
-    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
-  ) %>% 
-  step_rm(coord_x, coord_y)
+    angle = abs( atan2(abs(coord_y), (89 - coord_x) ) * (180 / pi)),
+    behind_goal_line = ifelse(coord_x >= 89, 1, 0)
+  )
 
 xgb_coord_wflow <- 
   workflow() %>% 
@@ -709,7 +684,7 @@ xgb_coord_wflow <-
 set.seed(9)
 xgb_coord_res <-
   xgb_coord_wflow %>%
-  tune_grid(resamples = nhl_val, grid = 20, control = ctrl)
+  tune_grid(resamples = nhl_val, grid = 30, control = ctrl)
 ```
 
 ## Did the machine figure it out? 
@@ -740,19 +715,6 @@ xgb_coord_res %>%
   select(.metric, .estimator, mean, n, std_err, .config)
 ```
 :::
-
-## Your turn {transition="slide-in"}
-
-![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
-
-*Can you get better ROC results with xgboost?*
-
-*Try increasing `learn_rate` beyond the original range.*
-
-```{r}
-#| echo: false
-countdown::countdown(minutes = 20, id = "improve-xgb")
-```
 
 ## Updating the workflow `r hexes(c("workflows", "tune"))`
 
@@ -895,7 +857,7 @@ pdp_coord_x <- model_profile(
   glm_explainer,
   variables = "coord_x",
   N = 500,
-  groups = "position"
+  groups = "strength"
 )
 ```
 
@@ -912,13 +874,13 @@ You can use the default `plot()` method or create your own visualization.
 p <- 
   as_tibble(pdp_coord_x$agr_profiles) %>%
   mutate(`_label_` = stringr::str_remove(`_label_`, "^[^_]*_")) %>%
-  ggplot(aes(`_x_`, `_yhat_`)) +
+  ggplot(aes(`_x_`, 1 - `_yhat_`)) +
   geom_line(data = as_tibble(pdp_coord_x$cp_profiles),
             aes(x = coord_x, group = `_ids_`),
             size = 0.5, alpha = 0.05, color = "gray50")
 
 p +
-  labs(y = "Predicted probability of not being on goal")
+  labs(y = "Predicted probability of being on goal", x = "x-axis position")
 ```
 
 ## Explain the x coordinates
@@ -929,8 +891,8 @@ p +
 #| fig.height: 5.5
 p +
   geom_line(aes(color = `_label_`), size = 1.2, alpha = 0.8) +
-  theme(legend.position="top") +
-  labs(y = "Predicted probability of not being on goal", color = NULL)
+  theme(legend.position = "top") +
+  labs(y = "Predicted probability of being on goal", x = "x-axis position", color = NULL)
 ```
 
 ## Your turn {transition="slide-in"}
@@ -939,7 +901,7 @@ p +
 
 *Create an explainer for our glm model.*
 
-*Try grouping by another variable, like `game_type` or `dow`.*
+*Try grouping by another variable, like `extra_attacker` or `game_seconds`.*
 
 ```{r}
 #| echo: false
