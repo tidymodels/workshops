@@ -207,7 +207,7 @@ nhl_train <- analysis(nhl_val$splits[[1]])
 set.seed(100)
 nhl_train %>% 
   sample_n(200) %>%
-  plot_nhl_shots(emphasis = position)
+  plot_nhl_shots(emphasis = shooter_type)
 ```
 :::
 
@@ -481,6 +481,23 @@ What happens for a 20% threshold?
 
 -   sensitivity ⬆️, specificity ⬇️
 
+## Varying the threshold
+
+```{r}
+#| label: thresholds
+#| echo: false
+
+glm_val_pred %>% 
+  roc_curve(truth = on_goal, estimate = .pred_yes) %>% 
+  filter(is.finite(.threshold)) %>% 
+  pivot_longer(c(specificity, sensitivity), names_to = "statistic", values_to = "value") %>% 
+  rename(`event threshold` = .threshold) %>% 
+  ggplot(aes(x = `event threshold`, y = value, col = statistic, group = statistic)) + 
+  geom_line() +
+  scale_color_brewer(palette = "Dark2") +
+  labs(y = NULL)
+```
+
 ## ROC curves
 
 To make an ROC (receiver operator characteristic) curve, we:
@@ -550,7 +567,7 @@ countdown(minutes = 3, id = "roc-curve-data")
 
 ## What do we do with the player data? 🏒
 
-There are `r length(unique(nhl_train$player))` unique player values in our training set. How can we include this information in our model?
+There are `r length(unique(nhl_train$shooter))` unique player values in our training set. How can we include this information in our model?
 
 . . .
 
@@ -558,45 +575,125 @@ We could:
 
 -   make the full set of indicator variables 😳
 
+-   lump players who rarely shoot into an "other" group
+
 -   use [feature hashing](https://www.tmwr.org/categorical.html#feature-hashing) to create a smaller set of indicator variables
 
--   use effect encoding to replace the `player` column with the estimated effect of that predictor
+-   use effect encoding to replace the `shooter` column with the estimated effect of that predictor
 
 
 . . .
 
-Let's use an _effect encoding_.
-
+Let's look at _othering_ then _effect encodings_.
 
 ```{r effects-calcs}
 #| include: false
 
 player_stats <- 
   nhl_train %>%
-  group_by(player) %>%
+  group_by(shooter) %>%
   summarize(
     rate = mean(on_goal == "yes"), 
     num_shots = n(),
     .groups = "drop"
     ) %>%
-  mutate(player = reorder(player, rate))
+  mutate(shooter = reorder(shooter, rate))
 
 library(embed)
 
 estimates <- 
   recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_lencode_mixed(player, outcome = vars(on_goal), id = "encoding") %>%   #<<
+  step_lencode_mixed(shooter, outcome = vars(on_goal), id = "encoding") %>%   #<<
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
   prep() %>% 
   tidy(id = "encoding") %>% 
-  select(player = level, estimate = value)
+  select(shooter = level, estimate = value)
 
-before <- nhl_train %>% select(on_goal, player) %>% slice(1:7) %>% add_rowindex()
-after <- left_join(before, estimates, by = "player") %>% 
-  select(on_goal, player = estimate, .row)
+before <- nhl_train %>% select(on_goal, shooter) %>% slice(1:7) %>% add_rowindex()
+after <- left_join(before, estimates, by = "shooter") %>% 
+  select(on_goal, shooter = estimate, .row)
 ```
+
+
+## Per-player statistics 
+
+::: columns
+::: {.column width="50%"}
+```{r effects}
+#| echo: false
+#| out-width: '90%'
+#| fig-width: 6
+#| fig-height: 3
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+  
+player_stats %>%   
+  ggplot(aes(x = num_shots)) +
+  geom_histogram(bins = 30, col = "blue", fill = "blue", alpha = 1/3) +
+  scale_x_log10() +
+  labs(x = "Number of shots per player")
+player_stats %>%   
+  ggplot(aes(x = rate)) +
+  geom_histogram(binwidth = 1/40, col = "red", fill = "red", alpha = 1/3) +
+  labs(x = "On-goal rate per player")
+```
+:::
+:::
+
+## Collapsing factor levels
+
+There is a recipe step that will redefine factor levels based on the their frequency in the training set: 
+
+```{r}
+#| code-line-numbers: "3:4"
+
+nhl_other_rec <-
+  recipe(on_goal ~ ., data = nhl_train) %>%
+  # Any player with <= 0.01% of shots is set to "other
+  step_other(shooter, threshold = 0.001) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+```{r other-res}
+#| include: false
+
+retained_shooters <-
+  recipe(on_goal ~ ., data = nhl_train) %>%
+  step_mutate(original = shooter) %>% 
+  step_other(shooter, threshold = 0.001) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors()) %>% 
+  prep() %>% 
+  tidy(number = 2)
+
+num_shooters <- length(unique(nhl_train$shooter))
+num_other <- num_shooters - length(retained_shooters$retained)
+```
+
+Using this code, `r num_other` players (out of `r num_shooters`) were collapsed into "other" based on the training set.
+
+We _could_ try to optimize the threshold for collapsing (see the next section of notes).
+
+## Does othering help? 
+
+```{r}
+#| code-line-numbers: "3|"
+nhl_other_wflow <-
+  nhl_glm_wflow %>%
+  update_recipe(nhl_other_rec)
+
+nhl_other_res <-
+  nhl_other_wflow %>%
+  fit_resamples(nhl_val, control = ctrl)
+
+collect_metrics(nhl_other_res)
+```
+
+A little better ROC AUC and much faster to complete.  
 
 ## What is an effect encoding?
 
@@ -623,7 +720,7 @@ after
 :::
 :::
 
-The `player` column is replaced with the log-odds of being on goal. 
+The `shooter` column is replaced with the log-odds of being on goal. 
 
 :::notes
 As a reminder:
@@ -637,11 +734,11 @@ For logistic regression, this is what the predictors are modeling. The log-odds 
 :::
 
 
-## Per-player statistics {.annotation}
+## Per-player statistics again {.annotation}
 
 ::: columns
 ::: {.column width="50%"}
-```{r effects}
+```{r effects-again}
 #| echo: false
 #| out-width: '90%'
 #| fig-width: 6
@@ -692,7 +789,7 @@ Partial pooling gives better estimates for players with fewer shots by shrinking
 #| dev: 'svglite'
 #| dev-args: list(bg = "transparent")
 
-inner_join(player_stats, estimates, by = "player") %>% 
+inner_join(player_stats, estimates, by = "shooter") %>% 
   mutate(estimate = binomial()$linkinv(estimate)) %>% 
   ggplot(aes(x = rate, y = estimate)) + 
   geom_abline(col = "green", lty = 2) +
@@ -711,7 +808,7 @@ library(embed)
 
 nhl_effect_rec <-
   recipe(on_goal ~ ., data = nhl_train) %>%
-  step_lencode_mixed(player, outcome = vars(on_goal)) %>%
+  step_lencode_mixed(shooter, goaltender, outcome = vars(on_goal)) %>%
   step_dummy(all_nominal_predictors()) %>%
   step_zv(all_predictors())
 ```
@@ -753,15 +850,17 @@ nhl_effect_res <-
 collect_metrics(nhl_effect_res)
 ```
 
+Better and it can handle new players (if they occur).
+
 # Where is the shot coming from? 🏒🧐 
 
 ## Angle
 
 ```{r}
 nhl_angle_rec <-
-  nhl_indicators %>%
+  nhl_effect_rec %>%
   step_mutate(
-    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi))
+    angle = abs( atan2(abs(coord_y), (89 - coord_x) ) * (180 / pi))
   )
 ```
 
@@ -777,17 +876,16 @@ nhl_angle_rec <-
 example_data <- 
   nhl_train %>% 
   mutate(
-    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
-    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
-    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
+    angle = abs( atan2(abs(coord_y), (89 - coord_x) ) * (180 / pi)),
+    behind_goal_line = ifelse(coord_x >= 89, 1, 0)
   )
 
 set.seed(42)
 example_data %>% 
-  filter(angle <= 25) %>% 
+  filter(angle <= 15) %>% 
   sample_n(500) %>% 
   plot_nhl_shots(emphasis = on_goal, alpha = 1/2) +
-  ggtitle("<= 25 degree angle")
+  ggtitle("<= 15 degree angle")
 ```
 
 :::notes
@@ -796,42 +894,15 @@ Note the danger of using `step_mutate()` -- easy to have data leakage
 `coord_x` is "distance from goal". We subtract it from `89` to get the distance from the center of the ice. The `abs()` calls account for the fact that the goals might be on either side of `(0, 0)`. The rest of it is the formula for going from `(x, y)` to angle in degrees.
 :::
 
-## Distance {.annotation}
-
-```{r}
-nhl_distance_rec <-
-  nhl_angle_rec %>%
-  step_mutate(
-    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
-    distance = log(distance)
-  )
-```
-
-```{r distance}
-#| echo: false
-#| out-width: '50%'
-#| fig-width: 7
-#| fig-height: 4
-#| fig-align: 'center'
-#| dev: 'svg'
-#| dev-args: list(bg = "transparent")
-
-set.seed(42)
-example_data %>% 
-  filter(distance <= 40) %>% 
-  sample_n(500) %>% 
-  plot_nhl_shots(emphasis = on_goal, alpha = 1/2) +
-  ggtitle("distance <= 40")
-```
-
 ## Behind goal line
 
 ```{r}
 nhl_behind_rec <-
-  nhl_distance_rec %>%
+  nhl_angle_rec %>%
   step_mutate(
-    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
-  )
+    behind_goal_line = ifelse(coord_x >= 89, 1, 0)
+  ) %>% 
+  step_rm(starts_with("coord"))
 ```
 
 ```{r goal-line}
@@ -861,8 +932,8 @@ set.seed(9)
 
 nhl_glm_set_res <-
   workflow_set(
-    list(`1_dummy` = nhl_indicators, `2_angle` = nhl_angle_rec, 
-         `3_dist` = nhl_distance_rec, `4_bgl` = nhl_behind_rec),
+    list(`1_other` = nhl_other_rec, 2_effects` = nhl_effect_rec, 
+         `3_angle` = nhl_angle_rec, `4_bgl` = nhl_behind_rec),
     list(logistic = logistic_reg())
   ) %>%
   workflow_map(fn = "fit_resamples", resamples = nhl_val, verbose = TRUE, control = ctrl)
@@ -948,9 +1019,9 @@ roc_curves_part_5 <-
   collect_predictions() %>% 
   select(wflow_id, on_goal, .pred_yes) %>% 
   bind_rows(
-    nhl_effect_res %>% 
+    nhl_glm_res %>% 
       collect_predictions() %>% 
-      mutate(wflow_id = "encoded_logistic") %>% 
+      mutate(wflow_id = "dummy_logistic") %>% 
       select(wflow_id, on_goal, .pred_yes)
   ) %>% 
   group_by(wflow_id) %>% 
