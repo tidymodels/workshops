@@ -200,7 +200,7 @@ Remember that a validation split is a type of resample.
 *Use the function `plot_nhl_shots()` for nice spatial plots of the data.*
 
 ::: columns
-::: {.column width="50%"}
+::: {.column width="60%"}
 ```{r rink-code}
 nhl_train <- analysis(nhl_val$splits[[1]])
 
@@ -495,7 +495,9 @@ glm_val_pred %>%
   ggplot(aes(x = `event threshold`, y = value, col = statistic, group = statistic)) + 
   geom_line() +
   scale_color_brewer(palette = "Dark2") +
-  labs(y = NULL)
+  labs(y = NULL) +
+  coord_equal() +
+  theme(legend.position = "top")
 ```
 
 ## ROC curves
@@ -544,25 +546,12 @@ autoplot(roc_curve_points)
 
 *Compute and plot an ROC curve for your current model.*
 
+*What data are being used for this ROC curve plot?*
 
 ```{r}
 #| echo: false
 countdown(minutes = 5, id = "roc-curve")
 ```
-
-
-## Your turn {transition="slide-in"}
-
-![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
-
-*What data are being used for this ROC curve plot?*
-
-
-```{r}
-#| echo: false
-countdown(minutes = 3, id = "roc-curve-data")
-```
-
 
 
 ## What do we do with the player data? 🏒
@@ -621,7 +610,7 @@ after <- left_join(before, estimates, by = "shooter") %>%
 
 ::: columns
 ::: {.column width="50%"}
-```{r effects}
+```{r effects-freq}
 #| echo: false
 #| out-width: '90%'
 #| fig-width: 6
@@ -635,6 +624,19 @@ player_stats %>%
   geom_histogram(bins = 30, col = "blue", fill = "blue", alpha = 1/3) +
   scale_x_log10() +
   labs(x = "Number of shots per player")
+```
+:::
+
+::: {.column width="50%"}
+```{r effects-rate}
+#| echo: false
+#| out-width: '90%'
+#| fig-width: 6
+#| fig-height: 3
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
 player_stats %>%   
   ggplot(aes(x = rate)) +
   geom_histogram(binwidth = 1/40, col = "red", fill = "red", alpha = 1/3) +
@@ -694,6 +696,8 @@ collect_metrics(nhl_other_res)
 ```
 
 A little better ROC AUC and much faster to complete.  
+
+Now let's look at a more sophisticated tool called effect encodings.
 
 ## What is an effect encoding?
 
@@ -783,8 +787,8 @@ Partial pooling gives better estimates for players with fewer shots by shrinking
 
 ```{r effect-compare}
 #| echo: false
-#| fig-width: 5
-#| fig-height: 5
+#| fig-width: 6
+#| fig-height: 6
 #| fig-align: 'center'
 #| dev: 'svglite'
 #| dev-args: list(bg = "transparent")
@@ -854,7 +858,7 @@ Better and it can handle new players (if they occur).
 
 # Where is the shot coming from? 🏒🧐 
 
-## Angle
+## Angle {.annotation}
 
 ```{r}
 nhl_angle_rec <-
@@ -882,17 +886,12 @@ example_data <-
 
 set.seed(42)
 example_data %>% 
-  filter(angle <= 15) %>% 
+  filter(angle <= 10) %>% 
   sample_n(500) %>% 
   plot_nhl_shots(emphasis = on_goal, alpha = 1/2) +
-  ggtitle("<= 15 degree angle")
+  ggtitle("<= 10 degree angle")
 ```
 
-:::notes
-Note the danger of using `step_mutate()` -- easy to have data leakage 
-
-`coord_x` is "distance from goal". We subtract it from `89` to get the distance from the center of the ice. The `abs()` calls account for the fact that the goals might be on either side of `(0, 0)`. The rest of it is the formula for going from `(x, y)` to angle in degrees.
-:::
 
 ## Behind goal line
 
@@ -901,8 +900,7 @@ nhl_behind_rec <-
   nhl_angle_rec %>%
   step_mutate(
     behind_goal_line = ifelse(coord_x >= 89, 1, 0)
-  ) %>% 
-  step_rm(starts_with("coord"))
+  )
 ```
 
 ```{r goal-line}
@@ -928,12 +926,17 @@ A workflow set can cross models and/or preprocessors and then resample them *en 
 #| cache: true
 #| results: 'markup'
 
+no_coord_rec <- 
+  nhl_indicators %>% 
+  step_rm(starts_with("coord"))
+
 set.seed(9)
 
 nhl_glm_set_res <-
   workflow_set(
-    list(`1_other` = nhl_other_rec, 2_effects` = nhl_effect_rec, 
-         `3_angle` = nhl_angle_rec, `4_bgl` = nhl_behind_rec),
+    list(`1_no_coord` = no_coord_rec,
+         `2_other` = nhl_other_rec, `3_effects` = nhl_effect_rec, 
+         `4_angle` = nhl_angle_rec, `5_bgl` = nhl_behind_rec),
     list(logistic = logistic_reg())
   ) %>%
   workflow_map(fn = "fit_resamples", resamples = nhl_val, verbose = TRUE, control = ctrl)
@@ -959,6 +962,7 @@ countdown(minutes = 8, id = "hockey-wfset")
 
 ```{r rank-res-code}
 #| eval: false
+#| out-width: '70%'
 
 library(forcats)
 collect_metrics(nhl_glm_set_res) %>%
@@ -986,11 +990,25 @@ collect_metrics(nhl_glm_set_res) %>%
 
 . . .
 
-- If you have an error and need to debug your recipe, the original recipe object (e.g. `encoded_players`) can be estimated manually with a function called `prep()`. It is analogous to `fit()`.
+- If you have an error and need to debug your recipe, the original recipe object (e.g. `encoded_players`) can be estimated manually with a function called `prep()`. It is analogous to `fit()`. See [TMwR section 16.4](https://www.tmwr.org/dimensionality.html#recipe-functions)
 
 . . .
 
 - Another function (`bake()`) is analogous to `predict()`, and gives you the processed data back.
+
+. . .
+
+- The `tidy()` function can be used to get specific results from the recipe.
+
+## Example
+
+```{r}
+nhl_angle_fit <- prep(nhl_angle_rec)
+
+tidy(nhl_angle_fit, number = 1) %>% slice(1:4)
+
+bake(nhl_angle_fit, nhl_train %>% slice(1:3), starts_with("coord"), angle, shooter)
+```
 
 ## More on recipes
 
