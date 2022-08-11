@@ -131,6 +131,67 @@ As shown in the Whole Game slides, there is a slightly different scheme used whe
 
 # 05 - Feature Engineering
 
+
+## Using a workflow
+
+What's going on with the 
+
+> prediction from a rank-deficient fit may be misleading
+
+warnings? 
+
+For linear regression, a computation is used called _matrix inversion_. The matrix in question is called the "model matrix" and it contains the predictor set for the training data. 
+
+Matrix inversion can fail if two or more columns: 
+
+ * are identical, or 
+ * add up to some other column. 
+ 
+These situations are called _linear dependencies_.  
+
+When this happens, `lm()` is pretty tolerant. It does not fail but does not compute regression coefficients for a minimal number of predictors involved in the dependency (and issues the warning above).
+
+For these data, there is this dependency:
+
+```
+shooter_type_{level} = shooter_{level}
+```
+
+Here is what is happening: since the player shooting only ever plays a single position, their indicators sum up (row-wide) to the same data as the sum of the shooter type indicators. 
+
+In other words, if you know the player's name, you know their position too. This is a perfect redundency in the data. 
+
+The way to avoid this problem is to use `step_lincomb(all_numeric_predictors())` in the recipe. [This step](https://recipes.tidymodels.org/reference/step_lincomb.html) removes the minimum number of columns to avoid the issue. 
+
+Just in case you ever want to figure out what the specific issues are, this code might help:
+
+```{r}
+#| eval: false
+
+# Get the exact data set used to fit the model. For a recipe, that is:
+processed_data <- 
+  nhl_indicators %>% 
+  prep() %>% 
+  bake(new_data = NULL, all_predictors())
+
+# Let's capture their names:
+pred_names <- names(processed_data)
+
+# caret has a function to determine the variables involved in each dependency
+issues <- caret::findLinearCombos(processed_data)
+# Convert the column index to names:
+issues_vars <- purrr::map(issues$linearCombos, ~ pred_names[.x])
+
+# caret proposes removing these columns to get rid of the issue. The choice
+# is pretty arbitrary: 
+removed_names <- pred_names[issues$remove]
+```
+
+**tl;dr**
+
+Linear regression detects some redundancies in the predictor set. We can ignore the warnings since `lm()` can deal with it or use [`step_lincomb()`](https://recipes.tidymodels.org/reference/step_lincomb.html) to avoid the warnings. 
+
+
 ## Per-player statistics
 
 The effect encoding method essentially takes the effect of a variable, like player, and makes a data column for that effect. In our example, the ability of a player to have an on-goal shot is quantified by a model and then added as a data column to be used in the model. 
@@ -208,43 +269,6 @@ ns_tunable
 ns_tunable$call_info
 ```
 
-
-## Spline grid search 
-
-What's going on with the 
-
-> prediction from a rank-deficient fit may be misleading
-
-warnings? 
-
-For linear regression, a computation is used called _matrix inversion_. The matrix in question is called the "model matrix" and it contains the predictor set for the training data. 
-
-Matrix inversion can fail if two or more columns: 
-
- * are identical, or 
- * add up to some other column. 
- 
-These situations are called _linear dependencies_.  
-
-When this happens, `lm()` is pretty tolerant. It does not fail but does not compute regression coefficients for a minimal number of predictors involved in the dependency (and issues the warning above).
-
-For these data, there are three dependencies between:
-
- * `defense_team_PIT` and `offense_team_PIT`
- * `strength_short_handed`, `player_diff`, and `strength_power_play`
- * `year`, `month_Oct`, `month_Nov`, and `month_Dec`
-
-The first one is easy to explain. For each row, when one these two `PIT` column has a one, the other must have a zero. The linear regression intercept is represented in the model matrix as a column of all ones. The dependency is 
-
-```r
-(Intercept) = defense_team_PIT + offense_team_PIT
-```
-
-The way to avoid this problem is to use `step_lincomb(all_numeric_predictors())` in the recipe. [This step](https://recipes.tidymodels.org/reference/step_lincomb.html) removes the minimum number of columns to avoid the issue. 
-
-**tl;dr**
-
-Linear regression detects some redundancies in the predictor set. We can ignore the warnings since `lm()` can deal with it or use [`step_lincomb()`](https://recipes.tidymodels.org/reference/step_lincomb.html) to avoid the warnings. 
 
 ## Boosted tree tuning parameters
 
