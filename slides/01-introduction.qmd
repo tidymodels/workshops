@@ -26,55 +26,6 @@ knitr:
 Welcome!
 :::
 
-::: columns
-::: {.column width="50%"}
-
-<center>
-
-### <i class="fa fa-wifi"></i>
-
-Wi-Fi network name
-
-`conf22`
-
-</center>
-
-:::
-
-::: {.column width="50%"}
-
-<center>
-
-### <i class="fa fa-key"></i>
-
-Wi-Fi password
-
-`together!`
-
-</center>
-
-:::
-:::
-
-## Workshop policies
-
--   Please do not photograph people wearing red lanyards
-
--   There are gender neutral bathrooms near National Harbor rooms
-
--   A meditation room is located at National Harbor 9 (8am - 5pm, Mon - Thurs)
-
--   A lactation room is located at Potomac Dressing Room (8am - 5pm, Mon - Thurs)
-
-
-## Workshop policies
-
--   Please review the rstudio::conf code of conduct, which applies to all workshops: <https://www.rstudio.com/conference/2022/2022-conf-code-of-conduct/>
-
--   CoC site has info on how to report a problem (in person, email, phone)
-
--   You are required to wear a mask that fully covers your mouth and nose at all times in all public spaces
-
 ## Who are you?
 
 -   You can use the magrittr `%>%` or base R `|>` pipe
@@ -85,41 +36,12 @@ Wi-Fi password
 
 -   You do **not** need intermediate or expert familiarity with modeling or ML
 
-## Who are we?
+## Who are tidymodels?
 
-::: columns
-::: {.column width="50%"}
 -   Simon Couch
 -   Hannah Frick
 -   Emil Hvitfeldt
 -   Max Kuhn
-:::
-
-::: {.column width="50%"}
--   Julia Silge
--   David Robinson
--   Davis Vaughan
-:::
-:::
-
-## Who are we?
-
-::: columns
-::: {.column width="50%"}
--   Kelly Bodwin
--   Michael Chow
--   Pritam Dalal
--   Matt Dancho
--   Jon Harmon
-:::
-
-::: {.column width="50%"}
--   Mike Mahoney
--   Edgar Ruiz
--   Asmae Toumi
--   Qiushi Yan
-:::
-:::
 
 . . .
 
@@ -200,7 +122,7 @@ Illustration credit: <https://vas3k.com/blog/machine_learning/>
 
 ```{r}
 #| echo: false
-countdown(minutes = 3, id = "statistics-vs-ml")
+countdown::countdown(minutes = 3, id = "statistics-vs-ml")
 ```
 
 ::: notes
@@ -271,7 +193,7 @@ knitr::include_graphics("images/whole-game-logistic.svg")
 
 - Our first model will have `r ncol(season_2015) - 1` simple predictor columns. 
 
-- One initial question: there are `r length(unique(season_2015$player))` players taking shots. 
+- One initial question: there are `r length(unique(season_2015$shooter))` players taking shots. 
 
 - For logistic regression, do we convert these to binary indicators (a.k.a. "dummies")? 
 
@@ -302,8 +224,8 @@ plot_roc <- function(x, highlight = "1_effects_logistic") {
   
   p <- 
     ggplot(others, aes(x = 1 - specificity, y = sensitivity)) + 
-    geom_abline(col = "red", lty = 3) +
-    geom_step(aes(group = wflow_id, col = wflow_id), alpha = 1/4, lwd = 1, show.legend = FALSE) + 
+    geom_abline(col = "red", lty = 2) +
+    geom_step(aes(group = wflow_id, col = wflow_id), alpha = 1/5, lwd = 1/2, show.legend = FALSE) + 
     geom_step(aes(group = wflow_id, col = wflow_id), data = emphasize, alpha = 1, lwd = 1, show.legend = FALSE) +
     scale_colour_viridis_d(drop = FALSE) +
     coord_fixed()
@@ -311,14 +233,16 @@ plot_roc <- function(x, highlight = "1_effects_logistic") {
   p
 }
 
-lvls <- c("dummy_logistic", "1_effects_logistic", "2_angle_logistic", "3_dist_logistic", 
-          "4_bgl_logistic", "splines", "xgboost", "xgboost-coords")
+lvls <- c("dummy_logistic", 
+          "3_effects_logistic", "4_angle_logistic", "5_zone_logistic", 
+          "6_bgl_logistic", "splines", "xgboost", "xgboost-coords")
 
 load("roc_curves_part_5.RData")
 load("roc_curves_part_6.RData")
 
 roc_curves <- 
   bind_rows(roc_curves_part_5, roc_curves_part_6) %>%
+  filter(!(wflow_id %in% c("2_other_logistic", "1_no_coord_logistic"))) %>% 
   mutate(wflow_id = factor(wflow_id, levels = lvls))
 
 plot_roc(roc_curves, "dummy_logistic") + theme_bw()
@@ -336,7 +260,7 @@ plot_roc(roc_curves, "dummy_logistic") + theme_bw()
 #| dev: 'svg'
 #| dev-args: list(bg = "transparent")
 
-plot_roc(roc_curves, "1_effects_logistic") + theme_bw()
+plot_roc(roc_curves, "3_effects_logistic") + theme_bw()
 ```
 
 ## What about location
@@ -359,10 +283,10 @@ How can we make location more usable for the model?
 #| dev: 'svg'
 #| dev-args: list(bg = "transparent")
 
-plot_roc(roc_curves, "2_angle_logistic") + theme_bw()
+plot_roc(roc_curves, "4_angle_logistic") + theme_bw()
 ```
 
-## Add shot distance? 
+## Add shot from defensive zone? 
 
 ```{r shot-dist}
 #| echo: false
@@ -373,7 +297,7 @@ plot_roc(roc_curves, "2_angle_logistic") + theme_bw()
 #| dev: 'svg'
 #| dev-args: list(bg = "transparent")
 
-plot_roc(roc_curves, "3_dist_logistic") + theme_bw()
+plot_roc(roc_curves, "5_zone_logistic") + theme_bw()
 ```
 
 ## Add shot behind goal line? 
@@ -387,7 +311,7 @@ plot_roc(roc_curves, "3_dist_logistic") + theme_bw()
 #| dev: 'svg'
 #| dev-args: list(bg = "transparent")
 
-plot_roc(roc_curves, "4_bgl_logistic") + theme_bw()
+plot_roc(roc_curves, "6_bgl_logistic") + theme_bw()
 ```
 
 
@@ -484,7 +408,7 @@ install.packages(c("DALEXtra", "doParallel", "embed", "forcats",
                    "rpart.plot", "stacks", "tidymodels",
                    "vetiver", "xgboost"))
 
-remotes::install_github("topepo/ongoal@v0.0.2")
+remotes::install_github("topepo/ongoal@hockeyR)
 ```
 
 . . .
