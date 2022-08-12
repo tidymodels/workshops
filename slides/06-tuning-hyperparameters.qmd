@@ -165,7 +165,8 @@ glm_rec <-
   step_lencode_mixed(shooter, goaltender, outcome = vars(on_goal)) %>%
   step_dummy(all_nominal_predictors()) %>%
   step_mutate(
-    angle = abs( atan2(abs(coord_y), (89 - coord_x) ) * (180 / pi)),
+    angle = abs( atan2(abs(coord_y), (89 - coord_x) ) * (180 / pi) ),
+    defensive_zone = ifelse(coord_x <= -25.5, 1, 0),
     behind_goal_line = ifelse(coord_x >= 89, 1, 0)
   ) %>%
   step_zv(all_predictors()) %>%
@@ -216,10 +217,10 @@ example_data <- nhl_train
 example_data %>%
   group_by(coord_x = cut(coord_x, seq(-100, 100, by = 10))) %>%
   summarize(
-    pct_on_goal = mean(on_goal == "yes"), 
+    on_goal_rate = mean(on_goal == "yes"), 
     n = n()
   ) %>%
-  ggplot(aes(coord_x, pct_on_goal)) +
+  ggplot(aes(coord_x, on_goal_rate)) +
   geom_point(aes(size = n)) +
   scale_y_continuous(labels = scales::percent) +
   expand_limits(y = 0) +
@@ -356,7 +357,7 @@ grid %>%
 
 # Use the `tune_*()` functions to tune models
 
-## Spline grid search `r hexes(c("dials", "workflows", "tune"))` {.annotation}
+## Spline grid search `r hexes(c("dials", "workflows", "tune"))` 
 
 ```{r tuning} 
 #| cache: true
@@ -456,9 +457,9 @@ This best result has:
 #| dev-args: list(bg = "transparent")
 tree_mod <- 
     rpart::rpart(
-        on_goal ~ . - shooter - goaltender,
+        on_goal ~ coord_x + shooter_type + strength,
         data = nhl_train,
-        control = rpart::rpart.control(maxdepth = 5, cp = 0.0000001)
+        control = rpart::rpart.control(maxdepth = 5, cp = 0, minsplit = 10)
     ) %>% 
     partykit::as.party()
 plot(tree_mod)
@@ -672,7 +673,8 @@ autoplot(xgb_res)
 coord_rec <- 
   xgb_rec %>%
   step_mutate(
-    angle = abs( atan2(abs(coord_y), (89 - coord_x) ) * (180 / pi)),
+    angle = abs( atan2(abs(coord_y), (89 - coord_x) ) * (180 / pi) ),
+    defensive_zone = ifelse(coord_x <= -25.5, 1, 0),
     behind_goal_line = ifelse(coord_x >= 89, 1, 0)
   )
 
@@ -689,10 +691,16 @@ xgb_coord_res <-
 
 ## Did the machine figure it out? 
 
-```{r}
-show_best(xgb_res, metric = "roc_auc")
+No extra features:
 
-show_best(xgb_coord_res, metric = "roc_auc")
+```{r}
+show_best(xgb_res, metric = "roc_auc", n = 3)
+```
+
+With additional coordinate features:
+
+```{r}
+show_best(xgb_coord_res, metric = "roc_auc", n = 3)
 ```
 
 

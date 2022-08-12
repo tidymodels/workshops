@@ -864,7 +864,7 @@ Better and it can handle new players (if they occur).
 nhl_angle_rec <-
   nhl_effect_rec %>%
   step_mutate(
-    angle = abs( atan2(abs(coord_y), (89 - coord_x) ) * (180 / pi))
+    angle = abs( atan2(abs(coord_y), (89 - coord_x) ) * (180 / pi) )
   )
 ```
 
@@ -893,11 +893,38 @@ example_data %>%
 ```
 
 
+## Shot from the defensive zone
+
+```{r}
+nhl_zone_rec <-
+  nhl_angle_rec %>%
+  step_mutate(
+    defensive_zone = ifelse(coord_x <= -25.5, 1, 0)
+  )
+```
+
+```{r zone}
+#| echo: false
+#| out-width: '50%'
+#| fig-width: 7
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+set.seed(42)
+example_data %>% 
+  filter(coord_x <= -25.5) %>% 
+  sample_n(500) %>% 
+  plot_nhl_shots(emphasis = on_goal, alpha = 1/2) +
+  ggtitle("coord_x <= -25.5")
+```
+
 ## Behind goal line
 
 ```{r}
 nhl_behind_rec <-
-  nhl_angle_rec %>%
+  nhl_zone_rec %>%
   step_mutate(
     behind_goal_line = ifelse(coord_x >= 89, 1, 0)
   )
@@ -934,9 +961,9 @@ set.seed(9)
 
 nhl_glm_set_res <-
   workflow_set(
-    list(`1_no_coord` = no_coord_rec,
-         `2_other` = nhl_other_rec, `3_effects` = nhl_effect_rec, 
-         `4_angle` = nhl_angle_rec, `5_bgl` = nhl_behind_rec),
+    list(`1_no_coord` = no_coord_rec,   `2_other` = nhl_other_rec, 
+         `3_effects`  = nhl_effect_rec, `4_angle` = nhl_angle_rec, 
+         `5_zone`     = nhl_zone_rec,   `6_bgl`   = nhl_behind_rec),
     list(logistic = logistic_reg())
   ) %>%
   workflow_map(fn = "fit_resamples", resamples = nhl_val, verbose = TRUE, control = ctrl)
