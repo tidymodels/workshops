@@ -34,10 +34,12 @@ tidymodels_prefer()
 data(Chicago)
 
 cores <- parallel::detectCores(logical = FALSE)
-cl <- parallel::makePSOCKcluster(cores)
-doParallel::registerDoParallel(cl)
+if (.Platform$OS.type != "windows") {
+  library(doMC)
+  registerDoMC(cores = cores)
+}
 
-options(width = 200)
+options(width = 90)
 
 ggplot2::theme_set(ggplot2::theme_bw())
 ```
@@ -103,7 +105,9 @@ Take a look at these data for a few minutes and see if you can find any interest
 
 ```{r}
 #| label: turn-setup
+
 library(tidymodels)
+library(rules)
 data("Chicago")
 dim(Chicago)
 stations
@@ -111,11 +115,11 @@ stations
 
 ```{r}
 #| echo: false
-countdown(minutes = 5, id = "explore-chicago")
+countdown::countdown(minutes = 5, id = "explore-chicago")
 ```
 
 
-## Splitting with Chicago data
+## Splitting with Chicago data `r hexes(c("rsample"))`
 
 Let's put the last two weeks of data into the test set. `initial_time_split()` can be used for this purpose:
 
@@ -133,7 +137,7 @@ chi_test  <- testing(chi_split)
 c(training = nrow(chi_train), testing = nrow(chi_test))
 ```
 
-## Time series resampling
+## Time series resampling 
 
 Our Chicago data is over time. Regular cross-validation, which uses random sampling, may not be the best idea. 
 
@@ -145,7 +149,7 @@ We can emulate our training/test split by making similar resamples.
 
 * and so on
 
-##  Rolling forecast origin resampling
+##  Rolling forecast origin resampling 
 
 ```{r}
 #| label: rolling
@@ -157,7 +161,7 @@ We can emulate our training/test split by making similar resamples.
 knitr::include_graphics("images/rolling.svg")
 ```
 
-##  Using rsample to do this
+##  Times series resampling  `r hexes(c("rsample"))`
 
 ```{r}
 #| eval: false
@@ -177,7 +181,7 @@ chi_rs <-
 Use the `date` column to find the date data. 
 
 
-##   Using rsample to do this
+##   Times series resampling  `r hexes(c("rsample"))`
 
 ```{r}
 #| eval: false
@@ -196,7 +200,7 @@ chi_rs <-
 Our units will be weeks. 
 
 
-##   Using rsample to do this
+##   Times series resampling  `r hexes(c("rsample"))`
 
 ```{r}
 #| eval: false
@@ -216,7 +220,7 @@ Every analysis set has 15 years of data
 
 
 
-##   Using rsample to do this
+##   Times series resampling  `r hexes(c("rsample"))`
 
 ```{r}
 #| eval: false
@@ -236,7 +240,7 @@ chi_rs <-
 Every assessment set has 2 weeks of data
 
 
-##   Using rsample to do this
+##   Times series resampling  `r hexes(c("rsample"))`
 
 ```{r}
 #| code-line-numbers: "8"
@@ -259,11 +263,8 @@ chi_rs$splits[[1]] %>% assessment() %>% pluck("date") %>% range()
 chi_rs$splits[[2]] %>% assessment() %>% pluck("date") %>% range()
 ```
 
-## Feature engineering
 
-
-
-## Our resampling object
+## Our resampling object  `r hexes(c("rsample"))`
 
 ::: columns
 ::: {.column width="45%"}
@@ -282,23 +283,19 @@ chi_rs
 
 We will fit `r nrow(chi_rs)` models on  `r nrow(chi_rs)` slightly different analysis sets. 
 
-Each will produce a separate RMSE and we will average the  `r nrow(chi_rs)` RMSE values to get the resampling estimate of that statistic. 
+Each will produce a separate performance metrics. 
+
+We will average the  `r nrow(chi_rs)` metrics to get the resampling estimate of that statistic. 
 
 :::
 :::
 
 
-## Feature engineering
-
-
-
-## A recipe
+## Feature engineering with recipes  `r hexes(c("recipes"))`
 
 ```{r}
 chi_rec <- 
   recipe(ridership ~ ., data = chi_train)
-# If ncol(data) is large, you can use
-# recipe(data = chi_train)
 ```
 
 Based on the formula, the function assigns columns to roles of "outcome" or "predictor"
@@ -311,7 +308,7 @@ summary(chi_rec)
 
 
 
-## A recipe - work with dates
+## A recipe - work with dates `r hexes(c("recipes"))`
 
 ```{r}
 #| code-line-numbers: "3"
@@ -323,7 +320,7 @@ chi_rec <-
 This creates three new columns in the data based on the date. Now that the day-of-the-week column is a factor.
 
 
-## A recipe - work with dates
+## A recipe - work with dates `r hexes(c("recipes"))`
 
 ```{r}
 #| code-line-numbers: "4"
@@ -338,39 +335,23 @@ Add indicators for major holidays. Specific holidays, especially those ex-US, ca
 At this point, we don't need `date` anymore. Instead of deleting it (there is a step for that) we will change its _role_ to be an identification variable. 
 
 
-## A recipe - work with dates
+## A recipe - work with dates `r hexes(c("recipes"))`
 
 ```{r}
-#| code-line-numbers: "5"
+#| code-line-numbers: "5,6"
 chi_rec <- 
   recipe(ridership ~ ., data = chi_train) %>% 
   step_date(date, features = c("dow", "month", "year")) %>% 
   step_holiday(date) %>% 
-  update_role(date, new_role = "id")
+  update_role(date, new_role = "id") %>%
+  update_role_requirements(role = "id", bake = TRUE)
 ```
 
 `date` is still in the data set but tidymodels knows not to treat it as an analysis column. 
 
+`update_role_requirements()` is required to make sure that this column is required when making new data points. 
 
-## A recipe -create indicator variables
-
-```{r}
-#| code-line-numbers: "6"
-chi_rec <- 
-  recipe(ridership ~ ., data = chi_train) %>% 
-  step_date(date, features = c("dow", "month", "year")) %>% 
-  step_holiday(date) %>% 
-  update_role(date, new_role = "id") %>% 
-  step_dummy(all_nominal_predictors()) 
-```
-
-For any factor or character predictors, make binary indicators. 
-
-There are _many_ recipe steps that can convert categorical predictors to numeric columns. 
-
-
-
-## A recipe - filter out constant columns
+## A recipe - remove constant columns `r hexes(c("recipes"))`
 
 ```{r}
 #| code-line-numbers: "7"
@@ -378,36 +359,259 @@ chi_rec <-
   recipe(ridership ~ ., data = chi_train) %>% 
   step_date(date, features = c("dow", "month", "year")) %>% 
   step_holiday(date) %>% 
-  update_role(date, new_role = "id") %>% 
-  step_dummy(all_nominal_predictors()) %>% 
-  step_zv(all_predictors()) 
+  update_role(date, new_role = "id") %>%
+  update_role_requirements(role = "id", bake = TRUE) %>% 
+  step_zv(all_nominal_predictors()) 
 ```
 
-In case there is a holiday that never was observed, we can delete any _zero-variance_ predictors that have a single unique value.
 
-Note that the selector chooses all columns with a role of "predictor"
+## A recipe - handle correlations `r hexes(c("recipes"))`
 
+The columns in the `stations` vector have a very high degree of correlation. 
 
-
-## A recipe - normalization
+We might want to decorrelated them with principle component analysis to help the model fits go more easily. 
 
 ```{r}
-#| code-line-numbers: "8"
-chi_rec <- 
-  recipe(ridership ~ ., data = chi_train) %>% 
-  step_date(date, features = c("dow", "month", "year")) %>% 
-  step_holiday(date) %>% 
-  update_role(date, new_role = "id") %>% 
-  step_dummy(all_nominal_predictors()) %>% 
-  step_zv(all_predictors()) %>% 
-  step_normalize(all_numeric_predictors()) 
+#| code-line-numbers: "7"
+chi_pca_rec <- 
+  chi_rec %>% 
+  step_normalize(all_of(!!stations)) %>% 
+  step_pca(all_of(!!stations), num_comp = tune())
 ```
 
-This centers and scales the numeric predictors. 
+We'll tune the number of PCA components for (default) values of one to four.
 
-Note that this will use the training set to estimate the means and standard deviations of the data. 
+## Make some models `r hexes(c("recipes", "parsnip", "tune", "yardstick", "rules"))`
 
-All data put through the recipe will be normalized using those statistics (there is no re-estimation). 
+Let's try three models. The first one requires the `rules` package (loaded earlier).
 
+```{r chi-specs}
+cb_spec <- cubist_rules(committees = 25, neighbors = tune())
+mars_spec <- mars(prod_degree = tune()) %>% set_mode("regression")
+lm_spec <- linear_reg()
+
+
+chi_set <- 
+  workflow_set(
+    list(pca = chi_pca_rec, basic = chi_rec), 
+    list(cubist = cb_spec, mars = mars_spec, lm = lm_spec)
+  ) %>% 
+  # Evaluate models using mean absolute errors. 
+  option_add(metrics = metric_set(mae))
+```
+
+
+## Process them on the resamples
+
+```{r chi-res}
+#| cache: true
+#| results: markup
+
+# Set up some objects for stacking ensembles (in a few slides)
+grid_ctrl <- control_grid(save_pred = TRUE, save_workflow = TRUE)
+
+chi_res <- 
+  chi_set %>% 
+  workflow_map(
+    resamples = chi_rs,
+    grid = 10,
+    control = grid_ctrl,
+    verbose = TRUE,
+    seed = 12
+  )
+```
+
+## How does the results look? 
+
+```{r}
+rank_results(chi_res)
+```
+
+## Plot the results `r hexes(c("ggplot2", "tune"))`
+
+```{r set-results}
+#| fig-align: center
+autoplot(chi_res)
+```
+
+## Pull out specific results `r hexes(c("ggplot2", "tune"))`
+
+We can also pull out the specific tuning results and look at them: 
+
+```{r cubist-autoplot}
+#| fig-align: center
+chi_res %>% 
+  extract_workflow_set_result("pca_cubist") %>% 
+  autoplot()
+```
+
+
+## Why choose just one `final_fit`? `r hexes("stacks")`
+
+_Model stacks_ generate predictions that are informed by several models.
+
+## Why choose just one `final_fit`? `r hexes("stacks")`
+
+![](images/stack_01.png)
+
+## Why choose just one `final_fit`? `r hexes("stacks")`
+
+![](images/stack_02.png)
+
+## Why choose just one `final_fit`? `r hexes("stacks")`
+
+![](images/stack_03.png)
+
+## Why choose just one `final_fit`? `r hexes("stacks")`
+
+![](images/stack_04.png)
+
+## Why choose just one `final_fit`? `r hexes("stacks")`
+
+![](images/stack_05.png)
+
+## Building a model stack `r hexes("stacks")`
+
+```{r load-stacks}
+library(stacks)
+```
+
+1) Define candidate members
+2) Initialize a data stack object
+3) Add candidate ensemble members to the data stack
+4) Evaluate how to combine their predictions
+5) Fit candidate ensemble members with non-zero stacking coefficients
+6) Predict on new data!
+
+
+## Start the stack and add members `r hexes("stacks")`
+
+Collect all of the resampling results for all model configurations. 
+
+```{r}
+chi_stack <- 
+  stacks() %>% 
+  add_candidates(chi_res)
+```
+
+
+## Estimate weights for each candidate `r hexes("stacks")`
+
+Which configurations should be retained? Uses a penalized linear model: 
+
+```{r}
+set.seed(122)
+chi_stack_res <- blend_predictions(chi_stack)
+
+chi_stack_res
+```
+
+## How did it do? `r hexes(c("ggplot2", "stacks"))`
+
+The overall results of the penalized model: 
+
+```{r}
+#| label: stack-autoplot
+#| fig-align: center
+
+autoplot(chi_stack_res)
+```
+
+
+
+## What does it use?  `r hexes(c("ggplot2", "stacks"))`
+
+```{r}
+#| label: stack-members
+#| fig-align: center
+
+autoplot(chi_stack_res, type = "weights")
+```
+
+
+## Fit the required candidate models`r hexes("stacks")`
+
+For each model we retain in the stack, we need their model fit on the entire training set. 
+
+```{r}
+chi_stack_res <- fit_members(chi_stack_res)
+```
+
+
+## The test set: best Cubist model `r hexes(c("tune", "workflows"))`
+
+We can pull out the results and the workflow to fit the single best cubist model. 
+
+```{r}
+best_cubist <- 
+  chi_res %>% 
+  extract_workflow_set_result("pca_cubist") %>% 
+  select_best()
+
+cubist_res <- 
+  chi_res %>% 
+  extract_workflow("pca_cubist") %>% 
+  finalize_workflow(best_cubist) %>% 
+  last_fit(split = chi_split, metrics = metric_set(mae))
+```
+
+## The test set: stack ensemble`r hexes(c("stacks"))`
+
+We don't have `last_fit()` for stacks (yet) so we manually make predictions. 
+
+```{r}
+stack_pred <- 
+  predict(chi_stack_res, chi_test) %>% 
+  bind_cols(chi_test)
+```
+
+## Compare the results `r hexes(c("tune", "stacks"))`
+
+Single best versus the stack:
+
+```{r}
+collect_metrics(cubist_res)
+
+stack_pred %>% mae(ridership, .pred)
+```
+
+## Plot the test set `r hexes(c("ggplot2", "stacks"))`
+
+
+::: columns
+::: {.column width="60%"}
+
+```{r}
+#| eval: false
+cubist_res %>% 
+  collect_predictions() %>% 
+  ggplot(aes(ridership, .pred)) + 
+  geom_point(alpha = 1 / 2) + 
+  geom_abline(lty = 2, col = "darkgreen") + 
+  coord_obs_pred()
+```
+
+:::
+
+
+::: {.column width="40%"}
+
+
+```{r}
+#| echo: false
+#| label: chi-test
+#| fig-align: center
+#| fig-width: 5
+#| fig-height: 5
+cubist_res %>% 
+  collect_predictions() %>% 
+  ggplot(aes(ridership, .pred)) + 
+  geom_point(alpha = 1 / 2) + 
+  geom_abline(lty = 2, col = "darkgreen") + 
+  coord_obs_pred()
+```
+:::
+
+:::
 
 
