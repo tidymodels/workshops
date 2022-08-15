@@ -30,7 +30,8 @@ library(tidymodels)
 library(countdown)
 data("tree_frogs", package = "stacks")
 tree_frogs <- tree_frogs %>%
-  mutate(t_o_d = factor(t_o_d)) %>% 
+  mutate(t_o_d = factor(t_o_d),
+         age = age / 86400) %>% 
   filter(!is.na(latency)) %>%
   select(-c(clutch, hatched))
 
@@ -770,7 +771,9 @@ frog_st_res
 #| fig-align: 'center'
 frog_test %>%
   select(latency) %>%
-  bind_cols(predict(frog_st_res, frog_test)) %>%
+  bind_cols(
+    predict(frog_st_res, frog_test)
+  ) %>%
   ggplot(aes(latency, .pred)) + 
   geom_abline(lty = 2, 
               col = "deeppink4", 

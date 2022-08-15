@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.0.35">
+<meta name="generator" content="quarto-1.0.36">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -280,6 +280,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="https://www.jmlr.org/papers/volume11/cawley10a/cawley10a.pdf">On Over-fitting in Model Selection and Subsequent Selection Bias in Performance Evaluation</a></li>
 </ul>
 </section>
+</section>
+<section id="evaluating-models" class="level1">
+<h1>04 - Evaluating Models</h1>
 <section id="where-are-the-fitted-models" class="level2">
 <h2 class="anchored" data-anchor-id="where-are-the-fitted-models">Where are the fitted models?</h2>
 <p>The primary purpose of resampling is to estimate model performance. The models are almost never needed again.</p>
@@ -290,9 +293,6 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="https://www.tidymodels.org/learn/models/coefficients/" class="uri">https://www.tidymodels.org/learn/models/coefficients/</a> (an example)</li>
 </ul>
 </section>
-</section>
-<section id="evaluating-models" class="level1">
-<h1>04 - Evaluating Models</h1>
 <section id="the-final-fit" class="level2">
 <h2 class="anchored" data-anchor-id="the-final-fit">The final fit</h2>
 <p>Since our data spending scheme created the resamples from the training set, <code>last_fit()</code> will use all of the training data to fit the final workflow.</p>
@@ -301,30 +301,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </section>
 <section id="feature-engineering" class="level1">
 <h1>05 - Feature Engineering</h1>
-<section id="splitting-the-nhl-data" class="level2">
-<h2 class="anchored" data-anchor-id="splitting-the-nhl-data">Splitting the NHL data</h2>
-<p><code>nhl_train</code> isn’t really the right name for these data.</p>
-<p>In a little bit, we’ll use the <code>validation_split()</code> function to take the rows in <code>nhl_train</code> and make a validation set. The data that are not used in the validation set are the data that we will use to build the models during tuning.</p>
-<p>Recall the Whole Game slide had:</p>
-<div class="cell" data-layout-align="center">
-<div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="images/whole-game-split.svg" class="img-fluid figure-img"></p>
-</figure>
-</div>
-</div>
-</div>
-<p><code>nhl_train</code> has the “Not Testing” data.</p>
-</section>
 <section id="per-player-statistics" class="level2">
 <h2 class="anchored" data-anchor-id="per-player-statistics">Per-player statistics</h2>
 <p>The effect encoding method essentially takes the effect of a variable, like player, and makes a data column for that effect. In our example, the ability of a player to have an on-goal shot is quantified by a model and then added as a data column to be used in the model.</p>
 <p>Suppose NHL rookie Max has a single shot in the data and it was on goal. If we used a naive estimate for Max’s effect, the model is being told that Max should have a 100% chance of being on goal. That’s a very poor estimate since it is from a single data point.</p>
-<p>Contrast this with seasoned player Davis, show has taken 250 shots and 75% of these were on goal. Davis’s proportion is more predictive because it is estimated with better data (i.e., more total shots). Partial pooling leverages the entire data set and can borrow strength from all of the players. It is a common tool in Bayesian estimation and non-Bayesian mixed models. If a player’s data is of good quality, the partial pooling effect estimate is closer to the raw proportion. Max’s data is not great and is “shrunk” towards the center of the overall on goal proportion. Since there is so little known about Max’s shot history, this is a better effect estimate (until more data is available for him).</p>
+<p>Contrast this with seasoned player Davis, who has taken 250 shots and 75% of these were on goal. Davis’s proportion is more predictive because it is estimated with better data (i.e., more total shots). Partial pooling leverages the entire data set and can borrow strength from all of the players. It is a common tool in Bayesian estimation and non-Bayesian mixed models. If a player’s data is of good quality, the partial pooling effect estimate is closer to the raw proportion. Max’s data is not great and is “shrunk” towards the center of the overall on goal proportion. Since there is so little known about Max’s shot history, this is a better effect estimate (until more data is available for him).</p>
 <p>The Stan documentation has a pretty good vignette on this: <a href="https://cran.r-project.org/web/packages/rstanarm/vignettes/pooling.html" class="uri">https://cran.r-project.org/web/packages/rstanarm/vignettes/pooling.html</a></p>
 <p>Also, <em>Bayes Rules!</em> has a nice section on this: <a href="https://www.bayesrulesbook.com/chapter-15.html" class="uri">https://www.bayesrulesbook.com/chapter-15.html</a></p>
-<p>If the outcome were numeric, the effect would be the mean of the outcome per player. In this case, partial pooling is very similar to the James–Stein estimator: https://en.wikipedia.org/wiki/James–Stein_estimator</p>
+<p>If the outcome were numeric, the effect would be the mean of the outcome per player. In this case, partial pooling is very similar to the James–Stein estimator: <a href="https://en.wikipedia.org/wiki/James–Stein_estimator" class="uri">https://en.wikipedia.org/wiki/James–Stein_estimator</a></p>
 </section>
 <section id="player-effects" class="level2">
 <h2 class="anchored" data-anchor-id="player-effects">Player effects</h2>
@@ -356,7 +340,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>parameter_object <span class="sc">%&gt;%</span> </span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">update</span>(<span class="at">mtry =</span> <span class="fu">mtry</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">100</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>In our case, the argument name is <code>deg_free</code> but we update it with <code>spline_degree</code>.</p>
+<p>In our case, the argument name is <code>deg_free</code> but we update it with <code>spline_degree()</code>.</p>
 <p><code>deg_free</code> represents the general concept of degrees of freedom and could be associated with many different things. For example, if we ever had an argument that was the number of degrees of freedom for a <span class="math inline">\(t\)</span> distribution, we would call that argument <code>deg_free</code>.</p>
 <p>For splines, we probably want a wider range for the degrees of freedom. We made a specialized function called <code>spline_degree()</code> to be used in these cases.</p>
 <p>How can you tell when this happens? There is a helper function called <code>tunable()</code> and that gives information on how we make the default ranges for parameters. There is a column in these objects names <code>call_info</code>:</p>
@@ -396,7 +380,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </blockquote>
 <p>warnings?</p>
 <p>For linear regression, a computation is used called <em>matrix inversion</em>. The matrix in question is called the “model matrix” and it contains the predictor set for the training data.</p>
-<p>Matrix inverse can fail if two or model columns:</p>
+<p>Matrix inversion can fail if two or more columns:</p>
 <ul>
 <li>are identical, or</li>
 <li>add up to some other column.</li>
@@ -429,7 +413,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p><img src="annotations_files/figure-html/early-stopping-1.svg" class="img-fluid"></p>
 </div>
 </div>
-<p>This is likely do to over-fitting so we stop the model at eleven boosting iterations.</p>
+<p>This is likely due to over-fitting so we stop the model at eleven boosting iterations.</p>
 <p>Early stopping usually has good results and takes far less time.</p>
 </section>
 <section id="boosted-tree-code" class="level2">

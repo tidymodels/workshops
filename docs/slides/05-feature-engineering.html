@@ -8,7 +8,7 @@
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.0.35">
+  <meta name="generator" content="quarto-1.0.36">
 
   <title>Machine learning with tidymodels - 5 - Feature engineering</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -396,6 +396,27 @@
   <p class="subtitle">Machine learning with tidymodels</p>
 </section>
 
+<section id="working-with-our-predictors" class="slide level2">
+<h2>Working with our predictors</h2>
+<p>We might want to modify our predictors columns for a few reasons:</p>
+<div>
+<ul>
+<li class="fragment">The model requires them in a different format (e.g.&nbsp;dummy variables for <code>lm()</code>).</li>
+<li class="fragment">The model needs certain data qualities (e.g.&nbsp;same units for K-NN).</li>
+<li class="fragment">The outcome is better predicted when one or more columns are transformed in some way (a.k.a “feature engineering”).</li>
+</ul>
+</div>
+<div class="fragment">
+<p>The first two reasons are fairly predictable (<a href="https://www.tmwr.org/pre-proc-table.html#tab:preprocessing">next page</a>).</p>
+<p>The last one depends on your modeling problem.</p>
+</div>
+</section>
+<section id="section" class="slide level2" data-background-iframe="https://www.tmwr.org/pre-proc-table.html#tab:preprocessing">
+<h2></h2>
+<div class="footer">
+
+</div>
+</section>
 <section id="what-is-feature-engineering" class="slide level2">
 <h2>What is feature engineering?</h2>
 <p>Think of a feature as some <em>representation</em> of a predictor that will be used in a model.</p>
@@ -406,28 +427,12 @@
 <li>Polynomial expansions/splines</li>
 <li>PCA feature extraction</li>
 </ul>
-</div>
-<div class="fragment">
-<p>“Feature engineering” sounds pretty cool, but let’s take a minute to talk about <em>preprocessing</em> data.</p>
+<p>There are a lot of examples in <a href="https://bookdown.org/max/FES/"><em>Feature Engineering and Selection</em></a>.</p>
 </div>
 </section>
-<section id="two-types-of-preprocessing" class="slide level2">
-<h2>Two types of preprocessing</h2>
-
-<img data-src="images/fe_venn.svg" class="r-stretch quarto-figure-center"></section>
-<section id="two-types-of-preprocessing-1" class="slide level2" data-auto-animate="true">
-<h2 data-id="quarto-animate-title">Two types of preprocessing</h2>
-
-<img data-src="images/fe_venn_info.svg" class="r-stretch quarto-figure-center"></section>
-<section id="two-types-of-preprocessing-2" class="slide level2" data-auto-animate="true">
-<h2 data-id="quarto-animate-title">Two types of preprocessing</h2>
-<p><img data-src="images/fe_venn_info.svg" class="absolute" style="bottom: 0px; right: 0px; height: 400px; "></p>
-<p>Where does creation of dummy variables belong on the diagram?</p>
-</section>
-<section id="two-types-of-preprocessing-3" class="slide level2">
-<h2>Two types of preprocessing</h2>
-<p><img data-src="images/fe_venn_info.svg" class="absolute" style="bottom: 0px; right: 0px; height: 400px; "></p>
-<p>Where does engineering a date column belong in the diagram?</p>
+<section id="example-dates" class="slide level2">
+<h2>Example: Dates</h2>
+<p>How can we represent date columns for our model?</p>
 <div class="fragment">
 <p>When a date column is used in its native format, it is usually converted by an R model to an integer.</p>
 </div>
@@ -440,21 +445,9 @@
 <li>Year</li>
 <li>Indicators for holidays</li>
 </ul>
-</div>
-</section>
-<section id="original-column" class="slide level2">
-<h2>Original column</h2>
-
-<img data-src="images/steve.gif" class="r-stretch quarto-figure-center"></section>
-<section id="features" class="slide level2">
-<h2>Features</h2>
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="images/cap.png"></p>
-</figure>
-</div>
 <aside class="notes">
-<p>At least that’s what we hope the difference looks like.</p>
+<p>The main point is that we try to maximize performance with different versions of the predictors.</p>
+<p>Mention that, for the Chicago data, the day or the week features are usually the most important ones in the model.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -466,13 +459,16 @@
           overflow: hidden!important;
           display:block!important;
       }</style></aside>
+</div>
 </section>
 <section id="general-definitions" class="slide level2">
-<h2>General definitions</h2>
+<h2>General definitions <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <ul>
 <li><p><em>Data preprocessing</em> steps allow your model to fit.</p></li>
 <li><p><em>Feature engineering</em> steps help the model do the least work to predict the outcome as well as possible.</p></li>
 </ul>
+<p>The recipes package can handle both!</p>
+<p>In a little bit, we’ll see successful (and unsuccessful) feature engineering methods for our example data.</p>
 <aside class="notes">
 <p>These terms are often used interchangeably in the ML community but we want to distinguish them.</p>
 <style type="text/css">
@@ -486,14 +482,6 @@
           overflow: hidden!important;
           display:block!important;
       }</style></aside>
-</section>
-<section id="general-definitions-1" class="slide level2">
-<h2>General definitions <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
-<ul>
-<li><p><em>Data preprocessing</em> steps allow your model to fit.</p></li>
-<li><p><em>Feature engineering</em> steps help the model do the least work to predict the outcome as well as possible.</p></li>
-</ul>
-<p>The recipes package can handle both!</p>
 </section>
 <section id="the-nhl-data" class="slide level2">
 <h2>The NHL data 🏒</h2>
@@ -798,7 +786,7 @@
 <p>Nonlinear transforms like natural splines, and so on!</p>
 </div>
 </section>
-<section id="section" class="slide level2" data-background-iframe="https://recipes.tidymodels.org/reference/index.html">
+<section id="section-1" class="slide level2" data-background-iframe="https://recipes.tidymodels.org/reference/index.html">
 <h2></h2>
 <div class="footer">
 
@@ -831,8 +819,8 @@
 </section>
 <section id="using-a-workflow" class="slide level2">
 <h2>Using a workflow <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "></h2>
-<div class="cell" data-hash="05-feature-engineering_cache/revealjs/unnamed-chunk-10_2c7f25fc53b47d4c2e51af0db3a8481a">
-<div class="sourceCode cell-code" id="cb15" data-code-line-numbers="3|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
+<div class="cell" data-hash="05-feature-engineering_cache/revealjs/unnamed-chunk-10_d25f3f3effb02851a0cf9029710a3f56">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
 <span id="cb15-2"><a href="#cb15-2"></a></span>
 <span id="cb15-3"><a href="#cb15-3"></a>nhl_glm_wflow <span class="ot">&lt;-</span></span>
 <span id="cb15-4"><a href="#cb15-4"></a>  <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
@@ -849,7 +837,7 @@
 <span id="cb15-15"><a href="#cb15-15"></a><span class="co">#&gt;   .metric  .estimator  mean     n std_err .config             </span></span>
 <span id="cb15-16"><a href="#cb15-16"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
 <span id="cb15-17"><a href="#cb15-17"></a><span class="co">#&gt; 1 accuracy binary     0.555     1      NA Preprocessor1_Model1</span></span>
-<span id="cb15-18"><a href="#cb15-18"></a><span class="co">#&gt; 2 roc_auc  binary     0.558     1      NA Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb15-18"><a href="#cb15-18"></a><span class="co">#&gt; 2 roc_auc  binary     0.557     1      NA Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="your-turn-2" class="slide level2" data-transition="slide-in">
@@ -874,13 +862,13 @@
 <span id="cb16-4"><a href="#cb16-4"></a><span class="co">#&gt; # A tibble: 7 × 7</span></span>
 <span id="cb16-5"><a href="#cb16-5"></a><span class="co">#&gt;   id         .pred_yes .pred_no  .row .pred_class on_goal .config             </span></span>
 <span id="cb16-6"><a href="#cb16-6"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;dbl&gt;    &lt;dbl&gt; &lt;int&gt; &lt;fct&gt;       &lt;fct&gt;   &lt;chr&gt;               </span></span>
-<span id="cb16-7"><a href="#cb16-7"></a><span class="co">#&gt; 1 validation     0.198 8.02e- 1    10 no          no      Preprocessor1_Model1</span></span>
-<span id="cb16-8"><a href="#cb16-8"></a><span class="co">#&gt; 2 validation     0.264 7.36e- 1    17 no          yes     Preprocessor1_Model1</span></span>
-<span id="cb16-9"><a href="#cb16-9"></a><span class="co">#&gt; 3 validation     0.189 8.11e- 1    23 no          no      Preprocessor1_Model1</span></span>
-<span id="cb16-10"><a href="#cb16-10"></a><span class="co">#&gt; 4 validation     1.00  8.39e-11    40 yes         yes     Preprocessor1_Model1</span></span>
-<span id="cb16-11"><a href="#cb16-11"></a><span class="co">#&gt; 5 validation     0.322 6.78e- 1    41 no          yes     Preprocessor1_Model1</span></span>
-<span id="cb16-12"><a href="#cb16-12"></a><span class="co">#&gt; 6 validation     1.00  8.39e-11    46 yes         no      Preprocessor1_Model1</span></span>
-<span id="cb16-13"><a href="#cb16-13"></a><span class="co">#&gt; 7 validation     0.354 6.46e- 1    55 no          no      Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb16-7"><a href="#cb16-7"></a><span class="co">#&gt; 1 validation     0.194 8.06e- 1    10 no          no      Preprocessor1_Model1</span></span>
+<span id="cb16-8"><a href="#cb16-8"></a><span class="co">#&gt; 2 validation     0.259 7.41e- 1    17 no          yes     Preprocessor1_Model1</span></span>
+<span id="cb16-9"><a href="#cb16-9"></a><span class="co">#&gt; 3 validation     0.185 8.15e- 1    23 no          no      Preprocessor1_Model1</span></span>
+<span id="cb16-10"><a href="#cb16-10"></a><span class="co">#&gt; 4 validation     1.00  4.63e-12    40 yes         yes     Preprocessor1_Model1</span></span>
+<span id="cb16-11"><a href="#cb16-11"></a><span class="co">#&gt; 5 validation     0.317 6.83e- 1    41 no          yes     Preprocessor1_Model1</span></span>
+<span id="cb16-12"><a href="#cb16-12"></a><span class="co">#&gt; 6 validation     1.00  4.50e-12    46 yes         no      Preprocessor1_Model1</span></span>
+<span id="cb16-13"><a href="#cb16-13"></a><span class="co">#&gt; 7 validation     0.348 6.52e- 1    55 no          no      Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section>
@@ -949,14 +937,14 @@
 <span id="cb17-5"><a href="#cb17-5"></a><span class="co">#&gt;   .threshold specificity sensitivity</span></span>
 <span id="cb17-6"><a href="#cb17-6"></a><span class="co">#&gt;        &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;</span></span>
 <span id="cb17-7"><a href="#cb17-7"></a><span class="co">#&gt; 1   -Inf          0            1    </span></span>
-<span id="cb17-8"><a href="#cb17-8"></a><span class="co">#&gt; 2      0.139      0.0303       0.977</span></span>
-<span id="cb17-9"><a href="#cb17-9"></a><span class="co">#&gt; 3      0.272      0.0642       0.955</span></span>
+<span id="cb17-8"><a href="#cb17-8"></a><span class="co">#&gt; 2      0.139      0.0315       0.977</span></span>
+<span id="cb17-9"><a href="#cb17-9"></a><span class="co">#&gt; 3      0.267      0.0642       0.954</span></span>
 <span id="cb17-10"><a href="#cb17-10"></a></span>
 <span id="cb17-11"><a href="#cb17-11"></a>glm_val_pred <span class="sc">%&gt;%</span> <span class="fu">roc_auc</span>(<span class="at">truth =</span> on_goal, <span class="at">estimate =</span> .pred_yes)</span>
 <span id="cb17-12"><a href="#cb17-12"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
 <span id="cb17-13"><a href="#cb17-13"></a><span class="co">#&gt;   .metric .estimator .estimate</span></span>
 <span id="cb17-14"><a href="#cb17-14"></a><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb17-15"><a href="#cb17-15"></a><span class="co">#&gt; 1 roc_auc binary         0.558</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb17-15"><a href="#cb17-15"></a><span class="co">#&gt; 1 roc_auc binary         0.557</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="roc-curve-plot" class="slide level2">
@@ -1152,7 +1140,7 @@
 <span id="cb22-4"><a href="#cb22-4"></a></span>
 <span id="cb22-5"><a href="#cb22-5"></a>nhl_effect_res <span class="ot">&lt;-</span></span>
 <span id="cb22-6"><a href="#cb22-6"></a>  nhl_effect_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb22-7"><a href="#cb22-7"></a>  <span class="fu">fit_resamples</span>(nhl_val)</span>
+<span id="cb22-7"><a href="#cb22-7"></a>  <span class="fu">fit_resamples</span>(nhl_val, <span class="at">control =</span> ctrl)</span>
 <span id="cb22-8"><a href="#cb22-8"></a></span>
 <span id="cb22-9"><a href="#cb22-9"></a><span class="fu">collect_metrics</span>(nhl_effect_res)</span>
 <span id="cb22-10"><a href="#cb22-10"></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>

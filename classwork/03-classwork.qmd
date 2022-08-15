@@ -17,7 +17,8 @@ library(tidymodels)
 data("tree_frogs", package = "stacks")
 
 tree_frogs <- tree_frogs %>%
-  mutate(t_o_d = factor(t_o_d)) %>%
+  mutate(t_o_d = factor(t_o_d),
+         age = age / 86400) %>%
   filter(!is.na(latency)) %>%
   select(-c(clutch, hatched))
 
@@ -86,15 +87,6 @@ workflow() %>%
   fit(data = frog_train) 
 ```
 
-Change the preprocessor. Here we just use the variables with no modifications at all.
-
-```{r}
-workflow() %>%
-  add_variables(outcomes = latency, predictors = everything()) %>%
-  add_model(tree_spec) %>%
-  fit(data = frog_train) 
-```
-
 "Shortcut" by specifying the preprocessor and model spec directly in the `workflow()` call:
 
 ```{r}
@@ -104,9 +96,7 @@ workflow(latency ~ ., tree_spec) %>%
 
 ## Your turn
 
-Edit this code so it:
-- creates a different model
-- uses one of the other `workflow()` interfaces
+This is how you'd fit a decision model:
 
 ```{r tree_wflow}
 tree_spec <-
@@ -118,6 +108,13 @@ tree_wflow <- workflow() %>%
   add_model(tree_spec)
 
 tree_wflow
+```
+
+Now use a similar approach to fit a linear model! Call it `lm_wflow`.
+
+```{r}
+### Your code here
+
 ```
 
 ## Predict with your model
@@ -155,20 +152,24 @@ library(rpart.plot)
 
 tree_fit %>%
   extract_fit_engine() %>%
-  rpart.plot()
+  rpart.plot(roundint = FALSE)
 ```
 
 ## Your turn
 
-Read the documentation for object extraction:
-https://workflows.tidymodels.org/reference/extract-workflow.html
-
-Try out some extraction methods on your trained workflow.
+Try extracting the model engine object from your fitted linear workflow, `lm_wflow`.
 
 ```{r}
-# Your code here!
+### Your code here
 
 ```
+
+What kind of object is it? What can you do with it?
+
+⚠️ Never `predict()` with any extracted components!
+
+You can also read the documentation for object extraction:
+https://workflows.tidymodels.org/reference/extract-workflow.html
 
 ## Your turn
 

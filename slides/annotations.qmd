@@ -84,7 +84,7 @@ The value of the seed is an integer and really has no meaning. Max has a script 
 cat(paste0("set.seed(", sample.int(10000, 5), ")", collapse = "\n"))
 ```
 
-# 03 - What  Makes A Model?
+# 03 - What Makes A Model?
 
 ## What is wrong with this? 
 
@@ -108,6 +108,7 @@ Generally speaking, this problem is referred to as [data leakage](https://en.wik
  * [On Over-fitting in Model Selection and Subsequent Selection Bias in Performance Evaluation](https://www.jmlr.org/papers/volume11/cawley10a/cawley10a.pdf)
 
 
+# 04 - Evaluating Models
 
 ## Where are the fitted models?
 
@@ -121,9 +122,6 @@ For more advanced use cases, you can extract and save them. See:
  * <https://www.tidymodels.org/learn/models/coefficients/> (an example)
 
 
-# 04 - Evaluating Models
-
-
 ## The final fit
 
 Since our data spending scheme created the resamples from the training set, `last_fit()` will use all of the training data to fit the final workflow. 
@@ -133,36 +131,20 @@ As shown in the Whole Game slides, there is a slightly different scheme used whe
 
 # 05 - Feature Engineering
 
-## Splitting the NHL data 
-
-`nhl_train` isn't really the right name for these data. 
-
-In a little bit, we'll use the `validation_split()` function to take the rows in `nhl_train` and make a validation set. The data that are not used in the validation set are the data that we will use to build the models during tuning. 
-
-Recall the Whole Game slide had: 
-
-```{r spending-diagram, echo = FALSE}
-#| fig-align: "center"
-
-knitr::include_graphics("images/whole-game-split.svg")
-```
-
-`nhl_train` has the "Not Testing" data. 
-
 ## Per-player statistics
 
 The effect encoding method essentially takes the effect of a variable, like player, and makes a data column for that effect. In our example, the ability of a player to have an on-goal shot is quantified by a model and then added as a data column to be used in the model. 
 
 Suppose NHL rookie Max has a single shot in the data and it was on goal. If we used a naive estimate for Max’s effect, the model is being told that Max should have a 100% chance of being on goal. That’s a very poor estimate since it is from a single data point. 
 
-Contrast this with seasoned player Davis, show has taken 250 shots and 75% of these were on goal. Davis’s proportion is more predictive because it is estimated with better data (i.e., more total shots). 
+Contrast this with seasoned player Davis, who has taken 250 shots and 75% of these were on goal. Davis’s proportion is more predictive because it is estimated with better data (i.e., more total shots). 
 Partial pooling leverages the entire data set and can borrow strength from all of the players. It is a common tool in Bayesian estimation and non-Bayesian mixed models. If a player’s data is of good quality, the partial pooling effect estimate is closer to the raw proportion. Max’s data is not great and is "shrunk" towards the center of the overall on goal proportion. Since there is so little known about Max’s shot history, this is a better effect estimate (until more data is available for him). 
 
 The Stan documentation has a pretty good vignette on this:  <https://cran.r-project.org/web/packages/rstanarm/vignettes/pooling.html>
 
 Also, _Bayes Rules!_ has a nice section on this: <https://www.bayesrulesbook.com/chapter-15.html>
 
-If the outcome were numeric, the effect would be the mean of the outcome per player. In this case, partial pooling is very similar to the James–Stein estimator: https://en.wikipedia.org/wiki/James–Stein_estimator
+If the outcome were numeric, the effect would be the mean of the outcome per player. In this case, partial pooling is very similar to the James–Stein estimator: <https://en.wikipedia.org/wiki/James–Stein_estimator>
 
 ## Player effects
 
@@ -207,7 +189,7 @@ parameter_object %>%
   update(mtry = mtry(c(1, 100)))
 ```
 
-In our case, the argument name is `deg_free` but we update it with `spline_degree`. 
+In our case, the argument name is `deg_free` but we update it with `spline_degree()`. 
 
 `deg_free` represents the general concept of degrees of freedom and could be associated with many different things. For example, if we ever had an argument that was the number of degrees of freedom for a $t$ distribution, we would call that argument `deg_free`. 
 
@@ -237,7 +219,7 @@ warnings?
 
 For linear regression, a computation is used called _matrix inversion_. The matrix in question is called the "model matrix" and it contains the predictor set for the training data. 
 
-Matrix inverse can fail if two or model columns: 
+Matrix inversion can fail if two or more columns: 
 
  * are identical, or 
  * add up to some other column. 
@@ -289,7 +271,7 @@ early_stop <- tibble(iterations = iterations, `ROC AUC` = roc_vals)
 early_stop %>% ggplot(aes(iterations, `ROC AUC`)) + geom_point() + theme_bw()
 ```
 
-This is likely do to over-fitting so we stop the model at eleven boosting iterations.  
+This is likely due to over-fitting so we stop the model at eleven boosting iterations.  
 
 Early stopping usually has good results and takes far less time. 
 
