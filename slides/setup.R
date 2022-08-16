@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 # devtools::install_github("gadenbuie/countdown")
 library(countdown)
 library(ggplot2)
-theme_set(theme_minimal())
+theme_set(theme_bw())
 options(cli.width = 70)
 
 train_color <- "#1a162d"
