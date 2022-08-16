@@ -1,0 +1,981 @@
+---
+title: "6 - Tuning Hyperparameters"
+subtitle: "Machine learning with tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+```{r more-setup}
+#| include: false
+library(rpart)
+library(partykit)
+
+cores <- parallel::detectCores(logical = FALSE)
+cl <- parallel::makePSOCKcluster(cores)
+doParallel::registerDoParallel(cl)
+
+options(width = 200)
+
+ggplot2::theme_set(ggplot2::theme_bw())
+```
+
+```{r previously}
+#| include: false
+library(tidymodels)
+library(embed)
+library(ongoal)
+
+tidymodels_prefer()
+
+set.seed(23)
+nhl_split <- initial_split(season_2015, prop = 3/4)
+nhl_split
+
+nhl_train_and_val <- training(nhl_split)
+nhl_test  <- testing(nhl_split)
+
+set.seed(234)
+nhl_val <- validation_split(nhl_train_and_val, prop = 0.80)
+
+nhl_train <- analysis(nhl_val$splits[[1]])
+
+nhl_distance_rec <-
+  recipe(on_goal ~ ., data = nhl_train) %>%
+  step_lencode_mixed(player, outcome = vars(on_goal)) %>%
+  step_other(all_nominal_predictors()) %>% # TODO: keep this?
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors()) %>%
+  step_mutate(
+    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    distance = log(distance)
+  )
+
+nhl_distance_wflow <-
+  workflow() %>%
+  add_recipe(nhl_distance_rec) %>%
+  add_model(logistic_reg())
+
+nhl_distance_res <-
+  nhl_distance_wflow %>%
+  fit_resamples(nhl_val)
+```
+
+## Tuning parameters
+
+Some model or preprocessing parameters cannot be estimated directly from the data.
+
+. . .
+
+Some examples:
+
+-   Tree depth in decision trees
+-   Number of neighbors in a K-nearest neighbor model
+
+# Activation function in neural networks?
+
+Sigmoidal functions, ReLu, etc.
+
+::: fragment
+Yes, it is a tuning parameter.
+✅
+:::
+
+# Number of PCA components to retain?
+
+::: fragment
+Yes, it is a tuning parameter.
+✅
+:::
+
+# Bayesian priors for model parameters?
+
+::: fragment
+Hmmmm, probably not.
+These are based on prior belief.
+❌
+:::
+
+# Covariance/correlation matrix structure in mixed models?
+
+::: fragment
+Yes, but it is unlikely to affect performance.
+:::
+
+::: fragment
+It will impact inference though.
+🤔
+:::
+
+
+
+# Is the random seed a tuning parameter?
+
+::: fragment
+Nope. It is not. 
+❌
+:::
+
+## Optimize tuning parameters
+
+-   Try different values and measure their performance.
+
+. . .
+
+-   Find good values for these parameters.
+
+. . .
+
+-   Once the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set.
+
+## Optimize tuning parameters
+
+The main two strategies for optimization are:
+
+. . .
+
+-   **Grid search** 💠 which tests a pre-defined set of candidate values
+
+-   **Iterative search** 🌀 which suggests/estimates new values of candidate parameters to evaluate
+
+## Choosing tuning parameters `r hexes("recipes","parsnip", "workflows", "tune")`
+
+Let's take our previous recipe and add a few changes:
+
+```{r}
+#| code-line-numbers: "13-14"
+glm_rec <-
+  recipe(on_goal ~ ., data = nhl_train) %>%
+  step_lencode_mixed(player, outcome = vars(on_goal)) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_mutate(
+    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    distance = log(distance),
+    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
+  ) %>%
+  step_rm(coord_x, coord_y) %>%
+  step_zv(all_predictors()) %>%
+  step_ns(angle, deg_free = tune("angle")) %>%
+  step_ns(distance, deg_free = tune("distance")) %>%
+  step_normalize(all_numeric_predictors())
+```
+
+. . .
+
+Let's `tune()` our spline terms!
+
+## Choosing tuning parameters `r hexes("recipes","parsnip", "workflows", "tune")`
+
+Let's take our previous recipe and add a few changes:
+
+```{r}
+#| code-line-numbers: "4"
+glm_spline_wflow <-
+  workflow() %>%
+  add_model(logistic_reg()) %>%
+  add_recipe(glm_rec)
+```
+
+
+## {background-image="https://www.tmwr.org/figures/ames-latitude-splines-1.png" background-size="contain"}
+
+:::notes
+Splines replace the existing numeric predictor with a set of columns that allow a model to emulate a flexible, nonlinear relationship.
+
+More spline terms = more "wiggly", i.e. flexibly model a nonlinear relationship
+
+How many spline terms? This is called *degrees of freedom*
+
+2 and 5 look like they underfit; 20 and 100 look like they overfit
+:::
+
+## Splines and nonlinear relationships
+
+```{r}
+#| echo: false
+#| fig-align: center
+#| fig.width: 16
+#| fig.height: 8
+example_data <- nhl_train %>% 
+  mutate(distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2))
+
+example_data %>%
+  group_by(distance = cut(distance, c(0, seq(10, 60, 5), 100))) %>%
+  summarize(pct_on_goal = mean(on_goal == "yes"), n = n()) %>%
+  mutate(distance = forcats::fct_recode(distance, "<10" = "(0,10]", ">60" = "(60,100]")) %>%
+  ggplot(aes(distance, pct_on_goal)) +
+  geom_line(group = 1, size = 2, alpha = 0.8, color = test_color) +
+  scale_y_continuous(labels = scales::percent) +
+  expand_limits(y = 0) +
+  labs(x = "Distance to goal (bucketed)",
+       y = "% of shots in this bucket that are on goal")
+
+```
+
+:::notes
+Our hockey data exhibits nonlinear relationships
+
+We can model nonlinearity like this via a *model* (later this afternoon) or *feature engineering*
+
+How do we decide how "wiggly" or flexible to make our spline features? TUNING 
+:::
+
+## Grid search
+
+#### Parameters
+
+-   The tidymodels framework provides pre-defined information on tuning parameters (such as their type, range, transformations, etc).
+
+-   The `extract_parameter_set_dials()` function extracts these tuning parameters and the info.
+
+::: fragment
+#### Grids
+
+-   Create your grid manually or automatically.
+
+-   The `grid_*()` functions can make a grid.
+:::
+
+::: notes
+Most basic (but very effective) way to tune models
+:::
+
+## Create a grid `r hexes(c("dials", "workflows"))`
+
+```{r get-param}
+#| tidy: false
+glm_spline_wflow %>% 
+  extract_parameter_set_dials()
+```
+
+::: fragment
+A parameter set can be updated (e.g. to change the ranges).
+:::
+
+## Create a grid `r hexes(c("dials", "workflows"))`
+
+::: columns
+::: {.column width="50%"}
+```{r get-grid}
+set.seed(2)
+grid <- 
+  glm_spline_wflow %>% 
+  extract_parameter_set_dials() %>% 
+  grid_latin_hypercube(size = 25)
+
+grid
+```
+:::
+
+::: {.column width="50%"}
+::: fragment
+-   A *space-filling design* like this tends to perform better than random grids.
+-   Space-filling designs are also usually more efficient than regular grids.
+:::
+:::
+:::
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Create a grid for our tunable workflow.*
+
+*Try creating a regular grid.*
+
+```{r}
+#| echo: false
+countdown::countdown(minutes = 3, id = "make-grid")
+```
+
+## Create a grid `r hexes(c("dials", "workflows"))`
+
+```{r get-regular-grid}
+#| code-line-numbers: "5"
+set.seed(2)
+grid <- 
+  glm_spline_wflow %>% 
+  extract_parameter_set_dials() %>% 
+  grid_regular(levels = 25)
+
+grid
+```
+
+:::notes
+Note that even though we requested 25x25=625 rows, we only got 15x15=225 back, since the `deg_free` parameters only have a range of `1->15`.
+:::
+
+## Update parameter ranges `r hexes(c("dials", "workflows"))` {.annotation}
+
+
+```{r mod-grid-code}
+#| code-line-numbers: "5-6"
+set.seed(2)
+grid <- 
+  glm_spline_wflow %>% 
+  extract_parameter_set_dials() %>% 
+  update(angle = spline_degree(c(2L, 20L)),
+         distance = spline_degree(c(2L, 20L))) %>% 
+  grid_latin_hypercube(size = 25)
+
+grid
+```
+
+::: notes
+Even though `angle` is a `deg_free` parameter in `step_ns()`, we don't use the dials `deg_free()` object here. We have a special `spline_degree()` function that has better defaults for splines.
+:::
+
+## The results `r hexes(c("dials", "workflows"))`
+
+```{r show-grid-code}
+#| output-location: column
+#| fig-width: 5
+#| fig-height: 5.1
+#| fig-align: 'center'
+grid %>% 
+  ggplot(aes(angle, distance)) +
+  geom_point(size = 4)
+```
+
+# Use the `tune_*()` functions to tune models
+
+## Spline grid search `r hexes(c("dials", "workflows", "tune"))` {.annotation}
+
+```{r tuning} 
+#| cache: true
+set.seed(9)
+ctrl <- control_grid(save_pred = TRUE, parallel_over = "everything")
+
+glm_spline_res <-
+  glm_spline_wflow %>%
+  tune_grid(resamples = nhl_val, grid = grid, control = ctrl)
+
+glm_spline_res
+```
+
+::: notes
+-   `tune_grid()` is representative of tuning function syntax
+-   similar to `fit_resamples()`
+:::
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Tune our `glm_wflow`.*
+
+*What happens if you don't supply a `grid` argument to `tune_grid()`?*
+
+```{r}
+#| echo: false
+countdown::countdown(minutes = 5, id = "tune-glm")
+```
+
+## Grid results `r hexes(c("tune"))`
+
+```{r autoplot}
+#| fig-align: 'center'
+#| dev-args: list(bg = "transparent")
+autoplot(glm_spline_res)
+```
+
+## Tuning results `r hexes(c("tune"))`
+
+```{r}
+collect_metrics(glm_spline_res)
+```
+
+## Tuning results `r hexes(c("tune"))`
+
+```{r}
+collect_metrics(glm_spline_res, summarize = FALSE)
+```
+
+## Choose a parameter combination `r hexes(c("tune"))`
+
+```{r}
+show_best(glm_spline_res, metric = "roc_auc")
+```
+
+## Choose a parameter combination `r hexes(c("tune"))`
+
+Create your own tibble for final parameters or use one of the `tune::select_*()` functions:
+
+```{r}
+select_best(glm_spline_res, metric = "roc_auc")
+```
+
+. . .
+
+This best result has:
+
+-   low-degree spline for `angle` (less "wiggly", less complex)
+-   higher-degree spline for `distance` (more "wiggly", more complex)
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Try an alternative selection strategy.*
+
+*Read the docs for `select_by_pct_loss()`.*
+
+*Try choosing a model that has a simpler (less "wiggly") relationship for `distance`.*
+
+```{r}
+#| echo: false
+countdown::countdown(minutes = 5, id = "select-by-pct-loss")
+```
+
+## Choose a parameter combination `r hexes(c("tune"))`
+
+```{r}
+select_best(glm_spline_res, metric = "roc_auc")
+select_by_pct_loss(glm_spline_res, distance, metric = "roc_auc")
+```
+
+# Boosted trees 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌵🌴🌲🌳🌴🌵🌳🌴🌳
+
+## Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵
+
+-   Ensemble many decision tree models
+
+::: fragment
+### Review how a decision tree model works:
+
+-   Series of splits or if/then statements based on predictors
+
+-   First the tree *grows* until some condition is met (maximum depth, no more data)
+
+-   Then the tree is *pruned* to reduce its complexity
+:::
+
+## Single decision tree
+
+```{r tree-example}
+#| echo: false
+#| fig.width: 16
+#| fig.height: 8
+#| fig-align: 'center'
+#| dev-args: list(bg = "transparent")
+tree_mod <- 
+    rpart::rpart(
+        on_goal ~ . - player - offense_team - defense_team - coord_x - coord_y,
+        data = nhl_train,
+        control = rpart::rpart.control(maxdepth = 3, cp = 0.001)
+    ) %>% 
+    partykit::as.party()
+plot(tree_mod)
+```
+
+## Boosted trees 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵
+
+Boosting methods fit a *sequence* of tree-based models.
+
+. . .
+
+-   Each tree is dependent on the one before and tries to compensate for any poor results in the previous trees.
+
+-   This is like gradient-based steepest ascent methods from calculus.
+
+## Boosted tree tuning parameters  {.annotation}
+
+Most modern boosting methods have *a lot* of tuning parameters!
+
+. . .
+
+-   For tree growth and pruning (`min_n`, `max_depth`, etc)
+
+-   For boosting (`trees`, `stop_iter`, `learn_rate`)
+
+. . .
+
+We'll use *early stopping* to stop boosting when a few iterations produce consecutively worse results.
+
+## Comparing tree ensembles
+
+::: columns
+::: {.column width="50%"}
+Random forest
+
+* Independent trees
+* Bootstrapped data
+* No pruning
+* 1000's of trees
+:::
+
+::: {.column width="50%"}
+Boosting
+
+* Dependent trees
+* Different case weights
+* Tune tree parameters
+* Far fewer trees
+:::
+:::
+
+The general consensus for tree-based models is, in terms of performance: boosting > random forest > bagging > single trees.
+
+
+## Boosted tree code {.annotation}
+
+```{r xgboost-specs}
+xgb_spec <-
+  boost_tree(
+    trees = 500, min_n = tune(), stop_iter = tune(), tree_depth = tune(),
+    learn_rate = tune(), loss_reduction = tune()
+  ) %>%
+  set_mode("classification") %>% 
+  set_engine("xgboost", validation = 1/10) # <- for better early stopping
+
+xgb_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_lencode_mixed(player, outcome = vars(on_goal)) %>% 
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+
+xgb_wflow <- 
+  workflow() %>% 
+  add_model(xgb_spec) %>% 
+  add_recipe(xgb_rec)
+```
+
+:::notes
+`validation` is an argument to `parsnip::xgb_train()`, not directly to xgboost. It generates a validation set that is used by xgboost when evaluating model performance. It is eventually assigned to `xgb.train(watchlist = list(validation = data))`.
+
+See `translate(xgb_spec)` to see where it is passed to `parsnip::xgb_train()`.
+:::
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Create your boosted tree workflow.*
+
+```{r}
+#| echo: false
+countdown::countdown(minutes = 3, id = "xgb-wflow")
+```
+
+## Running in parallel
+
+::: columns
+::: {.column width="60%"}
+-   Grid search, combined with resampling, requires fitting a lot of models!
+
+-   These models don't depend on one another and can be run in parallel.
+
+We can use a *parallel backend* to do this:
+
+```{r, eval= FALSE}
+cores <- parallel::detectCores(logical = FALSE)
+cl <- parallel::makePSOCKcluster(cores)
+doParallel::registerDoParallel(cl)
+
+# Now call `tune_grid()`!
+
+# Shut it down with:
+foreach::registerDoSEQ()
+parallel::stopCluster(cl)
+```
+:::
+
+::: {.column width="40%"}
+```{r resample-times}
+#| echo: false
+#| out-width: '100%'
+#| fig-width: 6
+#| fig-height: 6
+#| fig-align: 'center'
+#| dev-args: list(bg = "transparent")
+load("resamples_times.RData")
+resamples_times %>%
+  dplyr::rename(operation = label) %>% 
+  ggplot(aes(y = id_alt, x = duration, fill = operation)) +
+  geom_bar(stat = "identity", color = "black") +
+  labs(y = NULL, x = "Elapsed Time") + 
+  scale_fill_brewer(palette = "Paired") +
+  theme(legend.position = "top")
+```
+:::
+:::
+
+## Running in parallel
+
+Speed-ups are fairly linear up to the number of physical cores (10 here).
+
+```{r}
+#| echo: false
+#| out-width: '90%'
+#| fig-width: 9
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev-args: list(bg = "transparent")
+load("xgb_times.RData")
+ggplot(times, aes(x = num_cores, y = speed_up, color = parallel_over, shape = parallel_over)) + 
+  geom_abline(lty = 1) + 
+  geom_point(size = 2) + 
+  geom_line() +
+  facet_wrap(~ preprocessing) + 
+  coord_obs_pred() + 
+  scale_color_manual(values = c("#7FC97F", "#386CB0")) +
+  labs(x = "Number of Workers", y = "Speed-up")  +
+  theme(legend.position = "top")
+```
+
+:::notes
+Faceted on the expensiveness of preprocessing used.
+:::
+
+## Tuning `r hexes(c("tune"))`
+
+This will take some time to run ⏳
+
+```{r xgboost-tune}
+#| cache: true
+set.seed(9)
+
+xgb_res <-
+  xgb_wflow %>%
+  tune_grid(resamples = nhl_val, grid = 15, control = ctrl) # automatic grid now!
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Start tuning the boosted tree model!*
+
+*We won't wait for everyone's tuning to finish, but take this time to get it started before we move on.*
+
+```{r}
+#| echo: false
+countdown::countdown(minutes = 3, id = "tune-xgboost")
+```
+
+## Tuning results `r hexes(c("tune"))`
+
+```{r}
+xgb_res
+```
+
+## Tuning results `r hexes(c("tune"))`
+
+```{r autoplot-xgboost}
+#| out-width: '100%'
+#| fig-width: 11
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev-args: list(bg = "transparent")
+autoplot(xgb_res)
+```
+
+## Again with the location features
+
+```{r xgb-coord}
+coord_rec <- 
+  xgb_rec %>%
+  step_mutate(
+    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi)),
+    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
+    distance = log(distance),
+    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
+  ) %>% 
+  step_rm(coord_x, coord_y)
+
+xgb_coord_wflow <- 
+  workflow() %>% 
+  add_model(xgb_spec) %>% 
+  add_recipe(coord_rec)
+
+set.seed(9)
+xgb_coord_res <-
+  xgb_coord_wflow %>%
+  tune_grid(resamples = nhl_val, grid = 20, control = ctrl)
+```
+
+## Did the machine figure it out? 
+
+```{r}
+show_best(xgb_res, metric = "roc_auc")
+
+show_best(xgb_coord_res, metric = "roc_auc")
+```
+
+
+## Compare models
+
+Best logistic regression results:
+
+```{r logistic-best}
+glm_spline_res %>% 
+  show_best(metric = "roc_auc", n = 1) %>% 
+  select(.metric, .estimator, mean, n, std_err, .config)
+```
+
+::: fragment
+Best boosting results:
+
+```{r xgboost-best}
+xgb_coord_res %>% 
+  show_best(metric = "roc_auc", n = 1) %>% 
+  select(.metric, .estimator, mean, n, std_err, .config)
+```
+:::
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Can you get better ROC results with xgboost?*
+
+*Try increasing `learn_rate` beyond the original range.*
+
+```{r}
+#| echo: false
+countdown::countdown(minutes = 20, id = "improve-xgb")
+```
+
+## Updating the workflow `r hexes(c("workflows", "tune"))`
+
+```{r final-select-best}
+#| cache: true
+
+best_auc <- select_best(glm_spline_res, metric = "roc_auc")
+best_auc
+
+glm_spline_wflow <-
+  glm_spline_wflow %>% 
+  finalize_workflow(best_auc)
+
+glm_spline_wflow
+```
+
+## The final fit to the NHL data `r hexes(c("workflows", "tune"))`  {.annotation}
+
+```{r final-last-fit}
+#| cache: true
+test_res <- 
+  glm_spline_wflow %>% 
+  last_fit(split = nhl_split)
+
+test_res
+```
+
+. . .
+
+Remember that `last_fit()` fits one time with the combined training and validation set, then evaluates one time with the testing set.
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Finalize your workflow with the best parameters.*
+
+*Create a final fit.*
+
+```{r}
+#| echo: false
+countdown::countdown(minutes = 8, id = "finalize-xgb")
+```
+
+## Estimates of ROC AUC `r hexes(c("tune"))`
+
+Validation results from tuning:
+
+```{r val-res}
+glm_spline_res %>% 
+  show_best(metric = "roc_auc", n = 1) %>% 
+  select(.metric, mean, n, std_err)
+```
+
+::: fragment
+Test set results:
+
+```{r test-res}
+test_res %>% collect_metrics()
+```
+:::
+
+## Final fitted workflow
+
+Extract the final fitted workflow, fit using the training set:
+
+```{r}
+final_glm_spline_wflow <- 
+  test_res %>% 
+  extract_workflow()
+
+# use this object to predict or deploy
+predict(final_glm_spline_wflow, nhl_test[1:3,])
+```
+
+## Next steps
+
+
+-   [Document the model](https://vetiver.rstudio.com/learn-more/model-card.html).
+
+. . .
+
+-   [Deploy the model](https://vetiver.rstudio.com/get-started/).
+
+. . .
+
+-   Create an [applicability domain model](https://applicable.tidymodels.org/) to help monitor our data over time.
+
+. . .
+
+-   Use [explainers](https://www.tmwr.org/explain.html) to characterize the model and the predictions.
+
+
+## Explain yourself  {.annotation}
+
+
+There are two categories of model explanations, **global** and **local**.
+
+. . .
+
+- Global model explanations provide an overall understanding aggregated over a _whole set_ of observations.
+
+- Local model explanations provide information about a prediction for a _single_ observation.
+
+
+. . .
+
+You can also build global model explanations by aggregating local model explanations.
+
+# tidymodels integrates with model explainability frameworks
+
+![](https://dalex.drwhy.ai/misc/dalex_even.png){.absolute bottom="-300" right="0" width="300"}
+
+## A tidymodels explainer  {.annotation}
+
+We can build explainers using:
+
+- original, basic predictors
+- derived features
+
+```{r}
+library(DALEXtra)
+
+glm_explainer <- explain_tidymodels(
+  final_glm_spline_wflow,
+  data = dplyr::select(nhl_train, -on_goal),
+  # DALEX required an integer for factors:
+  y = as.integer(nhl_train$on_goal),
+  verbose = FALSE
+)
+```
+
+## Explain the x coordinates
+
+With our explainer, let's create [partial dependence profiles](https://ema.drwhy.ai/partialDependenceProfiles.html):
+
+```{r}
+set.seed(123)
+pdp_coord_x <- model_profile(
+  glm_explainer,
+  variables = "coord_x",
+  N = 500,
+  groups = "position"
+)
+```
+
+. . .
+
+You can use the default `plot()` method or create your own visualization.
+
+## Explain the x coordinates
+
+```{r pdp}
+#| echo: false
+#| fig-align: 'center'
+#| fig.height: 5
+p <- 
+  as_tibble(pdp_coord_x$agr_profiles) %>%
+  mutate(`_label_` = stringr::str_remove(`_label_`, "^[^_]*_")) %>%
+  ggplot(aes(`_x_`, `_yhat_`)) +
+  geom_line(data = as_tibble(pdp_coord_x$cp_profiles),
+            aes(x = coord_x, group = `_ids_`),
+            size = 0.5, alpha = 0.05, color = "gray50")
+
+p +
+  labs(y = "Predicted probability of not being on goal")
+```
+
+## Explain the x coordinates
+
+```{r pdp-grouped}
+#| echo: false
+#| fig-align: 'center'
+#| fig.height: 5.5
+p +
+  geom_line(aes(color = `_label_`), size = 1.2, alpha = 0.8) +
+  theme(legend.position="top") +
+  labs(y = "Predicted probability of not being on goal", color = NULL)
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Create an explainer for our glm model.*
+
+*Try grouping by another variable, like `game_type` or `dow`.*
+
+```{r}
+#| echo: false
+countdown::countdown(minutes = 5, id = "explainer")
+```
+
+
+
+```{r teardown}
+#| include: false
+foreach::registerDoSEQ()
+parallel::stopCluster(cl)
+
+# Used in whole game slides in introduction
+spline_curves <- 
+  glm_spline_res %>% 
+  collect_predictions(parameters = select_best(glm_spline_res, metric = "roc_auc")) %>% 
+  roc_curve(on_goal, .pred_yes) %>% 
+  mutate(wflow_id = "splines") %>% 
+  relocate(wflow_id)
+
+xgb_curves <- 
+  xgb_coord_res %>% 
+  collect_predictions(parameters = select_best(xgb_coord_res, metric = "roc_auc")) %>% 
+  roc_curve(on_goal, .pred_yes) %>% 
+  mutate(wflow_id = "xgboost") %>% 
+  relocate(wflow_id)
+
+xgb_coord_curves <- 
+  xgb_coord_res %>% 
+  collect_predictions(parameters = select_best(xgb_coord_res, metric = "roc_auc")) %>% 
+  roc_curve(on_goal, .pred_yes) %>% 
+  mutate(wflow_id = "xgboost-coords") %>% 
+  relocate(wflow_id)
+
+roc_curves_part_6 <- bind_rows(spline_curves, xgb_curves, xgb_coord_curves) 
+
+save(roc_curves_part_6, file = "roc_curves_part_6.RData", compress = TRUE)
+```
