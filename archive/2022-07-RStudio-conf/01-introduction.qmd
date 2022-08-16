@@ -1,10 +1,20 @@
 ---
 title: "1 - Introduction"
+subtitle: "Machine learning with tidymodels"
 format:
   revealjs: 
     slide-number: true
     footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
     theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
 ---
 
 ```{r}
@@ -12,48 +22,506 @@ format:
 #| file: setup.R
 ```
 
-## part 1 - introduction
+::: r-fit-text
+Welcome!
+:::
 
- * using R for modeling (good and bad parts)
- * introduce tidymodels
- * tidyverse review
- * hands-on: example data warm up
- * the model versus the modeling process
- * naming conventions
+::: columns
+::: {.column width="50%"}
 
-* the whole game, this is the process and we are at this part (graphic?); use a workflow (and explain briefly) 
+<center>
 
-* move feature engineering to second day
+### <i class="fa fa-wifi"></i>
 
-* modeling -> resampling -> tune then get to feature engineering and workflows
+Wi-Fi network name
 
-* data splitting
-* modeling
-  - walk through multiple models
-  - workflows
-* resample the model 
-* tuning 
-* feat eng + workflows
+`conf22`
 
-Data: 
+</center>
 
- * AD data for first day 
- * hockey for feature engineering etc
- * flights for case study
+:::
 
-- Day 1
-  - intro
-  - whole game
-  - Dataset 1
-  - data splitting
-  - modeling + workflow
-  - yardstick
-  - resample + fit_resamples()
-  - glimpse of tune_grid
+::: {.column width="50%"}
+
+<center>
+
+### <i class="fa fa-key"></i>
+
+Wi-Fi password
+
+`together!`
+
+</center>
+
+:::
+:::
+
+## Workshop policies
+
+-   Please do not photograph people wearing red lanyards
+
+-   There are gender neutral bathrooms near National Harbor rooms
+
+-   A meditation room is located at National Harbor 9 (8am - 5pm, Mon - Thurs)
+
+-   A lactation room is located at Potomac Dressing Room (8am - 5pm, Mon - Thurs)
+
+
+## Workshop policies
+
+-   Please review the rstudio::conf code of conduct, which applies to all workshops: <https://www.rstudio.com/conference/2022/2022-conf-code-of-conduct/>
+
+-   CoC site has info on how to report a problem (in person, email, phone)
+
+-   You are required to wear a mask that fully covers your mouth and nose at all times in all public spaces
+
+## Who are you?
+
+-   You can use the magrittr `%>%` or base R `|>` pipe
+
+-   You are familiar with functions from dplyr, tidyr, ggplot2
+
+-   You have exposure to basic statistical concepts
+
+-   You do **not** need intermediate or expert familiarity with modeling or ML
+
+## Who are we?
+
+::: columns
+::: {.column width="50%"}
+-   Simon Couch
+-   Hannah Frick
+-   Emil Hvitfeldt
+-   Max Kuhn
+:::
+
+::: {.column width="50%"}
+-   Julia Silge
+-   David Robinson
+-   Davis Vaughan
+:::
+:::
+
+## Who are we?
+
+::: columns
+::: {.column width="50%"}
+-   Kelly Bodwin
+-   Michael Chow
+-   Pritam Dalal
+-   Matt Dancho
+-   Jon Harmon
+:::
+
+::: {.column width="50%"}
+-   Mike Mahoney
+-   Edgar Ruiz
+-   Asmae Toumi
+-   Qiushi Yan
+:::
+:::
+
+. . .
+
+Many thanks to Julie Jung, Alison Hill, and Desirée De Leon for their role in creating these materials!
+
+## Asking for help
+
+. . .
+
+🟪 "I'm stuck and need help!"
+
+. . .
+
+🟩 "I finished the exercise"
+
+
+## `r emo::ji("eyes")` {.annotation}
+
+![](images/pointing.svg){.absolute top="0" right="0"}
+
+## Plan for this workshop
+
+-   *Today:* 
+
+    - Your data budget
+    - What makes a model
+    - Evaluating models
+
+-   *Tomorrow:*
+    
+    - Feature engineering
+    - Tuning hyperparameters
+    - Wrapping up!
+
+##  {.center}
+
+### Introduce yourself to your neighbors 👋
+
+<br></br>
+
+### <i class="fa fa-cloud"></i> Log in to RStudio Cloud here (free):
+
+[bit.ly/tidymodels-rstudioconf-2022](https://bit.ly/tidymodels-rstudioconf-2022)
+
+## What is machine learning?
+
+![](https://imgs.xkcd.com/comics/machine_learning.png){fig-align="center"}
+
+::: footer
+<https://xkcd.com/1838/>
+:::
+
+## What is machine learning?
+
+![](images/what_is_ml.jpg){fig-align="center"}
+
+::: footer
+Illustration credit: <https://vas3k.com/blog/machine_learning/>
+:::
+
+## What is machine learning?
+
+![](images/ml_illustration.jpg){fig-align="center"}
+
+::: footer
+Illustration credit: <https://vas3k.com/blog/machine_learning/>
+:::
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+. . .
+
+*How are statistics and machine learning related?*
+
+*How are they similar? Different?*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "statistics-vs-ml")
+```
+
+::: notes
+the "two cultures"
+
+model first vs. data first
+
+inference vs. prediction
+:::
+
+## What is tidymodels? `r hexes("tidymodels")`
+
+```{r}
+#| message: true
+library(tidymodels)
+```
+
+##  {background-image="images/tm-org.png" background-size="contain"}
+
+## The whole game
+
+- Tomorrow we will walk through a case study in detail to illustrate feature engineering and model tuning. 
+
+- Today we will walk through the analysis at a higher level to show the model development process as a whole and give you an introduction to the data set.
+
+- The data are from the NHL where we want to predict whether a shot was on-goal or not! `r emo::ji("ice_hockey")`
+
+- It’s a good example to show how model development works. 
+
+## Shots on goal
+
+```{r rink-shots}
+#| echo: false
+#| out-width: '90%'
+#| fig-width: 7
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+library(ongoal)
+set.seed(100)
+on_goal %>% 
+  sample_n(500) %>%
+  plot_nhl_shots(emphasis = on_goal)
+```
+
+
+## Data spending
+
+```{r spending-diagram, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-split.svg")
+```
+
+## A first model
+
+```{r logistic-diagram, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-logistic.svg")
+```
+
+## Starting point: logistic regression
+
+- We'll start by using basic logistic regression to predict our binary outcome. 
+
+- Our first model will have `r ncol(season_2015) - 1` simple predictor columns. 
+
+- One initial question: there are `r length(unique(season_2015$player))` players taking shots. 
+
+- For logistic regression, do we convert these to binary indicators (a.k.a. "dummies")? 
+
+
+
+## Basic features (inc dummy variables)
+
+```{r basic-features}
+#| echo: false
+#| out-width: '70%'
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+plot_roc <- function(x, highlight = "1_dummy_logistic") {
+  emphasize <- dplyr::filter(x, wflow_id == highlight)
   
-- Day 2
-  - Remind them how fit_resamples() worked
-  - tune_grid() on Dataset 1
-  - Switch to Dataset 2
-  - Feature engineering on Dataset 2
-  - Modeling + Tuning on Dataset 2
+  lvls <- levels(x$wflow_id)
+  hl_lvl <- which(lvls == highlight)
+  if (hl_lvl > 1) {
+    prev_lvls <- lvls[1:(hl_lvl - 1)]
+    others    <- dplyr::filter(x, wflow_id %in% prev_lvls)
+  } else {
+    others <- x[0,]
+  }
+  
+  p <- 
+    ggplot(others, aes(x = 1 - specificity, y = sensitivity)) + 
+    geom_abline(col = "red", lty = 3) +
+    geom_step(aes(group = wflow_id, col = wflow_id), alpha = 1/4, lwd = 1, show.legend = FALSE) + 
+    geom_step(aes(group = wflow_id, col = wflow_id), data = emphasize, alpha = 1, lwd = 1, show.legend = FALSE) +
+    scale_colour_viridis_d(drop = FALSE) +
+    coord_fixed()
+  
+  p
+}
+
+lvls <- c("1_dummy_logistic", "encoded_logistic", "2_angle_logistic", "3_dist_logistic", 
+          "4_bgl_logistic", "splines", "xgboost", "xgboost-coords")
+
+load("roc_curves_part_5.RData")
+load("roc_curves_part_6.RData")
+
+roc_curves <- 
+  bind_rows(roc_curves_part_5, roc_curves_part_6) %>%
+  mutate(wflow_id = factor(wflow_id, levels = lvls))
+
+plot_roc(roc_curves, "1_dummy_logistic") + theme_bw()
+```
+
+
+## Different player encoding
+
+```{r player-encoding}
+#| echo: false
+#| out-width: '70%'
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+plot_roc(roc_curves, "encoded_logistic") + theme_bw()
+```
+
+## What about location
+
+The previous models used the x/y coordinates. 
+
+Are there better ways to represent shot location? 
+
+How can we make location more usable for the model? 
+
+
+## Add shot angle? 
+
+```{r shot-angle}
+#| echo: false
+#| out-width: '70%'
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+plot_roc(roc_curves, "2_angle_logistic") + theme_bw()
+```
+
+## Add shot distance? 
+
+```{r shot-dist}
+#| echo: false
+#| out-width: '70%'
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+plot_roc(roc_curves, "3_dist_logistic") + theme_bw()
+```
+
+## Add shot behind goal line? 
+
+```{r shot-behind-goal}
+#| echo: false
+#| out-width: '70%'
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+plot_roc(roc_curves, "4_bgl_logistic") + theme_bw()
+```
+
+
+## Nonlinear terms for angle and distance 
+
+```{r splines}
+#| echo: false
+#| out-width: '70%'
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+plot_roc(roc_curves, "splines") + theme_bw()
+```
+
+
+## Try another model
+
+```{r boost-diagram, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-boost.svg")
+```
+
+
+## Switch to boosting and basic features
+
+```{r xgboost-model}
+#| echo: false
+#| out-width: '70%'
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+plot_roc(roc_curves, "xgboost") + theme_bw()
+```
+
+
+## Boosting with location features
+
+```{r xgboost-coord-model}
+#| echo: false
+#| out-width: '70%'
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+plot_roc(roc_curves, "xgboost-coords") + theme_bw()
+```
+
+
+
+## Choose wisely...
+
+```{r select-diagram, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-select.svg")
+```
+
+
+## Finalize and verify {.annotation}
+
+```{r final-diagram, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-final.svg")
+```
+
+
+## ... and so on
+
+Once we find an acceptable model and feature set, the process is to 
+
+ * Confirm our results on the test set. 
+ * Document the data and model development process. 
+ * Deploy, monitor, etc. 
+ 
+
+## Let's install some packages
+
+If you are using your own laptop instead of RStudio Cloud:
+
+```{r}
+#| eval: false
+install.packages(c("DALEXtra", "doParallel", "embed", "forcats",
+                   "lme4", "ranger", "remotes", "rpart", 
+                   "rpart.plot", "stacks", "tidymodels",
+                   "vetiver", "xgboost"))
+
+remotes::install_github("topepo/ongoal@v0.0.2")
+```
+
+. . .
+
+<br></br>
+
+### <i class="fa fa-cloud"></i> Or log in to RStudio Cloud:
+
+[bit.ly/tidymodels-rstudioconf-2022](http://bit.ly/tidymodels-rstudioconf-2022)
+
+
+## Our versions
+
+```{r pkg-list, echo = FALSE}
+deps <- c("DALEXtra", "doParallel", "embed", "forcats", "ranger", "remotes", "rpart", 
+          "rpart.plot", "stacks", "tidymodels", "vetiver", "xgboost")
+loaded <- purrr::map(deps, ~ library(.x, character.only = TRUE))
+excl <- c("remotes", "iterators", "emo", "countdown", "stats", "graphics", 
+          "grDevices", "utils", "datasets", "methods", "base", "forcats", 
+          "infer", "foreach")
+loaded <- loaded[[length(loaded)]]
+loaded <- loaded[!(loaded %in% excl)]
+pkgs <- 
+  sessioninfo::package_info(loaded, dependencies = FALSE) %>% 
+  select(-date)
+df <- tibble::tibble(
+  package = pkgs$package,
+  version = pkgs$ondiskversion,
+  source = pkgs$source
+) %>% 
+  mutate(
+    source = gsub(" (R 4.2.0)", "", source, fixed = TRUE),
+    source = substr(source, 1, 31),
+    info = paste0(package, " (", version, ", ", source, ")")
+  )
+pkg_info <- knitr::combine_words(df$info)
+```
+
+`r pkg_info`
+

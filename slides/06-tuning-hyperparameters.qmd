@@ -360,7 +360,7 @@ grid %>%
 ## Spline grid search `r hexes(c("dials", "workflows", "tune"))` 
 
 ```{r tuning} 
-#| cache: true
+
 set.seed(9)
 ctrl <- control_grid(save_pred = TRUE, parallel_over = "everything")
 
@@ -629,7 +629,7 @@ Faceted on the expensiveness of preprocessing used.
 This will take some time to run ⏳
 
 ```{r xgboost-tune}
-#| cache: true
+
 set.seed(9)
 
 xgb_res <-
@@ -727,7 +727,7 @@ xgb_coord_res %>%
 ## Updating the workflow `r hexes(c("workflows", "tune"))`
 
 ```{r final-select-best}
-#| cache: true
+
 
 best_auc <- select_best(glm_spline_res, metric = "roc_auc")
 best_auc
@@ -742,7 +742,7 @@ glm_spline_wflow
 ## The final fit to the NHL data `r hexes(c("workflows", "tune"))`  {.annotation}
 
 ```{r final-last-fit}
-#| cache: true
+
 test_res <- 
   glm_spline_wflow %>% 
   last_fit(split = nhl_split)
@@ -850,7 +850,7 @@ glm_explainer <- explain_tidymodels(
   final_glm_spline_wflow,
   data = dplyr::select(nhl_train, -on_goal),
   # DALEX required an integer for factors:
-  y = as.integer(nhl_train$on_goal),
+  y = as.integer(nhl_train$on_goal) - 1,
   verbose = FALSE
 )
 ```
