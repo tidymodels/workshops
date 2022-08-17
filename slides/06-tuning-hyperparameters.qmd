@@ -514,7 +514,7 @@ Boosting
 The general consensus for tree-based models is, in terms of performance: boosting > random forest > bagging > single trees.
 
 
-## Boosted tree code {.annotation}
+## Boosted tree code
 
 ```{r xgboost-specs}
 xgb_spec <-
@@ -718,7 +718,7 @@ glm_spline_res %>%
 Best boosting results:
 
 ```{r xgboost-best}
-xgb_coord_res %>% 
+xgb_res %>% 
   show_best(metric = "roc_auc", n = 1) %>% 
   select(.metric, .estimator, mean, n, std_err, .config)
 ```
@@ -727,8 +727,6 @@ xgb_coord_res %>%
 ## Updating the workflow `r hexes(c("workflows", "tune"))`
 
 ```{r final-select-best}
-
-
 best_auc <- select_best(glm_spline_res, metric = "roc_auc")
 best_auc
 
@@ -909,7 +907,7 @@ p +
 
 *Create an explainer for our glm model.*
 
-*Try grouping by another variable, like `extra_attacker` or `game_seconds`.*
+*Try using other variables, like `extra_attacker` or `game_seconds`.*
 
 ```{r}
 #| echo: false
@@ -932,8 +930,8 @@ spline_curves <-
   relocate(wflow_id)
 
 xgb_curves <- 
-  xgb_coord_res %>% 
-  collect_predictions(parameters = select_best(xgb_coord_res, metric = "roc_auc")) %>% 
+  xgb_res %>% 
+  collect_predictions(parameters = select_best(xgb_res, metric = "roc_auc")) %>% 
   roc_curve(on_goal, .pred_yes) %>% 
   mutate(wflow_id = "xgboost") %>% 
   relocate(wflow_id)

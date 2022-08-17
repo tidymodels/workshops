@@ -215,27 +215,17 @@ Partial pooling somewhat lowers the risk of overfitting since it tends to correc
 
 ## Angle
 
-About these formulas... 
+About geometry... 
 
 The coordinates for the rink are centered at `(0, 0)` and the goal lines are both 89 ft from center. The center of the goal on the left is at `(-89, 0)` and the right-hand goal is centered at `(89, 0)`. 
 
-For the distance to center ice, the formula is 
-
-$$d_{center} = \sqrt{x^2 + y^2}$$ 
-
-We want distance to the goal line(s), so we first use `x* = (89 - abs(coord_x))` to make the side of the rink irrelevant and then compute 
-
-$$d_{goal} = \sqrt{x^{*2} + y^2}$$ 
-In the code, we log the distance value to help its distribution become more symmetric. 
-
-For angle to center, the formula is 
+For angle to center of the goal mouth, the formula is 
 
 $$a = \tan^{-1}\left(\frac{y}{x}\right)$$
 This is in radian units and we can convert to degrees using 
 
 $$a = \frac{180}{\pi}\tan^{-1}\left(\frac{y}{x}\right)$$
-For the angle to the goal, we need to alter $x$ and $y$ again. We'll use $x^*$ from above and also use the absolute value of $y$ so that the degrees range from 0 to 180.
-
+For the angle to the goal, we need to alter $x$ and use `x* = (89 - abs(coord_x))` instead. 
 
 # 06 - Tuning Hyperparameters
 
@@ -299,10 +289,7 @@ This is likely due to over-fitting so we stop the model at eleven boosting itera
 
 Early stopping usually has good results and takes far less time. 
 
-
-## Boosted tree code
-
-We set an engine argument called `validation` here. That's not an argument to any function in the xgboost package. 
+We _could_ an engine argument called `validation` here. That's not an argument to any function in the xgboost package. 
 
 parsnip has its own wrapper around (`xgboost::xgb.train()`) called `xgb_train()`. We use that here and it has a `validation` argument.
 

@@ -1017,13 +1017,13 @@
 <div class="cell">
 <div class="sourceCode cell-code" id="cb19" data-code-line-numbers="3:4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a>nhl_other_rec <span class="ot">&lt;-</span></span>
 <span id="cb19-2"><a href="#cb19-2"></a>  <span class="fu">recipe</span>(on_goal <span class="sc">~</span> ., <span class="at">data =</span> nhl_train) <span class="sc">%&gt;%</span></span>
-<span id="cb19-3"><a href="#cb19-3"></a>  <span class="co"># Any player with &lt;= 0.01% of shots is set to "other</span></span>
+<span id="cb19-3"><a href="#cb19-3"></a>  <span class="co"># Any player with &lt;= 0.01% of shots is set to "other"</span></span>
 <span id="cb19-4"><a href="#cb19-4"></a>  <span class="fu">step_other</span>(shooter, <span class="at">threshold =</span> <span class="fl">0.001</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb19-5"><a href="#cb19-5"></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span></span>
 <span id="cb19-6"><a href="#cb19-6"></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Using this code, 362 players (out of 574) were collapsed into “other” based on the training set.</p>
-<p>We <em>could</em> try to optimize the threshold for collapsing (see the next section of notes).</p>
+<p>We <em>could</em> try to optimize the threshold for collapsing (see the next set of slides on model tuning).</p>
 </section>
 <section id="does-othering-help" class="slide level2">
 <h2>Does othering help?</h2>
@@ -1212,8 +1212,29 @@
 <span id="cb25-4"><a href="#cb25-4"></a>    <span class="at">angle =</span> <span class="fu">abs</span>( <span class="fu">atan2</span>(<span class="fu">abs</span>(coord_y), (<span class="dv">89</span> <span class="sc">-</span> coord_x) ) <span class="sc">*</span> (<span class="dv">180</span> <span class="sc">/</span> pi) )</span>
 <span id="cb25-5"><a href="#cb25-5"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-
-<img data-src="05-feature-engineering_files/figure-revealjs/angle-1.svg" style="width:50.0%" class="r-stretch quarto-figure-center"></section>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="05-feature-engineering_files/figure-revealjs/angle-1.svg" style="width:50.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p>Note the danger of using <code>step_mutate()</code> – easy to have data leakage</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
 <section id="shot-from-the-defensive-zone" class="slide level2">
 <h2>Shot from the defensive zone</h2>
 <div class="cell">
