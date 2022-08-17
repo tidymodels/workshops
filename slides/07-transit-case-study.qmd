@@ -134,7 +134,7 @@ chi_split
 chi_train <- training(chi_split)
 chi_test  <- testing(chi_split)
 
-## Training
+## training
 nrow(chi_train)
  
 ## testing
@@ -323,7 +323,7 @@ chi_rec <-
   step_date(date, features = c("dow", "month", "year")) 
 ```
 
-This creates three new columns in the data based on the date. Now that the day-of-the-week column is a factor.
+This creates three new columns in the data based on the date. Note that the day-of-the-week column is a factor.
 
 
 ## A recipe - work with dates `r hexes(c("recipes"))`
@@ -336,7 +336,7 @@ chi_rec <-
   step_holiday(date) 
 ```
 
-Add indicators for major holidays. Specific holidays, especially those ex-US, can also be generated. 
+Add indicators for major holidays. Specific holidays, especially those non-USA, can also be generated. 
 
 At this point, we don't need `date` anymore. Instead of deleting it (there is a step for that) we will change its _role_ to be an identification variable. 
 
@@ -373,9 +373,11 @@ chi_rec <-
 
 ## A recipe - handle correlations `r hexes(c("recipes"))`
 
-The columns in the `stations` vector have a very high degree of correlation. 
+The station columns have a very high degree of correlation. 
 
 We might want to decorrelated them with principle component analysis to help the model fits go more easily. 
+
+The vector `stations` contains all station names and can be used to identify all the relevant columns.
 
 ```{r}
 #| code-line-numbers: "7"
@@ -402,7 +404,7 @@ chi_set <-
     list(pca = chi_pca_rec, basic = chi_rec), 
     list(cubist = cb_spec, mars = mars_spec, lm = lm_spec)
   ) %>% 
-  # Evaluate models using mean absolute errors. 
+  # Evaluate models using mean absolute errors
   option_add(metrics = metric_set(mae))
 ```
 
