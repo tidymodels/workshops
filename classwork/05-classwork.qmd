@@ -52,7 +52,7 @@ nhl_train <- analysis(nhl_val$splits[[1]])
 set.seed(100)
 nhl_train %>% 
   sample_n(200) %>%
-  plot_nhl_shots(emphasis = position)
+  plot_nhl_shots(emphasis = shooter_type)
 
 # Your code here!
 
@@ -191,14 +191,37 @@ autoplot(roc_curve_points)
 
 Compute and plot an ROC curve for your current model.
 
+What data is being used for this ROC curve plot?
+
 ```{r}
 # Your code here!
 
 ```
 
-## Your turn
+## Collapsing factor levels
 
-What data is being used for this ROC curve plot?
+```{r}
+nhl_other_rec <-
+  recipe(on_goal ~ ., data = nhl_train) %>%
+  # Any player with <= 0.01% of shots is set to "other"
+  step_other(shooter, threshold = 0.001) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+## Does othering help? 
+
+```{r}
+nhl_other_wflow <-
+  nhl_glm_wflow %>%
+  update_recipe(nhl_other_rec)
+
+nhl_other_res <-
+  nhl_other_wflow %>%
+  fit_resamples(nhl_val, control = ctrl)
+
+collect_metrics(nhl_other_res)
+```
 
 ## Player effects
 
@@ -207,7 +230,7 @@ library(embed)
 
 nhl_effect_rec <-
   recipe(on_goal ~ ., data = nhl_train) %>%
-  step_lencode_mixed(player, outcome = vars(on_goal)) %>%
+  step_lencode_mixed(shooter, goaltender, outcome = vars(on_goal)) %>%
   step_dummy(all_nominal_predictors()) %>%
   step_zv(all_predictors())
 ```
@@ -221,7 +244,7 @@ nhl_effect_wflow <-
 
 nhl_effect_res <-
   nhl_effect_wflow %>%
-  fit_resamples(nhl_val)
+  fit_resamples(nhl_val, control = ctrl)
 
 collect_metrics(nhl_effect_res)
 ```
@@ -231,36 +254,40 @@ collect_metrics(nhl_effect_res)
 ```{r}
 # angle
 nhl_angle_rec <-
-  nhl_indicators %>%
+  nhl_effect_rec %>%
   step_mutate(
-    angle = abs(atan2(abs(coord_y), (89 - abs(coord_x))) * (180 / pi))
+    angle = abs( atan2(abs(coord_y), (89 - coord_x) ) * (180 / pi) )
   )
 
-# distance
-nhl_distance_rec <-
+# defensive zone
+nhl_zone_rec <-
   nhl_angle_rec %>%
   step_mutate(
-    distance = sqrt((89 - abs(coord_x))^2 + abs(coord_y)^2),
-    distance = log(distance)
+    defensive_zone = ifelse(coord_x <= -25.5, 1, 0)
   )
 
 # behind goal line
 nhl_behind_rec <-
-  nhl_distance_rec %>%
+  nhl_zone_rec %>%
   step_mutate(
-    behind_goal_line = ifelse(abs(coord_x) >= 89, 1, 0)
+    behind_goal_line = ifelse(coord_x >= 89, 1, 0)
   )
 ```
 
 ## Fit different recipes
 
 ```{r}
+no_coord_rec <- 
+  nhl_indicators %>% 
+  step_rm(starts_with("coord"))
+
 set.seed(9)
 
 nhl_glm_set_res <-
   workflow_set(
-    list(`1_dummy` = nhl_indicators, `2_angle` = nhl_angle_rec, 
-         `3_dist` = nhl_distance_rec, `4_bgl` = nhl_behind_rec),
+    list(`1_no_coord` = no_coord_rec,   `2_other` = nhl_other_rec, 
+         `3_effects`  = nhl_effect_rec, `4_angle` = nhl_angle_rec, 
+         `5_zone`     = nhl_zone_rec,   `6_bgl`   = nhl_behind_rec),
     list(logistic = logistic_reg())
   ) %>%
   workflow_map(fn = "fit_resamples", resamples = nhl_val, verbose = TRUE, control = ctrl)
@@ -293,4 +320,14 @@ collect_metrics(nhl_glm_set_res) %>%
   ggplot(aes(x = mean, y = features)) +
   geom_point(size = 3) +
   labs(y = NULL, x = "ROC AUC (validation set)")
+```
+
+## Debugging a recipe
+
+```{r}
+nhl_angle_fit <- prep(nhl_angle_rec)
+
+tidy(nhl_angle_fit, number = 1) %>% slice(1:4)
+
+bake(nhl_angle_fit, nhl_train %>% slice(1:3), starts_with("coord"), angle, shooter)
 ```
