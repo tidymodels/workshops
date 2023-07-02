@@ -1,0 +1,126 @@
+---
+title: "1 - Tuning Hyperparameters"
+subtitle: "Advanced tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+```{r more-setup}
+#| include: false
+library(modeldatatoo)
+library(countdown)
+
+cores <- parallelly::availableCores(logical = FALSE)
+cl <- parallel::makePSOCKcluster(cores)
+doParallel::registerDoParallel(cl)
+
+options(width = 200)
+
+ggplot2::theme_set(ggplot2::theme_bw())
+```
+
+## Hotel Data
+
+We'll use a version of the [hotel data](https://www.sciencedirect.com/science/article/pii/S2352340918315191). We'll use [a version](https://modeldatatoo.tidymodels.org/dev/reference/data_hotel_rates.html) where we try to predict the cost of a room. 
+
+The data are in the modeldatatoo package. We'll sample down the data and refactor some columns: 
+
+:::: {.columns}
+
+::: {.column width="40%"}
+
+```{r}
+#| label: tune-startup
+library(tidymodels)
+library(modeldatatoo)
+
+# Max's usual settings: 
+tidymodels_prefer()
+theme_set(theme_bw())
+options(
+  pillar.advice = FALSE, 
+  pillar.min_title_chars = Inf
+)
+```
+
+:::
+
+::: {.column width="60%"}
+
+```{r}
+#| label: data-import
+set.seed(295)
+hotel_rates <- 
+  data_hotel_rates() %>% 
+  sample_n(5000) %>% 
+  arrange(arrival_date) %>% 
+  select(-arrival_date_num, -arrival_date) %>% 
+  mutate(
+    company = factor(as.character(company)),
+    country = factor(as.character(country)),
+    agent = factor(as.character(agent))
+  )
+```
+
+
+:::
+
+::::
+
+
+## Data Spending
+
+Let's split the data into a training set (75%) and testing set (25%):
+
+```{r}
+#| label: hotel-split
+set.seed(4028)
+hotel_split <-
+  initial_split(hotel_rates, strata = avg_price_per_room)
+
+hotel_tr <- training(hotel_split)
+hotel_te <- testing(hotel_split)
+```
+
+
+
+## Your turn {transition="slide-in"}
+
+Let's take some time and investigate the _training data_. The outcome is `avg_price_per_room`. 
+
+Are there any characteristic of the data that are interesting?
+
+```{r}
+#| label: hotel-investigation-exercise
+#| echo: false
+countdown(minutes = 10, id = "hotel-investigation")
+```
+
+
+# Optimizing Models via Tuning Parameters
+
+## Feature Engineering
+
+How should we represent our predictors? There are: 
+
+ * Categorical predictors, some with many levels
+ * Some skewed numeric predictor(s)
+ * Interactions? 
+
