@@ -25,6 +25,7 @@ knitr:
 ```{r more-setup}
 #| include: false
 library(modeldatatoo)
+library(probably)
 library(countdown)
 
 cores <- parallelly::availableCores(logical = FALSE)
@@ -114,8 +115,6 @@ countdown(minutes = 10, id = "hotel-investigation")
 ```
 
 
-# Optimizing Models via Tuning Parameters
-
 ## Feature Engineering
 
 How should we represent our predictors? There are: 
@@ -123,4 +122,102 @@ How should we represent our predictors? There are:
  * Categorical predictors, some with many levels
  * Some skewed numeric predictor(s)
  * Interactions? 
+
+. . .
+
+Let's start a basic recipe: 
+
+```{r}
+#| label: hotel-rec-start
+
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_YeoJohnson(lead_time)
+```
+
+. . .
+
+We'll add to this for different types of models. 
+
+
+# Optimizing Models via Tuning Parameters
+
+
+
+## Tuning parameters
+
+Some model or preprocessing parameters cannot be estimated directly from the data.
+
+. . .
+
+Some examples:
+
+- Tree depth in decision trees
+- Number of neighbors in a K-nearest neighbor model
+
+# Activation function in neural networks?
+
+Sigmoidal functions, ReLu, etc.
+
+::: fragment
+Yes, it is a tuning parameter.
+✅
+:::
+
+# Number of PCA components to retain?
+
+::: fragment
+Yes, it is a tuning parameter.
+✅
+:::
+
+# Bayesian priors for model parameters?
+
+::: fragment
+Hmmmm, probably not.
+These are based on prior belief.
+❌
+:::
+
+# Covariance/correlation matrix structure in mixed models?
+
+::: fragment
+Yes, but it is unlikely to affect performance.
+:::
+
+::: fragment
+It will impact inference though.
+🤔
+:::
+
+
+
+# Is the random seed a tuning parameter?
+
+::: fragment
+Nope. It is not. 
+❌
+:::
+
+## Optimize tuning parameters
+
+- Try different values and measure their performance.
+
+. . .
+
+- Find good values for these parameters.
+
+. . .
+
+- Once the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set.
+
+## Optimize tuning parameters
+
+The main two strategies for optimization are:
+
+. . .
+
+- **Grid search** 💠 which tests a pre-defined set of candidate values
+
+- **Iterative search** 🌀 which suggests/estimates new values of candidate parameters to evaluate
 
