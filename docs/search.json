@@ -4127,6 +4127,97 @@
     "href": "slides/advanced-02-racing.html#model-racing",
     "title": "2 - Grid Search via Racing",
     "section": "Model Racing",
-    "text": "Model Racing\nRacing is an old tool that we can use to go even faster.\n\nEvaluate all of the candidate models but only for a few resamples.\nDetermine which candidates have a low probability of being selected.\nEliminate poor candidates\nRepeat with next resample.\n\nThis can result in fitting a small number of models.\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Model Racing\nRacing is an old tool that we can use to go even faster.\n\nEvaluate all of the candidate models but only for a few resamples.\nDetermine which candidates have a low probability of being selected.\nEliminate poor candidates\nRepeat with next resample.\n\nThis can result in fitting a small number of models."
+  },
+  {
+    "objectID": "slides/advanced-02-racing.html#discarding-candidates",
+    "href": "slides/advanced-02-racing.html#discarding-candidates",
+    "title": "2 - Grid Search via Racing",
+    "section": "Discarding Candidates",
+    "text": "Discarding Candidates\nHow to we eliminate tuning parameter combinations?\nThere are a few methods to do so. We’ll use one based on analysis of variance (ANOVA).\nHowever… there is typically a large effect due to resamples in the data."
+  },
+  {
+    "objectID": "slides/advanced-02-racing.html#section",
+    "href": "slides/advanced-02-racing.html#section",
+    "title": "2 - Grid Search via Racing",
+    "section": "",
+    "text": "https://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/advanced-02-racing.html#resampling-results-non-racing",
+    "href": "slides/advanced-02-racing.html#resampling-results-non-racing",
+    "title": "2 - Grid Search via Racing",
+    "section": "Resampling Results (Non-Racing)",
+    "text": "Resampling Results (Non-Racing)\n\n\nHere are some realistic (but simulated) examples of two candidate models.\nAn error estimate is measured for each of 10 resamples.\n\nThe lines connect resamples.\n\nThere is usually a significant resample-to-resample effect (rank corr: 0.83)."
+  },
+  {
+    "objectID": "slides/advanced-02-racing.html#evaluating-differences-in-candidates",
+    "href": "slides/advanced-02-racing.html#evaluating-differences-in-candidates",
+    "title": "2 - Grid Search via Racing",
+    "section": "Evaluating Differences in Candidates",
+    "text": "Evaluating Differences in Candidates"
+  },
+  {
+    "objectID": "slides/advanced-02-racing.html#are-candidates-different",
+    "href": "slides/advanced-02-racing.html#are-candidates-different",
+    "title": "2 - Grid Search via Racing",
+    "section": "Are Candidates Different?",
+    "text": "Are Candidates Different?\nOne way to evaluate these models is to do a paired t-test\n\nor a t-test on their differences matched by resamples\n\nWith \\(n = 10\\) resamples, the confidence interval is (0.99, 2.8), indicating that candidate number 2 has smaller error.\nWhat if we were to compare each model candidate to the current best at each resample?\nOne shows superiority when 4 resamples have been evaluated."
+  },
+  {
+    "objectID": "slides/advanced-02-racing.html#interim-analysis-of-results",
+    "href": "slides/advanced-02-racing.html#interim-analysis-of-results",
+    "title": "2 - Grid Search via Racing",
+    "section": "Interim Analysis of Results",
+    "text": "Interim Analysis of Results\nOne version of racing uses a mixed model ANOVA to construct one-sided confidence intervals for each candidate versus the current best.\nAny candidates whose bound does not include zero are discarded.\nThe resamples are analyzed in a random order.\nKuhn (2014) has examples and simulations to show that the method works.\nThe finetune package has functions tune_race_anova() and tune_race_win_loss()."
+  },
+  {
+    "objectID": "slides/advanced-02-racing.html#racing",
+    "href": "slides/advanced-02-racing.html#racing",
+    "title": "2 - Grid Search via Racing",
+    "section": "Racing",
+    "text": "Racing\n\nlibrary(finetune)\n\nreg_metrics &lt;- metric_set(mae, rsq)\n\nset.seed(9)\nlgbm_race_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_race_anova(\n    resamples = hotel_rs,\n    grid = 25,\n    metrics = reg_metrics\n  )\n\nThe syntax and helper functions are extremely similar to those shown for tune_grid()."
+  },
+  {
+    "objectID": "slides/advanced-02-racing.html#racing-results",
+    "href": "slides/advanced-02-racing.html#racing-results",
+    "title": "2 - Grid Search via Racing",
+    "section": "Racing Results",
+    "text": "Racing Results\n\n\nOnly 83 models were fit (out of 250).\nselect_best() never considers candidate models that did not get to the end of the race.\nThere is a helper function to see how candidate models were removed from consideration.\n\n\nplot_race(lgbm_race_res)"
+  },
+  {
+    "objectID": "slides/advanced-02-racing.html#helper-functions",
+    "href": "slides/advanced-02-racing.html#helper-functions",
+    "title": "2 - Grid Search via Racing",
+    "section": "Helper Functions",
+    "text": "Helper Functions\n\n\nhttps://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/advanced-02-racing.html#previously---setup",
+    "href": "slides/advanced-02-racing.html#previously---setup",
+    "title": "2 - Grid Search via Racing",
+    "section": "Previously - Setup",
+    "text": "Previously - Setup\n\n\n\nlibrary(tidymodels)\nlibrary(modeldatatoo)\nlibrary(bonsai)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\n\n\nset.seed(295)\nhotel_rates &lt;- \n  data_hotel_rates() %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date_num, -arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
+  },
+  {
+    "objectID": "slides/advanced-02-racing.html#previously---data-usage",
+    "href": "slides/advanced-02-racing.html#previously---data-usage",
+    "title": "2 - Grid Search via Racing",
+    "section": "Previously - Data Usage",
+    "text": "Previously - Data Usage\n\nset.seed(4028)\nhotel_split &lt;-\n  initial_split(hotel_rates, strata = avg_price_per_room)\n\nhotel_tr &lt;- training(hotel_split)\nhotel_te &lt;- testing(hotel_split)\n\nset.seed(472)\nhotel_rs &lt;- vfold_cv(hotel_tr, strata = avg_price_per_room)"
+  },
+  {
+    "objectID": "slides/advanced-02-racing.html#previously---boosting-model",
+    "href": "slides/advanced-02-racing.html#previously---boosting-model",
+    "title": "2 - Grid Search via Racing",
+    "section": "Previously - Boosting Model",
+    "text": "Previously - Boosting Model\n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_YeoJohnson(lead_time)\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(), mtry = tune(), \n             min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)"
+  },
+  {
+    "objectID": "slides/advanced-02-racing.html#your-turn",
+    "href": "slides/advanced-02-racing.html#your-turn",
+    "title": "2 - Grid Search via Racing",
+    "section": "Your turn",
+    "text": "Your turn\n\nGet the grid from the example results\nPass it in as the grid\nRun tune_race_anova() with a different seed.\n\n\n\n\n−+\n10:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   }
 ]

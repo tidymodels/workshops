@@ -27,6 +27,7 @@ knitr:
 library(modeldatatoo)
 library(probably)
 library(countdown)
+library(finetune)
 
 cores <- parallelly::availableCores(logical = FALSE)
 cl <- parallel::makePSOCKcluster(cores)
@@ -37,7 +38,7 @@ options(width = 200)
 ggplot2::theme_set(ggplot2::theme_bw())
 ```
 
-## Previously
+## Previously - Setup
 
 :::: {.columns}
 
@@ -83,7 +84,7 @@ hotel_rates <-
 ::::
 
 
-## Previously
+## Previously - Data Usage
 
 ```{r}
 #| label: hotel-split
@@ -97,8 +98,12 @@ hotel_te <- testing(hotel_split)
 set.seed(472)
 hotel_rs <- vfold_cv(hotel_tr, strata = avg_price_per_room)
 
-# ------------------------------------------------------------------------------
+```
 
+## Previously - Boosting Model
+
+```{r}
+#| label: setup-lgbm
 hotel_rec <- 
   recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
   step_YeoJohnson(lead_time)
@@ -136,3 +141,209 @@ Both of these methods can lead to enormous speed-ups.
 
 This can result in fitting a small number of models. 
 
+
+## Discarding Candidates
+
+How to we eliminate tuning parameter combinations? 
+
+There are a few methods to do so. We'll use one based on analysis of variance (ANOVA). 
+
+_However_... there is typically a large effect due to resamples in the data. 
+
+## Resampling Results (Non-Racing)
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+
+```{r}
+#| label: race-data-comp
+#| echo: false
+#| out-width: 60%
+#| fig-align: center
+#| fig-width: 5
+#| fig-height: 5
+
+# Simulate some resamples for candidate models
+num_resamples <- 10
+race_example <- crossing(model = paste("candidate", 1:2), resample = 1:num_resamples)
+candidates <- tibble(model = paste("candidate", 1:2), mean = c(4, 2))
+set.seed(937)
+resamples <- tibble(resample = 1:num_resamples, effect = rnorm(num_resamples, sd = 2))
+race_example <-
+  race_example %>%
+  full_join(candidates, by = "model") %>%
+  full_join(resamples, by = "resample") %>%
+  mutate(
+    error = mean + effect + rnorm(n(), sd = 1),
+    resample = format(resample)
+  ) %>%
+  select(-mean, -effect)
+
+
+race_table <- 
+  race_example %>%
+  mutate(model = gsub(" ", "_", model)) %>%
+  pivot_wider(id_cols = c(resample), names_from = model, values_from = error)
+
+race_cor <- cor(race_table[, -1], method = "spearman")[1,2]
+
+get_ci <- function(ind) {
+  dat <- race_table[1:ind,]
+  t_test <- t.test(dat$candidate_1, dat$candidate_2, paired = TRUE)
+  t_test <- tidy(t_test, conf)
+  t_test %>% 
+    select(difference = estimate, lower = conf.low, upper = conf.high) %>% 
+    mutate(`number of resamples` = ind)
+}
+
+race_ci <- map_dfr(2:10, get_ci) 
+
+```
+
+Here are some realistic (but simulated) examples of two candidate models. 
+
+An error estimate is measured for each of 10 resamples. 
+
+ - The lines connect resamples. 
+
+There is usually a significant resample-to-resample effect (rank corr: `r round(race_cor, 2)`). 
+
+:::
+
+::: {.column width="50%"}
+
+
+```{r}
+#| label: race-data
+#| echo: false
+#| out-width: 100%
+#| fig-align: center
+#| fig-width: 5
+#| fig-height: 5
+
+
+race_example %>%
+  ggplot(aes(x = model, y = error, group = resample, col = factor(resample))) +
+  geom_point(show.legend = FALSE) +
+  geom_line(alpha = 1 / 2, show.legend = FALSE) +
+  labs(x = NULL, y = "model error")
+```
+
+:::
+
+::::
+
+
+## Are Candidates Different?
+
+One way to evaluate these models is to do a paired t-test
+ 
+ - or a t-test on their differences matched by resamples
+
+With $n = 10$ resamples, the confidence interval is (`r signif(race_ci$lower[9], 2)`, `r signif(race_ci$upper[9], 2)`), indicating that candidate number 2 has smaller error. 
+
+What if we were to compare each model candidate to the current best at each resample? 
+
+One shows superiority when `r which.max(race_ci$lower > 0)` resamples have been evaluated.
+
+
+## Evaluating Differences in Candidates
+
+```{r}
+#| label: race-ci
+#| echo: false
+#| out-width: 70%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+
+race_ci %>% 
+  ggplot(aes(`number of resamples`, difference)) + 
+  geom_point() +
+  geom_hline(yintercept = 0, col = "red", lty = 2) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 1 / 10, alpha = 0.5) +
+  labs(y = "error difference from best")
+```
+
+## Interim Analysis of Results
+
+One version of racing uses a _mixed model ANOVA_ to construct one-sided confidence intervals for each candidate versus the current best. 
+
+Any candidates whose bound does not include zero are discarded. 
+
+The resamples are analyzed in a random order. 
+
+[Kuhn (2014)](https://arxiv.org/abs/1405.6974) has examples and simulations to show that the method works. 
+
+The finetune package has functions `tune_race_anova()` and `tune_race_win_loss()`. 
+
+
+## Racing
+
+
+```{r tuning} 
+#| label: lgb-grid-race
+#| cache: true
+library(finetune)
+
+reg_metrics <- metric_set(mae, rsq)
+
+set.seed(9)
+lgbm_race_res <-
+  lgbm_wflow %>%
+  tune_race_anova(
+    resamples = hotel_rs,
+    grid = 25,
+    metrics = reg_metrics
+  )
+```
+
+The syntax and helper functions are extremely similar to those shown for `tune_grid()`. 
+
+
+## Racing Results
+
+:::: {.columns}
+
+::: {.column width="50%"}
+Only `r sum(map_int(lgbm_race_res$.metrics, ~ nrow(.x) / 2))` models were fit (out of 250). 
+
+`select_best()` never considers candidate models that did not get to the end of the race. 
+
+There is a helper function to see how candidate models were removed from consideration. 
+
+:::
+
+::: {.column width="50%"}
+
+
+```{r}
+#| label: plot-race
+#| out-width: 100%
+#| fig-align: center
+#| fig-width: 5
+#| fig-height: 3.8
+
+plot_race(lgbm_race_res)
+```
+
+:::
+
+::::
+
+
+## Your turn {transition="slide-in"}
+
+* Get the grid from the example results
+* Pass it in as the grid
+* Run `tune_race_anova()` with a different seed. 
+
+
+```{r}
+#| label: racing-repeat
+#| echo: false
+countdown(minutes = 10, id = "racing-repeat")
+```

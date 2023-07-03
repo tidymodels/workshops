@@ -384,6 +384,8 @@
       margin-right: 0; 
     }
   </style>
+  <link href="../site_libs/countdown-0.4.0/countdown.css" rel="stylesheet">
+  <script src="../site_libs/countdown-0.4.0/countdown.js"></script>
 <meta property="og:title" content="Machine learning with tidymodels - 2 - Grid Search via Racing">
 <meta property="og:description" content="Advanced tidymodels">
 <meta property="og:site-name" content="Machine learning with tidymodels">
@@ -404,8 +406,8 @@
 </div>
 
 </section>
-<section id="previously" class="slide level2">
-<h2>Previously</h2>
+<section id="previously---setup" class="slide level2">
+<h2>Previously - Setup</h2>
 <div class="columns">
 <div class="column" style="width:40%;">
 <div class="cell">
@@ -438,8 +440,8 @@
 </div>
 </div>
 </section>
-<section id="previously-1" class="slide level2">
-<h2>Previously</h2>
+<section id="previously---data-usage" class="slide level2">
+<h2>Previously - Data Usage</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">set.seed</span>(<span class="dv">4028</span>)</span>
 <span id="cb3-2"><a href="#cb3-2"></a>hotel_split <span class="ot">&lt;-</span></span>
@@ -449,21 +451,23 @@
 <span id="cb3-6"><a href="#cb3-6"></a>hotel_te <span class="ot">&lt;-</span> <span class="fu">testing</span>(hotel_split)</span>
 <span id="cb3-7"><a href="#cb3-7"></a></span>
 <span id="cb3-8"><a href="#cb3-8"></a><span class="fu">set.seed</span>(<span class="dv">472</span>)</span>
-<span id="cb3-9"><a href="#cb3-9"></a>hotel_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(hotel_tr, <span class="at">strata =</span> avg_price_per_room)</span>
-<span id="cb3-10"><a href="#cb3-10"></a></span>
-<span id="cb3-11"><a href="#cb3-11"></a><span class="co"># ------------------------------------------------------------------------------</span></span>
-<span id="cb3-12"><a href="#cb3-12"></a></span>
-<span id="cb3-13"><a href="#cb3-13"></a>hotel_rec <span class="ot">&lt;-</span> </span>
-<span id="cb3-14"><a href="#cb3-14"></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_tr) <span class="sc">%&gt;%</span> </span>
-<span id="cb3-15"><a href="#cb3-15"></a>  <span class="fu">step_YeoJohnson</span>(lead_time)</span>
-<span id="cb3-16"><a href="#cb3-16"></a></span>
-<span id="cb3-17"><a href="#cb3-17"></a>lgbm_spec <span class="ot">&lt;-</span> </span>
-<span id="cb3-18"><a href="#cb3-18"></a>  <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>(), <span class="at">mtry =</span> <span class="fu">tune</span>(), </span>
-<span id="cb3-19"><a href="#cb3-19"></a>             <span class="at">min_n =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
-<span id="cb3-20"><a href="#cb3-20"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb3-21"><a href="#cb3-21"></a>  <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>)</span>
-<span id="cb3-22"><a href="#cb3-22"></a></span>
-<span id="cb3-23"><a href="#cb3-23"></a>lgbm_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(hotel_rec, lgbm_spec)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-9"><a href="#cb3-9"></a>hotel_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(hotel_tr, <span class="at">strata =</span> avg_price_per_room)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="previously---boosting-model" class="slide level2">
+<h2>Previously - Boosting Model</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>hotel_rec <span class="ot">&lt;-</span> </span>
+<span id="cb4-2"><a href="#cb4-2"></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_tr) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-3"><a href="#cb4-3"></a>  <span class="fu">step_YeoJohnson</span>(lead_time)</span>
+<span id="cb4-4"><a href="#cb4-4"></a></span>
+<span id="cb4-5"><a href="#cb4-5"></a>lgbm_spec <span class="ot">&lt;-</span> </span>
+<span id="cb4-6"><a href="#cb4-6"></a>  <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>(), <span class="at">mtry =</span> <span class="fu">tune</span>(), </span>
+<span id="cb4-7"><a href="#cb4-7"></a>             <span class="at">min_n =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-8"><a href="#cb4-8"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-9"><a href="#cb4-9"></a>  <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>)</span>
+<span id="cb4-10"><a href="#cb4-10"></a></span>
+<span id="cb4-11"><a href="#cb4-11"></a>lgbm_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(hotel_rec, lgbm_spec)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="making-grid-search-more-effcieint" class="slide level2">
@@ -486,6 +490,112 @@
 <li>Repeat with next resample.</li>
 </ol>
 <p>This can result in fitting a small number of models.</p>
+</section>
+<section id="discarding-candidates" class="slide level2">
+<h2>Discarding Candidates</h2>
+<p>How to we eliminate tuning parameter combinations?</p>
+<p>There are a few methods to do so. We’ll use one based on analysis of variance (ANOVA).</p>
+<p><em>However</em>… there is typically a large effect due to resamples in the data.</p>
+</section>
+<section id="resampling-results-non-racing" class="slide level2">
+<h2>Resampling Results (Non-Racing)</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p>Here are some realistic (but simulated) examples of two candidate models.</p>
+<p>An error estimate is measured for each of 10 resamples.</p>
+<ul>
+<li>The lines connect resamples.</li>
+</ul>
+<p>There is usually a significant resample-to-resample effect (rank corr: 0.83).</p>
+</div><div class="column" style="width:50%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="advanced-02-racing_files/figure-revealjs/race-data-1.svg" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="are-candidates-different" class="slide level2">
+<h2>Are Candidates Different?</h2>
+<p>One way to evaluate these models is to do a paired t-test</p>
+<ul>
+<li>or a t-test on their differences matched by resamples</li>
+</ul>
+<p>With <span class="math inline">\(n = 10\)</span> resamples, the confidence interval is (0.99, 2.8), indicating that candidate number 2 has smaller error.</p>
+<p>What if we were to compare each model candidate to the current best at each resample?</p>
+<p>One shows superiority when 4 resamples have been evaluated.</p>
+</section>
+<section id="evaluating-differences-in-candidates" class="slide level2">
+<h2>Evaluating Differences in Candidates</h2>
+
+<img data-src="advanced-02-racing_files/figure-revealjs/race-ci-1.svg" style="width:70.0%" class="r-stretch quarto-figure-center"></section>
+<section id="interim-analysis-of-results" class="slide level2">
+<h2>Interim Analysis of Results</h2>
+<p>One version of racing uses a <em>mixed model ANOVA</em> to construct one-sided confidence intervals for each candidate versus the current best.</p>
+<p>Any candidates whose bound does not include zero are discarded.</p>
+<p>The resamples are analyzed in a random order.</p>
+<p><a href="https://arxiv.org/abs/1405.6974">Kuhn (2014)</a> has examples and simulations to show that the method works.</p>
+<p>The finetune package has functions <code>tune_race_anova()</code> and <code>tune_race_win_loss()</code>.</p>
+</section>
+<section id="racing" class="slide level2">
+<h2>Racing</h2>
+<div class="cell" data-hash="advanced-02-racing_cache/revealjs/lgb-grid-race_c27c1134f83dc0da4a3d5bd39cae834d">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="fu">library</span>(finetune)</span>
+<span id="cb5-2"><a href="#cb5-2"></a></span>
+<span id="cb5-3"><a href="#cb5-3"></a>reg_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mae, rsq)</span>
+<span id="cb5-4"><a href="#cb5-4"></a></span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
+<span id="cb5-6"><a href="#cb5-6"></a>lgbm_race_res <span class="ot">&lt;-</span></span>
+<span id="cb5-7"><a href="#cb5-7"></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb5-8"><a href="#cb5-8"></a>  <span class="fu">tune_race_anova</span>(</span>
+<span id="cb5-9"><a href="#cb5-9"></a>    <span class="at">resamples =</span> hotel_rs,</span>
+<span id="cb5-10"><a href="#cb5-10"></a>    <span class="at">grid =</span> <span class="dv">25</span>,</span>
+<span id="cb5-11"><a href="#cb5-11"></a>    <span class="at">metrics =</span> reg_metrics</span>
+<span id="cb5-12"><a href="#cb5-12"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The syntax and helper functions are extremely similar to those shown for <code>tune_grid()</code>.</p>
+</section>
+<section id="racing-results" class="slide level2">
+<h2>Racing Results</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p>Only 83 models were fit (out of 250).</p>
+<p><code>select_best()</code> never considers candidate models that did not get to the end of the race.</p>
+<p>There is a helper function to see how candidate models were removed from consideration.</p>
+</div><div class="column" style="width:50%;">
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="fu">plot_race</span>(lgbm_race_res)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="advanced-02-racing_files/figure-revealjs/plot-race-1.svg" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="your-turn" class="slide level2" data-transition="slide-in">
+<h2>Your turn</h2>
+<ul>
+<li>Get the grid from the example results</li>
+<li>Pass it in as the grid</li>
+<li>Run <code>tune_race_anova()</code> with a different seed.</li>
+</ul>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="racing-repeat" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
+<code class="countdown-time"><span class="countdown-digits minutes">10</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
 
 <div class="footer footer-default">
 <p><a href="https://workshops.tidymodels.org" class="uri">https://workshops.tidymodels.org</a></p>
