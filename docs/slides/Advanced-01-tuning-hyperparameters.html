@@ -599,10 +599,10 @@
 <section id="boosted-tree-tuning-parameters" class="slide level2">
 <h2>Boosted Tree Tuning Parameters</h2>
 <ul>
-<li>The number of predictors randomly sampled at each split (aka <code>mtry</code> in <code>[1, ncol(x)]</code> or <code>(0, 1]</code>).</li>
-<li>The number of trees (<code>trees</code> in <code>[1, Inf]</code>)</li>
-<li>The number of samples needed to further split (<code>min_n</code> in <code>[1, nrow(x)]</code>).</li>
-<li>The rate that each tree adapts form previous iterations (<code>learn_rate</code> in <code>(0, 0.1)</code>).</li>
+<li>The number of predictors randomly sampled at each split (aka <code>mtry</code> in <span class="math inline">\([1, ncol(x)]\)</span> or <span class="math inline">\((0, 1]\)</span>).</li>
+<li>The number of trees (<code>trees</code> in <span class="math inline">\([1, \infty]\)</span>, but usually up to thousands)</li>
+<li>The number of samples needed to further split (<code>min_n</code> in <span class="math inline">\([1, n]\)</span>).</li>
+<li>The rate that each tree adapts form previous iterations (<code>learn_rate</code> in <span class="math inline">\((0, \infty]\)</span>, usual maximum is 0.1).</li>
 <li>The number of iterations of boosting where <em>no improvement</em> was shown (<code>early_stop</code>)</li>
 </ul>
 </section>
@@ -613,7 +613,7 @@
 <p>To demonstrate simple concepts, we’ll look at optimizing the number of trees in the ensemble (between 1 and 100) and the learning rate (<span class="math inline">\(10^{-5}\)</span> to <span class="math inline">\(10^{-1}\)</span>).</p>
 </section>
 <section id="boosted-tree-tuning-parameters-2" class="slide level2">
-<h2>Boosted Tree Tuning Parameters</h2>
+<h2>Boosted Tree Tuning Parameters <img data-src="hexes/bonsai.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "></h2>
 <p>We’ll need to load the bonsai package. This has the information needed to use lightgbm</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="fu">library</span>(bonsai)</span>
@@ -633,11 +633,31 @@
 <li><p><strong>Grid search</strong> 💠 which tests a pre-defined set of candidate values</p></li>
 <li><p><strong>Iterative search</strong> 🌀 which suggests/estimates new values of candidate parameters to evaluate</p></li>
 </ul>
+<p>We’ll focus on grid search for a while.</p>
 </div>
 </section>
 <section id="grid-search" class="slide level2">
 <h2>Grid search</h2>
-<h4 id="parameters">Parameters</h4>
+<p>A small grid of points trying to minimize the error via learning rate:</p>
+
+<img data-src="images/small_init.svg" style="width:60.0%" class="r-stretch quarto-figure-center"></section>
+<section id="grid-search-1" class="slide level2">
+<h2>Grid search</h2>
+<p>In reality we would probably sample the space more densely:</p>
+
+<img data-src="images/grid_points.svg" style="width:60.0%" class="r-stretch quarto-figure-center"></section>
+<section id="sequential-search" class="slide level2">
+<h2>Sequential Search</h2>
+<p>We could start with a few points and search the space:</p>
+
+<img data-src="images/anime_seq.gif" style="width:60.0%" class="r-stretch quarto-figure-center"></section></section>
+<section>
+<section id="grid-search-2" class="title-slide slide level1 center">
+<h1>Grid Search</h1>
+
+</section>
+<section id="parameters" class="slide level2">
+<h2>Parameters</h2>
 <ul>
 <li><p>The tidymodels framework provides pre-defined information on tuning parameters (such as their type, range, transformations, etc).</p></li>
 <li><p>The <code>extract_parameter_set_dials()</code> function extracts these tuning parameters and the info.</p></li>
@@ -844,7 +864,7 @@
 <span id="cb13-7"><a href="#cb13-7"></a>lgbm_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(hotel_rec, lgbm_spec)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="grid-search-1" class="slide level2">
+<section id="grid-search-3" class="slide level2">
 <h2>Grid Search <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "></h2>
 <div class="cell" data-hash="advanced-01-tuning-hyperparameters_cache/revealjs/lgb-grid-tune_4a1c3f03cf258156ad4dc70fa4b8cf4e">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
@@ -876,7 +896,7 @@
           display:block!important;
       }</style></aside>
 </section>
-<section id="grid-search-2" class="slide level2">
+<section id="grid-search-4" class="slide level2">
 <h2>Grid Search <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a>lgbm_res</span>
@@ -977,7 +997,7 @@
 </div>
 </section>
 <section id="checking-calibration" class="slide level2">
-<h2>Checking Calibration</h2>
+<h2>Checking Calibration <img data-src="hexes/probably.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell columns column-output-location">
 <div class="column">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a><span class="fu">library</span>(probably)</span>
@@ -1079,7 +1099,8 @@
 <section id="your-turn-2" class="slide level2" data-transition="slide-in">
 <h2>Your turn</h2>
 <p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
-<p>What if we used early stopping instead of set number of trees?</p>
+<p><br></p>
+<p>What if we used early stopping instead of optimizing the number of trees?</p>
 <p>We could set <code>trees = 1000</code> and use tune the <code>stop_iter</code> parameter.</p>
 <div class="cell">
 <div class="cell-output-display">

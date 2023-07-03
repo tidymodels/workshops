@@ -4169,7 +4169,7 @@
     "href": "slides/advanced-01-tuning-hyperparameters.html#optimize-tuning-parameters-1",
     "title": "1 - Tuning Hyperparameters",
     "section": "Optimize tuning parameters",
-    "text": "Optimize tuning parameters\nThe main two strategies for optimization are:\n\n\nGrid search 💠 which tests a pre-defined set of candidate values\nIterative search 🌀 which suggests/estimates new values of candidate parameters to evaluate"
+    "text": "Optimize tuning parameters\nThe main two strategies for optimization are:\n\n\nGrid search 💠 which tests a pre-defined set of candidate values\nIterative search 🌀 which suggests/estimates new values of candidate parameters to evaluate\n\nWe’ll focus on grid search for a while."
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#a-baseline-model",
@@ -4197,7 +4197,7 @@
     "href": "slides/advanced-01-tuning-hyperparameters.html#boosted-tree-tuning-parameters",
     "title": "1 - Tuning Hyperparameters",
     "section": "Boosted Tree Tuning Parameters",
-    "text": "Boosted Tree Tuning Parameters\n\nThe number of predictors randomly sampled at each split (aka mtry in [1, ncol(x)] or (0, 1]).\nThe number of trees (trees in [1, Inf])\nThe number of samples needed to further split (min_n in [1, nrow(x)]).\nThe rate that each tree adapts form previous iterations (learn_rate in (0, 0.1)).\nThe number of iterations of boosting where no improvement was shown (early_stop)"
+    "text": "Boosted Tree Tuning Parameters\n\nThe number of predictors randomly sampled at each split (aka mtry in \\([1, ncol(x)]\\) or \\((0, 1]\\)).\nThe number of trees (trees in \\([1, \\infty]\\), but usually up to thousands)\nThe number of samples needed to further split (min_n in \\([1, n]\\)).\nThe rate that each tree adapts form previous iterations (learn_rate in \\((0, \\infty]\\), usual maximum is 0.1).\nThe number of iterations of boosting where no improvement was shown (early_stop)"
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#boosted-tree-tuning-parameters-1",
@@ -4210,15 +4210,15 @@
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#boosted-tree-tuning-parameters-2",
     "href": "slides/advanced-01-tuning-hyperparameters.html#boosted-tree-tuning-parameters-2",
     "title": "1 - Tuning Hyperparameters",
-    "section": "Boosted Tree Tuning Parameters",
-    "text": "Boosted Tree Tuning Parameters\nWe’ll need to load the bonsai package. This has the information needed to use lightgbm\n\nlibrary(bonsai)\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)"
+    "section": "Boosted Tree Tuning Parameters   ",
+    "text": "Boosted Tree Tuning Parameters   \nWe’ll need to load the bonsai package. This has the information needed to use lightgbm\n\nlibrary(bonsai)\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)"
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#grid-search",
     "href": "slides/advanced-01-tuning-hyperparameters.html#grid-search",
     "title": "1 - Tuning Hyperparameters",
     "section": "Grid search",
-    "text": "Grid search\nParameters\n\nThe tidymodels framework provides pre-defined information on tuning parameters (such as their type, range, transformations, etc).\nThe extract_parameter_set_dials() function extracts these tuning parameters and the info.\n\n\n\nGrids\n\nCreate your grid manually or automatically.\nThe grid_*() functions can make a grid.\n\n\n\nMost basic (but very effective) way to tune models"
+    "text": "Grid search\nA small grid of points trying to minimize the error via learning rate:"
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#create-a-grid",
@@ -4287,8 +4287,8 @@
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#grid-search-1",
     "href": "slides/advanced-01-tuning-hyperparameters.html#grid-search-1",
     "title": "1 - Tuning Hyperparameters",
-    "section": "Grid Search   ",
-    "text": "Grid Search   \n\nset.seed(9)\nctrl &lt;- control_grid(save_pred = TRUE, parallel_over = \"everything\")\n\nlgbm_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_grid(\n    resamples = hotel_rs,\n    grid = 25,\n    control = ctrl,\n    metrics = reg_metrics\n  )\n\n\n\ntune_grid() is representative of tuning function syntax\nsimilar to fit_resamples()"
+    "section": "Grid search",
+    "text": "Grid search\nIn reality we would probably sample the space more densely:"
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#grid-results",
@@ -4330,14 +4330,14 @@
     "href": "slides/advanced-01-tuning-hyperparameters.html#grid-search-2",
     "title": "1 - Tuning Hyperparameters",
     "section": "Grid Search   ",
-    "text": "Grid Search   \n\nlgbm_res\n#&gt; # Tuning results\n#&gt; # 10-fold cross-validation using stratification \n#&gt; # A tibble: 10 × 5\n#&gt;    splits             id     .metrics          .notes           .predictions        \n#&gt;    &lt;list&gt;             &lt;chr&gt;  &lt;list&gt;            &lt;list&gt;           &lt;list&gt;              \n#&gt;  1 &lt;split [3372/377]&gt; Fold01 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,425 × 8]&gt;\n#&gt;  2 &lt;split [3373/376]&gt; Fold02 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  3 &lt;split [3373/376]&gt; Fold03 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  4 &lt;split [3373/376]&gt; Fold04 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  5 &lt;split [3373/376]&gt; Fold05 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  6 &lt;split [3374/375]&gt; Fold06 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,375 × 8]&gt;\n#&gt;  7 &lt;split [3375/374]&gt; Fold07 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,350 × 8]&gt;\n#&gt;  8 &lt;split [3376/373]&gt; Fold08 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,325 × 8]&gt;\n#&gt;  9 &lt;split [3376/373]&gt; Fold09 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,325 × 8]&gt;\n#&gt; 10 &lt;split [3376/373]&gt; Fold10 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,325 × 8]&gt;"
+    "text": "Grid Search   \n\nset.seed(9)\nctrl &lt;- control_grid(save_pred = TRUE, parallel_over = \"everything\")\n\nlgbm_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_grid(\n    resamples = hotel_rs,\n    grid = 25,\n    control = ctrl,\n    metrics = reg_metrics\n  )\n\n\n\ntune_grid() is representative of tuning function syntax\nsimilar to fit_resamples()"
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#checking-calibration",
     "href": "slides/advanced-01-tuning-hyperparameters.html#checking-calibration",
     "title": "1 - Tuning Hyperparameters",
-    "section": "Checking Calibration",
-    "text": "Checking Calibration\n\n\nlibrary(probably)\nlgbm_res %&gt;%\n  collect_predictions(\n    parameters = lgbm_best\n  ) %&gt;%\n  cal_plot_regression(\n    truth = avg_price_per_room,\n    estimate = .pred,\n    alpha = 1 / 3\n  )"
+    "section": "Checking Calibration  ",
+    "text": "Checking Calibration  \n\n\nlibrary(probably)\nlgbm_res %&gt;%\n  collect_predictions(\n    parameters = lgbm_best\n  ) %&gt;%\n  cal_plot_regression(\n    truth = avg_price_per_room,\n    estimate = .pred,\n    alpha = 1 / 3\n  )"
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#updating-the-workflow",
@@ -4351,7 +4351,7 @@
     "href": "slides/advanced-01-tuning-hyperparameters.html#your-turn-2",
     "title": "1 - Tuning Hyperparameters",
     "section": "Your turn",
-    "text": "Your turn\n\nWhat if we used early stopping instead of set number of trees?\nWe could set trees = 1000 and use tune the stop_iter parameter.\n\n\n\n−+\n10:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Your turn\n\n\nWhat if we used early stopping instead of optimizing the number of trees?\nWe could set trees = 1000 and use tune the stop_iter parameter.\n\n\n\n−+\n10:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#running-in-parallel",
@@ -4366,5 +4366,33 @@
     "title": "1 - Tuning Hyperparameters",
     "section": "Running in parallel",
     "text": "Running in parallel\nSpeed-ups are fairly linear up to the number of physical cores (10 here).\n\n\nFaceted on the expensiveness of preprocessing used."
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#parameters",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#parameters",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Parameters",
+    "text": "Parameters\n\nThe tidymodels framework provides pre-defined information on tuning parameters (such as their type, range, transformations, etc).\nThe extract_parameter_set_dials() function extracts these tuning parameters and the info.\n\n\n\nGrids\n\nCreate your grid manually or automatically.\nThe grid_*() functions can make a grid.\n\n\n\nMost basic (but very effective) way to tune models"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#sequential-search",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#sequential-search",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Sequential Search",
+    "text": "Sequential Search\nWe could start with a few points and search the space:"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#grid-search-3",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#grid-search-3",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Grid Search   ",
+    "text": "Grid Search   \n\nset.seed(9)\nctrl &lt;- control_grid(save_pred = TRUE, parallel_over = \"everything\")\n\nlgbm_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_grid(\n    resamples = hotel_rs,\n    grid = 25,\n    control = ctrl,\n    metrics = reg_metrics\n  )\n\n\n\ntune_grid() is representative of tuning function syntax\nsimilar to fit_resamples()"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#grid-search-4",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#grid-search-4",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Grid Search   ",
+    "text": "Grid Search   \n\nlgbm_res\n#&gt; # Tuning results\n#&gt; # 10-fold cross-validation using stratification \n#&gt; # A tibble: 10 × 5\n#&gt;    splits             id     .metrics          .notes           .predictions        \n#&gt;    &lt;list&gt;             &lt;chr&gt;  &lt;list&gt;            &lt;list&gt;           &lt;list&gt;              \n#&gt;  1 &lt;split [3372/377]&gt; Fold01 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,425 × 8]&gt;\n#&gt;  2 &lt;split [3373/376]&gt; Fold02 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  3 &lt;split [3373/376]&gt; Fold03 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  4 &lt;split [3373/376]&gt; Fold04 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  5 &lt;split [3373/376]&gt; Fold05 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  6 &lt;split [3374/375]&gt; Fold06 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,375 × 8]&gt;\n#&gt;  7 &lt;split [3375/374]&gt; Fold07 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,350 × 8]&gt;\n#&gt;  8 &lt;split [3376/373]&gt; Fold08 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,325 × 8]&gt;\n#&gt;  9 &lt;split [3376/373]&gt; Fold09 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,325 × 8]&gt;\n#&gt; 10 &lt;split [3376/373]&gt; Fold10 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,325 × 8]&gt;"
   }
 ]

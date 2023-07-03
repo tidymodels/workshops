@@ -257,10 +257,10 @@ We'll focus on the popular lightgbm implementation.
 
 ## Boosted Tree Tuning Parameters
 
-* The number of predictors randomly sampled at each split (aka `mtry` in `[1, ncol(x)]` or `(0, 1]`).
-* The number of trees (`trees` in `[1, Inf]`)
-* The number of samples needed to further split (`min_n` in `[1, nrow(x)]`).
-* The rate that each tree adapts form previous iterations (`learn_rate` in `(0, 0.1)`).
+* The number of predictors randomly sampled at each split (aka `mtry` in $[1, ncol(x)]$ or $(0, 1]$).
+* The number of trees (`trees` in $[1, \infty]$, but usually up to thousands)
+* The number of samples needed to further split (`min_n` in $[1, n]$).
+* The rate that each tree adapts form previous iterations (`learn_rate` in $(0, \infty]$, usual maximum is 0.1).
 * The number of iterations of boosting where _no improvement_ was shown (`early_stop`)
 
 ## Boosted Tree Tuning Parameters
@@ -271,7 +271,7 @@ Often, there are multiple _candidate_ tuning parameter combinations that have ve
 
 To demonstrate simple concepts, we'll look at optimizing the number of trees in the ensemble (between 1 and 100) and the learning rate ($10^{-5}$ to $10^{-1}$).
 
-## Boosted Tree Tuning Parameters
+## Boosted Tree Tuning Parameters `r hexes(c("workflows", "parsnip", "bonsai"))`
 
 We'll need to load the bonsai package. This has the information needed to use lightgbm
 
@@ -298,11 +298,52 @@ The main two strategies for optimization are:
 
 - **Iterative search** 🌀 which suggests/estimates new values of candidate parameters to evaluate
 
+We'll focus on grid search for a while. 
+
+## Grid search
+
+A small grid of points trying to minimize the error via learning rate: 
+
+```{r}
+#| label: small-grid-demo
+#| echo: false
+#| fig-align: center
+#| out-width: 60%
+
+knitr::include_graphics("images/small_init.svg")
+```
 
 
 ## Grid search
 
-#### Parameters
+In reality we would probably sample the space more densely: 
+
+```{r}
+#| label: grid-demo
+#| echo: false
+#| fig-align: center
+#| out-width: 60%
+
+knitr::include_graphics("images/grid_points.svg")
+```
+
+
+## Sequential Search
+
+We could start with a few points and search the space:
+
+```{r}
+#| label: seq-demo
+#| echo: false
+#| fig-align: center
+#| out-width: 60%
+
+knitr::include_graphics("images/anime_seq.gif")
+```
+
+# Grid Search
+
+## Parameters
 
 -   The tidymodels framework provides pre-defined information on tuning parameters (such as their type, range, transformations, etc).
 
@@ -517,7 +558,7 @@ lgbm_best <- select_best(lgbm_res, metric = "mae")
 lgbm_best
 ```
 
-## Checking Calibration
+## Checking Calibration `r hexes(c("tune", "probably"))`
 
 ```{r}
 #| label: lgb-cal-plot
@@ -625,11 +666,14 @@ ggplot(times, aes(x = num_cores, y = speed_up, color = parallel_over, shape = pa
 :::notes
 Faceted on the expensiveness of preprocessing used.
 :::
+
 ## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-What if we used early stopping instead of set number of trees? 
+<br>
+
+What if we used early stopping instead of optimizing the number of trees? 
 
 We could set `trees = 1000` and use tune the `stop_iter` parameter. 
 
