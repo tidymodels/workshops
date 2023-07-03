@@ -1,0 +1,138 @@
+---
+title: "2 - Grid Search via Racing"
+subtitle: "Advanced tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+```{r more-setup}
+#| include: false
+library(modeldatatoo)
+library(probably)
+library(countdown)
+
+cores <- parallelly::availableCores(logical = FALSE)
+cl <- parallel::makePSOCKcluster(cores)
+doParallel::registerDoParallel(cl)
+
+options(width = 200)
+
+ggplot2::theme_set(ggplot2::theme_bw())
+```
+
+## Previously
+
+:::: {.columns}
+
+::: {.column width="40%"}
+
+```{r}
+#| label: tune-startup
+library(tidymodels)
+library(modeldatatoo)
+library(bonsai)
+
+# Max's usual settings: 
+tidymodels_prefer()
+theme_set(theme_bw())
+options(
+  pillar.advice = FALSE, 
+  pillar.min_title_chars = Inf
+)
+```
+
+:::
+
+::: {.column width="60%"}
+
+```{r}
+#| label: data-import
+set.seed(295)
+hotel_rates <- 
+  data_hotel_rates() %>% 
+  sample_n(5000) %>% 
+  arrange(arrival_date) %>% 
+  select(-arrival_date_num, -arrival_date) %>% 
+  mutate(
+    company = factor(as.character(company)),
+    country = factor(as.character(country)),
+    agent = factor(as.character(agent))
+  )
+```
+
+
+:::
+
+::::
+
+
+## Previously
+
+```{r}
+#| label: hotel-split
+set.seed(4028)
+hotel_split <-
+  initial_split(hotel_rates, strata = avg_price_per_room)
+
+hotel_tr <- training(hotel_split)
+hotel_te <- testing(hotel_split)
+
+set.seed(472)
+hotel_rs <- vfold_cv(hotel_tr, strata = avg_price_per_room)
+
+# ------------------------------------------------------------------------------
+
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_YeoJohnson(lead_time)
+
+lgbm_spec <- 
+  boost_tree(trees = tune(), learn_rate = tune(), mtry = tune(), 
+             min_n = tune()) %>% 
+  set_mode("regression") %>% 
+  set_engine("lightgbm")
+
+lgbm_wflow <- workflow(hotel_rec, lgbm_spec)
+```
+
+## Making Grid Search More Effcieint
+
+In the last section, we evaluated 250 models (25 candidates times 10 resamples).
+
+We can make this go faster using parallel processing. 
+
+Also, for some models, we can _fit_ far fewer models than the number that are being evaluated. 
+ 
+ * For boosting, a model with `X` trees can often predict on candidates with less than `X` trees. 
+ 
+Both of these methods can lead to enormous speed-ups. 
+
+
+## Model Racing 
+
+[_Racing_](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C7&q=+Hoeffding+racing) is an old tool that we can use to go even faster. 
+
+1. Evaluate all of the candidate models but only for a few resamples. 
+1. Determine which candidates have a low probability of being selected.
+1. Eliminate poor candidates
+1. Repeat with next resample. 
+
+This can result in fitting a small number of models. 
+
