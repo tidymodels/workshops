@@ -2034,7 +2034,7 @@
     "href": "slides/annotations.html#data-splitting-and-spending",
     "title": "Annotations",
     "section": "Data splitting and spending",
-    "text": "Data splitting and spending\nWhat does set.seed() do?\nWe’ll use pseudo-random numbers (PRN) to partition the data into training and testing. PRN are numbers that emulate truly random numbers (but really are not truly random).\nThink of PRN as a box that takes a starting value (the “seed”) that produces random numbers using that starting value as an input into its process.\nIf we know a seed value, we can reproduce our “random” numbers. To use a different set of random numbers, choose a different seed value.\nFor example:\n\nset.seed(1)\nrunif(3)\n\n#> [1] 0.2655087 0.3721239 0.5728534\n\n# Get a new set of random numbers:\nset.seed(2)\nrunif(3)\n\n#> [1] 0.1848823 0.7023740 0.5733263\n\n# We can reproduce the old ones with the same seed\nset.seed(1)\nrunif(3)\n\n#> [1] 0.2655087 0.3721239 0.5728534\n\n\nIf we don’t set the seed, R uses the clock time and the process ID to create a seed. This isn’t reproducible.\nSince we want our code to be reproducible, we set the seeds before random numbers are used.\nIn theory, you can set the seed once at the start of a script. However, if we do interactive data analysis, we might unwittingly use random numbers while coding. In that case, the stream is not the same and we don’t get reproducible results.\nThe value of the seed is an integer and really has no meaning. Max has a script to generate random integers to use as seeds to “spread the randomness around”. It is basically:\n\ncat(paste0(\"set.seed(\", sample.int(10000, 5), \")\", collapse = \"\\n\"))\n\n#> set.seed(9725)\n#> set.seed(8462)\n#> set.seed(4050)\n#> set.seed(8789)\n#> set.seed(1301)"
+    "text": "Data splitting and spending\nWhat does set.seed() do?\nWe’ll use pseudo-random numbers (PRN) to partition the data into training and testing. PRN are numbers that emulate truly random numbers (but really are not truly random).\nThink of PRN as a box that takes a starting value (the “seed”) that produces random numbers using that starting value as an input into its process.\nIf we know a seed value, we can reproduce our “random” numbers. To use a different set of random numbers, choose a different seed value.\nFor example:\n\nset.seed(1)\nrunif(3)\n\n#&gt; [1] 0.2655087 0.3721239 0.5728534\n\n# Get a new set of random numbers:\nset.seed(2)\nrunif(3)\n\n#&gt; [1] 0.1848823 0.7023740 0.5733263\n\n# We can reproduce the old ones with the same seed\nset.seed(1)\nrunif(3)\n\n#&gt; [1] 0.2655087 0.3721239 0.5728534\n\n\nIf we don’t set the seed, R uses the clock time and the process ID to create a seed. This isn’t reproducible.\nSince we want our code to be reproducible, we set the seeds before random numbers are used.\nIn theory, you can set the seed once at the start of a script. However, if we do interactive data analysis, we might unwittingly use random numbers while coding. In that case, the stream is not the same and we don’t get reproducible results.\nThe value of the seed is an integer and really has no meaning. Max has a script to generate random integers to use as seeds to “spread the randomness around”. It is basically:\n\ncat(paste0(\"set.seed(\", sample.int(10000, 5), \")\", collapse = \"\\n\"))\n\n#&gt; set.seed(9725)\n#&gt; set.seed(8462)\n#&gt; set.seed(4050)\n#&gt; set.seed(8789)\n#&gt; set.seed(1301)"
   },
   {
     "objectID": "slides/annotations.html#what-is-wrong-with-this",
@@ -2062,7 +2062,7 @@
     "href": "slides/annotations.html#using-a-workflow",
     "title": "Annotations",
     "section": "Using a workflow",
-    "text": "Using a workflow\nWhat’s going on with the\n\nprediction from a rank-deficient fit may be misleading\n\nwarnings?\nFor linear regression, a computation is used called matrix inversion. The matrix in question is called the “model matrix” and it contains the predictor set for the training data.\nMatrix inversion can fail if two or more columns:\n\nare identical, or\nadd up to some other column.\n\nThese situations are called linear dependencies.\nWhen this happens, lm() is pretty tolerant. It does not fail but does not compute regression coefficients for a minimal number of predictors involved in the dependency (and issues the warning above).\nFor these data, there is this dependency:\nshooter_type_{level} = shooter_{level}\nHere is what is happening: since the player shooting only ever plays a single position, their indicators sum up (row-wide) to the same data as the sum of the shooter type indicators.\nIn other words, if you know the player’s name, you know their position too. This is a perfect redundency in the data.\nThe way to avoid this problem is to use step_lincomb(all_numeric_predictors()) in the recipe. This step removes the minimum number of columns to avoid the issue.\nJust in case you ever want to figure out what the specific issues are, this code might help:\n\n# Get the exact data set used to fit the model. For a recipe, that is:\nprocessed_data <- \n  nhl_indicators %>% \n  prep() %>% \n  bake(new_data = NULL, all_predictors())\n\n# Let's capture their names:\npred_names <- names(processed_data)\n\n# caret has a function to determine the variables involved in each dependency\nissues <- caret::findLinearCombos(processed_data)\n# Convert the column index to names:\nissues_vars <- purrr::map(issues$linearCombos, ~ pred_names[.x])\n\n# caret proposes removing these columns to get rid of the issue. The choice\n# is pretty arbitrary: \nremoved_names <- pred_names[issues$remove]\n\ntl;dr\nLinear regression detects some redundancies in the predictor set. We can ignore the warnings since lm() can deal with it or use step_lincomb() to avoid the warnings."
+    "text": "Using a workflow\nWhat’s going on with the\n\nprediction from a rank-deficient fit may be misleading\n\nwarnings?\nFor linear regression, a computation is used called matrix inversion. The matrix in question is called the “model matrix” and it contains the predictor set for the training data.\nMatrix inversion can fail if two or more columns:\n\nare identical, or\nadd up to some other column.\n\nThese situations are called linear dependencies.\nWhen this happens, lm() is pretty tolerant. It does not fail but does not compute regression coefficients for a minimal number of predictors involved in the dependency (and issues the warning above).\nFor these data, there is this dependency:\nshooter_type_{level} = shooter_{level}\nHere is what is happening: since the player shooting only ever plays a single position, their indicators sum up (row-wide) to the same data as the sum of the shooter type indicators.\nIn other words, if you know the player’s name, you know their position too. This is a perfect redundency in the data.\nThe way to avoid this problem is to use step_lincomb(all_numeric_predictors()) in the recipe. This step removes the minimum number of columns to avoid the issue.\nJust in case you ever want to figure out what the specific issues are, this code might help:\n\n# Get the exact data set used to fit the model. For a recipe, that is:\nprocessed_data &lt;- \n  nhl_indicators %&gt;% \n  prep() %&gt;% \n  bake(new_data = NULL, all_predictors())\n\n# Let's capture their names:\npred_names &lt;- names(processed_data)\n\n# caret has a function to determine the variables involved in each dependency\nissues &lt;- caret::findLinearCombos(processed_data)\n# Convert the column index to names:\nissues_vars &lt;- purrr::map(issues$linearCombos, ~ pred_names[.x])\n\n# caret proposes removing these columns to get rid of the issue. The choice\n# is pretty arbitrary: \nremoved_names &lt;- pred_names[issues$remove]\n\ntl;dr\nLinear regression detects some redundancies in the predictor set. We can ignore the warnings since lm() can deal with it or use step_lincomb() to avoid the warnings."
   },
   {
     "objectID": "slides/annotations.html#per-player-statistics",
@@ -2083,14 +2083,14 @@
     "href": "slides/annotations.html#angle",
     "title": "Annotations",
     "section": "Angle",
-    "text": "Angle\nAbout geometry…\nThe coordinates for the rink are centered at (0, 0) and the goal lines are both 89 ft from center. The center of the goal on the left is at (-89, 0) and the right-hand goal is centered at (89, 0).\nFor angle to center of the goal mouth, the formula is\n\\[a = \\tan^{-1}\\left(\\frac{y}{x}\\right)\\]\nThis is in radian units and we can convert to degrees using\n\\[a = \\frac{180}{\\pi}\\tan^{-1}\\left(\\frac{y}{x}\\right)\\]\nFor the angle to the goal, we need to alter \\(x\\) and use x* = (89 - abs(coord_x)) instead."
+    "text": "Angle\nAbout geometry…\nThe coordinates for the rink are centered at (0, 0) and the goal lines are both 89 ft from center. The center of the goal on the left is at (-89, 0) and the right-hand goal is centered at (89, 0).\nFor angle to center of the goal mouth, the formula is\n\\[a = \\tan^{-1}\\left(\\frac{y}{x}\\right)\\] This is in radian units and we can convert to degrees using\n\\[a = \\frac{180}{\\pi}\\tan^{-1}\\left(\\frac{y}{x}\\right)\\] For the angle to the goal, we need to alter \\(x\\) and use x* = (89 - abs(coord_x)) instead."
   },
   {
     "objectID": "slides/annotations.html#update-parameter-ranges",
     "href": "slides/annotations.html#update-parameter-ranges",
     "title": "Annotations",
     "section": "Update parameter ranges",
-    "text": "Update parameter ranges\nIn about 90% of the cases, the dials function that you use to update the parameter range has the same name as the argument. For example, if you were to update the mtry parameter in a random forests model, the code would look like\n\nparameter_object %>% \n  update(mtry = mtry(c(1, 100)))\n\nIn our case, the argument name is deg_free but we update it with spline_degree().\ndeg_free represents the general concept of degrees of freedom and could be associated with many different things. For example, if we ever had an argument that was the number of degrees of freedom for a \\(t\\) distribution, we would call that argument deg_free.\nFor splines, we probably want a wider range for the degrees of freedom. We made a specialized function called spline_degree() to be used in these cases.\nHow can you tell when this happens? There is a helper function called tunable() and that gives information on how we make the default ranges for parameters. There is a column in these objects names call_info:\n\nlibrary(tidymodels)\nns_tunable <- \n  recipe(mpg ~ ., data = mtcars) %>% \n  step_ns(dis, deg_free = tune()) %>% \n  tunable()\n\nns_tunable\n\n#> # A tibble: 1 × 5\n#>   name     call_info        source component component_id\n#>   <chr>    <list>           <chr>  <chr>     <chr>       \n#> 1 deg_free <named list [3]> recipe step_ns   ns_P1Tjg\n\nns_tunable$call_info\n\n#> [[1]]\n#> [[1]]$pkg\n#> [1] \"dials\"\n#> \n#> [[1]]$fun\n#> [1] \"spline_degree\"\n#> \n#> [[1]]$range\n#> [1]  1 15"
+    "text": "Update parameter ranges\nIn about 90% of the cases, the dials function that you use to update the parameter range has the same name as the argument. For example, if you were to update the mtry parameter in a random forests model, the code would look like\n\nparameter_object %&gt;% \n  update(mtry = mtry(c(1, 100)))\n\nIn our case, the argument name is deg_free but we update it with spline_degree().\ndeg_free represents the general concept of degrees of freedom and could be associated with many different things. For example, if we ever had an argument that was the number of degrees of freedom for a \\(t\\) distribution, we would call that argument deg_free.\nFor splines, we probably want a wider range for the degrees of freedom. We made a specialized function called spline_degree() to be used in these cases.\nHow can you tell when this happens? There is a helper function called tunable() and that gives information on how we make the default ranges for parameters. There is a column in these objects names call_info:\n\nlibrary(tidymodels)\nns_tunable &lt;- \n  recipe(mpg ~ ., data = mtcars) %&gt;% \n  step_ns(dis, deg_free = tune()) %&gt;% \n  tunable()\n\nns_tunable\n\n#&gt; # A tibble: 1 × 5\n#&gt;   name     call_info        source component component_id\n#&gt;   &lt;chr&gt;    &lt;list&gt;           &lt;chr&gt;  &lt;chr&gt;     &lt;chr&gt;       \n#&gt; 1 deg_free &lt;named list [3]&gt; recipe step_ns   ns_P1Tjg\n\nns_tunable$call_info\n\n#&gt; [[1]]\n#&gt; [[1]]$pkg\n#&gt; [1] \"dials\"\n#&gt; \n#&gt; [[1]]$fun\n#&gt; [1] \"spline_degree\"\n#&gt; \n#&gt; [[1]]$range\n#&gt; [1]  1 15"
   },
   {
     "objectID": "slides/annotations.html#boosted-tree-tuning-parameters",
@@ -2104,7 +2104,7 @@
     "href": "slides/annotations.html#the-final-fit-to-the-nhl-data",
     "title": "Annotations",
     "section": "The final fit to the NHL data",
-    "text": "The final fit to the NHL data\nRecall that last_fit() uses the objects produced by initial_split() to determine what data are used for the final model fit and which are used as the test set.\nFor the validation set, last_fit() will use the non-testing data to create the final model fit. This includes the training and validation set.\nThere is no agreement in the community on whether this is the best approach or if we should just use the training set. There are good arguments either way.\nIf you only want to use the training set for the final model, you can do this via:\n\ntraining_data <- nhl_val$splits[[1]] %>% analysis()\n\n# Use `fit()` to train the model on just the training set\nfinal_glm_spline_wflow <- \n  glm_spline_wflow %>% \n  fit(data = training_data)\n\n# Create test set predictions\ntest_set_pred <- augment(final_glm_spline_wflow, nhl_test)\n\n# Setup and compute the test set metrics\ncls_metrics <- metric_set(roc_auc, accuracy)\n\ntest_res <- \n  test_set_pred %>% \n  cls_metrics(on_goal, estimate = .pred_class, .pred_yes)\ntest_res"
+    "text": "The final fit to the NHL data\nRecall that last_fit() uses the objects produced by initial_split() to determine what data are used for the final model fit and which are used as the test set.\nFor the validation set, last_fit() will use the non-testing data to create the final model fit. This includes the training and validation set.\nThere is no agreement in the community on whether this is the best approach or if we should just use the training set. There are good arguments either way.\nIf you only want to use the training set for the final model, you can do this via:\n\ntraining_data &lt;- nhl_val$splits[[1]] %&gt;% analysis()\n\n# Use `fit()` to train the model on just the training set\nfinal_glm_spline_wflow &lt;- \n  glm_spline_wflow %&gt;% \n  fit(data = training_data)\n\n# Create test set predictions\ntest_set_pred &lt;- augment(final_glm_spline_wflow, nhl_test)\n\n# Setup and compute the test set metrics\ncls_metrics &lt;- metric_set(roc_auc, accuracy)\n\ntest_res &lt;- \n  test_set_pred %&gt;% \n  cls_metrics(on_goal, estimate = .pred_class, .pred_yes)\ntest_res"
   },
   {
     "objectID": "slides/annotations.html#explain-yourself",
@@ -4148,6 +4148,223 @@
     "href": "slides/advanced-01-tuning-hyperparameters.html#feature-engineering",
     "title": "1 - Tuning Hyperparameters",
     "section": "Feature Engineering",
-    "text": "Feature Engineering\nHow should we represent our predictors? There are:\n\nCategorical predictors, some with many levels\nSome skewed numeric predictor(s)\nInteractions?\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Feature Engineering\nHow should we represent our predictors? There are:\n\nCategorical predictors, some with many levels\nSome skewed numeric predictor(s)\nInteractions?\n\n\nLet’s start a basic recipe:\n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_YeoJohnson(lead_time)\n\n\n\nWe’ll add to this for different types of models."
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#tuning-parameters",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#tuning-parameters",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Tuning parameters",
+    "text": "Tuning parameters\nSome model or preprocessing parameters cannot be estimated directly from the data.\n\nSome examples:\n\nTree depth in decision trees\nNumber of neighbors in a K-nearest neighbor model"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#optimize-tuning-parameters",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#optimize-tuning-parameters",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Optimize tuning parameters",
+    "text": "Optimize tuning parameters\n\nTry different values and measure their performance.\n\n\n\nFind good values for these parameters.\n\n\n\n\nOnce the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set."
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#optimize-tuning-parameters-1",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#optimize-tuning-parameters-1",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Optimize tuning parameters",
+    "text": "Optimize tuning parameters\nThe main two strategies for optimization are:\n\n\nGrid search 💠 which tests a pre-defined set of candidate values\nIterative search 🌀 which suggests/estimates new values of candidate parameters to evaluate"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#a-baseline-model",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#a-baseline-model",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "A Baseline Model",
+    "text": "A Baseline Model\nA simple linear model with main effects\n\nset.seed(472)\nhotel_rs &lt;- vfold_cv(hotel_tr, strata = avg_price_per_room)\n\nbase_rec &lt;- \n  hotel_rec %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors())\n\nbase_wflow &lt;- workflow(base_rec, linear_reg())"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#a-baseline-model-1",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#a-baseline-model-1",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "A Baseline Model",
+    "text": "A Baseline Model\nWe’ll try to optimize the mean absolute error:\n\nreg_metrics &lt;- metric_set(mae, rsq)\nctrl_rs &lt;- control_resamples(save_pred = TRUE)\n\nbase_res &lt;- base_wflow %&gt;% fit_resamples(hotel_rs, metrics = reg_metrics)\n\ncollect_metrics(base_res)\n#&gt; # A tibble: 2 × 6\n#&gt;   .metric .estimator   mean     n std_err .config             \n#&gt;   &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 mae     standard   17.3      10 0.199   Preprocessor1_Model1\n#&gt; 2 rsq     standard    0.874    10 0.00400 Preprocessor1_Model1"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#boosted-trees",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#boosted-trees",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Boosted Trees",
+    "text": "Boosted Trees\nThese are popular ensemble methods that build a sequence of tree models.\nEach tree uses the results of the previous tree to better predict samples, especially those that have been poorly predicted.\nEach tree in the ensemble is saved and new samples are predicted using a weighted average of the votes of each tree in the ensemble.\nWe’ll focus on the popular lightgbm implementation."
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#boosted-tree-tuning-parameters",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#boosted-tree-tuning-parameters",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Boosted Tree Tuning Parameters",
+    "text": "Boosted Tree Tuning Parameters\n\nThe number of predictors randomly sampled at each split (aka mtry in [1, ncol(x)] or (0, 1]).\nThe number of trees (trees in [1, Inf])\nThe number of samples needed to further split (min_n in [1, nrow(x)]).\nThe rate that each tree adapts form previous iterations (learn_rate in (0, 0.1)).\nThe number of iterations of boosting where no improvement was shown (early_stop)"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#boosted-tree-tuning-parameters-1",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#boosted-tree-tuning-parameters-1",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Boosted Tree Tuning Parameters",
+    "text": "Boosted Tree Tuning Parameters\nTBH it is usually not difficult to optimize these models.\nOften, there are multiple candidate tuning parameter combinations that have very good results.\nTo demonstrate simple concepts, we’ll look at optimizing the number of trees in the ensemble (between 1 and 100) and the learning rate (\\(10^{-5}\\) to \\(10^{-1}\\))."
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#boosted-tree-tuning-parameters-2",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#boosted-tree-tuning-parameters-2",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Boosted Tree Tuning Parameters",
+    "text": "Boosted Tree Tuning Parameters\nWe’ll need to load the bonsai package. This has the information needed to use lightgbm\n\nlibrary(bonsai)\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#grid-search",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#grid-search",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Grid search",
+    "text": "Grid search\nParameters\n\nThe tidymodels framework provides pre-defined information on tuning parameters (such as their type, range, transformations, etc).\nThe extract_parameter_set_dials() function extracts these tuning parameters and the info.\n\n\n\nGrids\n\nCreate your grid manually or automatically.\nThe grid_*() functions can make a grid.\n\n\n\nMost basic (but very effective) way to tune models"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#create-a-grid",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#create-a-grid",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Create a grid  ",
+    "text": "Create a grid  \n\nlgbm_wflow %&gt;% \n  extract_parameter_set_dials()\n#&gt; Collection of 2 parameters for tuning\n#&gt; \n#&gt;  identifier       type    object\n#&gt;       trees      trees nparam[+]\n#&gt;  learn_rate learn_rate nparam[+]\n\n# Individual functions: \ntrees()\n#&gt; # Trees (quantitative)\n#&gt; Range: [1, 2000]\nlearn_rate()\n#&gt; Learning Rate (quantitative)\n#&gt; Transformer: log-10 [1e-100, Inf]\n#&gt; Range (transformed scale): [-10, -1]\n\n\nA parameter set can be updated (e.g. to change the ranges)."
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#create-a-grid-1",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#create-a-grid-1",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Create a grid  ",
+    "text": "Create a grid  \n\n\n\nset.seed(12)\ngrid &lt;- \n  lgbm_wflow %&gt;% \n  extract_parameter_set_dials() %&gt;% \n  grid_latin_hypercube(size = 25)\n\ngrid\n#&gt; # A tibble: 25 × 2\n#&gt;    trees learn_rate\n#&gt;    &lt;int&gt;      &lt;dbl&gt;\n#&gt;  1   510   4.40e- 6\n#&gt;  2    67   3.59e- 3\n#&gt;  3  1013   2.85e- 7\n#&gt;  4  1401   3.70e- 8\n#&gt;  5   453   1.44e-10\n#&gt;  6   768   5.78e- 5\n#&gt;  7  1226   5.57e- 2\n#&gt;  8  1564   7.02e- 3\n#&gt;  9   933   1.05e- 2\n#&gt; 10  1353   1.17e- 7\n#&gt; # ℹ 15 more rows\n\n\n\n\nA space-filling design like this tends to perform better than random grids.\nSpace-filling designs are also usually more efficient than regular grids."
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#your-turn-1",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#your-turn-1",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Your turn",
+    "text": "Your turn\n\nCreate a grid for our tunable workflow.\nTry creating a regular grid.\n\n\n\n−+\n03:00"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#create-a-grid-2",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#create-a-grid-2",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Create a grid  ",
+    "text": "Create a grid  \n\nset.seed(12)\ngrid &lt;- \n  lgbm_wflow %&gt;% \n  extract_parameter_set_dials() %&gt;% \n  grid_regular(levels = 25)\n\ngrid\n#&gt; # A tibble: 625 × 2\n#&gt;    trees   learn_rate\n#&gt;    &lt;int&gt;        &lt;dbl&gt;\n#&gt;  1     1 0.0000000001\n#&gt;  2    84 0.0000000001\n#&gt;  3   167 0.0000000001\n#&gt;  4   250 0.0000000001\n#&gt;  5   334 0.0000000001\n#&gt;  6   417 0.0000000001\n#&gt;  7   500 0.0000000001\n#&gt;  8   584 0.0000000001\n#&gt;  9   667 0.0000000001\n#&gt; 10   750 0.0000000001\n#&gt; # ℹ 615 more rows\n\n\nNote that even though we requested 25x25=625 rows, we only got 15x15=225 back, since the deg_free parameters only have a range of 1-&gt;15."
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#update-parameter-ranges",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#update-parameter-ranges",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Update parameter ranges  ",
+    "text": "Update parameter ranges  \n\nset.seed(121)\ngrid &lt;- \n  lgbm_wflow %&gt;% \n  extract_parameter_set_dials() %&gt;% \n  update(trees = trees(c(1L, 100L)),\n         learn_rate = learn_rate(c(-5, -1))) %&gt;% \n  grid_latin_hypercube(size = 25)\n\ngrid\n#&gt; # A tibble: 25 × 2\n#&gt;    trees learn_rate\n#&gt;    &lt;int&gt;      &lt;dbl&gt;\n#&gt;  1    17  0.00756  \n#&gt;  2    35  0.0000339\n#&gt;  3    77  0.000112 \n#&gt;  4    43  0.00124  \n#&gt;  5    58  0.0230   \n#&gt;  6     6  0.000471 \n#&gt;  7    91  0.000326 \n#&gt;  8    88  0.00899  \n#&gt;  9    15  0.00112  \n#&gt; 10    24  0.0777   \n#&gt; # ℹ 15 more rows"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#the-results",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#the-results",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "The results  ",
+    "text": "The results  \n\n\ngrid %&gt;% \n  ggplot(aes(trees, learn_rate)) +\n  geom_point(size = 4) +\n  scale_y_log10()\n\n\n\n\n\n\n\n\n\n\nNote that the learning rates are uniform on the log-10 scale."
+  },
+  {
+    "objectID": "slides/annotations.html#section",
+    "href": "slides/annotations.html#section",
+    "title": "Annotations",
+    "section": "",
+    "text": "This page contains annotations for selected slides.\nThere’s a lot that we want to tell you. We don’t want people to have to frantically scribble down things that we say that are not on the slides.\nWe’ve added sections to this document with longer explanations and links to other resources."
+  },
+  {
+    "objectID": "slides/annotations.html#finalize-and-verify",
+    "href": "slides/annotations.html#finalize-and-verify",
+    "title": "Annotations",
+    "section": "",
+    "text": "This is a pretty complex data usage scheme. That is mostly because of the validation set. In every other case, the situation is much more simple.\nThe important point here is that: tidymodels does most of this work for you. In other words, you don’t have to directly specify which data are being used where.\nIn a later section, we will talk about methods of resampling. These methods are like repeated validation sets. As an example, the popular 10-fold cross-validation method is one such type of resampling. Validation sets are special cases of resampling where there is a single “resample”.\nMost types of resampling use multiple hold-out sets of samples from the training set. In those cases, a diagram for data usage here would look like\n\n\n\n\n\n\n\n\n\nIn this case there is just “testing” and “training”. Once the final model is determined, the entire training set is used for the last fit.\nThis is the process that will be used for the tree frog data."
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#choosing-tuning-parameters",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#choosing-tuning-parameters",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Choosing tuning parameters    ",
+    "text": "Choosing tuning parameters    \nLet’s take our previous model and add more parameters:\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(), mtry = tune(), \n             min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#grid-search-1",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#grid-search-1",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Grid Search   ",
+    "text": "Grid Search   \n\nset.seed(9)\nctrl &lt;- control_grid(save_pred = TRUE, parallel_over = \"everything\")\n\nlgbm_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_grid(\n    resamples = hotel_rs,\n    grid = 25,\n    control = ctrl,\n    metrics = reg_metrics\n  )\n\n\n\ntune_grid() is representative of tuning function syntax\nsimilar to fit_resamples()"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#grid-results",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#grid-results",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Grid results ",
+    "text": "Grid results \n\nautoplot(lgbm_res)"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#tuning-results",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#tuning-results",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Tuning results ",
+    "text": "Tuning results \n\ncollect_metrics(lgbm_res)\n#&gt; # A tibble: 50 × 10\n#&gt;     mtry trees min_n   learn_rate .metric .estimator   mean     n std_err .config              \n#&gt;    &lt;int&gt; &lt;int&gt; &lt;int&gt;        &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                \n#&gt;  1     1  1632     3 0.0000000262 mae     standard   53.2      10 0.427   Preprocessor1_Model01\n#&gt;  2     1  1632     3 0.0000000262 rsq     standard    0.734    10 0.00749 Preprocessor1_Model01\n#&gt;  3     3   935    37 0.0780       mae     standard   11.1      10 0.155   Preprocessor1_Model02\n#&gt;  4     3   935    37 0.0780       rsq     standard    0.936    10 0.00272 Preprocessor1_Model02\n#&gt;  5     4   663    33 0.00000396   mae     standard   53.1      10 0.426   Preprocessor1_Model03\n#&gt;  6     4   663    33 0.00000396   rsq     standard    0.841    10 0.00516 Preprocessor1_Model03\n#&gt;  7     5   532    27 0.00000816   mae     standard   53.1      10 0.425   Preprocessor1_Model04\n#&gt;  8     5   532    27 0.00000816   rsq     standard    0.857    10 0.00502 Preprocessor1_Model04\n#&gt;  9     6  1166     5 0.000104     mae     standard   48.5      10 0.389   Preprocessor1_Model05\n#&gt; 10     6  1166     5 0.000104     rsq     standard    0.859    10 0.00456 Preprocessor1_Model05\n#&gt; # ℹ 40 more rows"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#tuning-results-1",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#tuning-results-1",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Tuning results ",
+    "text": "Tuning results \n\ncollect_metrics(lgbm_res, summarize = FALSE)\n#&gt; # A tibble: 500 × 9\n#&gt;    id      mtry trees min_n   learn_rate .metric .estimator .estimate .config              \n#&gt;    &lt;chr&gt;  &lt;int&gt; &lt;int&gt; &lt;int&gt;        &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;                \n#&gt;  1 Fold01     1  1632     3 0.0000000262 mae     standard      51.8   Preprocessor1_Model01\n#&gt;  2 Fold01     1  1632     3 0.0000000262 rsq     standard       0.773 Preprocessor1_Model01\n#&gt;  3 Fold02     1  1632     3 0.0000000262 mae     standard      52.1   Preprocessor1_Model01\n#&gt;  4 Fold02     1  1632     3 0.0000000262 rsq     standard       0.742 Preprocessor1_Model01\n#&gt;  5 Fold03     1  1632     3 0.0000000262 mae     standard      52.2   Preprocessor1_Model01\n#&gt;  6 Fold03     1  1632     3 0.0000000262 rsq     standard       0.737 Preprocessor1_Model01\n#&gt;  7 Fold04     1  1632     3 0.0000000262 mae     standard      51.7   Preprocessor1_Model01\n#&gt;  8 Fold04     1  1632     3 0.0000000262 rsq     standard       0.702 Preprocessor1_Model01\n#&gt;  9 Fold05     1  1632     3 0.0000000262 mae     standard      55.2   Preprocessor1_Model01\n#&gt; 10 Fold05     1  1632     3 0.0000000262 rsq     standard       0.771 Preprocessor1_Model01\n#&gt; # ℹ 490 more rows"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#choose-a-parameter-combination",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#choose-a-parameter-combination",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Choose a parameter combination ",
+    "text": "Choose a parameter combination \n\nshow_best(lgbm_res, metric = \"rsq\")\n#&gt; # A tibble: 5 × 10\n#&gt;    mtry trees min_n learn_rate .metric .estimator  mean     n std_err .config              \n#&gt;   &lt;int&gt; &lt;int&gt; &lt;int&gt;      &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                \n#&gt; 1    13  1309    13    0.0127  rsq     standard   0.940    10 0.00335 Preprocessor1_Model12\n#&gt; 2    14  1895    24    0.00730 rsq     standard   0.939    10 0.00310 Preprocessor1_Model13\n#&gt; 3    19   581    28    0.0231  rsq     standard   0.937    10 0.00315 Preprocessor1_Model18\n#&gt; 4     3   935    37    0.0780  rsq     standard   0.936    10 0.00272 Preprocessor1_Model02\n#&gt; 5    26  1094    17    0.00242 rsq     standard   0.918    10 0.00396 Preprocessor1_Model25"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#choose-a-parameter-combination-1",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#choose-a-parameter-combination-1",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Choose a parameter combination ",
+    "text": "Choose a parameter combination \nCreate your own tibble for final parameters or use one of the tune::select_*() functions:\n\nlgbm_best &lt;- select_best(lgbm_res, metric = \"mae\")\nlgbm_best\n#&gt; # A tibble: 1 × 5\n#&gt;    mtry trees min_n learn_rate .config              \n#&gt;   &lt;int&gt; &lt;int&gt; &lt;int&gt;      &lt;dbl&gt; &lt;chr&gt;                \n#&gt; 1    13  1309    13     0.0127 Preprocessor1_Model12"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#grid-search-2",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#grid-search-2",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Grid Search   ",
+    "text": "Grid Search   \n\nlgbm_res\n#&gt; # Tuning results\n#&gt; # 10-fold cross-validation using stratification \n#&gt; # A tibble: 10 × 5\n#&gt;    splits             id     .metrics          .notes           .predictions        \n#&gt;    &lt;list&gt;             &lt;chr&gt;  &lt;list&gt;            &lt;list&gt;           &lt;list&gt;              \n#&gt;  1 &lt;split [3372/377]&gt; Fold01 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,425 × 8]&gt;\n#&gt;  2 &lt;split [3373/376]&gt; Fold02 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  3 &lt;split [3373/376]&gt; Fold03 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  4 &lt;split [3373/376]&gt; Fold04 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  5 &lt;split [3373/376]&gt; Fold05 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  6 &lt;split [3374/375]&gt; Fold06 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,375 × 8]&gt;\n#&gt;  7 &lt;split [3375/374]&gt; Fold07 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,350 × 8]&gt;\n#&gt;  8 &lt;split [3376/373]&gt; Fold08 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,325 × 8]&gt;\n#&gt;  9 &lt;split [3376/373]&gt; Fold09 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,325 × 8]&gt;\n#&gt; 10 &lt;split [3376/373]&gt; Fold10 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,325 × 8]&gt;"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#checking-calibration",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#checking-calibration",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Checking Calibration",
+    "text": "Checking Calibration\n\n\nlibrary(probably)\nlgbm_res %&gt;%\n  collect_predictions(\n    parameters = lgbm_best\n  ) %&gt;%\n  cal_plot_regression(\n    truth = avg_price_per_room,\n    estimate = .pred,\n    alpha = 1 / 3\n  )"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#updating-the-workflow",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#updating-the-workflow",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Updating the Workflow",
+    "text": "Updating the Workflow\nIf we like this model, we might want to splice the best tuning parameter values into our lgbm_wflow object.\nThere is a function for that:\n\nlgbm_wflow &lt;- lgbm_wflow %&gt;% finalize_workflow(lgbm_best)\nlgbm_wflow\n#&gt; ══ Workflow ══════════════════════════════════════════════════════════\n#&gt; Preprocessor: Recipe\n#&gt; Model: boost_tree()\n#&gt; \n#&gt; ── Preprocessor ──────────────────────────────────────────────────────\n#&gt; 1 Recipe Step\n#&gt; \n#&gt; • step_YeoJohnson()\n#&gt; \n#&gt; ── Model ─────────────────────────────────────────────────────────────\n#&gt; Boosted Tree Model Specification (regression)\n#&gt; \n#&gt; Main Arguments:\n#&gt;   mtry = 13\n#&gt;   trees = 1309\n#&gt;   min_n = 13\n#&gt;   learn_rate = 0.012739722191806\n#&gt; \n#&gt; Computational engine: lightgbm"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#your-turn-2",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#your-turn-2",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Your turn",
+    "text": "Your turn\n\nWhat if we used early stopping instead of set number of trees?\nWe could set trees = 1000 and use tune the stop_iter parameter.\n\n\n\n−+\n10:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#running-in-parallel",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#running-in-parallel",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Running in parallel",
+    "text": "Running in parallel\n\n\n\nGrid search, combined with resampling, requires fitting a lot of models!\nThese models don’t depend on one another and can be run in parallel.\n\nWe can use a parallel backend to do this:\n\ncores &lt;- parallelly::availableCores(logical = FALSE)\ncl &lt;- parallel::makePSOCKcluster(cores)\ndoParallel::registerDoParallel(cl)\n\n# Now call `tune_grid()`!\n\n# Shut it down with:\nforeach::registerDoSEQ()\nparallel::stopCluster(cl)"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#running-in-parallel-1",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#running-in-parallel-1",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Running in parallel",
+    "text": "Running in parallel\nSpeed-ups are fairly linear up to the number of physical cores (10 here).\n\n\nFaceted on the expensiveness of preprocessing used."
   }
 ]

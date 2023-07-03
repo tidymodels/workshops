@@ -139,6 +139,39 @@ hotel_rec <-
 
 We'll add to this for different types of models. 
 
+## A Baseline Model
+
+A simple linear model with main effects
+
+```{r}
+#| label: hotel-base-model
+set.seed(472)
+hotel_rs <- vfold_cv(hotel_tr, strata = avg_price_per_room)
+
+base_rec <- 
+  hotel_rec %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors())
+
+base_wflow <- workflow(base_rec, linear_reg())
+```
+
+
+## A Baseline Model
+
+We'll try to optimize the mean absolute error: 
+
+```{r}
+#| label: hotel-base-res
+#| cache: true
+reg_metrics <- metric_set(mae, rsq)
+ctrl_rs <- control_resamples(save_pred = TRUE)
+
+base_res <- base_wflow %>% fit_resamples(hotel_rs, metrics = reg_metrics)
+
+collect_metrics(base_res)
+```
+
 
 # Optimizing Models via Tuning Parameters
 
@@ -211,6 +244,50 @@ Nope. It is not.
 
 - Once the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set.
 
+
+## Boosted Trees
+
+These are popular ensemble methods that build a _sequence_ of tree models. 
+
+Each tree uses the results of the previous tree to better predict samples, especially those that have been poorly predicted. 
+
+Each tree in the ensemble is saved and new samples are predicted using a weighted average of the votes of each tree in the ensemble. 
+
+We'll focus on the popular lightgbm implementation. 
+
+## Boosted Tree Tuning Parameters
+
+* The number of predictors randomly sampled at each split (aka `mtry` in `[1, ncol(x)]` or `(0, 1]`).
+* The number of trees (`trees` in `[1, Inf]`)
+* The number of samples needed to further split (`min_n` in `[1, nrow(x)]`).
+* The rate that each tree adapts form previous iterations (`learn_rate` in `(0, 0.1)`).
+* The number of iterations of boosting where _no improvement_ was shown (`early_stop`)
+
+## Boosted Tree Tuning Parameters
+
+TBH it is usually not difficult to optimize these models. 
+
+Often, there are multiple _candidate_ tuning parameter combinations that have very good results. 
+
+To demonstrate simple concepts, we'll look at optimizing the number of trees in the ensemble (between 1 and 100) and the learning rate ($10^{-5}$ to $10^{-1}$).
+
+## Boosted Tree Tuning Parameters
+
+We'll need to load the bonsai package. This has the information needed to use lightgbm
+
+```{r}
+#| label: boot-spec
+
+library(bonsai)
+lgbm_spec <- 
+  boost_tree(trees = tune(), learn_rate = tune()) %>% 
+  set_mode("regression") %>% 
+  set_engine("lightgbm")
+
+lgbm_wflow <- workflow(hotel_rec, lgbm_spec)
+```
+
+
 ## Optimize tuning parameters
 
 The main two strategies for optimization are:
@@ -220,4 +297,344 @@ The main two strategies for optimization are:
 - **Grid search** 💠 which tests a pre-defined set of candidate values
 
 - **Iterative search** 🌀 which suggests/estimates new values of candidate parameters to evaluate
+
+
+
+## Grid search
+
+#### Parameters
+
+-   The tidymodels framework provides pre-defined information on tuning parameters (such as their type, range, transformations, etc).
+
+-   The `extract_parameter_set_dials()` function extracts these tuning parameters and the info.
+
+::: fragment
+#### Grids
+
+-   Create your grid manually or automatically.
+
+-   The `grid_*()` functions can make a grid.
+:::
+
+::: notes
+Most basic (but very effective) way to tune models
+:::
+
+## Create a grid `r hexes(c("dials", "workflows"))`
+
+```{r get-param}
+#| tidy: false
+lgbm_wflow %>% 
+  extract_parameter_set_dials()
+
+# Individual functions: 
+trees()
+learn_rate()
+```
+
+::: fragment
+A parameter set can be updated (e.g. to change the ranges).
+:::
+
+## Create a grid `r hexes(c("dials", "workflows"))`
+
+::: columns
+::: {.column width="50%"}
+```{r}
+#| label: get-grid 
+set.seed(12)
+grid <- 
+  lgbm_wflow %>% 
+  extract_parameter_set_dials() %>% 
+  grid_latin_hypercube(size = 25)
+
+grid
+```
+:::
+
+::: {.column width="50%"}
+::: fragment
+-   A *space-filling design* like this tends to perform better than random grids.
+-   Space-filling designs are also usually more efficient than regular grids.
+:::
+:::
+:::
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Create a grid for our tunable workflow.*
+
+*Try creating a regular grid.*
+
+```{r}
+#| echo: false
+countdown::countdown(minutes = 3, id = "make-grid")
+```
+
+## Create a grid `r hexes(c("dials", "workflows"))`
+
+```{r get-regular-grid} 
+#| label: reg-grid
+#| code-line-numbers: "5"
+set.seed(12)
+grid <- 
+  lgbm_wflow %>% 
+  extract_parameter_set_dials() %>% 
+  grid_regular(levels = 25)
+
+grid
+```
+
+:::notes
+Note that even though we requested 25x25=625 rows, we only got 15x15=225 back, since the `deg_free` parameters only have a range of `1->15`.
+:::
+
+## Update parameter ranges `r hexes(c("dials", "workflows"))` {.annotation}
+
+
+```{r mod-grid-code} 
+#| label: update-param
+#| code-line-numbers: "5-6"
+set.seed(121)
+grid <- 
+  lgbm_wflow %>% 
+  extract_parameter_set_dials() %>% 
+  update(trees = trees(c(1L, 100L)),
+         learn_rate = learn_rate(c(-5, -1))) %>% 
+  grid_latin_hypercube(size = 25)
+
+grid
+```
+
+
+## The results `r hexes(c("dials", "workflows"))`
+
+```{r show-grid-code} 
+#| label: sfd
+#| output-location: column
+#| fig-width: 5
+#| fig-height: 5.1
+#| fig-align: 'center'
+grid %>% 
+  ggplot(aes(trees, learn_rate)) +
+  geom_point(size = 4) +
+  scale_y_log10()
+```
+
+Note that the learning rates are uniform on the log-10 scale. 
+
+
+# Use the `tune_*()` functions to tune models
+
+
+## Choosing tuning parameters `r hexes("recipes","parsnip", "workflows", "tune")`
+
+Let's take our previous model and add more parameters:
+
+```{r} 
+#| label: lgm-more-tune
+#| code-line-numbers: "2-3"
+lgbm_spec <- 
+  boost_tree(trees = tune(), learn_rate = tune(), mtry = tune(), 
+             min_n = tune()) %>% 
+  set_mode("regression") %>% 
+  set_engine("lightgbm")
+
+lgbm_wflow <- workflow(hotel_rec, lgbm_spec)
+```
+
+
+## Grid Search `r hexes(c("dials", "workflows", "tune"))` 
+
+```{r tuning} 
+#| label: lgb-grid-tune
+#| cache: true
+set.seed(9)
+ctrl <- control_grid(save_pred = TRUE, parallel_over = "everything")
+
+lgbm_res <-
+  lgbm_wflow %>%
+  tune_grid(
+    resamples = hotel_rs,
+    grid = 25,
+    control = ctrl,
+    metrics = reg_metrics
+  )
+```
+
+::: notes
+-   `tune_grid()` is representative of tuning function syntax
+-   similar to `fit_resamples()`
+:::
+
+
+
+## Grid Search `r hexes(c("dials", "workflows", "tune"))` 
+
+```{r tuning} 
+#| label: lgb-grid-tune-res
+lgbm_res
+```
+
+
+## Grid results `r hexes(c("tune"))`
+
+```{r autoplot}
+#| fig-width: 9
+#| fig-height: 5
+#| fig-align: center
+#| out-width: "80%"
+#| dev-args: list(bg = "transparent")
+autoplot(lgbm_res)
+```
+
+## Tuning results `r hexes(c("tune"))`
+
+```{r}
+collect_metrics(lgbm_res)
+```
+
+## Tuning results `r hexes(c("tune"))`
+
+```{r}
+collect_metrics(lgbm_res, summarize = FALSE)
+```
+
+## Choose a parameter combination `r hexes(c("tune"))`
+
+```{r}
+show_best(lgbm_res, metric = "rsq")
+```
+
+## Choose a parameter combination `r hexes(c("tune"))`
+
+Create your own tibble for final parameters or use one of the `tune::select_*()` functions:
+
+```{r}
+lgbm_best <- select_best(lgbm_res, metric = "mae")
+lgbm_best
+```
+
+## Checking Calibration
+
+```{r}
+#| label: lgb-cal-plot
+#| output-location: column
+#| out-width: 90%
+#| fig-width: 5
+#| fig-height: 5
+
+library(probably)
+lgbm_res %>%
+  collect_predictions(
+    parameters = lgbm_best
+  ) %>%
+  cal_plot_regression(
+    truth = avg_price_per_room,
+    estimate = .pred,
+    alpha = 1 / 3
+  )
+```
+
+## Updating the Workflow
+
+If we like this model, we might want to splice the best tuning parameter values into our `lgbm_wflow` object. 
+
+There is a function for that: 
+
+```{r}
+#| label: lgb-finalize
+
+lgbm_wflow <- lgbm_wflow %>% finalize_workflow(lgbm_best)
+lgbm_wflow
+```
+
+
+## Running in parallel
+
+::: columns
+::: {.column width="60%"}
+-   Grid search, combined with resampling, requires fitting a lot of models!
+
+-   These models don't depend on one another and can be run in parallel.
+
+We can use a *parallel backend* to do this:
+
+```{r, eval= FALSE}
+#| eval: false
+#| label: parallel-methods
+cores <- parallelly::availableCores(logical = FALSE)
+cl <- parallel::makePSOCKcluster(cores)
+doParallel::registerDoParallel(cl)
+
+# Now call `tune_grid()`!
+
+# Shut it down with:
+foreach::registerDoSEQ()
+parallel::stopCluster(cl)
+```
+:::
+
+::: {.column width="40%"}
+```{r}
+#| label: resample-times
+#| echo: false
+#| out-width: '100%'
+#| fig-width: 6
+#| fig-height: 6
+#| fig-align: 'center'
+#| dev-args: list(bg = "transparent")
+load("resamples_times.RData")
+resamples_times %>%
+  dplyr::rename(operation = label) %>% 
+  ggplot(aes(y = id_alt, x = duration, fill = operation)) +
+  geom_bar(stat = "identity", color = "black") +
+  labs(y = NULL, x = "Elapsed Time") + 
+  scale_fill_brewer(palette = "Paired") +
+  theme(legend.position = "top")
+```
+:::
+:::
+
+## Running in parallel
+
+Speed-ups are fairly linear up to the number of physical cores (10 here).
+
+```{r}
+#| label: parallel-speedup
+#| echo: false
+#| out-width: '90%'
+#| fig-width: 9
+#| fig-height: 4
+#| fig-align: 'center'
+#| dev-args: list(bg = "transparent")
+load("xgb_times.RData")
+ggplot(times, aes(x = num_cores, y = speed_up, color = parallel_over, shape = parallel_over)) + 
+  geom_abline(lty = 1) + 
+  geom_point(size = 2) + 
+  geom_line() +
+  facet_wrap(~ preprocessing) + 
+  coord_obs_pred() + 
+  scale_color_manual(values = c("#7FC97F", "#386CB0")) +
+  labs(x = "Number of Workers", y = "Speed-up")  +
+  theme(legend.position = "top")
+```
+
+:::notes
+Faceted on the expensiveness of preprocessing used.
+:::
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+What if we used early stopping instead of set number of trees? 
+
+We could set `trees = 1000` and use tune the `stop_iter` parameter. 
+
+```{r}
+#| echo: false
+countdown::countdown(minutes = 10, id = "lgbm-stop")
+```
 
