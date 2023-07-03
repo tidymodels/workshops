@@ -4190,21 +4190,21 @@
     "href": "slides/advanced-01-tuning-hyperparameters.html#boosted-trees",
     "title": "1 - Tuning Hyperparameters",
     "section": "Boosted Trees",
-    "text": "Boosted Trees\nThese are popular ensemble methods that build a sequence of tree models.\nEach tree uses the results of the previous tree to better predict samples, especially those that have been poorly predicted.\nEach tree in the ensemble is saved and new samples are predicted using a weighted average of the votes of each tree in the ensemble.\nWe’ll focus on the popular lightgbm implementation."
+    "text": "Boosted Trees\nThese are popular ensemble methods that build a sequence of tree models.\n\nEach tree uses the results of the previous tree to better predict samples, especially those that have been poorly predicted.\n\nEach tree in the ensemble is saved and new samples are predicted using a weighted average of the votes of each tree in the ensemble.\n\nWe’ll focus on the popular lightgbm implementation."
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#boosted-tree-tuning-parameters",
     "href": "slides/advanced-01-tuning-hyperparameters.html#boosted-tree-tuning-parameters",
     "title": "1 - Tuning Hyperparameters",
     "section": "Boosted Tree Tuning Parameters",
-    "text": "Boosted Tree Tuning Parameters\n\nThe number of predictors randomly sampled at each split (aka mtry in \\([1, ncol(x)]\\) or \\((0, 1]\\)).\nThe number of trees (trees in \\([1, \\infty]\\), but usually up to thousands)\nThe number of samples needed to further split (min_n in \\([1, n]\\)).\nThe rate that each tree adapts form previous iterations (learn_rate in \\((0, \\infty]\\), usual maximum is 0.1).\nThe number of iterations of boosting where no improvement was shown (early_stop)"
+    "text": "Boosted Tree Tuning Parameters\n\nThe number of predictors randomly sampled at each split (aka mtry in \\([1, ncol(x)]\\) or \\((0, 1]\\)).\nThe number of trees (trees in \\([1, \\infty]\\), but usually up to thousands)\nThe number of samples needed to further split (min_n in \\([1, n]\\)).\nThe rate that each tree adapts form previous iterations (learn_rate in \\((0, \\infty]\\), usual maximum is 0.1).\nThe number of iterations of boosting where no improvement was shown (stop_iter)"
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#boosted-tree-tuning-parameters-1",
     "href": "slides/advanced-01-tuning-hyperparameters.html#boosted-tree-tuning-parameters-1",
     "title": "1 - Tuning Hyperparameters",
     "section": "Boosted Tree Tuning Parameters",
-    "text": "Boosted Tree Tuning Parameters\nTBH it is usually not difficult to optimize these models.\nOften, there are multiple candidate tuning parameter combinations that have very good results.\nTo demonstrate simple concepts, we’ll look at optimizing the number of trees in the ensemble (between 1 and 100) and the learning rate (\\(10^{-5}\\) to \\(10^{-1}\\))."
+    "text": "Boosted Tree Tuning Parameters\nTBH it is usually not difficult to optimize these models.\n\nOften, there are multiple candidate tuning parameter combinations that have very good results.\n\nTo demonstrate simple concepts, we’ll look at optimizing the number of trees in the ensemble (between 1 and 100) and the learning rate (\\(10^{-5}\\) to \\(10^{-1}\\))."
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#boosted-tree-tuning-parameters-2",
@@ -4253,7 +4253,7 @@
     "href": "slides/advanced-01-tuning-hyperparameters.html#update-parameter-ranges",
     "title": "1 - Tuning Hyperparameters",
     "section": "Update parameter ranges  ",
-    "text": "Update parameter ranges  \n\nset.seed(121)\ngrid &lt;- \n  lgbm_wflow %&gt;% \n  extract_parameter_set_dials() %&gt;% \n  update(trees = trees(c(1L, 100L)),\n         learn_rate = learn_rate(c(-5, -1))) %&gt;% \n  grid_latin_hypercube(size = 25)\n\ngrid\n#&gt; # A tibble: 25 × 2\n#&gt;    trees learn_rate\n#&gt;    &lt;int&gt;      &lt;dbl&gt;\n#&gt;  1    17  0.00756  \n#&gt;  2    35  0.0000339\n#&gt;  3    77  0.000112 \n#&gt;  4    43  0.00124  \n#&gt;  5    58  0.0230   \n#&gt;  6     6  0.000471 \n#&gt;  7    91  0.000326 \n#&gt;  8    88  0.00899  \n#&gt;  9    15  0.00112  \n#&gt; 10    24  0.0777   \n#&gt; # ℹ 15 more rows"
+    "text": "Update parameter ranges  \n\nlgbm_param &lt;- \n  lgbm_wflow %&gt;% \n  extract_parameter_set_dials() %&gt;% \n  update(trees = trees(c(1L, 100L)),\n         learn_rate = learn_rate(c(-5, -1)))\n\nset.seed(121)\ngrid &lt;- \n  lgbm_param %&gt;% \n  grid_latin_hypercube(size = 25)\n\ngrid\n#&gt; # A tibble: 25 × 2\n#&gt;    trees learn_rate\n#&gt;    &lt;int&gt;      &lt;dbl&gt;\n#&gt;  1    17  0.00756  \n#&gt;  2    35  0.0000339\n#&gt;  3    77  0.000112 \n#&gt;  4    43  0.00124  \n#&gt;  5    58  0.0230   \n#&gt;  6     6  0.000471 \n#&gt;  7    91  0.000326 \n#&gt;  8    88  0.00899  \n#&gt;  9    15  0.00112  \n#&gt; 10    24  0.0777   \n#&gt; # ℹ 15 more rows"
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#the-results",
@@ -4280,8 +4280,8 @@
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#choosing-tuning-parameters",
     "href": "slides/advanced-01-tuning-hyperparameters.html#choosing-tuning-parameters",
     "title": "1 - Tuning Hyperparameters",
-    "section": "Choosing tuning parameters    ",
-    "text": "Choosing tuning parameters    \nLet’s take our previous model and add more parameters:\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(), mtry = tune(), \n             min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)"
+    "section": "Choosing tuning parameters     ",
+    "text": "Choosing tuning parameters     \nLet’s take our previous model and add more parameters:\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(), mtry = tune(), \n             min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)"
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#grid-search-1",

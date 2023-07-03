@@ -249,9 +249,15 @@ Nope. It is not.
 
 These are popular ensemble methods that build a _sequence_ of tree models. 
 
+<br>
+
 Each tree uses the results of the previous tree to better predict samples, especially those that have been poorly predicted. 
 
+<br>
+
 Each tree in the ensemble is saved and new samples are predicted using a weighted average of the votes of each tree in the ensemble. 
+
+<br>
 
 We'll focus on the popular lightgbm implementation. 
 
@@ -261,13 +267,17 @@ We'll focus on the popular lightgbm implementation.
 * The number of trees (`trees` in $[1, \infty]$, but usually up to thousands)
 * The number of samples needed to further split (`min_n` in $[1, n]$).
 * The rate that each tree adapts form previous iterations (`learn_rate` in $(0, \infty]$, usual maximum is 0.1).
-* The number of iterations of boosting where _no improvement_ was shown (`early_stop`)
+* The number of iterations of boosting where _no improvement_ was shown (`stop_iter`)
 
 ## Boosted Tree Tuning Parameters
 
 TBH it is usually not difficult to optimize these models. 
 
+<br>
+
 Often, there are multiple _candidate_ tuning parameter combinations that have very good results. 
+
+<br>
 
 To demonstrate simple concepts, we'll look at optimizing the number of trees in the ensemble (between 1 and 100) and the learning rate ($10^{-5}$ to $10^{-1}$).
 
@@ -437,13 +447,16 @@ Note that even though we requested 25x25=625 rows, we only got 15x15=225 back, s
 
 ```{r mod-grid-code} 
 #| label: update-param
-#| code-line-numbers: "5-6"
-set.seed(121)
-grid <- 
+#| code-line-numbers: "4-5"
+lgbm_param <- 
   lgbm_wflow %>% 
   extract_parameter_set_dials() %>% 
   update(trees = trees(c(1L, 100L)),
-         learn_rate = learn_rate(c(-5, -1))) %>% 
+         learn_rate = learn_rate(c(-5, -1)))
+
+set.seed(121)
+grid <- 
+  lgbm_param %>% 
   grid_latin_hypercube(size = 25)
 
 grid
@@ -470,7 +483,7 @@ Note that the learning rates are uniform on the log-10 scale.
 # Use the `tune_*()` functions to tune models
 
 
-## Choosing tuning parameters `r hexes("recipes","parsnip", "workflows", "tune")`
+## Choosing tuning parameters `r hexes("recipes","parsnip", "workflows", "tune", "bonsai")`
 
 Let's take our previous model and add more parameters:
 
