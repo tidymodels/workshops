@@ -1,0 +1,278 @@
+---
+title: "2 - Grid Search via Racing"
+subtitle: "Advanced tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+```{r more-setup}
+#| include: false
+library(modeldatatoo)
+library(probably)
+library(countdown)
+library(finetune)
+
+cores <- parallelly::availableCores(logical = FALSE)
+cl <- parallel::makePSOCKcluster(cores)
+doParallel::registerDoParallel(cl)
+
+options(width = 200)
+
+ggplot2::theme_set(ggplot2::theme_bw())
+
+load("bayes_opt_calcs.RData")
+```
+
+## Previously - Setup
+
+:::: {.columns}
+
+::: {.column width="40%"}
+
+```{r}
+#| label: tune-startup
+library(tidymodels)
+library(modeldatatoo)
+library(bonsai)
+
+# Max's usual settings: 
+tidymodels_prefer()
+theme_set(theme_bw())
+options(
+  pillar.advice = FALSE, 
+  pillar.min_title_chars = Inf
+)
+```
+
+:::
+
+::: {.column width="60%"}
+
+```{r}
+#| label: data-import
+set.seed(295)
+hotel_rates <- 
+  data_hotel_rates() %>% 
+  sample_n(5000) %>% 
+  arrange(arrival_date) %>% 
+  select(-arrival_date_num, -arrival_date) %>% 
+  mutate(
+    company = factor(as.character(company)),
+    country = factor(as.character(country)),
+    agent = factor(as.character(agent))
+  )
+```
+
+
+:::
+
+::::
+
+
+## Previously - Data Usage
+
+```{r}
+#| label: hotel-split
+set.seed(4028)
+hotel_split <-
+  initial_split(hotel_rates, strata = avg_price_per_room)
+
+hotel_tr <- training(hotel_split)
+hotel_te <- testing(hotel_split)
+
+set.seed(472)
+hotel_rs <- vfold_cv(hotel_tr, strata = avg_price_per_room)
+
+```
+
+## Previously - Boosting Model
+
+```{r}
+#| label: setup-lgbm
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_YeoJohnson(lead_time)
+
+lgbm_spec <- 
+  boost_tree(trees = tune(), learn_rate = tune(), mtry = tune(), 
+             min_n = tune()) %>% 
+  set_mode("regression") %>% 
+  set_engine("lightgbm")
+
+lgbm_wflow <- workflow(hotel_rec, lgbm_spec)
+```
+
+## A Large Grid
+
+
+```{r}
+#| label: grid-large
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+grid_points %>%
+  ggplot(aes(learn_rate, mean)) +
+  geom_line(alpha = 1 / 2, col = "#0b84a5", linewidth = 1.5) +
+  scale_x_log10() +
+  labs(y = "MAE", x = "Learning Rate")
+```
+
+
+## A Three Point Grid
+
+```{r}
+#| label: grid-large-sampled
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+grid_points %>%
+  ggplot(aes(learn_rate, mean)) +
+  geom_line(alpha = 1 / 2, col = "#0b84a5", linewidth = 1.5) +
+  geom_point(data = init_points) +
+  scale_x_log10() +
+  labs(y = "MAE", x = "Learning Rate")
+```
+
+
+
+## GP Fit with three points
+
+```{r}
+#| label: gp-iter-0
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+scaled_obj %>%
+  filter(.iter == 0) %>% 
+  ggplot(aes(learn_rate, .mean)) +
+  geom_line(data = grid_points, aes(y = mean), alpha = 1 / 4, 
+            col = "#0b84a5", linewidth = 1.5) +
+  geom_line() +
+  geom_point(data = bayes_points %>% filter(.iter == 0), aes(y = mean)) +
+  geom_ribbon(aes(ymin = .mean - .sd, ymax = .mean + .sd),
+              alpha = 1 / 7) +
+  scale_x_log10() +
+  labs(y = "MAE", x = "Learning Rate")
+```
+
+
+## GP Expected Improvement
+
+```{r}
+#| label: gp-iter-0-ei
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+scaled_obj %>%
+  filter(.iter == 0) %>% 
+  ggplot(aes(learn_rate, scaled)) +
+  geom_point(data = bayes_points %>% filter(.iter == 0), aes(y = zero)) +
+  geom_line(alpha = 1 / 2, col = "#D95F02", linewidth = 1) +
+  scale_x_log10()  +
+  labs(y = "Expected Improvement", x = "Learning Rate")
+```
+
+
+
+
+## GP Fit with four points
+
+```{r}
+#| label: gp-iter-1
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+scaled_obj %>%
+  filter(.iter == 1) %>% 
+  ggplot(aes(learn_rate, .mean)) +
+  geom_line(data = grid_points, aes(y = mean), alpha = 1 / 4, 
+            col = "#0b84a5", linewidth = 1.5) +
+  geom_line() +
+  geom_point(data = bayes_points %>% filter(.iter == 1), aes(y = mean)) +
+  geom_ribbon(aes(ymin = .mean - .sd, ymax = .mean + .sd),
+              alpha = 1 / 7) +
+  scale_x_log10() +
+  labs(y = "MAE", x = "Learning Rate")
+```
+
+
+## GP Expected Improvement
+
+```{r}
+#| label: gp-iter-1-ei
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+scaled_obj %>%
+  filter(.iter == 1) %>% 
+  ggplot(aes(learn_rate, scaled)) +
+  geom_point(data = bayes_points %>% filter(.iter == 1), aes(y = zero)) +
+  geom_line(alpha = 1 / 2, col = "#D95F02", linewidth = 1) +
+  scale_x_log10()  +
+  labs(y = "Expected Improvement", x = "Learning Rate")
+```
+
+
+## GP Evolution
+
+
+```{r}
+#| label: gp-anime
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+knitr::include_graphics("animations/anime_gp.gif")
+```
+
+
+## Expected Improvement Evolution
+
+
+```{r}
+#| label: ei-anime
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+knitr::include_graphics("animations/anime_improvement.gif")
+```
