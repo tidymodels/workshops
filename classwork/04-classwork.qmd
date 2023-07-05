@@ -13,24 +13,24 @@ Setup from deck 3
 
 ```{r}
 library(tidymodels)
+library(modeldatatoo)
 
-data("tree_frogs", package = "stacks")
+taxi <- data_taxi()
 
-tree_frogs <- tree_frogs %>%
-  mutate(t_o_d = factor(t_o_d),
-         age = age / 86400) %>% 
-  filter(!is.na(latency)) %>%
-  select(-c(clutch, hatched))
+taxi <- taxi %>%
+  mutate(month = factor(month, levels = c("Jan", "Feb", "Mar", "Apr"))) %>% 
+  select(-c(id, duration, fare, tolls, extras, total_cost, payment_type)) %>% 
+  drop_na()
 
 set.seed(123)
 
-frog_split <- initial_split(tree_frogs, prop = 0.8, strata = latency)
-frog_train <- training(frog_split)
-frog_test <- testing(frog_split)
+taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
+taxi_train <- training(taxi_split)
+taxi_test <- testing(taxi_split)
 
-tree_spec <- decision_tree(cost_complexity = 0.001, mode = "regression")
-tree_wflow <- workflow(latency ~ ., tree_spec)
-tree_fit <- fit(tree_wflow, frog_train)
+tree_spec <- decision_tree(mode = "classification")
+tree_wflow <- workflow(tip ~ ., tree_spec)
+tree_fit <- fit(tree_wflow, taxi_train)
 ```
 
 ## Metrics for model performance
@@ -38,32 +38,32 @@ tree_fit <- fit(tree_wflow, frog_train)
 `metrics()` returns a standard set of metrics
 
 ```{r}
-augment(tree_fit, new_data = frog_test) %>%
-  metrics(latency, .pred)
+augment(tree_fit, new_data = taxi_test) %>%
+  metrics(tip, .pred_class, .pred_yes)
 ```
 
 Or you can use individual metric functions
 
 ```{r}
-augment(tree_fit, new_data = frog_test) %>%
-  rmse(latency, .pred)
+augment(tree_fit, new_data = taxi_test) %>%
+  roc_auc(tip, .pred_yes)
 ```
 
 All yardstick metric functions work with grouped data frames!
 
 ```{r}
-augment(tree_fit, new_data = frog_test) %>%
-  group_by(reflex) %>%
-  rmse(latency, .pred)
+augment(tree_fit, new_data = taxi_test) %>%
+  group_by(month) %>%
+  roc_auc(tip, .pred_yes)
 ```
 
 Metric sets are a way to combine multiple similar metric functions together into a new function.
 
 ```{r}
-frog_metrics <- metric_set(rmse, msd)
+taxi_metrics <- metric_set(sensitivity, specificity, roc_auc) 
 
-augment(tree_fit, new_data = frog_test) %>%
-  frog_metrics(latency, .pred)
+augment(tree_fit, new_data = taxi_test) %>%
+  taxi_metrics(tip, estimate = .pred_class, .pred_yes)
 ```
 
 ## Dangers of overfitting
@@ -72,28 +72,28 @@ Repredicting the training set, bad!
 
 ```{r}
 tree_fit %>%
-  augment(frog_train)
+  augment(taxi_train)
 ```
 
 "Resubstitution estimate" - This should be the best possible performance that you could ever achieve, but it can be very misleading!
 
 ```{r}
 tree_fit %>%
-  augment(frog_train) %>%
-  rmse(latency, .pred)
+  augment(taxi_train) %>%
+  roc_auc(tip, .pred_yes)
 ```
 
 Now on the test set, see that it performs worse? This is closer to "real" performance.
 
 ```{r}
 tree_fit %>%
-  augment(frog_test) %>%
-  rmse(latency, .pred)
+  augment(taxi_test) %>%
+  roc_auc(tip, .pred_yes)
 ```
 
 ## Your turn
 
-Use `augment()` and `metrics()` to compute a regression metric like `mae()`.
+Use `augment()` and `metrics()` to compute a classification metric like `brier_class()`.
 
 Compute the metrics for both training and testing data.
 
@@ -119,30 +119,30 @@ for each fold
 
 ```{r}
 # v = 10 is the default
-vfold_cv(frog_train)
+vfold_cv(taxi_train)
 ```
 
 What is in a resampling result?
 
 ```{r}
-frog_folds <- vfold_cv(frog_train, v = 10)
+taxi_folds <- vfold_cv(taxi_train, v = 10)
 
 # Individual splits of analysis/assessment data
-frog_folds$splits[1:3]
+taxi_folds$splits[1:3]
 ```
 
 Stratification often helps, with very little downside
 
 ```{r}
-vfold_cv(frog_train, strata = latency)
+vfold_cv(taxi_train, strata = tip)
 ```
 
 We'll use this setup:
 
 ```{r}
 set.seed(123)
-frog_folds <- vfold_cv(frog_train, v = 10, strata = latency)
-frog_folds
+taxi_folds <- vfold_cv(taxi_train, v = 10, strata = tip)
+taxi_folds
 ```
 
 ## Evaluating model performance
@@ -150,7 +150,7 @@ frog_folds
 ```{r}
 # Fit the workflow on each analysis set,
 # then compute performance on each assessment set
-tree_res <- fit_resamples(tree_wflow, frog_folds)
+tree_res <- fit_resamples(tree_wflow, taxi_folds)
 tree_res
 ```
 
@@ -165,9 +165,9 @@ If you want to analyze the assessment set (i.e. holdout) predictions, then you n
 
 ```{r}
 # Save the assessment set results
-ctrl_frog <- control_resamples(save_pred = TRUE)
+ctrl_taxi <- control_resamples(save_pred = TRUE)
 
-tree_res <- fit_resamples(tree_wflow, frog_folds, control = ctrl_frog)
+tree_res <- fit_resamples(tree_wflow, taxi_folds, control = ctrl_taxi)
 
 tree_preds <- collect_predictions(tree_res)
 tree_preds
@@ -175,17 +175,16 @@ tree_preds
 
 ```{r}
 tree_preds %>% 
-  ggplot(aes(latency, .pred, color = id)) + 
-  geom_abline(lty = 2, col = "gray", size = 1.5) +
-  geom_point(alpha = 0.5) +
-  coord_obs_pred()
+  ggplot(aes(.pred_class, fill = id)) + 
+  geom_bar(alpha = 0.5) +
+  facet_grid(. ~ tip)
 ```
 
 ## Bootstrapping
 
 ```{r}
 set.seed(3214)
-bootstraps(frog_train)
+bootstraps(taxi_train)
 ```
 
 ## Your turn
@@ -207,12 +206,12 @@ Don't forget to set a seed when you resample!
 ## Create a random forest model
 
 ```{r}
-rf_spec <- rand_forest(trees = 1000, mode = "regression")
+rf_spec <- rand_forest(trees = 1000, mode = "classification")
 rf_spec
 ```
 
 ```{r}
-rf_wflow <- workflow(latency ~ ., rf_spec)
+rf_wflow <- workflow(tip ~ ., rf_spec)
 rf_wflow
 ```
 
@@ -232,13 +231,13 @@ Use `fit_resamples()` and `rf_wflow` to:
 ## Evaluate a workflow set
 
 ```{r}
-wf_set <- workflow_set(list(latency ~ .), list(tree_spec, rf_spec))
+wf_set <- workflow_set(list(tip ~ .), list(tree_spec, rf_spec))
 wf_set
 ```
 
 ```{r}
 wf_set_fit <- wf_set %>%
-  workflow_map("fit_resamples", resamples = frog_folds)
+  workflow_map("fit_resamples", resamples = taxi_folds)
 
 wf_set_fit
 ```
@@ -259,8 +258,8 @@ Discuss with your neighbors!
 ## The final fit
 
 ```{r}
-# `frog_split` has train + test info
-final_fit <- last_fit(rf_wflow, frog_split) 
+# `taxi_split` has train + test info
+final_fit <- last_fit(rf_wflow, taxi_split) 
 
 final_fit
 ```
@@ -279,10 +278,8 @@ collect_predictions(final_fit)
 
 ```{r}
 collect_predictions(final_fit) %>%
-  ggplot(aes(latency, .pred)) + 
-  geom_abline(lty = 2, col = "deeppink4", size = 1.5) +
-  geom_point(alpha = 0.5) +
-  coord_obs_pred()
+  ggplot(aes(.pred_class, fill = tip)) + 
+  geom_bar() 
 ```
 
 ```{r}
@@ -310,14 +307,14 @@ For stacking, we need to save the predictions and the fitted workflow objects.
 stack_ctrl <- control_resamples(save_pred = TRUE, save_workflow = TRUE)
 ```
 
-Create a linear model:
+Create a logistic model:
 
 ```{r}
-lr_spec <- linear_reg() %>%
-  set_mode("regression")
+lr_spec <- logistic_reg() %>%
+  set_mode("classification")
 
-lr_res <- workflow(latency ~ ., lr_spec) %>%
-  fit_resamples(frog_folds, control = stack_ctrl)
+lr_res <- workflow(tip ~ ., lr_spec) %>%
+  fit_resamples(taxi_folds, control = stack_ctrl)
 
 lr_res
 ```
@@ -325,8 +322,8 @@ lr_res
 And use our random forest:
 
 ```{r}
-rf_res <- workflow(latency ~ ., rf_spec) %>%
-  fit_resamples(frog_folds, control = stack_ctrl)
+rf_res <- workflow(tip ~ ., rf_spec) %>%
+  fit_resamples(taxi_folds, control = stack_ctrl)
 
 rf_res
 ```
@@ -334,52 +331,48 @@ rf_res
 Initialize a data stack and add candidate members
 
 ```{r}
-frog_st <- stacks()
+taxi_st <- stacks()
 
-frog_st
+taxi_st
 
-frog_st <- frog_st %>%
+taxi_st <- taxi_st %>%
   add_candidates(lr_res) %>%
   add_candidates(rf_res)
 
-frog_st
+taxi_st
 ```
 
 Fit a model that determines the "best" way to weight their predictions:
 
 ```{r}
-frog_st_res <- frog_st %>%
+taxi_st_res <- taxi_st %>%
   blend_predictions()
 
-frog_st_res
+taxi_st_res
 ```
 
 Fit using the models with non-zero coefficients
 
 ```{r}
-frog_st_res <- frog_st_res %>%
+taxi_st_res <- taxi_st_res %>%
   fit_members()
 
-frog_st_res
+taxi_st_res
 ```
 
 Predict on new data to get "blended" predictions
 
 ```{r}
-frog_st_predictions <- frog_test %>%
-  select(latency) %>%
+taxi_st_predictions <- taxi_test %>%
+  select(tip) %>%
   bind_cols(
-    predict(frog_st_res, frog_test)
+    predict(taxi_st_res, taxi_test)
     )
 
-frog_st_predictions
+taxi_st_predictions
 ```
 
 ```{r}
-ggplot(frog_st_predictions, aes(latency, .pred)) + 
-  geom_abline(lty = 2, 
-              col = "deeppink4", 
-              size = 1.5) +
-  geom_point(alpha = 0.5) +
-  coord_obs_pred()
+ggplot(taxi_st_predictions, aes(.pred_class, fill = tip)) + 
+  geom_bar()
 ```
