@@ -24,59 +24,68 @@ knitr:
 
 ##  {background-image="https://media.giphy.com/media/Lr3UeH9tYu3qJtsSUg/giphy.gif" background-size="40%"}
 
-## Data on tree frog hatching
+## Data on Chicago taxi trips
 
-![](images/Hatching-process.jpg)
+![](images/taxi.png)
 
-## Data on tree frog hatching
+::: footer
+Credit: <https://unsplash.com/photos/7_r85l4eht8>
+:::
 
--   Red-eyed tree frog embryos can hatch earlier than their normal \~7 days if they detect potential predator threat!
--   Type `?stacks::tree_frogs` to learn more about this dataset, including references.
--   We are using a slightly modified version from stacks.
+## Data on Chicago taxi trips
+
+-   The city of Chicago releases anonymized trip-level data on taxi trips in the city.
+-   We pulled a sample of 10,000 rides occurring in early 2022.
+-   Type `?modeldatatoo::data_taxi()` to learn more about this dataset, including references.
+-   We are using a slightly modified version from the modeldatatoo data.
 
 ```{r}
 library(tidymodels)
+library(modeldatatoo)
 
-data("tree_frogs", package = "stacks")
-tree_frogs <- tree_frogs %>%
-  mutate(t_o_d = factor(t_o_d),
-         age = age / 86400) %>%
-  filter(!is.na(latency)) %>%
-  select(-c(clutch, hatched))
+taxi <- data_taxi() %>%
+  mutate(month = factor(month, levels = c("Jan", "Feb", "Mar", "Apr"))) %>% 
+  select(-c(id, duration, fare, tolls, extras, total_cost, payment_type)) %>% 
+  drop_na()
 ```
 
-## Data on tree frog hatching
+## Data on Chicago taxi trips
 
 ::: columns
 ::: {.column width="60%"}
--   `N = 572`
--   A numeric outcome, `latency`
--   4 other variables
-    -   `treatment`, `reflex`, and `t_o_d` are **nominal** predictors
-    -   `age` is a **numeric** predictor
+-   `N = 10,000`
+-   A nominal outcome, `tip`, with levels `"yes"` and `"no"`
+-   6 other variables
+    -   `company`, `local`, and `dow`, and `month` are **nominal** predictors
+    -   `distance` and `hours` are **numeric** predictors
 :::
 
 ::: {.column width="40%"}
-![](images/Ac_2tads.jpg)
+![](images/taxi.png)
 :::
 :::
 
 :::notes
-- latency: How long it took the frog to hatch after being stimulated - i.e. after being poked by a blunt probe (in seconds).
+`tip`: Whether the rider left a tip. A factor with levels "yes" and "no".
 
-- treatment: Whether or not they got gentamicin, a compound that knocks out the embryo's lateral line (a sensory organ).
+`distance`: The trip distance, in odometer miles.
 
-- reflex: A measure of ear function (low, mid, full)
+`company`: The taxi company, as a factor. Companies that occurred few times were binned as "other".
 
-- t_o_d: Time that the stimulus was applied (morning, afternoon, night)
+`local`: Whether the trip started in the same community area as it began. See the source data for community area values.
 
-- age: Age at the time it was stimulated (in days)
+`dow`: The day of the week in which the trip began, as a factor.
+
+`month`: The month in which the trip began, as a factor.
+
+`hour`: The hour of the day in which the trip began, as a numeric.
+
 :::
 
-## Data on tree frog hatching
+## Data on chicago taxi trips
 
 ```{r}
-tree_frogs
+taxi
 ```
 
 
@@ -102,7 +111,7 @@ Do not 🚫 use the test set during training.
 #| 
 set.seed(123)
 library(forcats)
-one_split <- slice(tree_frogs, 1:30) %>% 
+one_split <- slice(taxi, 1:30) %>% 
   initial_split() %>% 
   tidy() %>% 
   add_row(Row = 1:30, Data = "Original") %>% 
@@ -154,8 +163,8 @@ countdown(minutes = 3, id = "when-to-split")
 
 ```{r}
 set.seed(123)
-frog_split <- initial_split(tree_frogs)
-frog_split
+taxi_split <- initial_split(taxi)
+taxi_split
 ```
 
 :::notes
@@ -167,20 +176,20 @@ We will talk about more powerful ways of splitting, like stratification, later
 ## Accessing the data `r hexes("rsample")`
 
 ```{r}
-frog_train <- training(frog_split)
-frog_test <- testing(frog_split)
+taxi_train <- training(taxi_split)
+taxi_test <- testing(taxi_split)
 ```
 
 ## The training set`r hexes("rsample")`
 
 ```{r}
-frog_train
+taxi_train
 ```
 
 ## The test set `r hexes("rsample")`
 
 ```{r}
-frog_test
+taxi_test
 ```
 
 ## Your turn {transition="slide-in"}
@@ -200,12 +209,12 @@ countdown(minutes = 5, id = "try-splitting")
 
 ```{r}
 set.seed(123)
-frog_split <- initial_split(tree_frogs, prop = 0.8)
-frog_train <- training(frog_split)
-frog_test <- testing(frog_split)
+taxi_split <- initial_split(taxi, prop = 0.8)
+taxi_train <- training(taxi_split)
+taxi_test <- testing(taxi_split)
 
-nrow(frog_train)
-nrow(frog_test)
+nrow(taxi_train)
+nrow(taxi_test)
 ```
 
 # What about a validation set?
@@ -224,56 +233,57 @@ We will use this tomorrow
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Explore the `frog_train` data on your own!*
+*Explore the `taxi_train` data on your own!*
 
-* *What's the distribution of the outcome, latency?*
-* *What's the distribution of numeric variables like age?*
-* *How does latency differ across the categorical variables?*
+* *What's the distribution of the outcome, tip?*
+* *What's the distribution of numeric variables like distance?*
+* *How does tip differ across the categorical variables?*
 
 ```{r}
 #| echo: false
-countdown(minutes = 8, id = "explore-frogs")
+countdown(minutes = 8, id = "explore-taxi")
 ```
 
 ::: notes
 Make a plot or summary and then share with neighbor
 :::
 
-## 
-
-```{r}
-#| fig-align: 'center'
-ggplot(frog_train, aes(latency)) +
-  geom_histogram(bins = 20)
-```
 
 :::notes
-This histogram brings up a concern. What if in our training set we get unlucky and sample few or none of these large values? That could mean that our model wouldn't be able to predict such values. Let's come back to that!
+
 :::
 
 ## 
 
 ```{r}
 #| fig-align: 'center'
-ggplot(frog_train, aes(latency, treatment, fill = treatment)) +
-  geom_boxplot(alpha = 0.5, show.legend = FALSE)
+ggplot(taxi_train, aes(x = local, fill = tip)) +
+  geom_bar(position = "fill")
 ```
 
 ## 
 
 ```{r}
 #| fig-align: 'center'
-frog_train %>%
-  ggplot(aes(latency, reflex, fill = reflex)) +
-  geom_boxplot(alpha = 0.3, show.legend = FALSE)
+ggplot(taxi_train, aes(x = hour, fill = tip)) +
+  geom_bar()
 ```
 
 ## 
 
 ```{r}
 #| fig-align: 'center'
-ggplot(frog_train, aes(age, latency, color = reflex)) +
-  geom_point(alpha = .8, size = 2)
+ggplot(taxi_train, aes(x = hour, fill = tip)) +
+  geom_bar(position = "fill")
+```
+
+## 
+
+```{r}
+#| fig-align: 'center'
+ggplot(taxi_train, aes(x = distance)) +
+  geom_histogram(bins = 20) +
+  facet_grid(vars(tip))
 ```
 
 # Split smarter
@@ -282,27 +292,29 @@ ggplot(frog_train, aes(age, latency, color = reflex)) +
 
 ```{r echo = FALSE}
 #| fig-align: 'center'
-quartiles <- quantile(frog_train$latency, probs = c(1:3)/4)
-ggplot(frog_train, aes(latency)) +
+quartiles <- quantile(taxi_train$distance, probs = c(1:3)/4)
+
+ggplot(taxi_train, aes(distance)) +
   geom_histogram(bins = 20) +
+  facet_grid(vars(tip)) +
   geom_vline(xintercept = quartiles, color = train_color, 
-             size = 1.5, lty = 2)
+             linewidth = 1.5, lty = 2)
 ```
 
 Stratified sampling would split within each quartile
 
 :::notes
-Based on our exploration, we realized that stratifying by latency might help get a consistent distribution. For instance, we'd include high and low latency in both the test and training
+Based on our exploration, we realized that stratifying by distance might help get a consistent distribution. For instance, we'd include high and low distance in both the test and training
 :::
 
 ## Stratification
 
-Use `strata = latency`
+Use `strata = distance`
 
 ```{r}
 set.seed(123)
-frog_split <- initial_split(tree_frogs, prop = 0.8, strata = latency)
-frog_split
+taxi_split <- initial_split(taxi, prop = 0.8, strata = distance)
+taxi_split
 ```
 
 . . .
