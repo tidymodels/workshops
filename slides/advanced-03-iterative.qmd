@@ -1,0 +1,442 @@
+---
+title: "3 - Iterative Search"
+subtitle: "Advanced tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+```{r more-setup}
+#| include: false
+library(modeldatatoo)
+library(probably)
+library(textrecipes)
+library(countdown)
+library(finetune)
+
+cores <- parallelly::availableCores(logical = FALSE)
+cl <- parallel::makePSOCKcluster(cores)
+doParallel::registerDoParallel(cl)
+
+options(width = 200)
+
+ggplot2::theme_set(ggplot2::theme_bw())
+
+load("bayes_opt_calcs.RData")
+```
+
+## Previously - Setup
+
+:::: {.columns}
+
+::: {.column width="40%"}
+
+```{r}
+#| label: tune-startup
+library(tidymodels)
+library(modeldatatoo)
+library(textrecipes)
+library(bonsai)
+
+# Max's usual settings: 
+tidymodels_prefer()
+theme_set(theme_bw())
+options(
+  pillar.advice = FALSE, 
+  pillar.min_title_chars = Inf
+)
+```
+
+:::
+
+::: {.column width="60%"}
+
+```{r}
+#| label: data-import
+set.seed(295)
+hotel_rates <- 
+  data_hotel_rates() %>% 
+  sample_n(5000) %>% 
+  arrange(arrival_date) %>% 
+  select(-arrival_date_num, -arrival_date) %>% 
+  mutate(
+    company = factor(as.character(company)),
+    country = factor(as.character(country)),
+    agent = factor(as.character(agent))
+  )
+```
+
+
+:::
+
+::::
+
+
+## Previously - Data Usage
+
+```{r}
+#| label: hotel-split
+set.seed(4028)
+hotel_split <- initial_split(hotel_rates, strata = avg_price_per_room)
+
+hotel_tr <- training(hotel_split)
+hotel_te <- testing(hotel_split)
+
+set.seed(472)
+hotel_rs <- vfold_cv(hotel_tr, strata = avg_price_per_room)
+```
+
+## Previously - Boosting Model
+
+```{r}
+#| label: setup-lgbm
+hotel_rec <-
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>%
+  step_YeoJohnson(lead_time) %>%
+  step_dummy_hash(agent,   num_terms = tune("agent hash")) %>%
+  step_dummy_hash(company, num_terms = tune("company hash")) %>%
+  step_zv(all_predictors())
+
+lgbm_spec <- 
+  boost_tree(trees = tune(), learn_rate = tune(), min_n = tune()) %>% 
+  set_mode("regression") %>% 
+  set_engine("lightgbm")
+
+lgbm_wflow <- workflow(hotel_rec, lgbm_spec)
+
+lgbm_param <-
+  lgbm_wflow %>%
+  extract_parameter_set_dials() %>%
+  update(`agent hash`   = num_hash(c(3, 8)),
+         `company hash` = num_hash(c(3, 8)))
+```
+
+## A Large Grid
+
+
+```{r}
+#| label: grid-large
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+grid_points %>%
+  ggplot(aes(learn_rate, mean)) +
+  geom_line(alpha = 1 / 2, col = "#0b84a5", linewidth = 1.5) +
+  scale_x_log10() +
+  labs(y = "MAE (resampled)", x = "Learning Rate")
+```
+
+
+## A Three Point Grid
+
+```{r}
+#| label: grid-large-sampled
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+grid_points %>%
+  ggplot(aes(learn_rate, mean)) +
+  geom_line(alpha = 1 / 10, col = "#0b84a5", linewidth = 1.5) +
+  geom_point(data = init_points) +
+  scale_x_log10() +
+  labs(y = "MAE (resampled)", x = "Learning Rate")
+```
+
+## Gaussian Processes
+
+
+Given that we have a small set of historical performance results, we can make a meta-model using these. 
+
+[Gaussian Processes](https://gaussianprocess.org/gpml/) (GP) models are a good choice to model performance. 
+
+
+## Predicting Candidates
+
+The GP model can take candidate tuning parameter combinations as inputs and make predictions for performance (e.g. MAE)
+
+ - The _mean_ performance
+ - The _variance_ of performance 
+ 
+The variance is mostly driven by spatial variability. The predicted variance is zero at locations of actual data points and becomes very high when far away from any observed data. 
+
+## GP Fit (ribbon is mean +/- 1SD)
+
+```{r}
+#| label: gp-iter-0
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+scaled_obj %>%
+  filter(.iter == 0) %>% 
+  ggplot(aes(learn_rate, .mean)) +
+  geom_line(data = grid_points, aes(y = mean), alpha = 1 / 10, 
+            col = "#0b84a5", linewidth = 1.5) +
+  geom_line() +
+  geom_point(data = bayes_points %>% filter(.iter == 0), aes(y = mean)) +
+  geom_ribbon(aes(ymin = .mean - .sd, ymax = .mean + .sd),
+              alpha = 1 / 7) +
+  scale_x_log10() +
+  labs(y = "MAE", x = "Learning Rate")
+```
+
+
+## Choosing New Candidates
+
+This isn't a very good fit. We'll use the outputs to choose the next point to measure. 
+
+_Acquisition functions_ take the predicted mean and variance and use them to balance: 
+
+ - _exploration_:  new candidates should explore new areas.
+ - _exploitation_: new candidates must stay near existing values. 
+
+Exploration focuses on the variance, exploitation is about the mean. 
+
+## Acquisition Functions
+
+These are functions that combine mean and variance to select new candidates.
+
+The most popular appears to be _expected improvement_ (EI) above the current best. 
+ 
+  - Zero at existing data points. 
+  - The _expected_ improvement is integrated overall all possible improvement ("expected" in the probability sense). 
+
+We would probably pick the point with the largest EI as the next point. 
+
+(there are other functions beyond EI)
+
+## Expected Improvement
+
+```{r}
+#| label: gp-iter-0-ei
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+scaled_obj %>%
+  filter(.iter == 0) %>% 
+  ggplot(aes(learn_rate, scaled)) +
+  geom_point(data = bayes_points %>% filter(.iter == 0), aes(y = zero)) +
+  geom_line(alpha = 1 / 2, col = "#D95F02", linewidth = 1) +
+  scale_x_log10()  +
+  labs(y = "Expected Improvement", x = "Learning Rate")
+```
+
+## Iteration
+
+Once we pick the candidate point, we measure performance for it (e.g. resampling). 
+
+Another GP is fit, recompute EI, select again, and so on. 
+
+We would stop when we have completed the specified number of iterations _or_ if we don't see any improvement after a pre-set number of attempts. 
+
+
+## GP Fit with four points
+
+```{r}
+#| label: gp-iter-1
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+scaled_obj %>%
+  filter(.iter == 1) %>% 
+  ggplot(aes(learn_rate, .mean)) +
+  geom_line(data = grid_points, aes(y = mean), alpha = 1 / 4, 
+            col = "#0b84a5", linewidth = 1.5) +
+  geom_line() +
+  geom_point(data = bayes_points %>% filter(.iter == 1), aes(y = mean)) +
+  geom_ribbon(aes(ymin = .mean - .sd, ymax = .mean + .sd),
+              alpha = 1 / 7) +
+  scale_x_log10() +
+  labs(y = "MAE", x = "Learning Rate")
+```
+
+
+## Expected Improvement
+
+```{r}
+#| label: gp-iter-1-ei
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+scaled_obj %>%
+  filter(.iter == 1) %>% 
+  ggplot(aes(learn_rate, scaled)) +
+  geom_point(data = bayes_points %>% filter(.iter == 1), aes(y = zero)) +
+  geom_line(alpha = 1 / 2, col = "#D95F02", linewidth = 1) +
+  scale_x_log10()  +
+  labs(y = "Expected Improvement", x = "Learning Rate")
+```
+
+
+## GP Evolution
+
+
+```{r}
+#| label: gp-anime
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+knitr::include_graphics("animations/anime_gp.gif")
+```
+
+
+## Expected Improvement Evolution
+
+
+```{r}
+#| label: ei-anime
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+knitr::include_graphics("animations/anime_improvement.gif")
+```
+
+## Getting Started
+
+We'll use a function called `tune_bayes()` that has very similar syntax to `tune_grid()`. 
+
+It has an `initial` argument that can take an integer or the previous results of another `tune_*()` function. 
+
+We'll run the optimization more than once, so let's make an initial grid of results to serve as the substrate for the BO. 
+
+I suggest do a grid the size of the number of tuning parameters plus two. 
+
+## An Initial Grid
+
+```{r tuning} 
+#| label: lgb-bo-initial
+#| cache: true
+reg_metrics <- metric_set(mae, rsq)
+
+set.seed(9)
+init_res <-
+  lgbm_wflow %>%
+  tune_grid(
+    resamples = hotel_rs,
+    grid = nrow(lgbm_param) + 2,
+    param_info = lgbm_param,
+    metrics = reg_metrics
+  )
+
+show_best(init_res, metric = "mae")
+```
+
+## BO using tidymodels
+
+```{r tuning} 
+#| label: lgb-bo
+#| cache: true
+
+set.seed(15)
+lgbm_bayes_res <-
+  lgbm_wflow %>%
+  tune_bayes(
+    resamples = hotel_rs,
+    initial = init_res,
+    iter = 20,
+    param_info = lgbm_param,
+    metrics = reg_metrics
+  )
+
+show_best(init_res, metric = "mae")
+```
+
+
+## Plotting BO Results
+
+```{r}
+#| label: autoplot-marginals
+#| echo: true
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 10
+#| fig-height: 4.25
+
+autoplot(lgbm_bayes_res, metric = "mae")
+```
+
+
+## Plotting BO Results
+
+```{r}
+#| label: autoplot-param
+#| echo: true
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 10
+#| fig-height: 4.25
+
+autoplot(lgbm_bayes_res, metric = "mae", type = "parameters")
+```
+
+
+## Plotting BO Results
+
+```{r}
+#| label: autoplot-perf
+#| echo: true
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+autoplot(lgbm_bayes_res, metric = "mae", type = "performance")
+```
+
+
+## ENCHANCE
+
+```{r}
+#| label: autoplot-perf-zoomed
+#| echo: true
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+autoplot(lgbm_bayes_res, metric = "mae", type = "performance") +
+  ylim(c(9.5, 12.5))
+```
+
+
+
+
