@@ -428,10 +428,12 @@
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">library</span>(tidymodels)</span>
 <span id="cb1-2"><a href="#cb1-2"></a><span class="fu">library</span>(modeldatatoo)</span>
 <span id="cb1-3"><a href="#cb1-3"></a></span>
-<span id="cb1-4"><a href="#cb1-4"></a>taxi <span class="ot">&lt;-</span> <span class="fu">data_taxi</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a>  <span class="fu">mutate</span>(<span class="at">month =</span> <span class="fu">factor</span>(month, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Jan"</span>, <span class="st">"Feb"</span>, <span class="st">"Mar"</span>, <span class="st">"Apr"</span>))) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-6"><a href="#cb1-6"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(id, duration, fare, tolls, extras, total_cost, payment_type)) <span class="sc">%&gt;%</span> </span>
-<span id="cb1-7"><a href="#cb1-7"></a>  <span class="fu">drop_na</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-4"><a href="#cb1-4"></a>taxi <span class="ot">&lt;-</span> <span class="fu">data_taxi</span>()</span>
+<span id="cb1-5"><a href="#cb1-5"></a></span>
+<span id="cb1-6"><a href="#cb1-6"></a>taxi <span class="ot">&lt;-</span> taxi <span class="sc">%&gt;%</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a>  <span class="fu">mutate</span>(<span class="at">month =</span> <span class="fu">factor</span>(month, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Jan"</span>, <span class="st">"Feb"</span>, <span class="st">"Mar"</span>, <span class="st">"Apr"</span>))) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-8"><a href="#cb1-8"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(id, duration, fare, tolls, extras, total_cost, payment_type)) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-9"><a href="#cb1-9"></a>  <span class="fu">drop_na</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="data-on-chicago-taxi-trips-2" class="slide level2">
@@ -748,18 +750,10 @@
 </section>
 <section id="section-8" class="slide level2">
 <h2></h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>taxi_train <span class="sc">%&gt;%</span></span>
-<span id="cb13-2"><a href="#cb13-2"></a>  <span class="fu">count</span>(tip)</span>
-<span id="cb13-3"><a href="#cb13-3"></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
-<span id="cb13-4"><a href="#cb13-4"></a><span class="co">#&gt;   tip       n</span></span>
-<span id="cb13-5"><a href="#cb13-5"></a><span class="co">#&gt;   &lt;fct&gt; &lt;int&gt;</span></span>
-<span id="cb13-6"><a href="#cb13-6"></a><span class="co">#&gt; 1 yes    4983</span></span>
-<span id="cb13-7"><a href="#cb13-7"></a><span class="co">#&gt; 2 no     2062</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Stratified sampling would split within response values</p>
+
+<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-18-1.svg" class="r-stretch"><p>Stratified sampling would split within response values</p>
 <aside class="notes">
-<p>Based on our exploration, we realized that stratifying by response values might help get a consistent distribution. For instance, we’d include plenty of <code>"no"</code> values in both the test and training sets.</p>
+<p>Based on our EDA, we know that the source data contains fewer <code>"no"</code> tip values than <code>"yes"</code>. We want to make sure we allot equal proportions of those responses so that both the training and testing data have enough of each to give accurate estimates.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -776,18 +770,36 @@
 <h2>Stratification</h2>
 <p>Use <code>strata = tip</code></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb14-2"><a href="#cb14-2"></a>taxi_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(taxi, <span class="at">prop =</span> <span class="fl">0.8</span>, <span class="at">strata =</span> tip)</span>
-<span id="cb14-3"><a href="#cb14-3"></a>taxi_split</span>
-<span id="cb14-4"><a href="#cb14-4"></a><span class="co">#&gt; &lt;Training/Testing/Total&gt;</span></span>
-<span id="cb14-5"><a href="#cb14-5"></a><span class="co">#&gt; &lt;7045/1762/8807&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb13-2"><a href="#cb13-2"></a>taxi_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(taxi, <span class="at">prop =</span> <span class="fl">0.8</span>, <span class="at">strata =</span> tip)</span>
+<span id="cb13-3"><a href="#cb13-3"></a>taxi_split</span>
+<span id="cb13-4"><a href="#cb13-4"></a><span class="co">#&gt; &lt;Training/Testing/Total&gt;</span></span>
+<span id="cb13-5"><a href="#cb13-5"></a><span class="co">#&gt; &lt;7045/1762/8807&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="fragment">
+</section>
+<section id="stratification-1" class="slide level2">
+<h2>Stratification</h2>
 <p>Stratification often helps, with very little downside</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>taxi_train <span class="sc">%&gt;%</span></span>
+<span id="cb14-2"><a href="#cb14-2"></a>  <span class="fu">count</span>(tip)</span>
+<span id="cb14-3"><a href="#cb14-3"></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
+<span id="cb14-4"><a href="#cb14-4"></a><span class="co">#&gt;   tip       n</span></span>
+<span id="cb14-5"><a href="#cb14-5"></a><span class="co">#&gt;   &lt;fct&gt; &lt;int&gt;</span></span>
+<span id="cb14-6"><a href="#cb14-6"></a><span class="co">#&gt; 1 yes    4983</span></span>
+<span id="cb14-7"><a href="#cb14-7"></a><span class="co">#&gt; 2 no     2062</span></span>
+<span id="cb14-8"><a href="#cb14-8"></a></span>
+<span id="cb14-9"><a href="#cb14-9"></a><span class="fu">bind_rows</span>(</span>
+<span id="cb14-10"><a href="#cb14-10"></a>  taxi_train <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">split =</span> <span class="st">"train"</span>),</span>
+<span id="cb14-11"><a href="#cb14-11"></a>  taxi_test <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">split =</span> <span class="st">"test"</span>)</span>
+<span id="cb14-12"><a href="#cb14-12"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-13"><a href="#cb14-13"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> split, <span class="at">fill =</span> tip)) <span class="sc">+</span></span>
+<span id="cb14-14"><a href="#cb14-14"></a>  <span class="fu">geom_bar</span>(<span class="at">position =</span> <span class="st">"fill"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
-<div class="footer footer-default">
-<p><a href="https://workshops.tidymodels.org" class="uri">https://workshops.tidymodels.org</a></p>
 </div>
+
+<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-20-1.svg" class="r-stretch"><div class="footer footer-default">
+<p><a href="https://workshops.tidymodels.org" class="uri">https://workshops.tidymodels.org</a></p>
 </div>
 </section></section>
     </div>

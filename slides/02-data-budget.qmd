@@ -296,15 +296,16 @@ ggplot(taxi_train, aes(x = distance)) +
 ##
 
 ```{r echo = FALSE}
-#| echo: true
-taxi_train %>%
-  count(tip)
+taxi %>%
+  ggplot(aes(x = "", fill = tip)) +
+  geom_bar(position = "fill") +
+  labs(x = "")
 ```
 
 Stratified sampling would split within response values
 
 :::notes
-Based on our exploration, we realized that stratifying by response values might help get a consistent distribution. For instance, we'd include plenty of `"no"` values in both the test and training sets.
+Based on our EDA, we know that the source data contains fewer `"no"` tip values than `"yes"`. We want to make sure we allot equal proportions of those responses so that both the training and testing data have enough of each to give accurate estimates.
 :::
 
 ## Stratification
@@ -317,6 +318,19 @@ taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
 taxi_split
 ```
 
-. . .
+## Stratification
 
 Stratification often helps, with very little downside
+
+```{r echo = FALSE}
+#| echo: true
+taxi_train %>%
+  count(tip)
+
+bind_rows(
+  taxi_train %>% mutate(split = "train"),
+  taxi_test %>% mutate(split = "test")
+) %>%
+  ggplot(aes(x = split, fill = tip)) +
+  geom_bar(position = "fill")
+```
