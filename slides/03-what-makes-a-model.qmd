@@ -214,8 +214,11 @@ All available models are listed at <https://www.tidymodels.org/find/parsnip/>
 #| echo: false
 #| fig.width: 8
 #| fig.height: 7
-ggplot(taxi_test, aes(distance, tip)) +
-  geom_point(color = test_color, size = 3) +
+taxi_test %>% 
+  mutate(tip = forcats::fct_rev(tip)) %>% 
+  ggplot() +
+  geom_histogram(aes(distance, fill = tip), position = "fill") +
+  labs(y = "") +
   theme_bw(base_size = 18)
 ```
 :::
@@ -235,12 +238,14 @@ ggplot(taxi_test, aes(distance, tip)) +
 logistic_preds <- 
   logistic_reg() %>%
   fit(tip ~ distance, data = taxi_train) %>%
-  augment(new_data = taxi_test) %>%
-  mutate(tip_num = if_else(tip == "yes", 0, 1))
+  augment(new_data = taxi_test) 
 
-ggplot(logistic_preds, aes(distance, tip_num)) +
-  geom_point(color = test_color, size = 3) +
-  geom_point(aes(distance, .pred_yes), color = data_color, size = 3) +
+logistic_preds %>% 
+  mutate(tip = forcats::fct_rev(tip)) %>% 
+  ggplot() +
+  geom_histogram(aes(distance, fill = tip), position = "fill") +
+  geom_line(aes(x = distance, y = .pred_yes), size = 2, alpha = 0.8, color = data_color) +
+  labs(y = "") +
   theme_bw(base_size = 18)
 ```
 :::
@@ -257,27 +262,23 @@ ggplot(logistic_preds, aes(distance, tip_num)) +
 #| echo: false
 #| fig.width: 8
 #| fig.height: 7
-logistic_preds <- 
-  logistic_reg() %>%
-  fit(tip ~ distance, data = taxi_train) %>%
-  augment(new_data = taxi_test) %>%
-  mutate(tip_num = if_else(tip == "yes", 0, 1))
-  
-
-ggplot(logistic_preds, aes(distance, tip_num)) +
-  geom_point(color = test_color, size = 3) +
-  geom_point(aes(distance, .pred_yes), color = data_color, size = 3) +
+logistic_preds %>% 
+  mutate(tip = forcats::fct_rev(tip)) %>% 
+  ggplot() +
+  geom_histogram(aes(distance, fill = tip), position = "fill") +
+  geom_line(aes(x = distance, y = .pred_yes), size = 2, alpha = 0.8, color = data_color) +
+  labs(y = "") +
   theme_bw(base_size = 18)
 ```
 :::
 
 ::: {.column width="40%"}
 
--   Outcome modeled as linear combination of predictors:
+-   Logit of outcome probability modeled as linear combination of predictors:
 
-$p(\mbox{tip}) = \frac{}{1 + e^{-(\beta_0 + \beta_1\cdot x_{\text{distance}})}}$
+$log(\frac{p}{1 - p}) = \beta_0 + \beta_1\cdot \text{distance}$
 
-- Find a line that minimizes the mean squared error (MSE)
+-   Find a sigmoid line that separates the two classes
 
 :::
 :::
@@ -290,20 +291,14 @@ $p(\mbox{tip}) = \frac{}{1 + e^{-(\beta_0 + \beta_1\cdot x_{\text{distance}})}}$
 #| echo: false
 #| fig.width: 8
 #| fig.height: 7
-distance_rng <- range(taxi_train$distance)
-distance_grid <- tibble(distance = seq(distance_rng[1], distance_rng[2], length.out = 500))
 
-tree_fit <-
+tree_fit <- 
   decision_tree(cost_complexity = 0.1, mode = "classification") %>%
   fit(tip ~ distance, data = taxi_train)
 
 tree_preds <- 
   tree_fit %>%
-  augment(new_data = taxi_train)
-
-tree_line <- 
-  tree_fit %>%
-  augment(new_data = distance_grid)
+  augment(new_data = taxi_test) 
 ```
 
 ```{r}
@@ -350,6 +345,8 @@ tree_fit %>%
 ::: {.column width="50%"}
 ```{r}
 #| echo: false
+#| fig.width: 8
+#| fig.height: 7
 #| fig-align: center
 library(rpart.plot)
 tree_fit %>%
@@ -363,14 +360,13 @@ tree_fit %>%
 #| echo: false
 #| fig.width: 8
 #| fig.height: 7
-#| eval: false
 
-ggplot(data = tree_preds, aes(distance, tip)) +
-  geom_segment(aes(x = distance, xend = distance, 
-                   y = tip, yend = .pred), 
-               colour = train_color, alpha = 0.8) +
-  geom_line(aes(x = distance, y = .pred), size = 2, alpha = 0.8, color = data_color) +
-  geom_point(data = tree_preds, color = test_color, size = 3) +
+tree_preds %>% 
+  mutate(tip = forcats::fct_rev(tip)) %>% 
+  ggplot() +
+  geom_histogram(aes(distance, fill = tip), position = "fill") +
+  geom_line(aes(x = distance, y = .pred_yes), size = 2, alpha = 0.8, color = data_color) +
+  labs(y = "") +
   theme_bw(base_size = 18)
 ```
 :::
@@ -385,17 +381,13 @@ ggplot(data = tree_preds, aes(distance, tip)) +
 #| echo: false
 #| fig.width: 8
 #| fig.height: 7
-#| eval: false
 
-ggplot(data = NULL, aes(distance, tip)) +
-  geom_segment(data = linear_preds,
-               aes(x = distance, xend = distance, 
-                   y = tip, yend = .pred), 
-               colour = train_color, alpha = 0.8) +
-  geom_smooth(data = taxi_train, method = "lm", 
-              se = FALSE, fullrange = TRUE,
-              alpha = 0.8, size = 2, color = data_color) +
-  geom_point(data = linear_preds, color = test_color, size = 3) +
+logistic_preds %>% 
+  mutate(tip = forcats::fct_rev(tip)) %>% 
+  ggplot() +
+  geom_histogram(aes(distance, fill = tip), position = "fill") +
+  geom_line(aes(x = distance, y = .pred_yes), size = 2, alpha = 0.8, color = data_color) +
+  labs(y = "") +
   theme_bw(base_size = 18)
 ```
 :::
@@ -406,14 +398,13 @@ ggplot(data = NULL, aes(distance, tip)) +
 #| echo: false
 #| fig.width: 8
 #| fig.height: 7
-#| eval: false
 
-ggplot(data = tree_preds, aes(distance, tip)) +
-  geom_segment(aes(x = distance, xend = distance, 
-                   y = tip, yend = .pred), 
-               colour = train_color, alpha = 0.8) +
-  geom_line(aes(x = distance, y = .pred), size = 2, alpha = 0.8, color = data_color) +
-  geom_point(data = tree_preds, color = test_color, size = 3) +
+tree_preds %>% 
+  mutate(tip = forcats::fct_rev(tip)) %>% 
+  ggplot() +
+  geom_histogram(aes(distance, fill = tip), position = "fill") +
+  geom_line(aes(x = distance, y = .pred_yes), size = 2, alpha = 0.8, color = data_color) +
+  labs(y = "") +
   theme_bw(base_size = 18)
 ```
 :::
