@@ -127,6 +127,34 @@ lgbm_param <-
          `company hash` = num_hash(c(3, 8)))
 ```
 
+## Iterative Search
+
+Instead of pre-defining a grid of candidate points, we can model our current results to predict what the next candidate point should be. 
+
+<br>
+
+Suppose that we are only tuning the learning rate in our boosted tree. 
+
+<br>
+
+We could do something like: 
+
+```r
+mae_pred <- lm(mae ~ learn_rate, data = resample_results)
+```
+
+and use this to predict and rank new learning rate candidates. 
+
+
+## Iterative Search
+
+A linear model probably isn't the best choice though (more in a minute). 
+
+To illustrate the process, we resampled a large grid of learning rate values for our data to show what the relationship is between MAE and learning rate. 
+
+Now suppose that we used a grid of three points in the parameter range for learning rate...
+
+
 ## A Large Grid
 
 
@@ -164,12 +192,17 @@ grid_points %>%
   labs(y = "MAE (resampled)", x = "Learning Rate")
 ```
 
-## Gaussian Processes
+## Gaussian Processes and Optimization
 
-
-Given that we have a small set of historical performance results, we can make a meta-model using these. 
+We can make a "meta-model" with a small set of historical performance results. 
 
 [Gaussian Processes](https://gaussianprocess.org/gpml/) (GP) models are a good choice to model performance. 
+
+- It is a Bayesian model so we are using **Bayesian Optimization (BO)**
+- For regression, we can assume that our data are multivariate normal. 
+- We also define a _covariance_ function for the variance relationship between data points. A common one is:
+
+$$\operatorname{cov}(\boldsymbol{x}_i, \boldsymbol{x}_j) = \exp\left(-\frac{1}{2}|\boldsymbol{x}_i - \boldsymbol{x}_j|^2\right) + \sigma^2_{ij}$$
 
 
 ## Predicting Candidates
@@ -179,7 +212,55 @@ The GP model can take candidate tuning parameter combinations as inputs and make
  - The _mean_ performance
  - The _variance_ of performance 
  
-The variance is mostly driven by spatial variability. The predicted variance is zero at locations of actual data points and becomes very high when far away from any observed data. 
+The variance is mostly driven by spatial variability (the previous equation). 
+
+The predicted variance is zero at locations of actual data points and becomes very high when far away from any observed data. 
+
+
+## Your turn {transition="slide-in"}
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+Your GP makes predictions on two new candidate tuning parameters.  
+
+We want to minimize MAE. 
+
+Which should we choose?
+
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: two-candidates
+#| echo: false
+#| out-width: 100%
+#| fig-width: 5
+#| fig-height: 5
+
+set.seed(28383)
+num_points <- 5000
+exerc_data <- 
+  tibble(MAE = c(rnorm(num_points, 10, 2), rnorm(num_points, 13, 1 / 2)),
+         `Choose:` = rep(paste("candidate", 1:2), each = num_points))
+
+exerc_data %>% 
+  ggplot(aes(MAE, col = `Choose:`)) + 
+  geom_line(stat = "density", adjust = 1.25, trim = TRUE, linewidth = 1) +
+  theme(legend.position = "top")
+```
+:::
+
+::::
+
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "mean-var-trade", left = "0")
+```
+
+
 
 ## GP Fit (ribbon is mean +/- 1SD)
 
@@ -207,9 +288,13 @@ scaled_obj %>%
 
 ## Choosing New Candidates
 
-This isn't a very good fit. We'll use the outputs to choose the next point to measure. 
+This isn't a very good fit but we can still use it.
 
-_Acquisition functions_ take the predicted mean and variance and use them to balance: 
+How can we use the outputs to choose the next point to measure?
+
+<br> 
+
+[_Acquisition functions_](https://ekamperi.github.io/machine%20learning/2021/06/11/acquisition-functions.html) take the predicted mean and variance and use them to balance: 
 
  - _exploration_:  new candidates should explore new areas.
  - _exploitation_: new candidates must stay near existing values. 
@@ -218,9 +303,9 @@ Exploration focuses on the variance, exploitation is about the mean.
 
 ## Acquisition Functions
 
-These are functions that combine mean and variance to select new candidates.
+We'll use an acquisition function to select a new candidate.
 
-The most popular appears to be _expected improvement_ (EI) above the current best. 
+The most popular method appears to be _expected improvement_ ([EI](https://arxiv.org/pdf/1911.12809.pdf)) above the current best results. 
  
   - Zero at existing data points. 
   - The _expected_ improvement is integrated overall all possible improvement ("expected" in the probability sense). 
@@ -252,9 +337,9 @@ scaled_obj %>%
 
 Once we pick the candidate point, we measure performance for it (e.g. resampling). 
 
-Another GP is fit, recompute EI, select again, and so on. 
+Another GP is fit, EI is recomputed, and so on. 
 
-We would stop when we have completed the specified number of iterations _or_ if we don't see any improvement after a pre-set number of attempts. 
+We stop when we have completed the allowed number of iterations _or_ if we don't see any improvement after a pre-set number of attempts. 
 
 
 ## GP Fit with four points
@@ -330,15 +415,17 @@ knitr::include_graphics("animations/anime_gp.gif")
 knitr::include_graphics("animations/anime_improvement.gif")
 ```
 
-## Getting Started
+## BO in tidymodels
 
 We'll use a function called `tune_bayes()` that has very similar syntax to `tune_grid()`. 
 
-It has an `initial` argument that can take an integer or the previous results of another `tune_*()` function. 
+<br> 
 
-We'll run the optimization more than once, so let's make an initial grid of results to serve as the substrate for the BO. 
+It has an additional `initial` argument that can take an integer or the previous results of another `tune_*()` function. 
+ 
+ - We'll run the optimization more than once, so let's make an initial grid of results to serve as the substrate for the BO. 
 
-I suggest do a grid the size of the number of tuning parameters plus two. 
+ - I suggest at least the number of tuning parameters plus two as the initial grid for BO. 
 
 ## An Initial Grid
 
@@ -347,7 +434,7 @@ I suggest do a grid the size of the number of tuning parameters plus two.
 #| cache: true
 reg_metrics <- metric_set(mae, rsq)
 
-set.seed(9)
+set.seed(12)
 init_res <-
   lgbm_wflow %>%
   tune_grid(
@@ -371,13 +458,13 @@ lgbm_bayes_res <-
   lgbm_wflow %>%
   tune_bayes(
     resamples = hotel_rs,
-    initial = init_res,
+    initial = init_res,     # <- initial results
     iter = 20,
     param_info = lgbm_param,
     metrics = reg_metrics
   )
 
-show_best(init_res, metric = "mae")
+show_best(lgbm_bayes_res, metric = "mae")
 ```
 
 
@@ -434,9 +521,138 @@ autoplot(lgbm_bayes_res, metric = "mae", type = "performance")
 #| fig-height: 4.25
 
 autoplot(lgbm_bayes_res, metric = "mae", type = "performance") +
-  ylim(c(9.5, 12.5))
+  ylim(c(9.5, 14))
 ```
 
 
+## Your turn {transition="slide-in"}
+
+Let's try a different acquisition function: `conf_bound(kappa)`.
+
+We'll use the `objective` argument to set it. 
+
+Choose your own `kappa` value 
+
+ - Larger values will explore the space more. 
+ - "Large" values are usually less than one
+
+
+```{r}
+#| echo: false
+countdown(minutes = 10, id = "conf-bound")
+```
+
+## Notes
+
+- Stopping `tune_bayes()` will return the current results. 
+
+- Parallel processing can still be used to more efficiently measure each candidate point. 
+
+- There are [a lot of other iterative methods](https://github.com/topepo/Optimization-Methods-for-Tuning-Predictive-Models) that you can use. 
+
+- The finetune package also has functions for [simulated annealing](https://www.tmwr.org/iterative-search.html#simulated-annealing) search. 
+
+## Finalizing the Model
+
+Let's say that we've tried a lot of different models and we like our lightgbm model the most. 
+
+What do we do now? 
+
+  * Finalize the tuning parameters. 
+  * Fit the model on the entire training set. 
+  * Verify performance using the test set. 
+  * Document and publish the model(?)
+  
+## Locking Down the Tuning Parameters
+
+We can take the results of the Bayesian optimization and accept the best results: 
+
+```{r}
+#| label: finalize
+
+best_param <- select_best(lgbm_bayes_res, metric = "mae")
+final_wflow <- 
+  lgbm_wflow %>% 
+  finalize_workflow(best_param)
+final_wflow
+```
+
+## The Final Fit
+
+We can use individual functions: 
+
+```r
+final_fit <- final_wflow %>% fit(data = hotel_tr)
+
+# the predict() or augment() then compute metrics
+```
+
+<br> 
+
+There is also a convenience function to do all of this: 
+
+```{r}
+#| label: last-fit
+
+set.seed(3893)
+final_res <- final_wflow %>% last_fit(hotel_split, metrics = reg_metrics)
+final_res
+```
+
+## Test Set Results
+
+:::: {.columns}
+
+::: {.column width="65%"}
+```{r}
+#| label: test-cal-code
+#| eval: false
+final_res %>% 
+  collect_predictions() %>% 
+  cal_plot_regression(
+    truth = avg_price_per_room, 
+    estimate = .pred, 
+    alpha = 1 / 4)
+```
+
+Test set performance: 
+
+```{r}
+#| label: test-metrics
+final_res %>% collect_metrics()
+```
+:::
+
+::: {.column width="35%"}
+
+
+```{r}
+#| label: test-cal
+#| echo: false
+#| out-width: 100%
+#| fig-width: 5
+#| fig-height: 5
+#| fig-align:  center
+
+final_res %>% 
+  collect_predictions() %>% 
+  cal_plot_regression(
+    truth = avg_price_per_room, 
+    estimate = .pred, 
+    alpha = 1 / 4)
+```
+
+:::
+
+::::
+
+## Your turn {transition="slide-in"}
+
+Compute your test set results and plot the observed and predicted daily room rates. 
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "test-res", left = "0")
+```
 
 

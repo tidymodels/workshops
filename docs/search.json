@@ -4097,28 +4097,28 @@
   {
     "objectID": "slides/advanced-03-sequential.html#previously---setup",
     "href": "slides/advanced-03-sequential.html#previously---setup",
-    "title": "2 - Grid Search via Racing",
+    "title": "3 - Iterative Search",
     "section": "Previously - Setup",
-    "text": "Previously - Setup\n\n\n\nlibrary(tidymodels)\nlibrary(modeldatatoo)\nlibrary(bonsai)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\n\n\nset.seed(295)\nhotel_rates &lt;- \n  data_hotel_rates() %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date_num, -arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
+    "text": "Previously - Setup\n\n\n\nlibrary(tidymodels)\nlibrary(modeldatatoo)\nlibrary(textrecipes)\nlibrary(bonsai)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\n\n\nset.seed(295)\nhotel_rates &lt;- \n  data_hotel_rates() %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date_num, -arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
   },
   {
     "objectID": "slides/advanced-03-sequential.html#previously---data-usage",
     "href": "slides/advanced-03-sequential.html#previously---data-usage",
-    "title": "2 - Grid Search via Racing",
+    "title": "3 - Iterative Search",
     "section": "Previously - Data Usage",
-    "text": "Previously - Data Usage\n\nset.seed(4028)\nhotel_split &lt;-\n  initial_split(hotel_rates, strata = avg_price_per_room)\n\nhotel_tr &lt;- training(hotel_split)\nhotel_te &lt;- testing(hotel_split)\n\nset.seed(472)\nhotel_rs &lt;- vfold_cv(hotel_tr, strata = avg_price_per_room)"
+    "text": "Previously - Data Usage\n\nset.seed(4028)\nhotel_split &lt;- initial_split(hotel_rates, strata = avg_price_per_room)\n\nhotel_tr &lt;- training(hotel_split)\nhotel_te &lt;- testing(hotel_split)\n\nset.seed(472)\nhotel_rs &lt;- vfold_cv(hotel_tr, strata = avg_price_per_room)"
   },
   {
     "objectID": "slides/advanced-03-sequential.html#previously---boosting-model",
     "href": "slides/advanced-03-sequential.html#previously---boosting-model",
-    "title": "2 - Grid Search via Racing",
+    "title": "3 - Iterative Search",
     "section": "Previously - Boosting Model",
-    "text": "Previously - Boosting Model\n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_YeoJohnson(lead_time)\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(), mtry = tune(), \n             min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)"
+    "text": "Previously - Boosting Model\n\nhotel_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;%\n  step_YeoJohnson(lead_time) %&gt;%\n  step_dummy_hash(agent,   num_terms = tune(\"agent hash\")) %&gt;%\n  step_dummy_hash(company, num_terms = tune(\"company hash\")) %&gt;%\n  step_zv(all_predictors())\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(), min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)\n\nlgbm_param &lt;-\n  lgbm_wflow %&gt;%\n  extract_parameter_set_dials() %&gt;%\n  update(`agent hash`   = num_hash(c(3, 8)),\n         `company hash` = num_hash(c(3, 8)))"
   },
   {
     "objectID": "slides/advanced-03-sequential.html#a-large-grid",
     "href": "slides/advanced-03-sequential.html#a-large-grid",
-    "title": "2 - Grid Search via Racing",
+    "title": "3 - Iterative Search",
     "section": "A Large Grid",
     "text": "A Large Grid"
   },
@@ -4132,50 +4132,435 @@
   {
     "objectID": "slides/advanced-03-sequential.html#gp-fit-with-three-points",
     "href": "slides/advanced-03-sequential.html#gp-fit-with-three-points",
-    "title": "2 - Grid Search via Racing",
+    "title": "3 - Iterative Search",
     "section": "GP Fit with three points",
     "text": "GP Fit with three points"
   },
   {
     "objectID": "slides/advanced-03-sequential.html#gp-expected-improvement",
     "href": "slides/advanced-03-sequential.html#gp-expected-improvement",
-    "title": "2 - Grid Search via Racing",
+    "title": "3 - Iterative Search",
     "section": "GP Expected Improvement",
     "text": "GP Expected Improvement"
   },
   {
     "objectID": "slides/advanced-03-sequential.html#gp-fit-with-four-points",
     "href": "slides/advanced-03-sequential.html#gp-fit-with-four-points",
-    "title": "2 - Grid Search via Racing",
+    "title": "3 - Iterative Search",
     "section": "GP Fit with four points",
     "text": "GP Fit with four points"
   },
   {
     "objectID": "slides/advanced-03-sequential.html#gp-expected-improvement-1",
     "href": "slides/advanced-03-sequential.html#gp-expected-improvement-1",
-    "title": "2 - Grid Search via Racing",
+    "title": "3 - Iterative Search",
     "section": "GP Expected Improvement",
     "text": "GP Expected Improvement"
   },
   {
     "objectID": "slides/advanced-03-sequential.html#gp-evolution",
     "href": "slides/advanced-03-sequential.html#gp-evolution",
-    "title": "2 - Grid Search via Racing",
+    "title": "3 - Iterative Search",
     "section": "GP Evolution",
     "text": "GP Evolution"
   },
   {
     "objectID": "slides/advanced-03-sequential.html#expected-improvement-evolution",
     "href": "slides/advanced-03-sequential.html#expected-improvement-evolution",
-    "title": "2 - Grid Search via Racing",
+    "title": "3 - Iterative Search",
     "section": "Expected Improvement Evolution",
-    "text": "Expected Improvement Evolution\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Expected Improvement Evolution"
   },
   {
     "objectID": "slides/advanced-03-sequential.html#a-three-point-grid",
     "href": "slides/advanced-03-sequential.html#a-three-point-grid",
-    "title": "2 - Grid Search via Racing",
+    "title": "3 - Iterative Search",
     "section": "A Three Point Grid",
     "text": "A Three Point Grid"
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#bo-using-tidymodels",
+    "href": "slides/advanced-03-sequential.html#bo-using-tidymodels",
+    "title": "3 - Iterative Search",
+    "section": "BO using tidymodels",
+    "text": "BO using tidymodels\n\nset.seed(15)\nlgbm_bayes_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_bayes(\n    resamples = hotel_rs,\n    initial = init_res,\n    iter = 20,\n    param_info = lgbm_param,\n    metrics = reg_metrics\n  )\n\nshow_best(init_res, metric = \"mae\")\n#&gt; # A tibble: 5 × 11\n#&gt;   trees min_n  learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config             \n#&gt;   &lt;int&gt; &lt;int&gt;       &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1   979     9 0.0208               244             11 mae     standard    10.6    10   0.196 Preprocessor2_Model1\n#&gt; 2  1648    34 0.000233              68            134 mae     standard    39.0    10   0.344 Preprocessor4_Model1\n#&gt; 3   204     4 0.000460             123             14 mae     standard    49.2    10   0.400 Preprocessor1_Model1\n#&gt; 4   548    37 0.0000131             18             27 mae     standard    52.9    10   0.424 Preprocessor7_Model1\n#&gt; 5  1333    15 0.000000143           10             84 mae     standard    53.2    10   0.426 Preprocessor3_Model1"
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#setting-parameter-ranges",
+    "href": "slides/advanced-03-sequential.html#setting-parameter-ranges",
+    "title": "3 - Iterative Search",
+    "section": "Setting Parameter Ranges",
+    "text": "Setting Parameter Ranges\n\nlgbm_param &lt;- \n  lgbm_wflow %&gt;% \n  extract_parameter_set_dials() %&gt;% \n  update(mtry = mtry(c(1, ncol(hotel_tr) - 1)))"
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#bo-using-tidymodels-1",
+    "href": "slides/advanced-03-sequential.html#bo-using-tidymodels-1",
+    "title": "3 - Iterative Search",
+    "section": "BO using tidymodels",
+    "text": "BO using tidymodels\n\nset.seed(15)\nlgbm_bayes_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_bayes(\n    resamples = hotel_rs,\n    initial = init_res,\n    iter = 20,\n    param_info = lgbm_param,\n    metrics = reg_metrics\n  )"
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#plotting-bo-results",
+    "href": "slides/advanced-03-sequential.html#plotting-bo-results",
+    "title": "3 - Iterative Search",
+    "section": "Plotting BO Results",
+    "text": "Plotting BO Results\n\nautoplot(lgbm_bayes_res, metric = \"mae\")"
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#plotting-bo-results-1",
+    "href": "slides/advanced-03-sequential.html#plotting-bo-results-1",
+    "title": "3 - Iterative Search",
+    "section": "Plotting BO Results",
+    "text": "Plotting BO Results\n\nautoplot(lgbm_bayes_res, metric = \"mae\", type = \"parameters\")"
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#plotting-bo-results-2",
+    "href": "slides/advanced-03-sequential.html#plotting-bo-results-2",
+    "title": "3 - Iterative Search",
+    "section": "Plotting BO Results",
+    "text": "Plotting BO Results\n\nautoplot(lgbm_bayes_res, metric = \"mae\", type = \"performance\")"
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#enchance",
+    "href": "slides/advanced-03-sequential.html#enchance",
+    "title": "3 - Iterative Search",
+    "section": "ENCHANCE",
+    "text": "ENCHANCE\n\nautoplot(lgbm_bayes_res, metric = \"mae\", type = \"performance\") +\n  ylim(c(9.5, 12.5))\n\n\n\n\nhttps://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#an-initial-grid",
+    "href": "slides/advanced-03-sequential.html#an-initial-grid",
+    "title": "3 - Iterative Search",
+    "section": "An Initial Grid",
+    "text": "An Initial Grid\n\nreg_metrics &lt;- metric_set(mae, rsq)\n\nset.seed(9)\ninit_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_grid(\n    resamples = hotel_rs,\n    grid = nrow(lgbm_param) + 2,\n    param_info = lgbm_param,\n    metrics = reg_metrics\n  )\n\nshow_best(init_res, metric = \"mae\")\n#&gt; # A tibble: 5 × 11\n#&gt;   trees min_n  learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config             \n#&gt;   &lt;int&gt; &lt;int&gt;       &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1   979     9 0.0208               244             11 mae     standard    10.6    10   0.196 Preprocessor2_Model1\n#&gt; 2  1648    34 0.000233              68            134 mae     standard    39.0    10   0.344 Preprocessor4_Model1\n#&gt; 3   204     4 0.000460             123             14 mae     standard    49.2    10   0.400 Preprocessor1_Model1\n#&gt; 4   548    37 0.0000131             18             27 mae     standard    52.9    10   0.424 Preprocessor7_Model1\n#&gt; 5  1333    15 0.000000143           10             84 mae     standard    53.2    10   0.426 Preprocessor3_Model1"
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#bo-using-tidymodels-2",
+    "href": "slides/advanced-03-sequential.html#bo-using-tidymodels-2",
+    "title": "3 - Iterative Search",
+    "section": "BO using tidymodels",
+    "text": "BO using tidymodels\n\nset.seed(16)\nlgbm_bayes_explore_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_bayes(\n    resamples = hotel_rs,\n    initial = init_res,\n    iter = 20,\n    param_info = lgbm_param,\n    metrics = reg_metrics,\n    objective = exp_improve(trade_off = 2)\n  )\n\n\n\nhttps://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#gaussian-processes",
+    "href": "slides/advanced-03-sequential.html#gaussian-processes",
+    "title": "3 - Iterative Search",
+    "section": "Gaussian Processes",
+    "text": "Gaussian Processes\nGiven that we have a small set of historical performance results, we can make a meta-model using these.\nGaussian Processes (GP) models are a good choice to model performance."
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#predicting-candidates",
+    "href": "slides/advanced-03-sequential.html#predicting-candidates",
+    "title": "3 - Iterative Search",
+    "section": "Predicting Candidates",
+    "text": "Predicting Candidates\nThe GP model can take candidate tuning parameter combinations as inputs and make predictions for performance (e.g. MAE)\n\nThe mean performance\nThe variance of performance\n\nThe variance is mostly driven by spatial variability. The predicted variance is zero at locations of actual data points and becomes very high when far away from any observed data."
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#gp-fit-ribbon-is-mean---1sd",
+    "href": "slides/advanced-03-sequential.html#gp-fit-ribbon-is-mean---1sd",
+    "title": "3 - Iterative Search",
+    "section": "GP Fit (ribbon is mean +/- 1SD)",
+    "text": "GP Fit (ribbon is mean +/- 1SD)"
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#choosing-new-candidates",
+    "href": "slides/advanced-03-sequential.html#choosing-new-candidates",
+    "title": "3 - Iterative Search",
+    "section": "Choosing New Candidates",
+    "text": "Choosing New Candidates\nThis isn’t a very good fit. We’ll use the outputs to choose the next point to measure.\nAcquisition functions take the predicted mean and variance and use them to balance:\n\nexploration: new candidates should explore new areas.\nexploitation: new candidates must stay near existing values.\n\nExploration focuses on the variance, exploitation is about the mean."
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#acquisition-functions",
+    "href": "slides/advanced-03-sequential.html#acquisition-functions",
+    "title": "3 - Iterative Search",
+    "section": "Acquisition Functions",
+    "text": "Acquisition Functions\nThese are functions that combine mean and variance to select new candidates.\nThe most popular appears to be expected improvement (EI) above the current best.\n\nZero at existing data points.\nThe expected improvement is integrated overall all possible improvement (“expected” in the probability sense).\n\nWe would probably pick the point with the largest EI as the next point.\n(there are other functions beyond EI)"
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#expected-improvement",
+    "href": "slides/advanced-03-sequential.html#expected-improvement",
+    "title": "3 - Iterative Search",
+    "section": "Expected Improvement",
+    "text": "Expected Improvement"
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#iteration",
+    "href": "slides/advanced-03-sequential.html#iteration",
+    "title": "3 - Iterative Search",
+    "section": "Iteration",
+    "text": "Iteration\nOnce we pick the candidate point, we measure performance for it (e.g. resampling).\nAnother GP is fit, recompute EI, select again, and so on.\nWe would stop when we have completed the specified number of iterations or if we don’t see any improvement after a pre-set number of attempts."
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#expected-improvement-1",
+    "href": "slides/advanced-03-sequential.html#expected-improvement-1",
+    "title": "3 - Iterative Search",
+    "section": "Expected Improvement",
+    "text": "Expected Improvement"
+  },
+  {
+    "objectID": "slides/advanced-03-sequential.html#getting-started",
+    "href": "slides/advanced-03-sequential.html#getting-started",
+    "title": "3 - Iterative Search",
+    "section": "Getting Started",
+    "text": "Getting Started\nWe’ll use a function called tune_bayes() that has very similar syntax to tune_grid().\nIt has an initial argument that can take an integer or the previous results of another tune_*() function.\nWe’ll run the optimization more than once, so let’s make an initial grid of results to serve as the substrate for the BO.\nI suggest do a grid the size of the number of tuning parameters plus two."
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#previously---setup",
+    "href": "slides/advanced-03-iterative.html#previously---setup",
+    "title": "3 - Iterative Search",
+    "section": "Previously - Setup",
+    "text": "Previously - Setup\n\n\n\nlibrary(tidymodels)\nlibrary(modeldatatoo)\nlibrary(textrecipes)\nlibrary(bonsai)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\n\n\nset.seed(295)\nhotel_rates &lt;- \n  data_hotel_rates() %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date_num, -arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#previously---data-usage",
+    "href": "slides/advanced-03-iterative.html#previously---data-usage",
+    "title": "3 - Iterative Search",
+    "section": "Previously - Data Usage",
+    "text": "Previously - Data Usage\n\nset.seed(4028)\nhotel_split &lt;- initial_split(hotel_rates, strata = avg_price_per_room)\n\nhotel_tr &lt;- training(hotel_split)\nhotel_te &lt;- testing(hotel_split)\n\nset.seed(472)\nhotel_rs &lt;- vfold_cv(hotel_tr, strata = avg_price_per_room)"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#previously---boosting-model",
+    "href": "slides/advanced-03-iterative.html#previously---boosting-model",
+    "title": "3 - Iterative Search",
+    "section": "Previously - Boosting Model",
+    "text": "Previously - Boosting Model\n\nhotel_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;%\n  step_YeoJohnson(lead_time) %&gt;%\n  step_dummy_hash(agent,   num_terms = tune(\"agent hash\")) %&gt;%\n  step_dummy_hash(company, num_terms = tune(\"company hash\")) %&gt;%\n  step_zv(all_predictors())\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(), min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)\n\nlgbm_param &lt;-\n  lgbm_wflow %&gt;%\n  extract_parameter_set_dials() %&gt;%\n  update(`agent hash`   = num_hash(c(3, 8)),\n         `company hash` = num_hash(c(3, 8)))"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#a-large-grid",
+    "href": "slides/advanced-03-iterative.html#a-large-grid",
+    "title": "3 - Iterative Search",
+    "section": "A Large Grid",
+    "text": "A Large Grid"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#a-three-point-grid",
+    "href": "slides/advanced-03-iterative.html#a-three-point-grid",
+    "title": "3 - Iterative Search",
+    "section": "A Three Point Grid",
+    "text": "A Three Point Grid"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#gaussian-processes",
+    "href": "slides/advanced-03-iterative.html#gaussian-processes",
+    "title": "3 - Iterative Search",
+    "section": "Gaussian Processes",
+    "text": "Gaussian Processes\nGiven that we have a small set of historical performance results, we can make a meta-model using these.\nGaussian Processes (GP) models are a good choice to model performance.\n\nIt is a Bayesian model so we are using Bayesian Optimization (BO)\nFor regression, we can assume that our data are multivariate normal.\nWe also define a covariance function for the variance relationship between data points. A common one is:\n\n\\[\\operatorname{cov}(\\boldsymbol{x}_i, \\boldsymbol{x}_j) = \\exp\\left(-\\frac{1}{2}|\\boldsymbol{x}_i - \\boldsymbol{x}_j|^2\\right) + \\sigma^2_{ij}\\]"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#predicting-candidates",
+    "href": "slides/advanced-03-iterative.html#predicting-candidates",
+    "title": "3 - Iterative Search",
+    "section": "Predicting Candidates",
+    "text": "Predicting Candidates\nThe GP model can take candidate tuning parameter combinations as inputs and make predictions for performance (e.g. MAE)\n\nThe mean performance\nThe variance of performance\n\nThe variance is mostly driven by spatial variability (the previous equation).\nThe predicted variance is zero at locations of actual data points and becomes very high when far away from any observed data."
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#gp-fit-ribbon-is-mean---1sd",
+    "href": "slides/advanced-03-iterative.html#gp-fit-ribbon-is-mean---1sd",
+    "title": "3 - Iterative Search",
+    "section": "GP Fit (ribbon is mean +/- 1SD)",
+    "text": "GP Fit (ribbon is mean +/- 1SD)"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#choosing-new-candidates",
+    "href": "slides/advanced-03-iterative.html#choosing-new-candidates",
+    "title": "3 - Iterative Search",
+    "section": "Choosing New Candidates",
+    "text": "Choosing New Candidates\nThis isn’t a very good fit but we can still use it.\nHow can we use the outputs to choose the next point to measure?\n\nAcquisition functions take the predicted mean and variance and use them to balance:\n\nexploration: new candidates should explore new areas.\nexploitation: new candidates must stay near existing values.\n\nExploration focuses on the variance, exploitation is about the mean."
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#acquisition-functions",
+    "href": "slides/advanced-03-iterative.html#acquisition-functions",
+    "title": "3 - Iterative Search",
+    "section": "Acquisition Functions",
+    "text": "Acquisition Functions\nWe’ll use an acquisition function to select a new candidate.\nThe most popular method appears to be expected improvement (EI) above the current best results.\n\nZero at existing data points.\nThe expected improvement is integrated overall all possible improvement (“expected” in the probability sense).\n\nWe would probably pick the point with the largest EI as the next point.\n(there are other functions beyond EI)"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#expected-improvement",
+    "href": "slides/advanced-03-iterative.html#expected-improvement",
+    "title": "3 - Iterative Search",
+    "section": "Expected Improvement",
+    "text": "Expected Improvement"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#iteration",
+    "href": "slides/advanced-03-iterative.html#iteration",
+    "title": "3 - Iterative Search",
+    "section": "Iteration",
+    "text": "Iteration\nOnce we pick the candidate point, we measure performance for it (e.g. resampling).\nAnother GP is fit, EI is recomputed, and so on.\nWe stop when we have completed the allowed number of iterations or if we don’t see any improvement after a pre-set number of attempts."
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#gp-fit-with-four-points",
+    "href": "slides/advanced-03-iterative.html#gp-fit-with-four-points",
+    "title": "3 - Iterative Search",
+    "section": "GP Fit with four points",
+    "text": "GP Fit with four points"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#expected-improvement-1",
+    "href": "slides/advanced-03-iterative.html#expected-improvement-1",
+    "title": "3 - Iterative Search",
+    "section": "Expected Improvement",
+    "text": "Expected Improvement"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#gp-evolution",
+    "href": "slides/advanced-03-iterative.html#gp-evolution",
+    "title": "3 - Iterative Search",
+    "section": "GP Evolution",
+    "text": "GP Evolution"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#expected-improvement-evolution",
+    "href": "slides/advanced-03-iterative.html#expected-improvement-evolution",
+    "title": "3 - Iterative Search",
+    "section": "Expected Improvement Evolution",
+    "text": "Expected Improvement Evolution"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#getting-started",
+    "href": "slides/advanced-03-iterative.html#getting-started",
+    "title": "3 - Iterative Search",
+    "section": "Getting Started",
+    "text": "Getting Started\nWe’ll use a function called tune_bayes() that has very similar syntax to tune_grid().\nIt has an initial argument that can take an integer or the previous results of another tune_*() function.\nWe’ll run the optimization more than once, so let’s make an initial grid of results to serve as the substrate for the BO.\n\nI suggest at least the number of tuning parameters plus two as the initial grid for BO."
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#an-initial-grid",
+    "href": "slides/advanced-03-iterative.html#an-initial-grid",
+    "title": "3 - Iterative Search",
+    "section": "An Initial Grid",
+    "text": "An Initial Grid\n\nreg_metrics &lt;- metric_set(mae, rsq)\n\nset.seed(12)\ninit_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_grid(\n    resamples = hotel_rs,\n    grid = nrow(lgbm_param) + 2,\n    param_info = lgbm_param,\n    metrics = reg_metrics\n  )\n\nshow_best(init_res, metric = \"mae\")\n#&gt; # A tibble: 5 × 11\n#&gt;   trees min_n   learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config             \n#&gt;   &lt;int&gt; &lt;int&gt;        &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1   390    10 0.0139                 13             62 mae     standard    11.9    10   0.208 Preprocessor1_Model1\n#&gt; 2   718    31 0.00112                72             25 mae     standard    29.1    10   0.325 Preprocessor4_Model1\n#&gt; 3  1236    22 0.0000261              11             17 mae     standard    51.8    10   0.416 Preprocessor7_Model1\n#&gt; 4  1044    25 0.00000832             34             12 mae     standard    52.8    10   0.424 Preprocessor5_Model1\n#&gt; 5  1599     7 0.0000000402          254            179 mae     standard    53.2    10   0.427 Preprocessor6_Model1"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#bo-using-tidymodels",
+    "href": "slides/advanced-03-iterative.html#bo-using-tidymodels",
+    "title": "3 - Iterative Search",
+    "section": "BO using tidymodels",
+    "text": "BO using tidymodels\n\nset.seed(15)\nlgbm_bayes_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_bayes(\n    resamples = hotel_rs,\n    initial = init_res,     # &lt;- initial results\n    iter = 20,\n    param_info = lgbm_param,\n    metrics = reg_metrics\n  )\n\nshow_best(lgbm_bayes_res, metric = \"mae\")\n#&gt; # A tibble: 5 × 12\n#&gt;   trees min_n learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config .iter\n#&gt;   &lt;int&gt; &lt;int&gt;      &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;int&gt;\n#&gt; 1  1665     2     0.0593           12             59 mae     standard    10.1    10   0.173 Iter13     13\n#&gt; 2  1179     2     0.0552          161            121 mae     standard    10.2    10   0.147 Iter7       7\n#&gt; 3  1609     6     0.0592          186            192 mae     standard    10.2    10   0.195 Iter17     17\n#&gt; 4  1352     6     0.0799          217             46 mae     standard    10.3    10   0.211 Iter4       4\n#&gt; 5  1647     4     0.0819           12            240 mae     standard    10.3    10   0.198 Iter20     20"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#plotting-bo-results",
+    "href": "slides/advanced-03-iterative.html#plotting-bo-results",
+    "title": "3 - Iterative Search",
+    "section": "Plotting BO Results",
+    "text": "Plotting BO Results\n\nautoplot(lgbm_bayes_res, metric = \"mae\")"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#plotting-bo-results-1",
+    "href": "slides/advanced-03-iterative.html#plotting-bo-results-1",
+    "title": "3 - Iterative Search",
+    "section": "Plotting BO Results",
+    "text": "Plotting BO Results\n\nautoplot(lgbm_bayes_res, metric = \"mae\", type = \"parameters\")"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#plotting-bo-results-2",
+    "href": "slides/advanced-03-iterative.html#plotting-bo-results-2",
+    "title": "3 - Iterative Search",
+    "section": "Plotting BO Results",
+    "text": "Plotting BO Results\n\nautoplot(lgbm_bayes_res, metric = \"mae\", type = \"performance\")"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#enchance",
+    "href": "slides/advanced-03-iterative.html#enchance",
+    "title": "3 - Iterative Search",
+    "section": "ENCHANCE",
+    "text": "ENCHANCE\n\nautoplot(lgbm_bayes_res, metric = \"mae\", type = \"performance\") +\n  ylim(c(9.5, 14))"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#your-turn",
+    "href": "slides/advanced-03-iterative.html#your-turn",
+    "title": "3 - Iterative Search",
+    "section": "Your turn",
+    "text": "Your turn\n\n\nYour GP makes predictions on two new candidate tuning parameters.\nWe want to minimize MAE.\nWhich should we choose?\n\n\n\n\n\n\n\n\n\n\n\n−+\n03:00"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#your-turn-1",
+    "href": "slides/advanced-03-iterative.html#your-turn-1",
+    "title": "3 - Iterative Search",
+    "section": "Your turn",
+    "text": "Your turn\nLet’s try a different acquisition function: conf_bound(kappa).\nWe’ll use the objective argument to set it.\nChoose your own kappa value\n\nLarger values will explore the space more.\n“Large” values are usually less than one\n\n\n\n\n−+\n10:00"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#iterative-search",
+    "href": "slides/advanced-03-iterative.html#iterative-search",
+    "title": "3 - Iterative Search",
+    "section": "Iterative Search",
+    "text": "Iterative Search\nInstead of pre-defining a grid of candidate points, we can model our current results to predict what the next candidate point should be.\n\nSuppose that we are only tuning the learning rate in our boosted tree.\n\nWe could do something like:\nmae_pred &lt;- lm(mae ~ learn_rate, data = resample_results)\nand use this to predict and rank new learning rate candidates."
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#iterative-search-1",
+    "href": "slides/advanced-03-iterative.html#iterative-search-1",
+    "title": "3 - Iterative Search",
+    "section": "Iterative Search",
+    "text": "Iterative Search\nA linear model probably isn’t the best choice though (more in a minute).\nTo illustrate the process, we resampled a large grid of learning rate values for our data to show what the relationship is between MAE and learning rate.\nNow suppose that we used a grid of three points in the parameter range for learning rate…"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#bo-in-tidymodels",
+    "href": "slides/advanced-03-iterative.html#bo-in-tidymodels",
+    "title": "3 - Iterative Search",
+    "section": "BO in tidymodels",
+    "text": "BO in tidymodels\nWe’ll use a function called tune_bayes() that has very similar syntax to tune_grid().\n\nIt has an additional initial argument that can take an integer or the previous results of another tune_*() function.\n\nWe’ll run the optimization more than once, so let’s make an initial grid of results to serve as the substrate for the BO.\nI suggest at least the number of tuning parameters plus two as the initial grid for BO."
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#other-tools",
+    "href": "slides/advanced-03-iterative.html#other-tools",
+    "title": "3 - Iterative Search",
+    "section": "Other Tools",
+    "text": "Other Tools\nThere are a lot of other iterative methods that you can use.\nThe finetune package also has functions for simulated annealing search."
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#finalizing-the-model",
+    "href": "slides/advanced-03-iterative.html#finalizing-the-model",
+    "title": "3 - Iterative Search",
+    "section": "Finalizing the Model",
+    "text": "Finalizing the Model\nLet’s say that we’ve tried a lot of different models and we like our lightgbm model the most.\nWhat do we do now?\n\nFinalize the tuning parameters.\nFit the model on the entire training set.\nVerify performance using the test set.\nDocument and publish the model(?)"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#locking-down-the-tuning-parameters",
+    "href": "slides/advanced-03-iterative.html#locking-down-the-tuning-parameters",
+    "title": "3 - Iterative Search",
+    "section": "Locking Down the Tuning Parameters",
+    "text": "Locking Down the Tuning Parameters\nWe can take the results of the Bayesian optimization and accept the best results:\n\nbest_param &lt;- select_best(lgbm_bayes_res, metric = \"mae\")\nfinal_wflow &lt;- \n  lgbm_wflow %&gt;% \n  finalize_workflow(best_param)\nfinal_wflow\n#&gt; ══ Workflow ══════════════════════════════════════════════════════════\n#&gt; Preprocessor: Recipe\n#&gt; Model: boost_tree()\n#&gt; \n#&gt; ── Preprocessor ──────────────────────────────────────────────────────\n#&gt; 4 Recipe Steps\n#&gt; \n#&gt; • step_YeoJohnson()\n#&gt; • step_dummy_hash()\n#&gt; • step_dummy_hash()\n#&gt; • step_zv()\n#&gt; \n#&gt; ── Model ─────────────────────────────────────────────────────────────\n#&gt; Boosted Tree Model Specification (regression)\n#&gt; \n#&gt; Main Arguments:\n#&gt;   trees = 1665\n#&gt;   min_n = 2\n#&gt;   learn_rate = 0.0592557571004946\n#&gt; \n#&gt; Computational engine: lightgbm"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#the-final-fit",
+    "href": "slides/advanced-03-iterative.html#the-final-fit",
+    "title": "3 - Iterative Search",
+    "section": "The Final Fit",
+    "text": "The Final Fit\nWe can use individual functions:\nfinal_fit &lt;- final_wflow %&gt;% fit(data = hotel_tr)\n\n# the predict() or augment() then compute metrics\n\nThere is also a convenience function to do all of this:\n\nset.seed(3893)\nfinal_res &lt;- final_wflow %&gt;% last_fit(hotel_split, metrics = reg_metrics)\nfinal_res\n#&gt; # Resampling results\n#&gt; # Manual resampling \n#&gt; # A tibble: 1 × 6\n#&gt;   splits              id               .metrics         .notes           .predictions         .workflow \n#&gt;   &lt;list&gt;              &lt;chr&gt;            &lt;list&gt;           &lt;list&gt;           &lt;list&gt;               &lt;list&gt;    \n#&gt; 1 &lt;split [3749/1251]&gt; train/test split &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [1,251 × 4]&gt; &lt;workflow&gt;"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#test-set-results",
+    "href": "slides/advanced-03-iterative.html#test-set-results",
+    "title": "3 - Iterative Search",
+    "section": "Test Set Results",
+    "text": "Test Set Results\n\n\n\nfinal_res %&gt;% \n  collect_predictions() %&gt;% \n  cal_plot_regression(\n    truth = avg_price_per_room, \n    estimate = .pred, \n    alpha = 1 / 4)\n\nTest set performance:\n\nfinal_res %&gt;% collect_metrics()\n#&gt; # A tibble: 2 × 4\n#&gt;   .metric .estimator .estimate .config             \n#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 mae     standard      10.5   Preprocessor1_Model1\n#&gt; 2 rsq     standard       0.937 Preprocessor1_Model1"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#gaussian-processes-and-bayesian-optimization",
+    "href": "slides/advanced-03-iterative.html#gaussian-processes-and-bayesian-optimization",
+    "title": "3 - Iterative Search",
+    "section": "Gaussian Processes and Bayesian Optimization",
+    "text": "Gaussian Processes and Bayesian Optimization\nWe can make a “meta-model” with a small set of historical performance results.\nGaussian Processes (GP) models are a good choice to model performance.\n\nIt is a Bayesian model so we are using Bayesian Optimization (BO)\nFor regression, we can assume that our data are multivariate normal.\nWe also define a covariance function for the variance relationship between data points. A common one is:\n\n\\[\\operatorname{cov}(\\boldsymbol{x}_i, \\boldsymbol{x}_j) = \\exp\\left(-\\frac{1}{2}|\\boldsymbol{x}_i - \\boldsymbol{x}_j|^2\\right) + \\sigma^2_{ij}\\]"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#gaussian-processes-and-optimization",
+    "href": "slides/advanced-03-iterative.html#gaussian-processes-and-optimization",
+    "title": "3 - Iterative Search",
+    "section": "Gaussian Processes and Optimization",
+    "text": "Gaussian Processes and Optimization\nWe can make a “meta-model” with a small set of historical performance results.\nGaussian Processes (GP) models are a good choice to model performance.\n\nIt is a Bayesian model so we are using Bayesian Optimization (BO)\nFor regression, we can assume that our data are multivariate normal.\nWe also define a covariance function for the variance relationship between data points. A common one is:\n\n\\[\\operatorname{cov}(\\boldsymbol{x}_i, \\boldsymbol{x}_j) = \\exp\\left(-\\frac{1}{2}|\\boldsymbol{x}_i - \\boldsymbol{x}_j|^2\\right) + \\sigma^2_{ij}\\]"
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#notes",
+    "href": "slides/advanced-03-iterative.html#notes",
+    "title": "3 - Iterative Search",
+    "section": "Notes",
+    "text": "Notes\n\nStopping tune_bayes() will return the current results.\nParallel processing can still be used to more efficiently measure each candidate point.\nThere are a lot of other iterative methods that you can use.\nThe finetune package also has functions for simulated annealing search."
+  },
+  {
+    "objectID": "slides/advanced-03-iterative.html#your-turn-2",
+    "href": "slides/advanced-03-iterative.html#your-turn-2",
+    "title": "3 - Iterative Search",
+    "section": "Your turn",
+    "text": "Your turn\nCompute your test set results and plot the observed and predicted daily room rates.\n\n\n\n−+\n05:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   }
 ]
