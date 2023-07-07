@@ -15,14 +15,17 @@ knitr:
     echo: true
     collapse: true
     comment: "#>"
+    fig.path: "figures/"
 ---
 
-```{r setup}
+```{r}
+#| label: setup
 #| include: false
 #| file: setup.R
 ```
 
-```{r more-setup}
+```{r}
+#| label: more-setup 
 #| include: false
 
 # pak::pak("gadenbuie/countdown")
@@ -166,24 +169,15 @@ hotel_rates <-
 ::::
 
 
-
 ## Data splitting strategy
 
-```{r spending-diagram, echo = FALSE}
+```{r}
+#| label: spending-diagram
 #| fig-align: "center"
+#| out-width: "20%"
+#| echo: false
 
-knitr::include_graphics("images/whole-game-split.svg")
-```
-
-
-
-
-## Data splitting strategy
-
-```{r spending-diagram, echo = FALSE}
-#| fig-align: "center"
-
-knitr::include_graphics("images/whole-game-split.svg")
+knitr::include_graphics("images/initial-split.svg")
 ```
 
 
@@ -217,6 +211,18 @@ countdown(minutes = 10, id = "hotel-investigation")
 
 ## Resampling Strategy
 
+```{r}
+#| label: 10-fold-diagram
+#| fig-align: "center"
+#| out-width: "100%"
+#| echo: false
+
+knitr::include_graphics("images/10-Fold-CV.svg")
+```
+
+
+## Resampling Strategy
+
 We'll use simple 10-fold cross-validation (stratified sampling):
 
 ```{r}
@@ -225,6 +231,7 @@ set.seed(472)
 hotel_rs <- vfold_cv(hotel_tr, strata = avg_price_per_room)
 hotel_rs
 ```
+
 
 ## Prepare your data for modeling `r hexes("recipes")`
 
@@ -240,7 +247,8 @@ hotel_rs
 
 ## A first recipe `r hexes("recipes")`
 
-```{r base-recipe}
+```{r}
+#| label: base-recipe
 hotel_rec <- 
   recipe(avg_price_per_room ~ ., data = hotel_tr)
 ```
@@ -251,13 +259,15 @@ hotel_rec <-
 
 ## A first recipe `r hexes("recipes")`
 
-```{r rec-summary}
+```{r}
+#| label: rec-summary
 summary(hotel_rec)
 ```
 
 ## Create indicator variables `r hexes("recipes")`
 
 ```{r}
+#| label: step-dummy
 #| code-line-numbers: "3"
 hotel_rec <- 
   recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
@@ -273,6 +283,7 @@ hotel_rec <-
 ## Filter out constant columns `r hexes("recipes")`
 
 ```{r}
+#| label: step-zv
 #| code-line-numbers: "4"
 hotel_rec <- 
   recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
@@ -291,7 +302,8 @@ Note that the selector chooses all columns with a role of "predictor"
 
 ## Normalization `r hexes("recipes")`
 
-```{r rec-norm}
+```{r}
+#| label: rec-norm 
 #| eval: false
 #| code-line-numbers: "5"
 hotel_rec <- 
@@ -306,7 +318,7 @@ hotel_rec <-
 - This centers and scales the numeric predictors.
 
 
-- The recipe will use the _tring_ set to estimate the means and standard deviations of the data.
+- The recipe will use the _training_ set to estimate the means and standard deviations of the data.
 
 . . .
 
@@ -314,7 +326,8 @@ hotel_rec <-
 
 ## Reduce correlation `r hexes("recipes")`
 
-```{r }
+```{r}
+#| label: corr
 #| code-line-numbers: "6"
 #| eval: false
 hotel_rec <- 
@@ -332,6 +345,7 @@ To deal with highly correlated predictors, find the minimum set of predictor col
 ## Other possible steps `r hexes("recipes")`
 
 ```{r}
+#| label: pca
 #| code-line-numbers: "6"
 #| eval: false
 hotel_rec <- 
@@ -349,6 +363,7 @@ PCA feature extraction...
 ## Other possible steps `r hexes("recipes", "embed")`
 
 ```{r}
+#| label: umap
 #| code-line-numbers: "6"
 #| eval: false
 hotel_rec <- 
@@ -371,6 +386,7 @@ Note that this uses the outcome, and it is from an extension package
 ## Other possible steps `r hexes("recipes")`
 
 ```{r}
+#| label: splines
 #| eval: false
 #| code-line-numbers: "6"
 hotel_rec <- 
@@ -402,6 +418,7 @@ Nonlinear transforms like natural splines, and so on!
 -   *remove zero-variance variables*
 
 ```{r}
+#| label: your-turn-make-recipe
 #| echo: false
 countdown(minutes = 3, id = "make-recipe")
 ```
@@ -410,6 +427,7 @@ countdown(minutes = 3, id = "make-recipe")
 ## Minimal recipe `r hexes("recipes")` 
 
 ```{r}
+#| label: hotel-rec
 hotel_indicators <-
   recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
   step_YeoJohnson(lead_time) %>%
@@ -420,6 +438,7 @@ hotel_indicators <-
 ## Using a workflow `r hexes("recipes", "workflows", "parsnip", "tune")` {.annotation}
 
 ```{r}
+#| label: lm-model
 #| cache: true
 
 set.seed(9)
@@ -447,6 +466,7 @@ collect_metrics(hotel_lm_res)
 
 
 ```{r}
+#| label: your-turn-resample-recipe
 #| echo: false
 countdown(minutes = 5, id = "resample-recipe")
 ```
@@ -455,6 +475,7 @@ countdown(minutes = 5, id = "resample-recipe")
 ## Holdout predictions `r hexes("recipes", "workflows", "parsnip", "tune")`
 
 ```{r}
+#| label: goldout-pred
 # Since we used `save_pred = TRUE`
 lm_val_pred <- collect_predictions(hotel_lm_res)
 lm_val_pred %>% slice(1:7)
@@ -487,7 +508,8 @@ We could:
 
 Let's look at _othering_ then _effect encodings_.
 
-```{r effects-calcs}
+```{r}
+#| label: effects-calcs 
 #| include: false
 
 agent_stats <- 
@@ -522,7 +544,8 @@ after <- left_join(before, estimates, by = "agent") %>%
 
 ::: columns
 ::: {.column width="50%"}
-```{r effects-freq}
+```{r}
+#| label: effects-freq 
 #| echo: false
 #| out-width: '90%'
 #| fig-width: 6
@@ -539,7 +562,8 @@ agent_stats %>%
 :::
 
 ::: {.column width="50%"}
-```{r effects-adr}
+```{r}
+#| label: effects-adr 
 #| echo: false
 #| out-width: '90%'
 #| fig-width: 6
@@ -561,6 +585,7 @@ agent_stats %>%
 There is a recipe step that will redefine factor levels based on the their frequency in the training set: 
 
 ```{r}
+#| label: step-other
 #| code-line-numbers: "3:4"
 
 hotel_other_rec <-
@@ -571,7 +596,8 @@ hotel_other_rec <-
   step_zv(all_predictors())
 ```
 
-```{r other-res}
+```{r}
+#| label: other-res 
 #| include: false
 
 retained_agents <-
@@ -594,6 +620,7 @@ We _could_ try to optimize the threshold for collapsing (see the next set of sli
 ## Does othering help? 
 
 ```{r}
+#| label: update-recipe
 #| code-line-numbers: "3|"
 hotel_other_wflow <-
   hotel_lm_wflow %>%
@@ -618,7 +645,8 @@ We replace the qualitative’s predictor data with their _effect on the outcome_
 ::: {.column width="50%"}
 Data before:
 
-```{r before}
+```{r}
+#| label: before
 before
 ```
 
@@ -628,7 +656,8 @@ before
 
 Data after:
 
-```{r after}
+```{r}
+#| label: after
 after
 ```
 
@@ -653,7 +682,8 @@ For logistic regression, this is what the predictors are modeling. The log-odds 
 
 ::: columns
 ::: {.column width="50%"}
-```{r effects-again}
+```{r}
+#| label: effects-again 
 #| echo: false
 #| out-width: '90%'
 #| fig-width: 6
@@ -695,7 +725,8 @@ Partial pooling gives better estimates for players with fewer shots by shrinking
 
 ## Partial pooling
 
-```{r effect-compare}
+```{r}
+#| label: effect-compare 
 #| echo: false
 #| fig-width: 6
 #| fig-height: 6
@@ -715,6 +746,7 @@ inner_join(agent_stats, estimates, by = "agent") %>%
 ## Player effects `r hexes("recipes","embed")` {.annotation}
 
 ```{r}
+#| label: lencode-rec
 #| code-line-numbers: "1,5"
 library(embed)
 
@@ -750,7 +782,8 @@ When a recipe is part of a workflow, this estimation occurs when `fit()` is call
 
 ## Effect encoding results `r hexes("recipes","embed", "workflows", "tune")`
 
-```{r resample-encoding}
+```{r}
+#| label: resample-encoding
 #| code-line-numbers: "3|"
 hotel_effect_wflow <-
   hotel_lm_wflow %>%
@@ -763,7 +796,9 @@ hotel_effect_res <-
 collect_metrics(hotel_effect_res)
 ```
 
-Not much worse but it can handle new agents (if they occur).
+Slightly worse but it can handle new agents (if they occur).
+
+## Another approach: feature hashing
 
 
 
@@ -774,8 +809,11 @@ Not much worse but it can handle new agents (if they occur).
 A workflow set can cross models and/or preprocessors and then resample them *en masse*. 
 
 ```{r nhl-feature-sets}
+#| label: feature-sets
 #| cache: true
 #| results: 'markup'
+#| eval: false
+
 
 no_coord_rec <- 
   hotel_indicators %>% 
@@ -804,6 +842,7 @@ hotel_lm_set_res <-
 *Use `workflow_map()` to resample the workflow set.* 
 
 ```{r}
+#| label: your-turn-wflow-set
 #| echo: false
 countdown(minutes = 8, id = "hockey-wfset")
 ```
@@ -811,7 +850,8 @@ countdown(minutes = 8, id = "hockey-wfset")
 
 ## Compare recipes
 
-```{r rank-res-code}
+```{r}
+#| label: rank-res-code 
 #| eval: false
 #| out-width: '70%'
 
@@ -829,11 +869,6 @@ collect_metrics(hotel_lm_set_res) %>%
 
 ## Compare recipes
 
-```{r}
-#| ref.label: 'rank-res-code'
-#| echo: false
-
-```
 
 ## Debugging a recipe
 
@@ -854,6 +889,8 @@ collect_metrics(hotel_lm_set_res) %>%
 ## Example
 
 ```{r}
+#| label: prep-tidy-bake
+#| eval: false
 hotel_angle_fit <- prep(hotel_angle_rec)
 
 tidy(hotel_angle_fit, number = 1) %>% slice(1:4)
@@ -877,24 +914,10 @@ bake(hotel_angle_fit, hotel_tr %>% slice(1:3), starts_with("coord"), angle, agen
 
 -   The [order](https://recipes.tidymodels.org/articles/Ordering.html) of the steps matters.
 
-```{r teardown}
+```{r}
+#| label: teardown
 #| include: false
 
 parallel::stopCluster(cl)
 
-# Used in whole game slides in introduction
-roc_curves_part_5 <- 
-  hotel_lm_set_res %>% 
-  collect_predictions() %>% 
-  select(wflow_id, avg_price_per_room, .pred_yes) %>% 
-  bind_rows(
-    hotel_lm_res %>% 
-      collect_predictions() %>% 
-      mutate(wflow_id = "dummy_logistic") %>% 
-      select(wflow_id, avg_price_per_room, .pred_yes)
-  ) %>% 
-  group_by(wflow_id) %>% 
-  roc_curve(avg_price_per_room, .pred_yes)
-
-save(roc_curves_part_5, file = "roc_curves_part_5.RData", compress = TRUE)
 ```
