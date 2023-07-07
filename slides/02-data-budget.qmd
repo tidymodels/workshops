@@ -203,9 +203,11 @@ taxi_train
 
 ## The test set `r hexes("rsample")`
 
-```{r}
-taxi_test
-```
+🙈
+
+. . .
+
+There are `r nrow(taxi_test)` rows and `r ncol(taxi_test)` columns in the test set.
 
 ## Your turn {transition="slide-in"}
 
@@ -267,7 +269,8 @@ Make a plot or summary and then share with neighbor
 
 ```{r}
 #| fig-align: 'center'
-ggplot(taxi_train, aes(x = tip)) +
+taxi_train %>% 
+  ggplot(aes(x = tip)) +
   geom_bar()
 ```
 
@@ -275,7 +278,19 @@ ggplot(taxi_train, aes(x = tip)) +
 
 ```{r}
 #| fig-align: 'center'
-ggplot(taxi_train, aes(x = tip, fill = local)) +
+taxi_train %>% 
+  ggplot(aes(x = tip, fill = local)) +
+  geom_bar() +
+  scale_fill_viridis_d(end = .5)
+```
+
+## 
+
+```{r}
+#| fig-align: 'center'
+taxi_train %>% 
+  mutate(tip = forcats::fct_rev(tip)) %>% 
+  ggplot(aes(x = hour, fill = tip)) +
   geom_bar()
 ```
 
@@ -283,15 +298,9 @@ ggplot(taxi_train, aes(x = tip, fill = local)) +
 
 ```{r}
 #| fig-align: 'center'
-ggplot(taxi_train, aes(x = hour, fill = tip)) +
-  geom_bar()
-```
-
-## 
-
-```{r}
-#| fig-align: 'center'
-ggplot(taxi_train, aes(x = hour, fill = tip)) +
+taxi_train %>% 
+  mutate(tip = forcats::fct_rev(tip)) %>% 
+  ggplot(aes(x = hour, fill = tip)) +
   geom_bar(position = "fill")
 ```
 
@@ -299,7 +308,9 @@ ggplot(taxi_train, aes(x = hour, fill = tip)) +
 
 ```{r}
 #| fig-align: 'center'
-ggplot(taxi_train, aes(x = distance)) +
+taxi_train %>% 
+  mutate(tip = forcats::fct_rev(tip)) %>% 
+  ggplot(aes(x = distance)) +
   geom_histogram(bins = 100) +
   facet_grid(vars(tip))
 ```
@@ -310,6 +321,7 @@ ggplot(taxi_train, aes(x = distance)) +
 
 ```{r echo = FALSE}
 taxi %>%
+  mutate(tip = forcats::fct_rev(tip)) %>% 
   ggplot(aes(x = "", fill = tip)) +
   geom_bar(position = "fill") +
   labs(x = "")
@@ -340,6 +352,7 @@ bind_rows(
   taxi_train %>% mutate(split = "train"),
   taxi_test %>% mutate(split = "test")
 ) %>%
+  mutate(tip = forcats::fct_rev(tip)) %>% 
   ggplot(aes(x = split, fill = tip)) +
   geom_bar(position = "fill")
 ```

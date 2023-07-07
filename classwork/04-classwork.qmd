@@ -23,47 +23,64 @@ taxi <- taxi %>%
   drop_na()
 
 set.seed(123)
-
 taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
 taxi_train <- training(taxi_split)
 taxi_test <- testing(taxi_split)
 
-tree_spec <- decision_tree(mode = "classification")
-tree_wflow <- workflow(tip ~ ., tree_spec)
-tree_fit <- fit(tree_wflow, taxi_train)
+tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
+taxi_wflow <- workflow(tip ~ ., tree_spec)
+taxi_fit <- fit(taxi_wflow, taxi_train)
 ```
 
 ## Metrics for model performance
 
-`metrics()` returns a standard set of metrics
+`conf_mat()` can be used to see how well the model is doing at prediction
 
 ```{r}
-augment(tree_fit, new_data = taxi_test) %>%
-  metrics(tip, .pred_class, .pred_yes)
+augment(taxi_fit, new_data = taxi_train) %>%
+  conf_mat(truth = tip, estimate = .pred_class)
 ```
 
-Or you can use individual metric functions
+and it has nice plotting features
 
 ```{r}
-augment(tree_fit, new_data = taxi_test) %>%
-  roc_auc(tip, .pred_yes)
+augment(taxi_fit, new_data = taxi_train) %>%
+  conf_mat(truth = tip, estimate = .pred_class) %>%
+  autoplot(type = "heatmap")
+```
+
+using the same interface we can calculate metrics
+
+```{r}
+augment(taxi_fit, new_data = taxi_train) %>%
+  accuracy(truth = tip, estimate = .pred_class)
 ```
 
 All yardstick metric functions work with grouped data frames!
 
 ```{r}
-augment(tree_fit, new_data = taxi_test) %>%
-  group_by(month) %>%
-  roc_auc(tip, .pred_yes)
+augment(taxi_fit, new_data = taxi_train) %>%
+  group_by(local) %>%
+  accuracy(truth = tip, estimate = .pred_class)
 ```
 
 Metric sets are a way to combine multiple similar metric functions together into a new function.
 
 ```{r}
-taxi_metrics <- metric_set(sensitivity, specificity, roc_auc) 
+taxi_metrics <- metric_set(accuracy, specificity, sensitivity)
 
-augment(tree_fit, new_data = taxi_test) %>%
-  taxi_metrics(tip, estimate = .pred_class, .pred_yes)
+augment(taxi_fit, new_data = taxi_train) %>%
+  taxi_metrics(truth = tip, estimate = .pred_class)
+```
+
+## Your turn
+
+Compute and plot an ROC curve for your current model.
+
+What data is being used for this ROC curve plot?
+
+```{r}
+# Your code here!
 ```
 
 ## Dangers of overfitting
@@ -71,39 +88,39 @@ augment(tree_fit, new_data = taxi_test) %>%
 Repredicting the training set, bad!
 
 ```{r}
-tree_fit %>%
+taxi_fit %>%
   augment(taxi_train)
 ```
 
 "Resubstitution estimate" - This should be the best possible performance that you could ever achieve, but it can be very misleading!
 
 ```{r}
-tree_fit %>%
+taxi_fit %>%
   augment(taxi_train) %>%
-  roc_auc(tip, .pred_yes)
+  accuracy(tip, .pred_class)
 ```
 
 Now on the test set, see that it performs worse? This is closer to "real" performance.
 
 ```{r}
-tree_fit %>%
+taxi_fit %>%
   augment(taxi_test) %>%
-  roc_auc(tip, .pred_yes)
+  accuracy(tip, .pred_class)
 ```
 
 ## Your turn
 
-Use `augment()` and `metrics()` to compute a classification metric like `brier_class()`.
+Use `augment()` and and a metric function to compute a classification metric like `brier_class()`.
 
-Compute the metrics for both training and testing data.
+Compute the metrics for both training and testing data to demonstrate overfitting!
 
-Notice the evidence of overfitting! ⚠️
+Notice the evidence of overfitting!
 
 ```{r}
 # Your code here!
 
-# Use `augment()` and `metrics()` with `tree_fit`
-tree_fit
+# Use `augment()` and `brier_class()` with `taxi_fit`
+taxi_fit
 ```
 
 ## Your turn
@@ -150,14 +167,14 @@ taxi_folds
 ```{r}
 # Fit the workflow on each analysis set,
 # then compute performance on each assessment set
-tree_res <- fit_resamples(tree_wflow, taxi_folds)
-tree_res
+taxi_res <- fit_resamples(taxi_wflow, taxi_folds)
+taxi_res
 ```
 
 Aggregate metrics
 
 ```{r}
-tree_res %>%
+taxi_res %>%
   collect_metrics()
 ```
 
@@ -167,17 +184,10 @@ If you want to analyze the assessment set (i.e. holdout) predictions, then you n
 # Save the assessment set results
 ctrl_taxi <- control_resamples(save_pred = TRUE)
 
-tree_res <- fit_resamples(tree_wflow, taxi_folds, control = ctrl_taxi)
+taxi_res <- fit_resamples(taxi_wflow, taxi_folds, control = ctrl_taxi)
 
-tree_preds <- collect_predictions(tree_res)
-tree_preds
-```
-
-```{r}
-tree_preds %>% 
-  ggplot(aes(.pred_class, fill = id)) + 
-  geom_bar(alpha = 0.5) +
-  facet_grid(. ~ tip)
+taxi_preds <- collect_predictions(taxi_res)
+taxi_preds
 ```
 
 ## Bootstrapping
@@ -191,8 +201,10 @@ bootstraps(taxi_train)
 
 Create:
 
-- Bootstrap folds (change `times` from its default!)
-- A validation resample (what function is used for this?)
+- Monte Carlo Cross-Validation sets
+- validation set
+
+(use the reference guide to find the function)
 
 https://rsample.tidymodels.org/reference/index.html
 
@@ -221,7 +233,6 @@ Use `fit_resamples()` and `rf_wflow` to:
 
 - Keep predictions
 - Compute metrics
-- Plot true vs predicted values
 
 ```{r}
 # Your code here!
@@ -293,86 +304,3 @@ Which model do you think you would decide to use?
 What surprised you the most?
 
 What is one thing you are looking forward to for tomorrow?
-
-
-## Building a model stack
-
-```{r}
-library(stacks)
-```
-
-For stacking, we need to save the predictions and the fitted workflow objects.
-
-```{r}
-stack_ctrl <- control_resamples(save_pred = TRUE, save_workflow = TRUE)
-```
-
-Create a logistic model:
-
-```{r}
-lr_spec <- logistic_reg() %>%
-  set_mode("classification")
-
-lr_res <- workflow(tip ~ ., lr_spec) %>%
-  fit_resamples(taxi_folds, control = stack_ctrl)
-
-lr_res
-```
-
-And use our random forest:
-
-```{r}
-rf_res <- workflow(tip ~ ., rf_spec) %>%
-  fit_resamples(taxi_folds, control = stack_ctrl)
-
-rf_res
-```
-
-Initialize a data stack and add candidate members
-
-```{r}
-taxi_st <- stacks()
-
-taxi_st
-
-taxi_st <- taxi_st %>%
-  add_candidates(lr_res) %>%
-  add_candidates(rf_res)
-
-taxi_st
-```
-
-Fit a model that determines the "best" way to weight their predictions:
-
-```{r}
-taxi_st_res <- taxi_st %>%
-  blend_predictions()
-
-taxi_st_res
-```
-
-Fit using the models with non-zero coefficients
-
-```{r}
-taxi_st_res <- taxi_st_res %>%
-  fit_members()
-
-taxi_st_res
-```
-
-Predict on new data to get "blended" predictions
-
-```{r}
-taxi_st_predictions <- taxi_test %>%
-  select(tip) %>%
-  bind_cols(
-    predict(taxi_st_res, taxi_test)
-    )
-
-taxi_st_predictions
-```
-
-```{r}
-ggplot(taxi_st_predictions, aes(.pred_class, fill = tip)) + 
-  geom_bar()
-```

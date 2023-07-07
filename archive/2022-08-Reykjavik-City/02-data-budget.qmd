@@ -1,0 +1,310 @@
+---
+title: "2 - Your data budget"
+subtitle: "Machine learning with tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+---
+
+```{r}
+#| include: false
+#| file: setup.R
+```
+
+##  {background-image="https://media.giphy.com/media/Lr3UeH9tYu3qJtsSUg/giphy.gif" background-size="40%"}
+
+## Data on tree frog hatching
+
+![](images/Hatching-process.jpg)
+
+## Data on tree frog hatching
+
+-   Red-eyed tree frog embryos can hatch earlier than their normal \~7 days if they detect potential predator threat!
+-   Type `?stacks::tree_frogs` to learn more about this dataset, including references.
+-   We are using a slightly modified version from stacks.
+
+```{r}
+library(tidymodels)
+
+data("tree_frogs", package = "stacks")
+tree_frogs <- tree_frogs %>%
+  mutate(t_o_d = factor(t_o_d),
+         age = age / 86400) %>%
+  filter(!is.na(latency)) %>%
+  select(-c(clutch, hatched))
+```
+
+## Data on tree frog hatching
+
+::: columns
+::: {.column width="60%"}
+-   `N = 572`
+-   A numeric outcome, `latency`
+-   4 other variables
+    -   `treatment`, `reflex`, and `t_o_d` are **nominal** predictors
+    -   `age` is a **numeric** predictor
+:::
+
+::: {.column width="40%"}
+![](images/Ac_2tads.jpg)
+:::
+:::
+
+:::notes
+- latency: How long it took the frog to hatch after being stimulated - i.e. after being poked by a blunt probe (in seconds).
+
+- treatment: Whether or not they got gentamicin, a compound that knocks out the embryo's lateral line (a sensory organ).
+
+- reflex: A measure of ear function (low, mid, full)
+
+- t_o_d: Time that the stimulus was applied (morning, afternoon, night)
+
+- age: Age at the time it was stimulated (in days)
+:::
+
+## Data on tree frog hatching
+
+```{r}
+tree_frogs
+```
+
+
+## Data splitting and spending
+
+For machine learning, we typically split data into training and test sets:
+
+. . .
+
+-   The **training set** is used to estimate model parameters.
+-   The **test set** is used to find an independent assessment of model performance.
+
+. . .
+
+Do not 🚫 use the test set during training.
+
+## Data splitting and spending
+
+```{r}
+#| echo: false
+#| fig.width: 12
+#| fig.height: 3
+#| 
+set.seed(123)
+library(forcats)
+one_split <- slice(tree_frogs, 1:30) %>% 
+  initial_split() %>% 
+  tidy() %>% 
+  add_row(Row = 1:30, Data = "Original") %>% 
+  mutate(Data = case_when(
+    Data == "Analysis" ~ "Training",
+    Data == "Assessment" ~ "Testing",
+    TRUE ~ Data
+  )) %>% 
+  mutate(Data = factor(Data, levels = c("Original", "Training", "Testing")))
+all_split <-
+  ggplot(one_split, aes(x = Row, y = fct_rev(Data), fill = Data)) + 
+  geom_tile(color = "white",
+            size = 1) + 
+  scale_fill_manual(values = splits_pal, guide = "none") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = rel(2)),
+        axis.text.x = element_blank(),
+        legend.position = "top",
+        panel.grid = element_blank()) +
+  coord_equal(ratio = 1) +
+  labs(x = NULL, y = NULL)
+all_split
+```
+
+# The more data<br>we spend 🤑<br><br>the better estimates<br>we'll get.
+
+## Data splitting and spending
+
+-   Spending too much data in **training** prevents us from computing a good assessment of predictive **performance**.
+
+. . .
+
+-   Spending too much data in **testing** prevents us from computing a good estimate of model **parameters**.
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*When is a good time to split your data?*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "when-to-split")
+```
+
+# The testing data is precious 💎
+
+## Data splitting and spending `r hexes("rsample")` {.annotation}
+
+```{r}
+set.seed(123)
+frog_split <- initial_split(tree_frogs)
+frog_split
+```
+
+:::notes
+How much data in training vs testing?
+This function uses a good default, but this depends on your specific goal/data
+We will talk about more powerful ways of splitting, like stratification, later
+:::
+
+## Accessing the data `r hexes("rsample")`
+
+```{r}
+frog_train <- training(frog_split)
+frog_test <- testing(frog_split)
+```
+
+## The training set`r hexes("rsample")`
+
+```{r}
+frog_train
+```
+
+## The test set `r hexes("rsample")`
+
+```{r}
+frog_test
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Split your data so 20% is held out for the test set.*
+
+*Try out different values in `set.seed()` to see how the results change.*
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "try-splitting")
+```
+
+## Data splitting and spending `r hexes("rsample")`
+
+```{r}
+set.seed(123)
+frog_split <- initial_split(tree_frogs, prop = 0.8)
+frog_train <- training(frog_split)
+frog_test <- testing(frog_split)
+
+nrow(frog_train)
+nrow(frog_test)
+```
+
+# What about a validation set?
+
+##  {background-color="white" background-image="https://www.tmwr.org/premade/validation.svg" background-size="50%"}
+
+:::notes
+We will use this tomorrow
+:::
+
+##  {background-color="white" background-image="https://www.tmwr.org/premade/validation-alt.svg" background-size="40%"}
+
+# Exploratory data analysis for ML 🧐
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Explore the `frog_train` data on your own!*
+
+* *What's the distribution of the outcome, latency?*
+* *What's the distribution of numeric variables like age?*
+* *How does latency differ across the categorical variables?*
+
+```{r}
+#| echo: false
+countdown(minutes = 8, id = "explore-frogs")
+```
+
+::: notes
+Make a plot or summary and then share with neighbor
+:::
+
+## 
+
+```{r}
+#| fig-align: 'center'
+ggplot(frog_train, aes(latency)) +
+  geom_histogram(bins = 20)
+```
+
+:::notes
+This histogram brings up a concern. What if in our training set we get unlucky and sample few or none of these large values? That could mean that our model wouldn't be able to predict such values. Let's come back to that!
+:::
+
+## 
+
+```{r}
+#| fig-align: 'center'
+ggplot(frog_train, aes(latency, treatment, fill = treatment)) +
+  geom_boxplot(alpha = 0.5, show.legend = FALSE)
+```
+
+## 
+
+```{r}
+#| fig-align: 'center'
+frog_train %>%
+  ggplot(aes(latency, reflex, fill = reflex)) +
+  geom_boxplot(alpha = 0.3, show.legend = FALSE)
+```
+
+## 
+
+```{r}
+#| fig-align: 'center'
+ggplot(frog_train, aes(age, latency, color = reflex)) +
+  geom_point(alpha = .8, size = 2)
+```
+
+# Split smarter
+
+##
+
+```{r echo = FALSE}
+#| fig-align: 'center'
+quartiles <- quantile(frog_train$latency, probs = c(1:3)/4)
+ggplot(frog_train, aes(latency)) +
+  geom_histogram(bins = 20) +
+  geom_vline(xintercept = quartiles, color = train_color, 
+             size = 1.5, lty = 2)
+```
+
+Stratified sampling would split within each quartile
+
+:::notes
+Based on our exploration, we realized that stratifying by latency might help get a consistent distribution. For instance, we'd include high and low latency in both the test and training
+:::
+
+## Stratification
+
+Use `strata = latency`
+
+```{r}
+set.seed(123)
+frog_split <- initial_split(tree_frogs, prop = 0.8, strata = latency)
+frog_split
+```
+
+. . .
+
+Stratification often helps, with very little downside
