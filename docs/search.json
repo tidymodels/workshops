@@ -18,7 +18,7 @@
     "href": "index.html#preparation",
     "title": "Machine learning with tidymodels",
     "section": "Preparation",
-    "text": "Preparation\nPlease join the workshop with a computer that has the following installed (all available for free):\n\nA recent version of R, available at https://cran.r-project.org/\nA recent version of RStudio Desktop (RStudio Desktop Open Source License, at least v2022.02), available at https://www.rstudio.com/download\nThe following R packages, which you can install from the R console:\n\n\ninstall.packages(c(\"Cubist\", \"DALEXtra\", \"doParallel\", \"earth\", \"embed\", \n                   \"forcats\", \"lme4\", \"parallelly\", \"ranger\", \"remotes\", \"rpart\", \n                   \"rpart.plot\", \"rules\", \"stacks\", \"tidymodels\",\n                   \"vetiver\", \"xgboost\"))\n\nremotes::install_github(\"topepo/ongoal@hockeyR\")"
+    "text": "Preparation\nPlease join the workshop with a computer that has the following installed (all available for free):\n\nA recent version of R, available at https://cran.r-project.org/\nA recent version of RStudio Desktop (RStudio Desktop Open Source License, at least v2022.02), available at https://www.rstudio.com/download\nThe following R packages, which you can install from the R console:\n\n\n# First, install the pak package: \n\ninstall.packages(\"pak\")\n\n# Then the packages for both days\npkgs &lt;- \n  c(\"bonasi\", \"doParallel\", \"finetune\", \"lightgbm\", \"lme4\", \"plumber\", \n    \"probably\", \"ranger\", \"rpart\", \"rpart.plot\", \"stacks\", \"textrecipes\", \n    \"tidymodels\", \"tidymodels/modeldatatoo\", \"vetiver\")\npak::pak(pkgs)"
   },
   {
     "objectID": "index.html#slides",
@@ -32,14 +32,14 @@
     "href": "index.html#code",
     "title": "Machine learning with tidymodels",
     "section": "Code",
-    "text": "Code\nQuarto files (version 1.3.433) for working along are available on GitHub. (Don’t worry if you haven’t used Quarto before; it will feel familiar to R Markdown users.)"
+    "text": "Code\nQuarto files (version 1.4.176) for working along are available on GitHub. (Don’t worry if you haven’t used Quarto before; it will feel familiar to R Markdown users.)"
   },
   {
     "objectID": "index.html#past-workshops",
     "href": "index.html#past-workshops",
     "title": "Machine learning with tidymodels",
     "section": "Past workshops",
-    "text": "Past workshops\n\n25-26 July 2022 at rstudio::conf()"
+    "text": "Past workshops\n\nJuly 2022 at rstudio::conf()\nAugust 2022 in Reykjavik"
   },
   {
     "objectID": "index.html#acknowledgments",
@@ -4127,7 +4127,7 @@
     "href": "slides/advanced-01-tuning-hyperparameters.html#hotel-data",
     "title": "1 - Tuning Hyperparameters",
     "section": "Hotel Data",
-    "text": "Hotel Data\nWe’ll use a version of the hotel data. We’ll use a version where we try to predict the cost of a room.\nThe data are in the modeldatatoo package. We’ll sample down the data and refactor some columns:\n\n\n\nlibrary(tidymodels)\nlibrary(modeldatatoo)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\n\n\nset.seed(295)\nhotel_rates &lt;- \n  data_hotel_rates() %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date_num, -arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
+    "text": "Hotel Data\nWe’ll use data on hotels to predict the cost of a room.\nThe data are in the modeldatatoo package. We’ll sample down the data and refactor some columns:\n\n\n\nlibrary(tidymodels)\nlibrary(modeldatatoo)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\n\n\nset.seed(295)\nhotel_rates &lt;- \n  data_hotel_rates() %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date_num, -arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#data-spending",
@@ -4141,7 +4141,7 @@
     "href": "slides/advanced-01-tuning-hyperparameters.html#your-turn",
     "title": "1 - Tuning Hyperparameters",
     "section": "Your turn",
-    "text": "Your turn\nLet’s take some time and investigate the training data. The outcome is avg_price_per_room.\nAre there any characteristic of the data that are interesting?\n\n\n\n−+\n10:00"
+    "text": "Your turn\nLet’s take some time and investigate the training data. The outcome is avg_price_per_room.\nAre there any characteristics of the data that are interesting?\n\n\n\n−+\n10:00"
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#feature-engineering",
@@ -4155,7 +4155,7 @@
     "href": "slides/advanced-01-tuning-hyperparameters.html#tuning-parameters",
     "title": "1 - Tuning Hyperparameters",
     "section": "Tuning parameters",
-    "text": "Tuning parameters\nSome model or preprocessing parameters cannot be estimated directly from the data.\n\nSome examples:\n\nTree depth in decision trees\nNumber of neighbors in a K-nearest neighbor model"
+    "text": "Tuning parameters\nSome model or preprocessing parameters cannot be estimated directly from the data.\n\nSome examples:\n\nTree depth in decision trees\nNumber of neighbors in a K-nearest neighbor model\nNumber of hashing features to retain"
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#optimize-tuning-parameters",
@@ -4169,7 +4169,7 @@
     "href": "slides/advanced-01-tuning-hyperparameters.html#optimize-tuning-parameters-1",
     "title": "1 - Tuning Hyperparameters",
     "section": "Optimize tuning parameters",
-    "text": "Optimize tuning parameters\nThe main two strategies for optimization are:\n\n\nGrid search 💠 which tests a pre-defined set of candidate values\nIterative search 🌀 which suggests/estimates new values of candidate parameters to evaluate\n\nWe’ll focus on grid search for a while."
+    "text": "Optimize tuning parameters\nThe main two strategies for optimization are:\n\n\nGrid search 💠 which tests a pre-defined set of candidate values\nIterative search 🌀 which suggests/estimates new values of candidate parameters to evaluate"
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#a-baseline-model",
@@ -4183,7 +4183,7 @@
     "href": "slides/advanced-01-tuning-hyperparameters.html#a-baseline-model-1",
     "title": "1 - Tuning Hyperparameters",
     "section": "A Baseline Model",
-    "text": "A Baseline Model\nWe’ll try to optimize the mean absolute error:\n\nreg_metrics &lt;- metric_set(mae, rsq)\nctrl_rs &lt;- control_resamples(save_pred = TRUE)\n\nbase_res &lt;- base_wflow %&gt;% fit_resamples(hotel_rs, metrics = reg_metrics)\n\ncollect_metrics(base_res)\n#&gt; # A tibble: 2 × 6\n#&gt;   .metric .estimator   mean     n std_err .config             \n#&gt;   &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 mae     standard   17.3      10 0.199   Preprocessor1_Model1\n#&gt; 2 rsq     standard    0.874    10 0.00400 Preprocessor1_Model1"
+    "text": "A Baseline Model\nWe’ll try to optimize the mean absolute error:\n\nctrl_rs &lt;- control_resamples(save_pred = TRUE)\n\nbase_res &lt;- base_wflow %&gt;% fit_resamples(hotel_rs, metrics = reg_metrics)\n\ncollect_metrics(base_res)\n#&gt; # A tibble: 2 × 6\n#&gt;   .metric .estimator   mean     n std_err .config             \n#&gt;   &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 mae     standard   17.3      10 0.199   Preprocessor1_Model1\n#&gt; 2 rsq     standard    0.874    10 0.00400 Preprocessor1_Model1"
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#boosted-trees",
@@ -4197,7 +4197,7 @@
     "href": "slides/advanced-01-tuning-hyperparameters.html#boosted-tree-tuning-parameters",
     "title": "1 - Tuning Hyperparameters",
     "section": "Boosted Tree Tuning Parameters",
-    "text": "Boosted Tree Tuning Parameters\n\nThe number of predictors randomly sampled at each split (aka mtry in \\([1, ncol(x)]\\) or \\((0, 1]\\)).\nThe number of trees (trees in \\([1, \\infty]\\), but usually up to thousands)\nThe number of samples needed to further split (min_n in \\([1, n]\\)).\nThe rate that each tree adapts form previous iterations (learn_rate in \\((0, \\infty]\\), usual maximum is 0.1).\nThe number of iterations of boosting where no improvement was shown (stop_iter)"
+    "text": "Boosted Tree Tuning Parameters\n\nmtry: The number of predictors randomly sampled at each split (in \\([1, ncol(x)]\\) or \\((0, 1]\\)).\ntrees: The number of trees (\\([1, \\infty]\\), but usually up to thousands)\nmin_n: The number of samples needed to further split (\\([1, n]\\)).\nlearn_rate: The rate that each tree adapts from previous iterations (\\((0, \\infty]\\), usual maximum is 0.1).\nstop_iter: The number of iterations of boosting where no improvement was shown before stopping (\\([1, trees]\\))"
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#boosted-tree-tuning-parameters-1",
@@ -4351,7 +4351,7 @@
     "href": "slides/advanced-01-tuning-hyperparameters.html#your-turn-2",
     "title": "1 - Tuning Hyperparameters",
     "section": "Your turn",
-    "text": "Your turn\n\n\nWhat if we used early stopping instead of optimizing the number of trees?\nWe could set trees = 1000 and use tune the stop_iter parameter.\n\n\n\n−+\n10:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Your turn\n\n\nWe just tuned the model over the number of trees in the ensemble.\nWhat if we set a specific number of trees and tuned the “early stopping” parameters?\n\nHow many iterations of worst performance before we stop adding new trees?\n\nThis is an alternate approach to tuning these models.\nWe could set trees = 1000 and tune the stop_iter parameter.\n\n\n\n−+\n10:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
     "objectID": "slides/advanced-01-tuning-hyperparameters.html#running-in-parallel",
@@ -4394,5 +4394,19 @@
     "title": "1 - Tuning Hyperparameters",
     "section": "Grid Search   ",
     "text": "Grid Search   \n\nlgbm_res\n#&gt; # Tuning results\n#&gt; # 10-fold cross-validation using stratification \n#&gt; # A tibble: 10 × 5\n#&gt;    splits             id     .metrics          .notes           .predictions        \n#&gt;    &lt;list&gt;             &lt;chr&gt;  &lt;list&gt;            &lt;list&gt;           &lt;list&gt;              \n#&gt;  1 &lt;split [3372/377]&gt; Fold01 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,425 × 8]&gt;\n#&gt;  2 &lt;split [3373/376]&gt; Fold02 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  3 &lt;split [3373/376]&gt; Fold03 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  4 &lt;split [3373/376]&gt; Fold04 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  5 &lt;split [3373/376]&gt; Fold05 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  6 &lt;split [3374/375]&gt; Fold06 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,375 × 8]&gt;\n#&gt;  7 &lt;split [3375/374]&gt; Fold07 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,350 × 8]&gt;\n#&gt;  8 &lt;split [3376/373]&gt; Fold08 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,325 × 8]&gt;\n#&gt;  9 &lt;split [3376/373]&gt; Fold09 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,325 × 8]&gt;\n#&gt; 10 &lt;split [3376/373]&gt; Fold10 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,325 × 8]&gt;"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#measuring-performance",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#measuring-performance",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Measuring Performance",
+    "text": "Measuring Performance\nWe’ll compute two measures: mean absolute error and the coefficient of determination (a.k.a \\(R^2\\)).\n\\[\\begin{align}\nMAE &= \\frac{1}{n}\\sum_{i=1}^n |y_i - \\hat{y}_i| \\notag \\\\\nR^2 &= cor(y_i, \\hat{y}_i)^2\n\\end{align}\\]\nThe focus will be on MAE for parameter optimization. We’ll use a metric set to compute these:\n\nreg_metrics &lt;- metric_set(mae, rsq)"
+  },
+  {
+    "objectID": "slides/advanced-01-tuning-hyperparameters.html#iterative-search",
+    "href": "slides/advanced-01-tuning-hyperparameters.html#iterative-search",
+    "title": "1 - Tuning Hyperparameters",
+    "section": "Iterative Search",
+    "text": "Iterative Search\nWe could start with a few points and search the space:"
   }
 ]

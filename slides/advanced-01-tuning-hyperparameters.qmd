@@ -39,9 +39,9 @@ ggplot2::theme_set(ggplot2::theme_bw())
 
 ## Hotel Data
 
-We'll use a version of the [hotel data](https://www.sciencedirect.com/science/article/pii/S2352340918315191). We'll use [a version](https://modeldatatoo.tidymodels.org/dev/reference/data_hotel_rates.html) where we try to predict the cost of a room. 
+We'll use [data on hotels](https://www.sciencedirect.com/science/article/pii/S2352340918315191) to predict the cost of a room. 
 
-The data are in the modeldatatoo package. We'll sample down the data and refactor some columns: 
+The [data](https://modeldatatoo.tidymodels.org/dev/reference/data_hotel_rates.html) are in the modeldatatoo package. We'll sample down the data and refactor some columns: 
 
 :::: {.columns}
 
@@ -114,6 +114,22 @@ Are there any characteristics of the data that are interesting?
 countdown(minutes = 10, id = "hotel-investigation")
 ```
 
+## Measuring Performance
+
+We'll compute two measures: mean absolute error and the coefficient of determination (a.k.a $R^2$). 
+
+\begin{align}
+MAE &= \frac{1}{n}\sum_{i=1}^n |y_i - \hat{y}_i| \notag \\
+R^2 &= cor(y_i, \hat{y}_i)^2
+\end{align}
+
+The focus will be on MAE for parameter optimization. We'll use a metric set to compute these: 
+
+```{r}
+#| label: metric-set
+
+reg_metrics <- metric_set(mae, rsq)
+```
 
 ## Feature Engineering
 
@@ -164,7 +180,6 @@ We'll try to optimize the mean absolute error:
 ```{r}
 #| label: hotel-base-res
 #| cache: true
-reg_metrics <- metric_set(mae, rsq)
 ctrl_rs <- control_resamples(save_pred = TRUE)
 
 base_res <- base_wflow %>% fit_resamples(hotel_rs, metrics = reg_metrics)
@@ -187,6 +202,7 @@ Some examples:
 
 - Tree depth in decision trees
 - Number of neighbors in a K-nearest neighbor model
+- Number of hashing features to retain
 
 # Activation function in neural networks?
 
@@ -263,11 +279,11 @@ We'll focus on the popular lightgbm implementation.
 
 ## Boosted Tree Tuning Parameters
 
-* The number of predictors randomly sampled at each split (aka `mtry` in $[1, ncol(x)]$ or $(0, 1]$).
-* The number of trees (`trees` in $[1, \infty]$, but usually up to thousands)
-* The number of samples needed to further split (`min_n` in $[1, n]$).
-* The rate that each tree adapts from previous iterations (`learn_rate` in $(0, \infty]$, usual maximum is 0.1).
-* The number of iterations of boosting where _no improvement_ was shown before stopping (`stop_iter` in $[1, $`trees`$]$)
+* `mtry`: The number of predictors randomly sampled at each split (in $[1, ncol(x)]$ or $(0, 1]$).
+* `trees`: The number of trees ($[1, \infty]$, but usually up to thousands)
+* `min_n`: The number of samples needed to further split ($[1, n]$).
+* `learn_rate`: The rate that each tree adapts from previous iterations ($(0, \infty]$, usual maximum is 0.1).
+* `stop_iter`: The number of iterations of boosting where _no improvement_ was shown before stopping ($[1, trees]$)
 
 ## Boosted Tree Tuning Parameters
 
@@ -337,7 +353,7 @@ knitr::include_graphics("images/grid_points.svg")
 ```
 
 
-## Sequential Search
+## Iterative Search
 
 We could start with a few points and search the space:
 
@@ -685,7 +701,13 @@ Faceted on the expensiveness of preprocessing used.
 
 <br>
 
-What if we used early stopping instead of optimizing the number of trees? 
+We just tuned the model over the number of trees in the ensemble. 
+
+What if we set a specific number of trees and tuned the "early stopping" parameters? 
+
+ - How many iterations of worst performance before we stop adding new trees? 
+
+This is an alternate approach to tuning these models. 
 
 We could set `trees = 1000` and tune the `stop_iter` parameter. 
 
