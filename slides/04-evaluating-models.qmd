@@ -39,14 +39,14 @@ taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
 taxi_train <- training(taxi_split)
 taxi_test <- testing(taxi_split)
 
-tree_spec <- decision_tree(cost_complexity = 0.00001, mode = "classification")
+tree_spec <- decision_tree(cost_complexity = 0.1, mode = "classification")
 taxi_wflow <- workflow(tip ~ ., tree_spec)
 taxi_fit <- fit(taxi_wflow, taxi_train)
 ```
 
 ```{r}
 augment(taxi_fit, new_data = taxi_train) %>%
-  relocate(tip, .pred_class)
+  relocate(tip, .pred_class, .pred_yes, .pred_no)
 ```
 
 ## Confusion matrix `r hexes("yardstick")`
@@ -134,23 +134,23 @@ augment(taxi_fit, new_data = taxi_train) %>%
 
 ## Metrics for model performance `r hexes("yardstick")`
 
-You can use `metric_set()` to combine multiple calculations into one
+We can use `metric_set()` to combine multiple calculations into one
 
 ```{r}
-my_metrics <- metric_set(accuracy, specificity, sensitivity)
+taxi_metrics <- metric_set(accuracy, specificity, sensitivity)
 
 augment(taxi_fit, new_data = taxi_train) %>%
-  my_metrics(truth = tip, estimate = .pred_class)
+  taxi_metrics(truth = tip, estimate = .pred_class)
 ```
 
 ## Metrics for model performance `r hexes("yardstick")`
 
 ```{r}
-my_metrics <- metric_set(accuracy, specificity, sensitivity)
+taxi_metrics <- metric_set(accuracy, specificity, sensitivity)
 
 augment(taxi_fit, new_data = taxi_train) %>%
   group_by(local) %>%
-  my_metrics(truth = tip, estimate = .pred_class)
+  taxi_metrics(truth = tip, estimate = .pred_class)
 ```
 
 ## Two class data
@@ -531,12 +531,12 @@ taxi_preds <- collect_predictions(taxi_res)
 taxi_preds
 ```
 
-## 
+## Evaluating model performance `r hexes("tune")`
 
 ```{r}
 taxi_preds %>% 
   group_by(id) %>%
-  my_metrics(truth = tip, estimate = .pred_class)
+  taxi_metrics(truth = tip, estimate = .pred_class)
 ```
 
 ## Where are the fitted models? `r hexes("tune")`  {.annotation}
