@@ -1,0 +1,688 @@
+---
+title: "3 - What makes a model?"
+subtitle: "Machine learning with tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+---
+
+```{r}
+#| include: false
+#| file: setup.R
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*How do you fit a linear model in R?*
+
+*How many different ways can you think of?*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "how-to-fit-linear-model")
+```
+
+. . .
+
+-   `lm` for linear model
+
+-   `glm` for generalized linear model (e.g. logistic regression)
+
+-   `glmnet` for regularized regression
+
+-   `keras` for regression using TensorFlow
+
+-   `stan` for Bayesian regression
+
+-   `spark` for large data sets
+
+## To specify a model `r hexes("parsnip")`
+
+. . .
+
+::: columns
+::: {.column width="40%"}
+-   Choose a [model]{.underline}
+-   Specify an engine
+-   Set the mode
+:::
+
+::: {.column width="60%"}
+![](images/Ac_2tads.jpg)
+:::
+:::
+
+## To specify a model `r hexes("parsnip")`
+
+```{r}
+#| echo: false
+library(tidymodels)
+data("tree_frogs", package = "stacks")
+tree_frogs <- tree_frogs %>%
+  mutate(t_o_d = factor(t_o_d),
+         age = age / 86400) %>%
+  filter(!is.na(latency)) %>%
+  select(-c(clutch, hatched))
+
+set.seed(123)
+frog_split <- initial_split(tree_frogs, prop = 0.8, strata = latency)
+frog_train <- training(frog_split)
+frog_test <- testing(frog_split)
+```
+
+```{r}
+linear_reg()
+```
+
+
+:::notes
+Models have default engines
+:::
+
+## To specify a model `r hexes("parsnip")`
+
+::: columns
+::: {.column width="40%"}
+-   Choose a model
+-   Specify an [engine]{.underline}
+-   Set the mode
+:::
+
+::: {.column width="60%"}
+![](images/Ac_2tads.jpg)
+:::
+:::
+
+## To specify a model `r hexes("parsnip")`
+
+```{r}
+linear_reg() %>%
+  set_engine("glmnet")
+```
+
+## To specify a model `r hexes("parsnip")`
+
+```{r}
+linear_reg() %>%
+  set_engine("stan")
+```
+
+## To specify a model `r hexes("parsnip")`
+
+::: columns
+::: {.column width="40%"}
+-   Choose a model
+-   Specify an engine
+-   Set the [mode]{.underline}
+:::
+
+::: {.column width="60%"}
+![](images/Ac_2tads.jpg)
+:::
+:::
+
+
+## To specify a model `r hexes("parsnip")`
+
+```{r}
+decision_tree()
+```
+
+:::notes
+Some models have a default mode
+:::
+
+## To specify a model `r hexes("parsnip")`
+
+```{r}
+decision_tree() %>% 
+  set_mode("regression")
+```
+
+. . .
+
+<br></br>
+
+::: r-fit-text
+All available models are listed at <https://www.tidymodels.org/find/parsnip/> 
+:::
+
+##  {background-iframe="https://www.tidymodels.org/find/parsnip/"}
+
+::: footer
+:::
+
+## To specify a model `r hexes("parsnip")`
+
+::: columns
+::: {.column width="40%"}
+-   Choose a [model]{.underline}
+-   Specify an [engine]{.underline}
+-   Set the [mode]{.underline}
+:::
+
+::: {.column width="60%"}
+![](images/Ac_2tads.jpg)
+:::
+:::
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Run the `tree_spec` chunk in your `.qmd`.*
+
+*Edit this code so it creates a different model.*
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "explore-tree-spec")
+```
+
+<br></br>
+
+::: r-fit-text
+All available models are listed at <https://www.tidymodels.org/find/parsnip/>
+:::
+
+## Models we'll be using today
+
+* Linear regression
+* Decision trees
+
+## Linear regression
+
+::: columns
+::: {.column width="60%"}
+```{r}
+#| echo: false
+#| fig.width: 8
+#| fig.height: 7
+ggplot(frog_test, aes(age, latency)) +
+  geom_point(color = test_color, size = 3) +
+  theme_bw(base_size = 18)
+```
+:::
+
+::: {.column width="40%"}
+:::
+:::
+
+## Linear regression
+
+::: columns
+::: {.column width="60%"}
+```{r}
+#| echo: false
+#| fig.width: 8
+#| fig.height: 7
+linear_preds <- 
+  linear_reg() %>%
+  fit(latency ~ age, data = frog_train) %>%
+  augment(new_data = frog_test)
+
+ggplot(data = NULL, aes(age, latency)) +
+  geom_segment(data = linear_preds,
+               aes(x = age, xend = age, 
+                   y = latency, yend = .pred), 
+               colour = train_color, alpha = 0.8) +
+  geom_smooth(data = frog_train, method = "lm", 
+              se = FALSE, fullrange = TRUE,
+              alpha = 0.8, size = 2, color = data_color) +
+  geom_point(data = linear_preds, color = test_color, size = 3) +
+  theme_bw(base_size = 18)
+```
+:::
+
+::: {.column width="40%"}
+:::
+:::
+
+## Linear regression
+
+::: columns
+::: {.column width="60%"}
+```{r}
+#| echo: false
+#| fig.width: 8
+#| fig.height: 7
+
+ggplot(data = NULL, aes(age, latency)) +
+  geom_segment(data = linear_preds,
+               aes(x = age, xend = age, 
+                   y = latency, yend = .pred), 
+               colour = train_color, alpha = 0.8) +
+  geom_smooth(data = frog_train, method = "lm", 
+              se = FALSE, fullrange = TRUE,
+              alpha = 0.8, size = 2, color = data_color) +
+  geom_point(data = linear_preds, color = test_color, size = 3) +
+  theme_bw(base_size = 18)
+```
+:::
+
+::: {.column width="40%"}
+
+-   Outcome modeled as linear combination of predictors:
+
+$\mbox{latency} = \beta_0 + \beta_1\cdot\mbox{age} + \epsilon$
+
+- Find a line that minimizes the mean squared error (MSE)
+
+:::
+:::
+
+## Decision trees
+
+::: columns
+::: {.column width="50%"}
+```{r}
+#| echo: false
+#| fig.width: 8
+#| fig.height: 7
+age_rng <- range(frog_train$age)
+age_grid <- tibble(age = seq(age_rng[1], age_rng[2], length.out = 500))
+
+tree_fit <-
+  decision_tree(cost_complexity = 0.015, mode = "regression") %>%
+  fit(latency ~ age, data = frog_train)
+
+tree_preds <- 
+  tree_fit %>%
+  augment(new_data = frog_train)
+
+tree_line <- 
+  tree_fit %>%
+  augment(new_data = age_grid)
+```
+
+```{r}
+#| echo: false
+#| fig-align: center
+library(rpart.plot)
+tree_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+
+:::
+
+::: {.column width="50%"}
+:::
+:::
+
+## Decision trees
+
+::: columns
+::: {.column width="50%"}
+```{r}
+#| echo: false
+#| fig-align: center
+library(rpart.plot)
+tree_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+:::
+
+::: {.column width="50%"}
+-   Series of splits or if/then statements based on predictors
+
+-   First the tree *grows* until some condition is met (maximum depth, no more data)
+
+-   Then the tree is *pruned* to reduce its complexity
+:::
+:::
+
+## Decision trees
+
+::: columns
+::: {.column width="50%"}
+```{r}
+#| echo: false
+#| fig-align: center
+library(rpart.plot)
+tree_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+#| echo: false
+#| fig.width: 8
+#| fig.height: 7
+
+ggplot(data = tree_preds, aes(age, latency)) +
+  geom_segment(aes(x = age, xend = age, 
+                   y = latency, yend = .pred), 
+               colour = train_color, alpha = 0.8) +
+  geom_line(aes(x = age, y = .pred), size = 2, alpha = 0.8, color = data_color) +
+  geom_point(data = tree_preds, color = test_color, size = 3) +
+  theme_bw(base_size = 18)
+```
+:::
+:::
+
+## All models are wrong, but some are useful!
+
+::: columns
+::: {.column width="50%"}
+### Linear regression
+```{r}
+#| echo: false
+#| fig.width: 8
+#| fig.height: 7
+
+ggplot(data = NULL, aes(age, latency)) +
+  geom_segment(data = linear_preds,
+               aes(x = age, xend = age, 
+                   y = latency, yend = .pred), 
+               colour = train_color, alpha = 0.8) +
+  geom_smooth(data = frog_train, method = "lm", 
+              se = FALSE, fullrange = TRUE,
+              alpha = 0.8, size = 2, color = data_color) +
+  geom_point(data = linear_preds, color = test_color, size = 3) +
+  theme_bw(base_size = 18)
+```
+:::
+
+::: {.column width="50%"}
+### Decision trees
+```{r}
+#| echo: false
+#| fig.width: 8
+#| fig.height: 7
+ggplot(data = tree_preds, aes(age, latency)) +
+  geom_segment(aes(x = age, xend = age, 
+                   y = latency, yend = .pred), 
+               colour = train_color, alpha = 0.8) +
+  geom_line(aes(x = age, y = .pred), size = 2, alpha = 0.8, color = data_color) +
+  geom_point(data = tree_preds, color = test_color, size = 3) +
+  theme_bw(base_size = 18)
+```
+:::
+:::
+
+# A model workflow
+
+## Workflows bind preprocessors and models
+
+```{r good-workflow}
+#| echo: false
+#| out-width: '70%'
+#| fig-align: 'center'
+knitr::include_graphics("images/good_workflow.png")
+```
+
+:::notes
+Explain that PCA that is a preprocessor / dimensionality reduction, used to decorrelate data
+:::
+
+
+## What is wrong with this? {.annotation}
+
+```{r bad-workflow}
+#| echo: false
+#| out-width: '70%'
+#| fig-align: 'center'
+knitr::include_graphics("images/bad_workflow.png")
+```
+
+## Why a `workflow()`? `r hexes("workflows")`
+
+. . .
+
+-   Workflows handle new data better than base R tools in terms of new factor levels
+
+. . .
+
+-   You can use other preprocessors besides formulas (more on feature engineering tomorrow!)
+
+. . .
+
+-   They can help organize your work when working with multiple models
+
+. . .
+
+-   [Most importantly]{.underline}, a workflow captures the entire modeling process: `fit()` and `predict()` apply to the preprocessing steps in addition to the actual model fit
+
+::: notes
+Two ways workflows handle levels better than base R:
+
+-   Enforces that new levels are not allowed at prediction time (this is an optional check that can be turned off)
+
+-   Restores missing levels that were present at fit time, but happen to be missing at prediction time (like, if your "new" data just doesn't have an instance of that level)
+:::
+
+## A model workflow `r hexes("parsnip", "workflows")`
+
+```{r}
+tree_spec <-
+  decision_tree() %>% 
+  set_mode("regression")
+
+tree_spec %>% 
+  fit(latency ~ ., data = frog_train) 
+```
+
+## A model workflow `r hexes("parsnip", "workflows")`
+
+```{r}
+tree_spec <-
+  decision_tree() %>% 
+  set_mode("regression")
+
+workflow() %>%
+  add_formula(latency ~ .) %>%
+  add_model(tree_spec) %>%
+  fit(data = frog_train) 
+```
+
+## A model workflow `r hexes("parsnip", "workflows")`
+
+```{r}
+tree_spec <-
+  decision_tree() %>% 
+  set_mode("regression")
+
+workflow(latency ~ ., tree_spec) %>% 
+  fit(data = frog_train) 
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Run the `tree_wflow` chunk in your `.qmd`.*
+
+*Edit this code so it uses a linear model.*
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "explore-tree-workflow")
+```
+
+## Predict with your model `r hexes("parsnip", "workflows")`
+
+How do you use your new `tree_fit` model?
+
+```{r}
+tree_spec <-
+  decision_tree() %>% 
+  set_mode("regression")
+
+tree_fit <-
+  workflow(latency ~ ., tree_spec) %>% 
+  fit(data = frog_train) 
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Run:*
+
+`predict(tree_fit, new_data = frog_test)`
+
+*What do you get?*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "predict-tree-fit")
+```
+
+## Your turn
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Run:*
+
+`augment(tree_fit, new_data = frog_test)`
+
+*What do you get?*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "augment-tree-fit")
+```
+
+# The tidymodels prediction guarantee!
+
+. . .
+
+-   The predictions will always be inside a **tibble**
+-   The column names and types are **unsurprising** and **predictable**
+-   The number of rows in `new_data` and the output **are the same**
+
+## Understand your model `r hexes("parsnip", "workflows")`
+
+How do you **understand** your new `tree_fit` model?
+
+```{r}
+#| echo: false
+#| fig-align: center
+library(rpart.plot)
+tree_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+
+## Understand your model `r hexes("parsnip", "workflows")`
+
+How do you **understand** your new `tree_fit` model?
+
+```{r}
+#| eval: false
+library(rpart.plot)
+tree_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+
+You can `extract_*()` several components of your fitted workflow.
+
+::: notes
+`roundint = FALSE` is only to quiet a warning
+:::
+
+
+## Understand your model `r hexes("parsnip", "workflows")`
+
+How do you **understand** your new `tree_fit` model?
+
+. . .
+
+You can use your fitted workflow for model and/or prediction explanations:
+
+. . .
+
+-   overall variable importance, such as with the [vip](https://koalaverse.github.io/vip/) package
+
+. . .
+
+-   flexible model explainers, such as with the [DALEXtra](https://dalex.drwhy.ai/) package
+
+. . .
+
+Learn more at <https://www.tmwr.org/explain.html>
+
+##  {background-iframe="https://hardhat.tidymodels.org/reference/hardhat-extract.html"}
+
+::: footer
+:::
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Extract the model engine object from your fitted linear workflow.*
+
+⚠️ *Never `predict()` with any extracted components!*
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "extract-methods")
+```
+
+:::notes
+Afterward, ask what kind of object people got from the extraction, and what they did with it (e.g. give it to `summary()`, `plot()`, `broom::tidy()` ). Live code along
+:::
+
+# Deploy your model `r hexes("vetiver")`
+
+## {background-image="https://vetiver.rstudio.com/images/ml_ops_cycle.png" background-size="contain"}
+
+## Deploying a model `r hexes("vetiver")`
+
+How do you use your new `tree_fit` model in **production**?
+
+```{r}
+library(vetiver)
+v <- vetiver_model(tree_fit, "frog_hatching")
+v
+```
+
+Learn more at <https://vetiver.rstudio.com>
+
+## Deploy your model `r hexes("vetiver")`
+
+How do you use your new model `tree_fit` in **production**?
+
+```{r}
+library(plumber)
+pr() %>%
+  vetiver_api(v)
+```
+
+Learn more at <https://vetiver.rstudio.com>
+
+:::notes
+Live-code making a prediction
+:::
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Run the `vetiver` chunk in your `.qmd`.*
+
+*Check out the automated visual documentation.*
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "vetiver")
+```

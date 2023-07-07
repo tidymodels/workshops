@@ -1,0 +1,333 @@
+---
+title: "5 - Feature engineering - Classwork"
+subtitle: "Machine learning with tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Case study
+
+```{r}
+library(tidymodels)
+library(ongoal)
+
+tidymodels_prefer()
+ggplot2::theme_set(ggplot2::theme_bw())
+
+glimpse(season_2015)
+```
+
+## Splitting the NHL data
+
+```{r}
+set.seed(23)
+nhl_split <- initial_split(season_2015, prop = 3/4)
+nhl_split
+
+nhl_train_and_val <- training(nhl_split)
+nhl_test  <- testing(nhl_split)
+```
+
+## Validation split
+
+Since there are a lot of observations, we'll use a validation set.
+
+```{r}
+set.seed(234)
+nhl_val <- validation_split(nhl_train_and_val, prop = 0.80)
+nhl_val
+```
+
+## Your turn
+
+Let's explore the training set data.
+
+Use the function `plot_nhl_shots()` for nice spatial plots of the data.
+
+```{r}
+nhl_train <- analysis(nhl_val$splits[[1]])
+
+set.seed(100)
+nhl_train %>% 
+  sample_n(200) %>%
+  plot_nhl_shots(emphasis = shooter_type)
+
+# Your code here!
+
+```
+
+## A first recipe
+
+```{r}
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train)
+summary(nhl_rec)
+```
+
+## A basic recipe
+
+```{r}
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors())
+```
+
+## Other possible steps
+
+```{r}
+# Reduce correlation 
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_corr(all_numeric_predictors(), threshold = 0.9)
+
+# PCA feature extraction
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_pca(all_numeric_predictors())
+
+# Supervised and unsupervised uniform manifold approximation and projection (UMAP)
+library(embed)
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  embed::step_umap(all_numeric_predictors(), outcome = on_goal)
+
+# Natural splines
+nhl_rec <- 
+  recipe(on_goal ~ ., data = nhl_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_ns(coord_y, coord_x, deg_free = 10)
+```
+
+## Your turn
+
+Create a `recipe()` for the on-goal data to :
+
+-   create one-hot indicator variables
+-   remove zero-variance variables
+
+```{r}
+# Your code here!
+
+```
+
+## Minimal recipe 
+
+```{r}
+nhl_indicators <-
+  recipe(on_goal ~ ., data = nhl_train) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+## Using a workflow
+
+```{r}
+set.seed(9)
+
+nhl_glm_wflow <-
+  workflow() %>%
+  add_recipe(nhl_indicators) %>%
+  add_model(logistic_reg())
+ 
+ctrl <- control_resamples(save_pred = TRUE)
+nhl_glm_res <-
+  nhl_glm_wflow %>%
+  fit_resamples(nhl_val, control = ctrl)
+
+collect_metrics(nhl_glm_res)
+```
+
+## Your turn
+
+Use `fit_resamples()` to fit your workflow with a recipe.
+
+Collect the predictions from the results.
+
+```{r}
+# Your code here!
+
+```
+
+## Holdout predictions
+
+```{r}
+# Since we used `save_pred = TRUE`
+glm_val_pred <- collect_predictions(nhl_glm_res)
+glm_val_pred %>% slice(1:7)
+```
+
+## ROC curves
+
+```{r}
+# Assumes _first_ factor level is event; there are options to change that
+roc_curve_points <- glm_val_pred %>% roc_curve(truth = on_goal, estimate = .pred_yes)
+roc_curve_points %>% slice(1, 50, 100)
+
+glm_val_pred %>% roc_auc(truth = on_goal, estimate = .pred_yes)
+```
+
+## ROC curve plot 
+
+```{r}
+autoplot(roc_curve_points)
+```
+
+## Your turn
+
+Compute and plot an ROC curve for your current model.
+
+What data is being used for this ROC curve plot?
+
+```{r}
+# Your code here!
+
+```
+
+## Collapsing factor levels
+
+```{r}
+nhl_other_rec <-
+  recipe(on_goal ~ ., data = nhl_train) %>%
+  # Any player with <= 0.01% of shots is set to "other"
+  step_other(shooter, threshold = 0.001) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+## Does othering help? 
+
+```{r}
+nhl_other_wflow <-
+  nhl_glm_wflow %>%
+  update_recipe(nhl_other_rec)
+
+nhl_other_res <-
+  nhl_other_wflow %>%
+  fit_resamples(nhl_val, control = ctrl)
+
+collect_metrics(nhl_other_res)
+```
+
+## Player effects
+
+```{r}
+library(embed)
+
+nhl_effect_rec <-
+  recipe(on_goal ~ ., data = nhl_train) %>%
+  step_lencode_mixed(shooter, goaltender, outcome = vars(on_goal)) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+## Effect encoding results
+
+```{r}
+nhl_effect_wflow <-
+  nhl_glm_wflow %>%
+  update_recipe(nhl_effect_rec)
+
+nhl_effect_res <-
+  nhl_effect_wflow %>%
+  fit_resamples(nhl_val, control = ctrl)
+
+collect_metrics(nhl_effect_res)
+```
+
+## Where is the shot coming from?
+
+```{r}
+# angle
+nhl_angle_rec <-
+  nhl_effect_rec %>%
+  step_mutate(
+    angle = abs( atan2(abs(coord_y), (89 - coord_x) ) * (180 / pi) )
+  )
+
+# defensive zone
+nhl_zone_rec <-
+  nhl_angle_rec %>%
+  step_mutate(
+    defensive_zone = ifelse(coord_x <= -25.5, 1, 0)
+  )
+
+# behind goal line
+nhl_behind_rec <-
+  nhl_zone_rec %>%
+  step_mutate(
+    behind_goal_line = ifelse(coord_x >= 89, 1, 0)
+  )
+```
+
+## Fit different recipes
+
+```{r}
+no_coord_rec <- 
+  nhl_indicators %>% 
+  step_rm(starts_with("coord"))
+
+set.seed(9)
+
+nhl_glm_set_res <-
+  workflow_set(
+    list(`1_no_coord` = no_coord_rec,   `2_other` = nhl_other_rec, 
+         `3_effects`  = nhl_effect_rec, `4_angle` = nhl_angle_rec, 
+         `5_zone`     = nhl_zone_rec,   `6_bgl`   = nhl_behind_rec),
+    list(logistic = logistic_reg())
+  ) %>%
+  workflow_map(fn = "fit_resamples", resamples = nhl_val, verbose = TRUE, control = ctrl)
+```
+
+## Your turn
+
+Create a workflow set with 2 or 3 recipes.
+
+(Consider using recipes we've already created.)
+
+Use `workflow_map()` to resample the workflow set.
+
+```{r}
+# Your code here!
+
+```
+
+## Compare recipes
+
+```{r}
+library(forcats)
+
+collect_metrics(nhl_glm_set_res) %>%
+  filter(.metric == "roc_auc") %>%
+  mutate(
+    features = gsub("_logistic", "", wflow_id), 
+    features = fct_reorder(features, mean)
+  ) %>%
+  ggplot(aes(x = mean, y = features)) +
+  geom_point(size = 3) +
+  labs(y = NULL, x = "ROC AUC (validation set)")
+```
+
+## Debugging a recipe
+
+```{r}
+nhl_angle_fit <- prep(nhl_angle_rec)
+
+tidy(nhl_angle_fit, number = 1) %>% slice(1:4)
+
+bake(nhl_angle_fit, nhl_train %>% slice(1:3), starts_with("coord"), angle, shooter)
+```
