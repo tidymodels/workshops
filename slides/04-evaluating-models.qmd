@@ -39,8 +39,8 @@ taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
 taxi_train <- training(taxi_split)
 taxi_test <- testing(taxi_split)
 
-taxi_spec <- decision_tree(cost_complexity = 0.001, mode = "classification")
-taxi_wflow <- workflow(tip ~ ., taxi_spec)
+tree_spec <- decision_tree(cost_complexity = 0.00001, mode = "classification")
+taxi_wflow <- workflow(tip ~ ., tree_spec)
 taxi_fit <- fit(taxi_wflow, taxi_train)
 ```
 
@@ -48,6 +48,10 @@ taxi_fit <- fit(taxi_wflow, taxi_train)
 augment(taxi_fit, new_data = taxi_train) %>%
   relocate(tip, .pred_class)
 ```
+
+## Confusion matrix `r hexes("yardstick")`
+
+![](images/confusion-matrix.png)
 
 ## Confusion matrix `r hexes("yardstick")`
 
@@ -66,10 +70,18 @@ augment(taxi_fit, new_data = taxi_train) %>%
 
 ## Metrics for model performance `r hexes("yardstick")`
 
+::: columns
+::: {.column width="60%"}
 ```{r}
 augment(taxi_fit, new_data = taxi_train) %>%
   accuracy(truth = tip, estimate = .pred_class)
 ```
+:::
+
+::: {.column width="40%"}
+![](images/confusion-matrix-accuracy.png)
+:::
+:::
 
 ## Dangers of accuracy `r hexes("yardstick")`
 
@@ -83,6 +95,47 @@ augment(taxi_fit, new_data = taxi_train) %>%
 
 ## Metrics for model performance `r hexes("yardstick")`
 
+::: columns
+::: {.column width="60%"}
+```{r}
+augment(taxi_fit, new_data = taxi_train) %>%
+  sensitivity(truth = tip, estimate = .pred_class)
+```
+:::
+
+::: {.column width="40%"}
+![](images/confusion-matrix-sensitivity.png)
+:::
+:::
+
+
+## Metrics for model performance `r hexes("yardstick")`
+
+::: columns
+::: {.column width="60%"}
+```{r}
+#| code-line-numbers: "3-6"
+augment(taxi_fit, new_data = taxi_train) %>%
+  sensitivity(truth = tip, estimate = .pred_class)
+```
+
+<br>
+
+```{r}
+augment(taxi_fit, new_data = taxi_train) %>%
+  specificity(truth = tip, estimate = .pred_class)
+```
+:::
+
+::: {.column width="40%"}
+![](images/confusion-matrix-specificity.png)
+:::
+:::
+
+## Metrics for model performance `r hexes("yardstick")`
+
+You can use `metric_set()` to combine multiple calculations into one
+
 ```{r}
 my_metrics <- metric_set(accuracy, specificity, sensitivity)
 
@@ -90,53 +143,113 @@ augment(taxi_fit, new_data = taxi_train) %>%
   my_metrics(truth = tip, estimate = .pred_class)
 ```
 
-##
+## Metrics for model performance `r hexes("yardstick")`
 
 ```{r}
-knitr::knit_exit()
-```
+my_metrics <- metric_set(accuracy, specificity, sensitivity)
 
-
-```{r}
 augment(taxi_fit, new_data = taxi_train) %>%
-  accuracy(tip, .pred_class)
+  group_by(local) %>%
+  my_metrics(truth = tip, estimate = .pred_class)
 ```
+
+## Two class data
+
+These metrics assume that we know the threshold for converting "soft" probability predictions into "hard" class predictions.
 
 . . .
 
--   RMSE: difference between the predicted and observed values ⬇️
--   $R^2$: squared correlation between the predicted and observed values ⬆️
--   MAE: similar to RMSE, but mean absolute error ⬇️
+Is a 50% threshold good? 
 
-## Metrics for model performance `r hexes("yardstick")`
+What happens if we say that we need to be 80% sure to declare an event?
+
+-   sensitivity ⬇️, specificity ⬆️
+
+. . .
+
+What happens for a 20% threshold?
+
+-   sensitivity ⬆️, specificity ⬇️
+
+## Varying the threshold
 
 ```{r}
-augment(tree_fit, new_data = frog_test) %>%
-  rmse(latency, .pred)
+#| label: thresholds
+#| echo: false
+
+augment(taxi_fit, new_data = taxi_train) %>% 
+  roc_curve(truth = tip, .pred_yes) %>% 
+  filter(is.finite(.threshold)) %>% 
+  pivot_longer(c(specificity, sensitivity), names_to = "statistic", values_to = "value") %>% 
+  rename(`event threshold` = .threshold) %>% 
+  ggplot(aes(x = `event threshold`, y = value, col = statistic, group = statistic)) + 
+  geom_line() +
+  scale_color_brewer(palette = "Dark2") +
+  labs(y = NULL) +
+  coord_equal() +
+  theme(legend.position = "top")
 ```
 
-## Metrics for model performance `r hexes("yardstick")`
+## ROC curves
+
+To make an ROC (receiver operator characteristic) curve, we:
+
+- calculate the sensitivity and specificity for all possible thresholds
+
+- plot false positive rate (x-axis) versus true positive rate (y-axis)
+
+. . .
+
+We can use the area under the ROC curve as a classification metric: 
+
+- ROC AUC = 1 💯 
+- ROC AUC = 1/2 😢
+
+:::notes
+ROC curves are insensitive to class imbalance.
+:::
+
+## ROC curves `r hexes("yardstick")`
 
 ```{r}
-augment(tree_fit, new_data = frog_test) %>%
-  group_by(reflex) %>%
-  rmse(latency, .pred)
+# Assumes _first_ factor level is event; there are options to change that
+augment(taxi_fit, new_data = taxi_train) %>% 
+  roc_curve(truth = tip, .pred_yes) %>%
+  slice(1, 20, 50)
+
+augment(taxi_fit, new_data = taxi_train) %>% 
+  roc_auc(truth = tip, .pred_yes)
 ```
 
-## Metrics for model performance `r hexes("yardstick")`
+## ROC curve plot `r hexes("yardstick")`
+
+```{r roc-curve}
+#| fig-width: 6
+#| fig-height: 6
+#| output-location: "column"
+
+augment(taxi_fit, new_data = taxi_train) %>% 
+  roc_curve(truth = tip, .pred_yes) %>%
+  autoplot()
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Compute and plot an ROC curve for your current model.*
+
+*What data are being used for this ROC curve plot?*
 
 ```{r}
-frog_metrics <- metric_set(rmse, msd)
-augment(tree_fit, new_data = frog_test) %>%
-  frog_metrics(latency, .pred)
+#| echo: false
+countdown(minutes = 5, id = "roc-curve")
 ```
 
 ##  {background-iframe="https://yardstick.tidymodels.org/reference/index.html"}
 
 ::: footer
 :::
-
-# We'll talk about classification metrics tomorrow!
 
 # ⚠️ DANGERS OF OVERFITTING ⚠️
 
@@ -151,8 +264,8 @@ augment(tree_fit, new_data = frog_test) %>%
 ## Dangers of overfitting ⚠️ `r hexes("yardstick")`
 
 ```{r}
-tree_fit %>%
-  augment(frog_train)
+taxi_fit %>%
+  augment(taxi_train)
 ```
 
 We call this "resubstitution" or "repredicting the training set"
@@ -160,9 +273,9 @@ We call this "resubstitution" or "repredicting the training set"
 ## Dangers of overfitting ⚠️ `r hexes("yardstick")`
 
 ```{r}
-tree_fit %>%
-  augment(frog_train) %>%
-  rmse(latency, .pred)
+taxi_fit %>%
+  augment(taxi_train) %>%
+  accuracy(truth = tip, estimate = .pred_class)
 ```
 
 We call this a "resubstitution estimate"
@@ -172,9 +285,9 @@ We call this a "resubstitution estimate"
 ::: columns
 ::: {.column width="50%"}
 ```{r}
-tree_fit %>%
-  augment(frog_train) %>%
-  rmse(latency, .pred)
+taxi_fit %>%
+  augment(taxi_train) %>%
+  accuracy(truth = tip, estimate = .pred_class)
 ```
 :::
 
@@ -187,17 +300,17 @@ tree_fit %>%
 ::: columns
 ::: {.column width="50%"}
 ```{r}
-tree_fit %>%
-  augment(frog_train) %>%
-  rmse(latency, .pred)
+taxi_fit %>%
+  augment(taxi_train) %>%
+  accuracy(truth = tip, estimate = .pred_class)
 ```
 :::
 
 ::: {.column width="50%"}
 ```{r}
-tree_fit %>%
-  augment(frog_test) %>%
-  rmse(latency, .pred)
+taxi_fit %>%
+  augment(taxi_test) %>%
+  accuracy(truth = tip, estimate = .pred_class)
 ```
 :::
 :::
@@ -217,7 +330,7 @@ tree_fit %>%
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Use `augment()` and `metrics()` to compute a regression metric like `mae()`.*
+*Use `augment()` and and a metric function to compute a classification metric like `precision()`.*
 
 *Compute the metrics for both training and testing data.*
 
@@ -233,17 +346,17 @@ countdown(minutes = 5, id = "augment-metrics")
 ::: columns
 ::: {.column width="50%"}
 ```{r}
-tree_fit %>%
-  augment(frog_train) %>%
-  metrics(latency, .pred)
+taxi_fit %>%
+  augment(taxi_train) %>%
+  precision(tip, .pred_class)
 ```
 :::
 
 ::: {.column width="50%"}
 ```{r}
-tree_fit %>%
-  augment(frog_test) %>%
-  metrics(latency, .pred)
+taxi_fit %>%
+  augment(taxi_test) %>%
+  precision(tip, .pred_class)
 ```
 :::
 :::
@@ -295,7 +408,7 @@ countdown(minutes = 3, id = "percent-in-folds")
 ## Cross-validation `r hexes("rsample")`
 
 ```{r}
-vfold_cv(frog_train) # v = 10 is default
+vfold_cv(taxi_train) # v = 10 is default
 ```
 
 ## Cross-validation `r hexes("rsample")`
@@ -303,8 +416,8 @@ vfold_cv(frog_train) # v = 10 is default
 What is in this?
 
 ```{r}
-frog_folds <- vfold_cv(frog_train)
-frog_folds$splits[1:3]
+taxi_folds <- vfold_cv(taxi_train)
+taxi_folds$splits[1:3]
 ```
 
 ::: notes
@@ -314,13 +427,13 @@ Talk about a list column, storing non-atomic types in dataframe
 ## Cross-validation `r hexes("rsample")`
 
 ```{r}
-vfold_cv(frog_train, v = 5)
+vfold_cv(taxi_train, v = 5)
 ```
 
 ## Cross-validation `r hexes("rsample")`
 
 ```{r}
-vfold_cv(frog_train, strata = latency)
+vfold_cv(taxi_train, strata = tip)
 ```
 
 . . .
@@ -333,8 +446,8 @@ We'll use this setup:
 
 ```{r}
 set.seed(123)
-frog_folds <- vfold_cv(frog_train, v = 10, strata = latency)
-frog_folds
+taxi_folds <- vfold_cv(taxi_train, v = 10, strata = tip)
+taxi_folds
 ```
 
 . . .
@@ -346,14 +459,14 @@ Set the seed when creating resamples
 ## Fit our model to the resamples
 
 ```{r}
-tree_res <- fit_resamples(tree_wflow, frog_folds)
-tree_res
+taxi_res <- fit_resamples(taxi_wflow, taxi_folds)
+taxi_res
 ```
 
 ## Evaluating model performance `r hexes("tune")`
 
 ```{r}
-tree_res %>%
+taxi_res %>%
   collect_metrics()
 ```
 
@@ -367,17 +480,17 @@ How do the metrics from resampling compare to the metrics from training and test
 
 ```{r}
 #| echo: false
-frog_training_rmse <-
-  tree_fit %>%
-  augment(frog_train) %>%
-  rmse(latency, .pred) %>%
+taxi_training_roc_auc <-
+  taxi_fit %>%
+  augment(taxi_train) %>%
+  roc_auc(tip, .pred_yes) %>%
   pull(.estimate) %>%
   round(digits = 2)
 
-frog_testing_rmse <-
-  tree_fit %>%
-  augment(frog_test) %>%
-  rmse(latency, .pred) %>%
+taxi_testing_roc_auc <-
+  taxi_fit %>%
+  augment(taxi_test) %>%
+  roc_auc(tip, .pred_yes) %>%
   pull(.estimate) %>%
   round(digits = 2)
 ```
@@ -385,17 +498,17 @@ frog_testing_rmse <-
 ::: columns
 ::: {.column width="50%"}
 ```{r}
-tree_res %>%
+taxi_res %>%
   collect_metrics() %>% 
   select(.metric, mean, n)
 ```
 :::
 
 ::: {.column width="50%"}
-The RMSE previously was
+The ROC AUC previously was
 
-- `r frog_training_rmse` for the training set
-- `r frog_testing_rmse` for test set
+- `r taxi_training_roc_auc` for the training set
+- `r taxi_testing_roc_auc` for test set
 :::
 :::
 
@@ -411,27 +524,25 @@ Remember that:
 
 ```{r}
 # Save the assessment set results
-ctrl_frog <- control_resamples(save_pred = TRUE)
-tree_res <- fit_resamples(tree_wflow, frog_folds, control = ctrl_frog)
+ctrl_taxi <- control_resamples(save_pred = TRUE)
+taxi_res <- fit_resamples(taxi_wflow, taxi_folds, control = ctrl_taxi)
 
-tree_preds <- collect_predictions(tree_res)
-tree_preds
+taxi_preds <- collect_predictions(taxi_res)
+taxi_preds
 ```
 
 ## 
 
 ```{r}
-tree_preds %>% 
-  ggplot(aes(latency, .pred, color = id)) + 
-  geom_abline(lty = 2, col = "gray", size = 1.5) +
-  geom_point(alpha = 0.5) +
-  coord_obs_pred()
+taxi_preds %>% 
+  group_by(id) %>%
+  my_metrics(truth = tip, estimate = .pred_class)
 ```
 
 ## Where are the fitted models? `r hexes("tune")`  {.annotation}
 
 ```{r}
-tree_res
+taxi_res
 ```
 
 . . .
@@ -448,7 +559,7 @@ tree_res
 
 ```{r}
 set.seed(3214)
-bootstraps(frog_train)
+bootstraps(taxi_train)
 ```
 
 ##  {background-iframe="https://rsample.tidymodels.org/reference/index.html"}
@@ -476,14 +587,14 @@ countdown(minutes = 5, id = "try-rsample")
 
 ```{r}
 set.seed(322)
-bootstraps(frog_train, times = 10)
+bootstraps(taxi_train, times = 10)
 ```
 
 ## Validation set `r hexes("rsample")`
 
 ```{r}
 set.seed(853)
-validation_split(frog_train, strata = latency)
+validation_split(taxi_train, strata = tip)
 ```
 
 . . .
@@ -509,14 +620,14 @@ A validation set is just another type of resample
 ## Create a random forest model `r hexes("parsnip")`
 
 ```{r}
-rf_spec <- rand_forest(trees = 1000, mode = "regression")
+rf_spec <- rand_forest(trees = 1000, mode = "classification")
 rf_spec
 ```
 
 ## Create a random forest model `r hexes("workflows")`
 
 ```{r}
-rf_wflow <- workflow(latency ~ ., rf_spec)
+rf_wflow <- workflow(tip ~ ., rf_spec)
 rf_wflow
 ```
 
@@ -528,7 +639,6 @@ rf_wflow
 
 -   *keep predictions*
 -   *compute metrics*
--   *plot true vs. predicted values*
 
 ```{r}
 #| echo: false
@@ -538,23 +648,13 @@ countdown(minutes = 8, id = "try-fit-resamples")
 ## Evaluating model performance `r hexes("tune")`
 
 ```{r}
-ctrl_frog <- control_resamples(save_pred = TRUE)
+ctrl_taxi <- control_resamples(save_pred = TRUE)
 
 # Random forest uses random numbers so set the seed first
 
 set.seed(2)
-rf_res <- fit_resamples(rf_wflow, frog_folds, control = ctrl_frog)
+rf_res <- fit_resamples(rf_wflow, taxi_folds, control = ctrl_taxi)
 collect_metrics(rf_res)
-```
-
-## 
-
-```{r}
-collect_predictions(rf_res) %>% 
-  ggplot(aes(latency, .pred, color = id)) + 
-  geom_abline(lty = 2, col = "gray", size = 1.5) +
-  geom_point(alpha = 0.5) +
-  coord_obs_pred()
 ```
 
 ## How can we compare multiple model workflows at once? {background-image="images/Hatching-process.jpg"}
@@ -563,21 +663,21 @@ collect_predictions(rf_res) %>%
 ## Evaluate a workflow set
 
 ```{r}
-workflow_set(list(latency ~ .), list(tree_spec, rf_spec))
+workflow_set(list(tip ~ .), list(tree_spec, rf_spec))
 ```
 
 ## Evaluate a workflow set
 
 ```{r}
-workflow_set(list(latency ~ .), list(tree_spec, rf_spec)) %>%
-  workflow_map("fit_resamples", resamples = frog_folds)
+workflow_set(list(tip ~ .), list(tree_spec, rf_spec)) %>%
+  workflow_map("fit_resamples", resamples = taxi_folds)
 ```
 
 ## Evaluate a workflow set
 
 ```{r}
-workflow_set(list(latency ~ .), list(tree_spec, rf_spec)) %>%
-  workflow_map("fit_resamples", resamples = frog_folds) %>%
+workflow_set(list(tip ~ .), list(tree_spec, rf_spec)) %>%
+  workflow_map("fit_resamples", resamples = taxi_folds) %>%
   rank_results()
 ```
 
@@ -610,8 +710,8 @@ Let's fit the model on the training set and verify our performance using the tes
 We've shown you `fit()` and `predict()` (+ `augment()`) but there is a shortcut:
 
 ```{r}
-# frog_split has train + test info
-final_fit <- last_fit(rf_wflow, frog_split) 
+# taxi_split has train + test info
+final_fit <- last_fit(rf_wflow, taxi_split) 
 
 final_fit
 ```
@@ -630,20 +730,6 @@ These are metrics computed with the **test** set
 
 ```{r}
 collect_predictions(final_fit)
-```
-
-. . .
-
-These are predictions for the **test** set
-
-## 
-
-```{r}
-collect_predictions(final_fit) %>%
-  ggplot(aes(latency, .pred)) + 
-  geom_abline(lty = 2, col = "deeppink4", size = 1.5) +
-  geom_point(alpha = 0.5) +
-  coord_obs_pred()
 ```
 
 ## What is in `final_fit`? `r hexes("tune")`
