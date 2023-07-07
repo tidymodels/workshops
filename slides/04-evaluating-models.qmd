@@ -198,6 +198,8 @@ To make an ROC (receiver operator characteristic) curve, we:
 
 - plot false positive rate (x-axis) versus true positive rate (y-axis)
 
+given that sensitivity is the true positive rate, and specificity is the true negative rate. Hence `1 - specificity` is the false positive rate.
+
 . . .
 
 We can use the area under the ROC curve as a classification metric: 
@@ -275,7 +277,7 @@ We call this "resubstitution" or "repredicting the training set"
 ```{r}
 taxi_fit %>%
   augment(taxi_train) %>%
-  accuracy(truth = tip, estimate = .pred_class)
+  accuracy(tip, .pred_class)
 ```
 
 We call this a "resubstitution estimate"
@@ -287,7 +289,7 @@ We call this a "resubstitution estimate"
 ```{r}
 taxi_fit %>%
   augment(taxi_train) %>%
-  accuracy(truth = tip, estimate = .pred_class)
+  accuracy(tip, .pred_class)
 ```
 :::
 
@@ -302,7 +304,7 @@ taxi_fit %>%
 ```{r}
 taxi_fit %>%
   augment(taxi_train) %>%
-  accuracy(truth = tip, estimate = .pred_class)
+  accuracy(tip, .pred_class)
 ```
 :::
 
@@ -310,7 +312,7 @@ taxi_fit %>%
 ```{r}
 taxi_fit %>%
   augment(taxi_test) %>%
-  accuracy(truth = tip, estimate = .pred_class)
+  accuracy(tip, .pred_class)
 ```
 :::
 :::
@@ -328,7 +330,7 @@ taxi_fit %>%
 
 ## Your turn {transition="slide-in"}
 
-![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+![](images/parsnip-flagger.jpg){.absolute bottom="0" left="0" width="150" height="150"}
 
 *Use `augment()` and and a metric function to compute a classification metric like `brier_class()`.*
 
@@ -398,7 +400,7 @@ And we want to understand if these are important differences?
 
 *for* **each** *fold?*
 
-![](images/snake.png){width="300"}
+![](images/taxi_spinning.svg){width="300"}
 
 ```{r}
 #| echo: false
@@ -573,8 +575,10 @@ bootstraps(taxi_train)
 
 *Create:*
 
--   *bootstrap folds (change `times` from the default)*
--   *validation set (use the reference guide to find the function)*
+-   *Monte Carlo Cross-Validation sets*
+-   *validation set*
+
+(use the reference guide to find the function)
 
 *Don't forget to set a seed when you resample!*
 
@@ -583,11 +587,11 @@ bootstraps(taxi_train)
 countdown(minutes = 5, id = "try-rsample")
 ```
 
-## Bootstrapping `r hexes("rsample")`
+## Monte Carlo Cross-Validation `r hexes("rsample")`
 
 ```{r}
 set.seed(322)
-bootstraps(taxi_train, times = 10)
+mc_cv(taxi_train, times = 10)
 ```
 
 ## Validation set `r hexes("rsample")`
@@ -657,8 +661,7 @@ rf_res <- fit_resamples(rf_wflow, taxi_folds, control = ctrl_taxi)
 collect_metrics(rf_res)
 ```
 
-## How can we compare multiple model workflows at once? {background-image="images/Hatching-process.jpg"}
-
+## How can we compare multiple model workflows at once? {background-image="images/taxi_spinning.svg"}
 
 ## Evaluate a workflow set
 
