@@ -15,9 +15,11 @@ Setup from deck 3
 library(tidymodels)
 library(modeldatatoo)
 
-taxi <- data_taxi() %>%
+taxi <- data_taxi()
+
+taxi <- taxi %>%
   mutate(month = factor(month, levels = c("Jan", "Feb", "Mar", "Apr"))) %>% 
-  select(-c(id, duration, fare, tolls, extras, total_cost, payment_type)) %>%
+  select(-c(id, duration, fare, tolls, extras, total_cost, payment_type)) %>% 
   drop_na()
 
 set.seed(123)
@@ -79,7 +81,6 @@ What data is being used for this ROC curve plot?
 
 ```{r}
 # Your code here!
-
 ```
 
 ## Dangers of overfitting
@@ -268,8 +269,8 @@ Discuss with your neighbors!
 ## The final fit
 
 ```{r}
-# `frog_split` has train + test info
-final_fit <- last_fit(rf_wflow, frog_split) 
+# `taxi_split` has train + test info
+final_fit <- last_fit(rf_wflow, taxi_split) 
 
 final_fit
 ```
@@ -284,6 +285,12 @@ Test set predictions:
 
 ```{r}
 collect_predictions(final_fit)
+```
+
+```{r}
+collect_predictions(final_fit) %>%
+  ggplot(aes(.pred_class, fill = tip)) + 
+  geom_bar() 
 ```
 
 ```{r}

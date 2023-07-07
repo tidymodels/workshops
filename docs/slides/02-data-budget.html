@@ -409,53 +409,68 @@
 <section id="section" class="slide level2" data-background-image="https://media.giphy.com/media/Lr3UeH9tYu3qJtsSUg/giphy.gif" data-background-size="40%">
 <h2></h2>
 </section>
-<section id="data-on-tree-frog-hatching" class="slide level2">
-<h2>Data on tree frog hatching</h2>
-
-<img data-src="images/Hatching-process.jpg" class="r-stretch"></section>
-<section id="data-on-tree-frog-hatching-1" class="slide level2">
-<h2>Data on tree frog hatching</h2>
-<ul>
-<li>Red-eyed tree frog embryos can hatch earlier than their normal ~7 days if they detect potential predator threat!</li>
-<li>Type <code>?stacks::tree_frogs</code> to learn more about this dataset, including references.</li>
-<li>We are using a slightly modified version from stacks.</li>
-</ul>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">library</span>(tidymodels)</span>
-<span id="cb1-2"><a href="#cb1-2"></a></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="fu">data</span>(<span class="st">"tree_frogs"</span>, <span class="at">package =</span> <span class="st">"stacks"</span>)</span>
-<span id="cb1-4"><a href="#cb1-4"></a>tree_frogs <span class="ot">&lt;-</span> tree_frogs <span class="sc">%&gt;%</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a>  <span class="fu">mutate</span>(<span class="at">t_o_d =</span> <span class="fu">factor</span>(t_o_d),</span>
-<span id="cb1-6"><a href="#cb1-6"></a>         <span class="at">age =</span> age <span class="sc">/</span> <span class="dv">86400</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb1-7"><a href="#cb1-7"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(latency)) <span class="sc">%&gt;%</span></span>
-<span id="cb1-8"><a href="#cb1-8"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(clutch, hatched))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="data-on-tree-frog-hatching-2" class="slide level2">
-<h2>Data on tree frog hatching</h2>
+<section id="data-on-chicago-taxi-trips" class="slide level2">
+<h2>Data on Chicago taxi trips</h2>
 <div class="columns">
 <div class="column" style="width:60%;">
 <ul>
-<li><code>N = 572</code></li>
-<li>A numeric outcome, <code>latency</code></li>
-<li>4 other variables
+<li>The city of Chicago releases anonymized trip-level data on taxi trips in the city.</li>
+<li>We pulled a sample of 10,000 rides occurring in early 2022.</li>
+<li>Type <code>?modeldatatoo::data_taxi()</code> to learn more about this dataset, including references.</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<p><img data-src="images/taxi_spinning.svg"></p>
+</div>
+</div>
+<div class="footer">
+<p>Credit: <a href="https://www.svgrepo.com/svg/8322/taxi" class="uri">https://www.svgrepo.com/svg/8322/taxi</a></p>
+</div>
+</section>
+<section id="data-on-chicago-taxi-trips-1" class="slide level2">
+<h2>Data on Chicago taxi trips</h2>
 <ul>
-<li><code>treatment</code>, <code>reflex</code>, and <code>t_o_d</code> are <strong>nominal</strong> predictors</li>
-<li><code>age</code> is a <strong>numeric</strong> predictor</li>
+<li>We are using a slightly modified version from the modeldatatoo data.</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="fu">library</span>(modeldatatoo)</span>
+<span id="cb1-3"><a href="#cb1-3"></a></span>
+<span id="cb1-4"><a href="#cb1-4"></a>taxi <span class="ot">&lt;-</span> <span class="fu">data_taxi</span>()</span>
+<span id="cb1-5"><a href="#cb1-5"></a></span>
+<span id="cb1-6"><a href="#cb1-6"></a>taxi <span class="ot">&lt;-</span> taxi <span class="sc">%&gt;%</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a>  <span class="fu">mutate</span>(<span class="at">month =</span> <span class="fu">factor</span>(month, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Jan"</span>, <span class="st">"Feb"</span>, <span class="st">"Mar"</span>, <span class="st">"Apr"</span>))) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-8"><a href="#cb1-8"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(id, duration, fare, tolls, extras, total_cost, payment_type)) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-9"><a href="#cb1-9"></a>  <span class="fu">drop_na</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="data-on-chicago-taxi-trips-2" class="slide level2">
+<h2>Data on Chicago taxi trips</h2>
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li><code>N = 10,000</code></li>
+<li>A nominal outcome, <code>tip</code>, with levels <code>"yes"</code> and <code>"no"</code></li>
+<li>6 other variables
+<ul>
+<li><code>company</code>, <code>local</code>, and <code>dow</code>, and <code>month</code> are <strong>nominal</strong> predictors</li>
+<li><code>distance</code> and <code>hours</code> are <strong>numeric</strong> predictors</li>
 </ul></li>
 </ul>
 </div><div class="column" style="width:40%;">
-<p><img data-src="images/Ac_2tads.jpg"></p>
+<p><img data-src="images/taxi.png"></p>
 </div>
+</div>
+<div class="footer">
+<p>Credit: <a href="https://unsplash.com/photos/7_r85l4eht8" class="uri">https://unsplash.com/photos/7_r85l4eht8</a></p>
 </div>
 <aside class="notes">
-<ul>
-<li><p>latency: How long it took the frog to hatch after being stimulated - i.e.&nbsp;after being poked by a blunt probe (in seconds).</p></li>
-<li><p>treatment: Whether or not they got gentamicin, a compound that knocks out the embryo’s lateral line (a sensory organ).</p></li>
-<li><p>reflex: A measure of ear function (low, mid, full)</p></li>
-<li><p>t_o_d: Time that the stimulus was applied (morning, afternoon, night)</p></li>
-<li><p>age: Age at the time it was stimulated (in days)</p></li>
-</ul>
+<p><code>tip</code>: Whether the rider left a tip. A factor with levels “yes” and “no”.</p>
+<p><code>distance</code>: The trip distance, in odometer miles.</p>
+<p><code>company</code>: The taxi company, as a factor. Companies that occurred few times were binned as “other”.</p>
+<p><code>local</code>: Whether the trip started in the same community area as it began. See the source data for community area values.</p>
+<p><code>dow</code>: The day of the week in which the trip began, as a factor.</p>
+<p><code>month</code>: The month in which the trip began, as a factor.</p>
+<p><code>hour</code>: The hour of the day in which the trip began, as a numeric.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -468,24 +483,24 @@
           display:block!important;
       }</style></aside>
 </section>
-<section id="data-on-tree-frog-hatching-3" class="slide level2">
-<h2>Data on tree frog hatching</h2>
+<section id="data-on-chicago-taxi-trips-3" class="slide level2">
+<h2>Data on Chicago taxi trips</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>tree_frogs</span>
-<span id="cb2-2"><a href="#cb2-2"></a><span class="co">#&gt; # A tibble: 572 × 5</span></span>
-<span id="cb2-3"><a href="#cb2-3"></a><span class="co">#&gt;    treatment  reflex   age t_o_d     latency</span></span>
-<span id="cb2-4"><a href="#cb2-4"></a><span class="co">#&gt;    &lt;fct&gt;      &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;       &lt;dbl&gt;</span></span>
-<span id="cb2-5"><a href="#cb2-5"></a><span class="co">#&gt;  1 control    full    5.40 morning        22</span></span>
-<span id="cb2-6"><a href="#cb2-6"></a><span class="co">#&gt;  2 control    low     4.18 night         360</span></span>
-<span id="cb2-7"><a href="#cb2-7"></a><span class="co">#&gt;  3 control    full    4.65 afternoon     106</span></span>
-<span id="cb2-8"><a href="#cb2-8"></a><span class="co">#&gt;  4 control    mid     4.14 night         180</span></span>
-<span id="cb2-9"><a href="#cb2-9"></a><span class="co">#&gt;  5 control    full    4.6  afternoon      60</span></span>
-<span id="cb2-10"><a href="#cb2-10"></a><span class="co">#&gt;  6 gentamicin full    5.36 morning        39</span></span>
-<span id="cb2-11"><a href="#cb2-11"></a><span class="co">#&gt;  7 control    full    4.56 afternoon     214</span></span>
-<span id="cb2-12"><a href="#cb2-12"></a><span class="co">#&gt;  8 control    full    5.43 morning        50</span></span>
-<span id="cb2-13"><a href="#cb2-13"></a><span class="co">#&gt;  9 control    full    4.63 afternoon     224</span></span>
-<span id="cb2-14"><a href="#cb2-14"></a><span class="co">#&gt; 10 control    full    5.40 morning        63</span></span>
-<span id="cb2-15"><a href="#cb2-15"></a><span class="co">#&gt; # ℹ 562 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>taxi</span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="co">#&gt; # A tibble: 8,807 × 7</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="co">#&gt;    tip   distance company      local dow   month  hour</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="co">#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;        &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;</span></span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="co">#&gt;  1 yes       1.24 Sun Taxi     no    Thu   Feb      13</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a><span class="co">#&gt;  2 no        5.39 Flash Cab    no    Sat   Mar      12</span></span>
+<span id="cb2-7"><a href="#cb2-7"></a><span class="co">#&gt;  3 yes       3.01 City Service no    Wed   Feb      17</span></span>
+<span id="cb2-8"><a href="#cb2-8"></a><span class="co">#&gt;  4 no       18.4  Sun Taxi     no    Sat   Apr       6</span></span>
+<span id="cb2-9"><a href="#cb2-9"></a><span class="co">#&gt;  5 yes       1.76 Sun Taxi     no    Sun   Jan      15</span></span>
+<span id="cb2-10"><a href="#cb2-10"></a><span class="co">#&gt;  6 yes      13.6  Sun Taxi     no    Mon   Feb      17</span></span>
+<span id="cb2-11"><a href="#cb2-11"></a><span class="co">#&gt;  7 yes       3.71 City Service no    Mon   Mar      21</span></span>
+<span id="cb2-12"><a href="#cb2-12"></a><span class="co">#&gt;  8 yes       4.8  other        no    Tue   Mar       9</span></span>
+<span id="cb2-13"><a href="#cb2-13"></a><span class="co">#&gt;  9 yes      18.0  City Service no    Fri   Jan      19</span></span>
+<span id="cb2-14"><a href="#cb2-14"></a><span class="co">#&gt; 10 no       17.5  other        yes   Thu   Apr      12</span></span>
+<span id="cb2-15"><a href="#cb2-15"></a><span class="co">#&gt; # ℹ 8,797 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="data-splitting-and-spending" class="slide level2">
@@ -542,10 +557,10 @@
 <h2>Data splitting and spending <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb3-2"><a href="#cb3-2"></a>frog_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(tree_frogs)</span>
-<span id="cb3-3"><a href="#cb3-3"></a>frog_split</span>
+<span id="cb3-2"><a href="#cb3-2"></a>taxi_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(taxi)</span>
+<span id="cb3-3"><a href="#cb3-3"></a>taxi_split</span>
 <span id="cb3-4"><a href="#cb3-4"></a><span class="co">#&gt; &lt;Training/Testing/Total&gt;</span></span>
-<span id="cb3-5"><a href="#cb3-5"></a><span class="co">#&gt; &lt;429/143/572&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-5"><a href="#cb3-5"></a><span class="co">#&gt; &lt;6605/2202/8807&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <aside class="notes">
 <p>How much data in training vs testing? This function uses a good default, but this depends on your specific goal/data We will talk about more powerful ways of splitting, like stratification, later</p>
@@ -564,48 +579,35 @@
 <section id="accessing-the-data" class="slide level2">
 <h2>Accessing the data <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>frog_train <span class="ot">&lt;-</span> <span class="fu">training</span>(frog_split)</span>
-<span id="cb4-2"><a href="#cb4-2"></a>frog_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(frog_split)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>taxi_train <span class="ot">&lt;-</span> <span class="fu">training</span>(taxi_split)</span>
+<span id="cb4-2"><a href="#cb4-2"></a>taxi_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(taxi_split)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="the-training-set" class="slide level2">
 <h2>The training set<img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>frog_train</span>
-<span id="cb5-2"><a href="#cb5-2"></a><span class="co">#&gt; # A tibble: 429 × 5</span></span>
-<span id="cb5-3"><a href="#cb5-3"></a><span class="co">#&gt;    treatment  reflex   age t_o_d     latency</span></span>
-<span id="cb5-4"><a href="#cb5-4"></a><span class="co">#&gt;    &lt;fct&gt;      &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;       &lt;dbl&gt;</span></span>
-<span id="cb5-5"><a href="#cb5-5"></a><span class="co">#&gt;  1 control    full    5.36 morning        36</span></span>
-<span id="cb5-6"><a href="#cb5-6"></a><span class="co">#&gt;  2 gentamicin full    5.37 morning        72</span></span>
-<span id="cb5-7"><a href="#cb5-7"></a><span class="co">#&gt;  3 gentamicin full    4.65 afternoon     141</span></span>
-<span id="cb5-8"><a href="#cb5-8"></a><span class="co">#&gt;  4 control    full    5.42 morning        27</span></span>
-<span id="cb5-9"><a href="#cb5-9"></a><span class="co">#&gt;  5 control    full    5.43 morning        27</span></span>
-<span id="cb5-10"><a href="#cb5-10"></a><span class="co">#&gt;  6 gentamicin full    5.38 morning        73</span></span>
-<span id="cb5-11"><a href="#cb5-11"></a><span class="co">#&gt;  7 gentamicin full    5.42 morning        68</span></span>
-<span id="cb5-12"><a href="#cb5-12"></a><span class="co">#&gt;  8 gentamicin full    4.75 afternoon     124</span></span>
-<span id="cb5-13"><a href="#cb5-13"></a><span class="co">#&gt;  9 control    full    5.00 night          62</span></span>
-<span id="cb5-14"><a href="#cb5-14"></a><span class="co">#&gt; 10 control    full    5.39 morning        25</span></span>
-<span id="cb5-15"><a href="#cb5-15"></a><span class="co">#&gt; # ℹ 419 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>taxi_train</span>
+<span id="cb5-2"><a href="#cb5-2"></a><span class="co">#&gt; # A tibble: 6,605 × 7</span></span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="co">#&gt;    tip   distance company                   local dow   month  hour</span></span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="co">#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;                     &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;</span></span>
+<span id="cb5-5"><a href="#cb5-5"></a><span class="co">#&gt;  1 yes       4.54 City Service              no    Sat   Mar      16</span></span>
+<span id="cb5-6"><a href="#cb5-6"></a><span class="co">#&gt;  2 no       10.2  Flash Cab                 no    Mon   Feb       8</span></span>
+<span id="cb5-7"><a href="#cb5-7"></a><span class="co">#&gt;  3 yes      12.4  other                     no    Sun   Apr      15</span></span>
+<span id="cb5-8"><a href="#cb5-8"></a><span class="co">#&gt;  4 yes      15.3  Sun Taxi                  no    Mon   Apr      18</span></span>
+<span id="cb5-9"><a href="#cb5-9"></a><span class="co">#&gt;  5 no        6.41 Flash Cab                 no    Wed   Apr      14</span></span>
+<span id="cb5-10"><a href="#cb5-10"></a><span class="co">#&gt;  6 yes       1.56 other                     no    Tue   Jan      13</span></span>
+<span id="cb5-11"><a href="#cb5-11"></a><span class="co">#&gt;  7 yes       3.13 Flash Cab                 no    Sun   Apr      12</span></span>
+<span id="cb5-12"><a href="#cb5-12"></a><span class="co">#&gt;  8 yes       7.54 other                     no    Tue   Apr       8</span></span>
+<span id="cb5-13"><a href="#cb5-13"></a><span class="co">#&gt;  9 yes       6.98 Flash Cab                 no    Tue   Apr       5</span></span>
+<span id="cb5-14"><a href="#cb5-14"></a><span class="co">#&gt; 10 yes       0.7  Taxi Affiliation Services no    Tue   Jan       9</span></span>
+<span id="cb5-15"><a href="#cb5-15"></a><span class="co">#&gt; # ℹ 6,595 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="the-test-set" class="slide level2">
 <h2>The test set <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>frog_test</span>
-<span id="cb6-2"><a href="#cb6-2"></a><span class="co">#&gt; # A tibble: 143 × 5</span></span>
-<span id="cb6-3"><a href="#cb6-3"></a><span class="co">#&gt;    treatment  reflex   age t_o_d     latency</span></span>
-<span id="cb6-4"><a href="#cb6-4"></a><span class="co">#&gt;    &lt;fct&gt;      &lt;fct&gt;  &lt;dbl&gt; &lt;fct&gt;       &lt;dbl&gt;</span></span>
-<span id="cb6-5"><a href="#cb6-5"></a><span class="co">#&gt;  1 control    full    5.40 morning        22</span></span>
-<span id="cb6-6"><a href="#cb6-6"></a><span class="co">#&gt;  2 control    low     4.18 night         360</span></span>
-<span id="cb6-7"><a href="#cb6-7"></a><span class="co">#&gt;  3 control    full    4.63 afternoon     224</span></span>
-<span id="cb6-8"><a href="#cb6-8"></a><span class="co">#&gt;  4 gentamicin full    4.75 afternoon     158</span></span>
-<span id="cb6-9"><a href="#cb6-9"></a><span class="co">#&gt;  5 control    mid     4.22 night          91</span></span>
-<span id="cb6-10"><a href="#cb6-10"></a><span class="co">#&gt;  6 gentamicin full    4.89 night         301</span></span>
-<span id="cb6-11"><a href="#cb6-11"></a><span class="co">#&gt;  7 control    full    5.38 morning         2</span></span>
-<span id="cb6-12"><a href="#cb6-12"></a><span class="co">#&gt;  8 control    full    4.80 afternoon      56</span></span>
-<span id="cb6-13"><a href="#cb6-13"></a><span class="co">#&gt;  9 control    full    5.36 morning        11</span></span>
-<span id="cb6-14"><a href="#cb6-14"></a><span class="co">#&gt; 10 control    full    5.40 morning        64</span></span>
-<span id="cb6-15"><a href="#cb6-15"></a><span class="co">#&gt; # ℹ 133 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>🙈</p>
+<div class="fragment">
+<p>There are 2202 rows and 7 columns in the test set.</p>
 </div>
 </section>
 <section id="your-turn-1" class="slide level2" data-transition="slide-in">
@@ -624,15 +626,15 @@
 <section id="data-splitting-and-spending-4" class="slide level2">
 <h2>Data splitting and spending <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb7-2"><a href="#cb7-2"></a>frog_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(tree_frogs, <span class="at">prop =</span> <span class="fl">0.8</span>)</span>
-<span id="cb7-3"><a href="#cb7-3"></a>frog_train <span class="ot">&lt;-</span> <span class="fu">training</span>(frog_split)</span>
-<span id="cb7-4"><a href="#cb7-4"></a>frog_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(frog_split)</span>
-<span id="cb7-5"><a href="#cb7-5"></a></span>
-<span id="cb7-6"><a href="#cb7-6"></a><span class="fu">nrow</span>(frog_train)</span>
-<span id="cb7-7"><a href="#cb7-7"></a><span class="co">#&gt; [1] 457</span></span>
-<span id="cb7-8"><a href="#cb7-8"></a><span class="fu">nrow</span>(frog_test)</span>
-<span id="cb7-9"><a href="#cb7-9"></a><span class="co">#&gt; [1] 115</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb6-2"><a href="#cb6-2"></a>taxi_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(taxi, <span class="at">prop =</span> <span class="fl">0.8</span>)</span>
+<span id="cb6-3"><a href="#cb6-3"></a>taxi_train <span class="ot">&lt;-</span> <span class="fu">training</span>(taxi_split)</span>
+<span id="cb6-4"><a href="#cb6-4"></a>taxi_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(taxi_split)</span>
+<span id="cb6-5"><a href="#cb6-5"></a></span>
+<span id="cb6-6"><a href="#cb6-6"></a><span class="fu">nrow</span>(taxi_train)</span>
+<span id="cb6-7"><a href="#cb6-7"></a><span class="co">#&gt; [1] 7045</span></span>
+<span id="cb6-8"><a href="#cb6-8"></a><span class="fu">nrow</span>(taxi_test)</span>
+<span id="cb6-9"><a href="#cb6-9"></a><span class="co">#&gt; [1] 1762</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section></section>
 <section>
@@ -667,15 +669,15 @@
 <section id="your-turn-2" class="slide level2" data-transition="slide-in">
 <h2>Your turn</h2>
 <p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
-<p><em>Explore the <code>frog_train</code> data on your own!</em></p>
+<p><em>Explore the <code>taxi_train</code> data on your own!</em></p>
 <ul>
-<li><em>What’s the distribution of the outcome, latency?</em></li>
-<li><em>What’s the distribution of numeric variables like age?</em></li>
-<li><em>How does latency differ across the categorical variables?</em></li>
+<li><em>What’s the distribution of the outcome, tip?</em></li>
+<li><em>What’s the distribution of numeric variables like distance?</em></li>
+<li><em>How does tip differ across the categorical variables?</em></li>
 </ul>
 <div class="cell">
 <div class="cell-output-display">
-<div class="countdown" id="explore-frogs" style="right:0;bottom:0;" data-warnwhen="0">
+<div class="countdown" id="explore-taxi" style="right:0;bottom:0;" data-warnwhen="0">
 <code class="countdown-time"><span class="countdown-digits minutes">08</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
 </div>
 </div>
@@ -697,46 +699,50 @@
 <section id="section-3" class="slide level2">
 <h2></h2>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="fu">ggplot</span>(frog_train, <span class="fu">aes</span>(latency)) <span class="sc">+</span></span>
-<span id="cb8-2"><a href="#cb8-2"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">20</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>taxi_train <span class="sc">%&gt;%</span> </span>
+<span id="cb7-2"><a href="#cb7-2"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> tip)) <span class="sc">+</span></span>
+<span id="cb7-3"><a href="#cb7-3"></a>  <span class="fu">geom_bar</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
-<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-13-1.svg" class="r-stretch quarto-figure-center"><aside class="notes">
-<p>This histogram brings up a concern. What if in our training set we get unlucky and sample few or none of these large values? That could mean that our model wouldn’t be able to predict such values. Let’s come back to that!</p>
-<style type="text/css">
-        span.MJX_Assistive_MathML {
-          position:absolute!important;
-          clip: rect(1px, 1px, 1px, 1px);
-          padding: 1px 0 0 0!important;
-          border: 0!important;
-          height: 1px!important;
-          width: 1px!important;
-          overflow: hidden!important;
-          display:block!important;
-      }</style></aside>
-</section>
+<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-12-1.svg" class="r-stretch quarto-figure-center"></section>
 <section id="section-4" class="slide level2">
 <h2></h2>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="fu">ggplot</span>(frog_train, <span class="fu">aes</span>(latency, treatment, <span class="at">fill =</span> treatment)) <span class="sc">+</span></span>
-<span id="cb9-2"><a href="#cb9-2"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>, <span class="at">show.legend =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>taxi_train <span class="sc">%&gt;%</span> </span>
+<span id="cb8-2"><a href="#cb8-2"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> tip, <span class="at">fill =</span> local)) <span class="sc">+</span></span>
+<span id="cb8-3"><a href="#cb8-3"></a>  <span class="fu">geom_bar</span>() <span class="sc">+</span></span>
+<span id="cb8-4"><a href="#cb8-4"></a>  <span class="fu">scale_fill_viridis_d</span>(<span class="at">end =</span> .<span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
-<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-14-1.svg" class="r-stretch quarto-figure-center"></section>
+<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-13-1.svg" class="r-stretch quarto-figure-center"></section>
 <section id="section-5" class="slide level2">
 <h2></h2>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>frog_train <span class="sc">%&gt;%</span></span>
-<span id="cb10-2"><a href="#cb10-2"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(latency, reflex, <span class="at">fill =</span> reflex)) <span class="sc">+</span></span>
-<span id="cb10-3"><a href="#cb10-3"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.3</span>, <span class="at">show.legend =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>taxi_train <span class="sc">%&gt;%</span> </span>
+<span id="cb9-2"><a href="#cb9-2"></a>  <span class="fu">mutate</span>(<span class="at">tip =</span> forcats<span class="sc">::</span><span class="fu">fct_rev</span>(tip)) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-3"><a href="#cb9-3"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> hour, <span class="at">fill =</span> tip)) <span class="sc">+</span></span>
+<span id="cb9-4"><a href="#cb9-4"></a>  <span class="fu">geom_bar</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
-<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-15-1.svg" class="r-stretch quarto-figure-center"></section>
+<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-14-1.svg" class="r-stretch quarto-figure-center"></section>
 <section id="section-6" class="slide level2">
 <h2></h2>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="fu">ggplot</span>(frog_train, <span class="fu">aes</span>(age, latency, <span class="at">color =</span> reflex)) <span class="sc">+</span></span>
-<span id="cb11-2"><a href="#cb11-2"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> .<span class="dv">8</span>, <span class="at">size =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>taxi_train <span class="sc">%&gt;%</span> </span>
+<span id="cb10-2"><a href="#cb10-2"></a>  <span class="fu">mutate</span>(<span class="at">tip =</span> forcats<span class="sc">::</span><span class="fu">fct_rev</span>(tip)) <span class="sc">%&gt;%</span> </span>
+<span id="cb10-3"><a href="#cb10-3"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> hour, <span class="at">fill =</span> tip)) <span class="sc">+</span></span>
+<span id="cb10-4"><a href="#cb10-4"></a>  <span class="fu">geom_bar</span>(<span class="at">position =</span> <span class="st">"fill"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+
+</div>
+<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-15-1.svg" class="r-stretch quarto-figure-center"></section>
+<section id="section-7" class="slide level2">
+<h2></h2>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>taxi_train <span class="sc">%&gt;%</span> </span>
+<span id="cb11-2"><a href="#cb11-2"></a>  <span class="fu">mutate</span>(<span class="at">tip =</span> forcats<span class="sc">::</span><span class="fu">fct_rev</span>(tip)) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-3"><a href="#cb11-3"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> distance)) <span class="sc">+</span></span>
+<span id="cb11-4"><a href="#cb11-4"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">100</span>) <span class="sc">+</span></span>
+<span id="cb11-5"><a href="#cb11-5"></a>  <span class="fu">facet_grid</span>(<span class="fu">vars</span>(tip))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
 <img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-16-1.svg" class="r-stretch quarto-figure-center"></section></section>
@@ -745,12 +751,12 @@
 <h1>Split smarter</h1>
 
 </section>
-<section id="section-7" class="slide level2">
+<section id="section-8" class="slide level2">
 <h2></h2>
 
-<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-17-1.svg" class="r-stretch quarto-figure-center"><p>Stratified sampling would split within each quartile</p>
+<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-17-1.svg" class="r-stretch"><p>Stratified sampling would split within response values</p>
 <aside class="notes">
-<p>Based on our exploration, we realized that stratifying by latency might help get a consistent distribution. For instance, we’d include high and low latency in both the test and training</p>
+<p>Based on our EDA, we know that the source data contains fewer <code>"no"</code> tip values than <code>"yes"</code>. We want to make sure we allot equal proportions of those responses so that both the training and testing data have enough of each to give accurate estimates.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;
@@ -765,20 +771,22 @@
 </section>
 <section id="stratification" class="slide level2">
 <h2>Stratification</h2>
-<p>Use <code>strata = latency</code></p>
+<p>Use <code>strata = tip</code></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb12-2"><a href="#cb12-2"></a>frog_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(tree_frogs, <span class="at">prop =</span> <span class="fl">0.8</span>, <span class="at">strata =</span> latency)</span>
-<span id="cb12-3"><a href="#cb12-3"></a>frog_split</span>
+<span id="cb12-2"><a href="#cb12-2"></a>taxi_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(taxi, <span class="at">prop =</span> <span class="fl">0.8</span>, <span class="at">strata =</span> tip)</span>
+<span id="cb12-3"><a href="#cb12-3"></a>taxi_split</span>
 <span id="cb12-4"><a href="#cb12-4"></a><span class="co">#&gt; &lt;Training/Testing/Total&gt;</span></span>
-<span id="cb12-5"><a href="#cb12-5"></a><span class="co">#&gt; &lt;456/116/572&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb12-5"><a href="#cb12-5"></a><span class="co">#&gt; &lt;7045/1762/8807&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="fragment">
+</section>
+<section id="stratification-1" class="slide level2">
+<h2>Stratification</h2>
 <p>Stratification often helps, with very little downside</p>
 
-<div class="footer footer-default">
+
+<img data-src="02-data-budget_files/figure-revealjs/unnamed-chunk-19-1.svg" class="r-stretch"><div class="footer footer-default">
 <p><a href="https://workshops.tidymodels.org" class="uri">https://workshops.tidymodels.org</a></p>
-</div>
 </div>
 </section></section>
     </div>
