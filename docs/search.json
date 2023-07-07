@@ -2167,7 +2167,7 @@
     "href": "slides/04-evaluating-models.html#looking-at-predictions",
     "title": "4 - Evaluating models",
     "section": "Looking at predictions",
-    "text": "Looking at predictions\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  relocate(tip, .pred_class)\n#&gt; # A tibble: 7,045 × 10\n#&gt;    tip   .pred_class distance company local dow   month  hour .pred_yes .pred_no\n#&gt;    &lt;fct&gt; &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt;   &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;     &lt;dbl&gt;    &lt;dbl&gt;\n#&gt;  1 no    no              5.39 Flash … no    Sat   Mar      12    0.0625   0.937 \n#&gt;  2 no    yes            18.4  Sun Ta… no    Sat   Apr       6    0.924    0.0758\n#&gt;  3 no    no              5.8  other   no    Tue   Jan      10    0.391    0.609 \n#&gt;  4 no    no              6.85 Flash … no    Fri   Apr       8    0.112    0.888 \n#&gt;  5 no    no              9.5  City S… no    Wed   Jan       7    0.129    0.871 \n#&gt;  6 no    no             12    other   no    Fri   Apr      11    0.326    0.674 \n#&gt;  7 no    no              8.9  Taxi A… no    Mon   Feb      14    0.0465   0.953 \n#&gt;  8 no    yes             1.38 other   no    Fri   Apr      16    0.692    0.308 \n#&gt;  9 no    no              9.12 Flash … no    Wed   Apr       9    0.0482   0.952 \n#&gt; 10 no    yes             2.28 City S… no    Thu   Apr      16    0.933    0.0668\n#&gt; # ℹ 7,035 more rows"
+    "text": "Looking at predictions\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  relocate(tip, .pred_class, .pred_yes, .pred_no)\n#&gt; # A tibble: 7,045 × 10\n#&gt;    tip   .pred_class .pred_yes .pred_no distance company local dow   month  hour\n#&gt;    &lt;fct&gt; &lt;fct&gt;           &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;fct&gt;   &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;\n#&gt;  1 no    no              0.326    0.674     5.39 Flash … no    Sat   Mar      12\n#&gt;  2 no    yes             0.828    0.172    18.4  Sun Ta… no    Sat   Apr       6\n#&gt;  3 no    yes             0.828    0.172     5.8  other   no    Tue   Jan      10\n#&gt;  4 no    no              0.326    0.674     6.85 Flash … no    Fri   Apr       8\n#&gt;  5 no    yes             0.828    0.172     9.5  City S… no    Wed   Jan       7\n#&gt;  6 no    yes             0.828    0.172    12    other   no    Fri   Apr      11\n#&gt;  7 no    no              0.326    0.674     8.9  Taxi A… no    Mon   Feb      14\n#&gt;  8 no    yes             0.828    0.172     1.38 other   no    Fri   Apr      16\n#&gt;  9 no    no              0.326    0.674     9.12 Flash … no    Wed   Apr       9\n#&gt; 10 no    yes             0.828    0.172     2.28 City S… no    Thu   Apr      16\n#&gt; # ℹ 7,035 more rows"
   },
   {
     "objectID": "slides/04-evaluating-models.html#confusion-matrix",
@@ -2181,7 +2181,7 @@
     "href": "slides/04-evaluating-models.html#confusion-matrix-1",
     "title": "4 - Evaluating models",
     "section": "Confusion matrix ",
-    "text": "Confusion matrix \n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  conf_mat(truth = tip, estimate = .pred_class)\n#&gt;           Truth\n#&gt; Prediction  yes   no\n#&gt;        yes 4638  655\n#&gt;        no   338 1414"
+    "text": "Confusion matrix \n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  conf_mat(truth = tip, estimate = .pred_class)\n#&gt;           Truth\n#&gt; Prediction  yes   no\n#&gt;        yes 4524 1135\n#&gt;        no   452  934"
   },
   {
     "objectID": "slides/04-evaluating-models.html#confusion-matrix-2",
@@ -2195,7 +2195,7 @@
     "href": "slides/04-evaluating-models.html#metrics-for-model-performance",
     "title": "4 - Evaluating models",
     "section": "Metrics for model performance ",
-    "text": "Metrics for model performance \n\n\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  accuracy(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric  .estimator .estimate\n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy binary         0.859"
+    "text": "Metrics for model performance \n\n\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  accuracy(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric  .estimator .estimate\n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy binary         0.775"
   },
   {
     "objectID": "slides/04-evaluating-models.html#dangers-of-accuracy",
@@ -2209,28 +2209,28 @@
     "href": "slides/04-evaluating-models.html#metrics-for-model-performance-1",
     "title": "4 - Evaluating models",
     "section": "Metrics for model performance ",
-    "text": "Metrics for model performance \n\n\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  sensitivity(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric     .estimator .estimate\n#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 sensitivity binary         0.932"
+    "text": "Metrics for model performance \n\n\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  sensitivity(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric     .estimator .estimate\n#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 sensitivity binary         0.909"
   },
   {
     "objectID": "slides/04-evaluating-models.html#metrics-for-model-performance-2",
     "href": "slides/04-evaluating-models.html#metrics-for-model-performance-2",
     "title": "4 - Evaluating models",
     "section": "Metrics for model performance ",
-    "text": "Metrics for model performance \n\n\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  sensitivity(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric     .estimator .estimate\n#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 sensitivity binary         0.932\n\n\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  specificity(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric     .estimator .estimate\n#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 specificity binary         0.683"
+    "text": "Metrics for model performance \n\n\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  sensitivity(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric     .estimator .estimate\n#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 sensitivity binary         0.909\n\n\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  specificity(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric     .estimator .estimate\n#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 specificity binary         0.451"
   },
   {
     "objectID": "slides/04-evaluating-models.html#metrics-for-model-performance-3",
     "href": "slides/04-evaluating-models.html#metrics-for-model-performance-3",
     "title": "4 - Evaluating models",
     "section": "Metrics for model performance ",
-    "text": "Metrics for model performance \nYou can use metric_set() to combine multiple calculations into one\n\nmy_metrics &lt;- metric_set(accuracy, specificity, sensitivity)\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  my_metrics(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 3 × 3\n#&gt;   .metric     .estimator .estimate\n#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy    binary         0.859\n#&gt; 2 specificity binary         0.683\n#&gt; 3 sensitivity binary         0.932"
+    "text": "Metrics for model performance \nWe can use metric_set() to combine multiple calculations into one\n\ntaxi_metrics &lt;- metric_set(accuracy, specificity, sensitivity)\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  taxi_metrics(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 3 × 3\n#&gt;   .metric     .estimator .estimate\n#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy    binary         0.775\n#&gt; 2 specificity binary         0.451\n#&gt; 3 sensitivity binary         0.909"
   },
   {
     "objectID": "slides/04-evaluating-models.html#metrics-for-model-performance-4",
     "href": "slides/04-evaluating-models.html#metrics-for-model-performance-4",
     "title": "4 - Evaluating models",
     "section": "Metrics for model performance ",
-    "text": "Metrics for model performance \n\nmy_metrics &lt;- metric_set(accuracy, specificity, sensitivity)\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  group_by(local) %&gt;%\n  my_metrics(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 6 × 4\n#&gt;   local .metric     .estimator .estimate\n#&gt;   &lt;fct&gt; &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 yes   accuracy    binary         0.840\n#&gt; 2 no    accuracy    binary         0.862\n#&gt; 3 yes   specificity binary         0.346\n#&gt; 4 no    specificity binary         0.722\n#&gt; 5 yes   sensitivity binary         0.969\n#&gt; 6 no    sensitivity binary         0.925"
+    "text": "Metrics for model performance \n\ntaxi_metrics &lt;- metric_set(accuracy, specificity, sensitivity)\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  group_by(local) %&gt;%\n  taxi_metrics(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 6 × 4\n#&gt;   local .metric     .estimator .estimate\n#&gt;   &lt;fct&gt; &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 yes   accuracy    binary         0.811\n#&gt; 2 no    accuracy    binary         0.769\n#&gt; 3 yes   specificity binary         0.104\n#&gt; 4 no    specificity binary         0.491\n#&gt; 5 yes   sensitivity binary         0.995\n#&gt; 6 no    sensitivity binary         0.892"
   },
   {
     "objectID": "slides/04-evaluating-models.html#two-class-data",
@@ -2258,7 +2258,7 @@
     "href": "slides/04-evaluating-models.html#roc-curves-1",
     "title": "4 - Evaluating models",
     "section": "ROC curves ",
-    "text": "ROC curves \n\n# Assumes _first_ factor level is event; there are options to change that\naugment(taxi_fit, new_data = taxi_train) %&gt;% \n  roc_curve(truth = tip, .pred_yes) %&gt;%\n  slice(1, 20, 50)\n#&gt; # A tibble: 3 × 3\n#&gt;   .threshold specificity sensitivity\n#&gt;        &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;\n#&gt; 1   -Inf           0           1    \n#&gt; 2      0.214       0.452       0.979\n#&gt; 3      0.529       0.688       0.930\n\naugment(taxi_fit, new_data = taxi_train) %&gt;% \n  roc_auc(truth = tip, .pred_yes)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric .estimator .estimate\n#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 roc_auc binary         0.874"
+    "text": "ROC curves \n\n# Assumes _first_ factor level is event; there are options to change that\naugment(taxi_fit, new_data = taxi_train) %&gt;% \n  roc_curve(truth = tip, .pred_yes) %&gt;%\n  slice(1, 20, 50)\n#&gt; # A tibble: 1 × 3\n#&gt;   .threshold specificity sensitivity\n#&gt;        &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;\n#&gt; 1       -Inf           0           1\n\naugment(taxi_fit, new_data = taxi_train) %&gt;% \n  roc_auc(truth = tip, .pred_yes)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric .estimator .estimate\n#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 roc_auc binary         0.714"
   },
   {
     "objectID": "slides/04-evaluating-models.html#roc-curve-plot",
@@ -2293,28 +2293,28 @@
     "href": "slides/04-evaluating-models.html#dangers-of-overfitting-3",
     "title": "4 - Evaluating models",
     "section": "Dangers of overfitting ⚠️ ",
-    "text": "Dangers of overfitting ⚠️ \n\ntaxi_fit %&gt;%\n  augment(taxi_train)\n#&gt; # A tibble: 7,045 × 10\n#&gt;    tip   distance company local dow   month  hour .pred_class .pred_yes .pred_no\n#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;   &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt; &lt;fct&gt;           &lt;dbl&gt;    &lt;dbl&gt;\n#&gt;  1 no        5.39 Flash … no    Sat   Mar      12 no             0.0625   0.937 \n#&gt;  2 no       18.4  Sun Ta… no    Sat   Apr       6 yes            0.924    0.0758\n#&gt;  3 no        5.8  other   no    Tue   Jan      10 no             0.391    0.609 \n#&gt;  4 no        6.85 Flash … no    Fri   Apr       8 no             0.112    0.888 \n#&gt;  5 no        9.5  City S… no    Wed   Jan       7 no             0.129    0.871 \n#&gt;  6 no       12    other   no    Fri   Apr      11 no             0.326    0.674 \n#&gt;  7 no        8.9  Taxi A… no    Mon   Feb      14 no             0.0465   0.953 \n#&gt;  8 no        1.38 other   no    Fri   Apr      16 yes            0.692    0.308 \n#&gt;  9 no        9.12 Flash … no    Wed   Apr       9 no             0.0482   0.952 \n#&gt; 10 no        2.28 City S… no    Thu   Apr      16 yes            0.933    0.0668\n#&gt; # ℹ 7,035 more rows\n\nWe call this “resubstitution” or “repredicting the training set”"
+    "text": "Dangers of overfitting ⚠️ \n\ntaxi_fit %&gt;%\n  augment(taxi_train)\n#&gt; # A tibble: 7,045 × 10\n#&gt;    tip   distance company local dow   month  hour .pred_class .pred_yes .pred_no\n#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;   &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt; &lt;fct&gt;           &lt;dbl&gt;    &lt;dbl&gt;\n#&gt;  1 no        5.39 Flash … no    Sat   Mar      12 no              0.326    0.674\n#&gt;  2 no       18.4  Sun Ta… no    Sat   Apr       6 yes             0.828    0.172\n#&gt;  3 no        5.8  other   no    Tue   Jan      10 yes             0.828    0.172\n#&gt;  4 no        6.85 Flash … no    Fri   Apr       8 no              0.326    0.674\n#&gt;  5 no        9.5  City S… no    Wed   Jan       7 yes             0.828    0.172\n#&gt;  6 no       12    other   no    Fri   Apr      11 yes             0.828    0.172\n#&gt;  7 no        8.9  Taxi A… no    Mon   Feb      14 no              0.326    0.674\n#&gt;  8 no        1.38 other   no    Fri   Apr      16 yes             0.828    0.172\n#&gt;  9 no        9.12 Flash … no    Wed   Apr       9 no              0.326    0.674\n#&gt; 10 no        2.28 City S… no    Thu   Apr      16 yes             0.828    0.172\n#&gt; # ℹ 7,035 more rows\n\nWe call this “resubstitution” or “repredicting the training set”"
   },
   {
     "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-4",
     "href": "slides/04-evaluating-models.html#dangers-of-overfitting-4",
     "title": "4 - Evaluating models",
     "section": "Dangers of overfitting ⚠️ ",
-    "text": "Dangers of overfitting ⚠️ \n\ntaxi_fit %&gt;%\n  augment(taxi_train) %&gt;%\n  accuracy(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric  .estimator .estimate\n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy binary         0.859\n\nWe call this a “resubstitution estimate”"
+    "text": "Dangers of overfitting ⚠️ \n\ntaxi_fit %&gt;%\n  augment(taxi_train) %&gt;%\n  accuracy(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric  .estimator .estimate\n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy binary         0.775\n\nWe call this a “resubstitution estimate”"
   },
   {
     "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-5",
     "href": "slides/04-evaluating-models.html#dangers-of-overfitting-5",
     "title": "4 - Evaluating models",
     "section": "Dangers of overfitting ⚠️ ",
-    "text": "Dangers of overfitting ⚠️ \n\n\n\ntaxi_fit %&gt;%\n  augment(taxi_train) %&gt;%\n  accuracy(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric  .estimator .estimate\n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy binary         0.859"
+    "text": "Dangers of overfitting ⚠️ \n\n\n\ntaxi_fit %&gt;%\n  augment(taxi_train) %&gt;%\n  accuracy(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric  .estimator .estimate\n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy binary         0.775"
   },
   {
     "objectID": "slides/04-evaluating-models.html#dangers-of-overfitting-6",
     "href": "slides/04-evaluating-models.html#dangers-of-overfitting-6",
     "title": "4 - Evaluating models",
     "section": "Dangers of overfitting ⚠️ ",
-    "text": "Dangers of overfitting ⚠️ \n\n\n\ntaxi_fit %&gt;%\n  augment(taxi_train) %&gt;%\n  accuracy(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric  .estimator .estimate\n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy binary         0.859\n\n\n\ntaxi_fit %&gt;%\n  augment(taxi_test) %&gt;%\n  accuracy(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric  .estimator .estimate\n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy binary         0.792\n\n\n\n\n⚠️ Remember that we’re demonstrating overfitting\n\n\n⚠️ Don’t use the test set until the end of your modeling analysis"
+    "text": "Dangers of overfitting ⚠️ \n\n\n\ntaxi_fit %&gt;%\n  augment(taxi_train) %&gt;%\n  accuracy(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric  .estimator .estimate\n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy binary         0.775\n\n\n\ntaxi_fit %&gt;%\n  augment(taxi_test) %&gt;%\n  accuracy(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric  .estimator .estimate\n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy binary         0.741\n\n\n\n\n⚠️ Remember that we’re demonstrating overfitting\n\n\n⚠️ Don’t use the test set until the end of your modeling analysis"
   },
   {
     "objectID": "slides/04-evaluating-models.html#your-turn-1",
@@ -2328,7 +2328,7 @@
     "href": "slides/04-evaluating-models.html#dangers-of-overfitting-7",
     "title": "4 - Evaluating models",
     "section": "Dangers of overfitting ⚠️ ",
-    "text": "Dangers of overfitting ⚠️ \n\n\n\ntaxi_fit %&gt;%\n  augment(taxi_train) %&gt;%\n  precision(tip, .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric   .estimator .estimate\n#&gt;   &lt;chr&gt;     &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 precision binary         0.876\n\n\n\ntaxi_fit %&gt;%\n  augment(taxi_test) %&gt;%\n  precision(tip, .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric   .estimator .estimate\n#&gt;   &lt;chr&gt;     &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 precision binary         0.826\n\n\n\n\nWhat if we want to compare more models?\n\n\nAnd/or more model configurations?\n\n\nAnd we want to understand if these are important differences?"
+    "text": "Dangers of overfitting ⚠️ \n\n\n\ntaxi_fit %&gt;%\n  augment(taxi_train) %&gt;%\n  precision(tip, .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric   .estimator .estimate\n#&gt;   &lt;chr&gt;     &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 precision binary         0.799\n\n\n\ntaxi_fit %&gt;%\n  augment(taxi_test) %&gt;%\n  precision(tip, .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric   .estimator .estimate\n#&gt;   &lt;chr&gt;     &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 precision binary         0.776\n\n\n\n\nWhat if we want to compare more models?\n\n\nAnd/or more model configurations?\n\n\nAnd we want to understand if these are important differences?"
   },
   {
     "objectID": "slides/04-evaluating-models.html#cross-validation",
@@ -2398,21 +2398,21 @@
     "href": "slides/04-evaluating-models.html#evaluating-model-performance",
     "title": "4 - Evaluating models",
     "section": "Evaluating model performance ",
-    "text": "Evaluating model performance \n\ntaxi_res %&gt;%\n  collect_metrics()\n#&gt; # A tibble: 2 × 6\n#&gt;   .metric  .estimator  mean     n std_err .config             \n#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 accuracy binary     0.791    10 0.00322 Preprocessor1_Model1\n#&gt; 2 roc_auc  binary     0.809    10 0.00520 Preprocessor1_Model1\n\n\nWe can reliably measure performance using only the training data 🎉"
+    "text": "Evaluating model performance \n\ntaxi_res %&gt;%\n  collect_metrics()\n#&gt; # A tibble: 2 × 6\n#&gt;   .metric  .estimator  mean     n std_err .config             \n#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 accuracy binary     0.773    10 0.00494 Preprocessor1_Model1\n#&gt; 2 roc_auc  binary     0.713    10 0.00645 Preprocessor1_Model1\n\n\nWe can reliably measure performance using only the training data 🎉"
   },
   {
     "objectID": "slides/04-evaluating-models.html#comparing-metrics",
     "href": "slides/04-evaluating-models.html#comparing-metrics",
     "title": "4 - Evaluating models",
     "section": "Comparing metrics ",
-    "text": "Comparing metrics \nHow do the metrics from resampling compare to the metrics from training and testing?\n\n\n\ntaxi_res %&gt;%\n  collect_metrics() %&gt;% \n  select(.metric, mean, n)\n#&gt; # A tibble: 2 × 3\n#&gt;   .metric   mean     n\n#&gt;   &lt;chr&gt;    &lt;dbl&gt; &lt;int&gt;\n#&gt; 1 accuracy 0.791    10\n#&gt; 2 roc_auc  0.809    10\n\n\nThe ROC AUC previously was\n\n0.87 for the training set\n0.8 for test set\n\n\n\n\nRemember that:\n⚠️ the training set gives you overly optimistic metrics\n⚠️ the test set is precious"
+    "text": "Comparing metrics \nHow do the metrics from resampling compare to the metrics from training and testing?\n\n\n\ntaxi_res %&gt;%\n  collect_metrics() %&gt;% \n  select(.metric, mean, n)\n#&gt; # A tibble: 2 × 3\n#&gt;   .metric   mean     n\n#&gt;   &lt;chr&gt;    &lt;dbl&gt; &lt;int&gt;\n#&gt; 1 accuracy 0.773    10\n#&gt; 2 roc_auc  0.713    10\n\n\nThe ROC AUC previously was\n\n0.71 for the training set\n0.67 for test set\n\n\n\n\nRemember that:\n⚠️ the training set gives you overly optimistic metrics\n⚠️ the test set is precious"
   },
   {
     "objectID": "slides/04-evaluating-models.html#evaluating-model-performance-1",
     "href": "slides/04-evaluating-models.html#evaluating-model-performance-1",
     "title": "4 - Evaluating models",
     "section": "Evaluating model performance ",
-    "text": "Evaluating model performance \n\n# Save the assessment set results\nctrl_taxi &lt;- control_resamples(save_pred = TRUE)\ntaxi_res &lt;- fit_resamples(taxi_wflow, taxi_folds, control = ctrl_taxi)\n\ntaxi_preds &lt;- collect_predictions(taxi_res)\ntaxi_preds\n#&gt; # A tibble: 7,045 × 7\n#&gt;    id     .pred_yes .pred_no  .row .pred_class tip   .config             \n#&gt;    &lt;chr&gt;      &lt;dbl&gt;    &lt;dbl&gt; &lt;int&gt; &lt;fct&gt;       &lt;fct&gt; &lt;chr&gt;               \n#&gt;  1 Fold01    0.936    0.0638    10 yes         no    Preprocessor1_Model1\n#&gt;  2 Fold01    0.898    0.102     20 yes         no    Preprocessor1_Model1\n#&gt;  3 Fold01    0.898    0.102     47 yes         no    Preprocessor1_Model1\n#&gt;  4 Fold01    0.101    0.899     51 no          no    Preprocessor1_Model1\n#&gt;  5 Fold01    0.871    0.129     59 yes         no    Preprocessor1_Model1\n#&gt;  6 Fold01    0.0815   0.918     60 no          no    Preprocessor1_Model1\n#&gt;  7 Fold01    0.162    0.838     92 no          no    Preprocessor1_Model1\n#&gt;  8 Fold01    0.26     0.74      97 no          no    Preprocessor1_Model1\n#&gt;  9 Fold01    0.274    0.726     98 no          no    Preprocessor1_Model1\n#&gt; 10 Fold01    0.804    0.196    104 yes         no    Preprocessor1_Model1\n#&gt; # ℹ 7,035 more rows"
+    "text": "Evaluating model performance \n\n# Save the assessment set results\nctrl_taxi &lt;- control_resamples(save_pred = TRUE)\ntaxi_res &lt;- fit_resamples(taxi_wflow, taxi_folds, control = ctrl_taxi)\n\ntaxi_preds &lt;- collect_predictions(taxi_res)\ntaxi_preds\n#&gt; # A tibble: 7,045 × 7\n#&gt;    id     .pred_yes .pred_no  .row .pred_class tip   .config             \n#&gt;    &lt;chr&gt;      &lt;dbl&gt;    &lt;dbl&gt; &lt;int&gt; &lt;fct&gt;       &lt;fct&gt; &lt;chr&gt;               \n#&gt;  1 Fold01     0.829    0.171    10 yes         no    Preprocessor1_Model1\n#&gt;  2 Fold01     0.709    0.291    20 yes         no    Preprocessor1_Model1\n#&gt;  3 Fold01     0.709    0.291    47 yes         no    Preprocessor1_Model1\n#&gt;  4 Fold01     0.324    0.676    51 no          no    Preprocessor1_Model1\n#&gt;  5 Fold01     0.709    0.291    59 yes         no    Preprocessor1_Model1\n#&gt;  6 Fold01     0.324    0.676    60 no          no    Preprocessor1_Model1\n#&gt;  7 Fold01     0.709    0.291    92 yes         no    Preprocessor1_Model1\n#&gt;  8 Fold01     0.324    0.676    97 no          no    Preprocessor1_Model1\n#&gt;  9 Fold01     0.324    0.676    98 no          no    Preprocessor1_Model1\n#&gt; 10 Fold01     0.829    0.171   104 yes         no    Preprocessor1_Model1\n#&gt; # ℹ 7,035 more rows"
   },
   {
     "objectID": "slides/04-evaluating-models.html#section-3",
@@ -2496,7 +2496,7 @@
     "href": "slides/04-evaluating-models.html#evaluating-model-performance-2",
     "title": "4 - Evaluating models",
     "section": "Evaluating model performance ",
-    "text": "Evaluating model performance \n\nctrl_taxi &lt;- control_resamples(save_pred = TRUE)\n\n# Random forest uses random numbers so set the seed first\n\nset.seed(2)\nrf_res &lt;- fit_resamples(rf_wflow, taxi_folds, control = ctrl_taxi)\ncollect_metrics(rf_res)\n#&gt; # A tibble: 2 × 6\n#&gt;   .metric  .estimator  mean     n std_err .config             \n#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 accuracy binary     0.813    10 0.00305 Preprocessor1_Model1\n#&gt; 2 roc_auc  binary     0.832    10 0.00513 Preprocessor1_Model1"
+    "text": "Evaluating model performance \n\ntaxi_preds %&gt;% \n  group_by(id) %&gt;%\n  taxi_metrics(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 30 × 4\n#&gt;    id     .metric  .estimator .estimate\n#&gt;    &lt;chr&gt;  &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt;  1 Fold01 accuracy binary         0.760\n#&gt;  2 Fold02 accuracy binary         0.752\n#&gt;  3 Fold03 accuracy binary         0.765\n#&gt;  4 Fold04 accuracy binary         0.777\n#&gt;  5 Fold05 accuracy binary         0.779\n#&gt;  6 Fold06 accuracy binary         0.799\n#&gt;  7 Fold07 accuracy binary         0.793\n#&gt;  8 Fold08 accuracy binary         0.777\n#&gt;  9 Fold09 accuracy binary         0.753\n#&gt; 10 Fold10 accuracy binary         0.774\n#&gt; # ℹ 20 more rows"
   },
   {
     "objectID": "slides/04-evaluating-models.html#how-can-we-compare-multiple-model-workflows-at-once",
@@ -2524,7 +2524,7 @@
     "href": "slides/04-evaluating-models.html#evaluate-a-workflow-set-2",
     "title": "4 - Evaluating models",
     "section": "Evaluate a workflow set",
-    "text": "Evaluate a workflow set\n\nworkflow_set(list(tip ~ .), list(tree_spec, rf_spec)) %&gt;%\n  workflow_map(\"fit_resamples\", resamples = taxi_folds) %&gt;%\n  rank_results()\n#&gt; # A tibble: 4 × 9\n#&gt;   wflow_id          .config .metric  mean std_err     n preprocessor model  rank\n#&gt;   &lt;chr&gt;             &lt;chr&gt;   &lt;chr&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;        &lt;chr&gt; &lt;int&gt;\n#&gt; 1 formula_rand_for… Prepro… accura… 0.813 0.00339    10 formula      rand…     1\n#&gt; 2 formula_rand_for… Prepro… roc_auc 0.833 0.00528    10 formula      rand…     1\n#&gt; 3 formula_decision… Prepro… accura… 0.791 0.00322    10 formula      deci…     2\n#&gt; 4 formula_decision… Prepro… roc_auc 0.809 0.00520    10 formula      deci…     2\n\nThe first metric of the metric set is used for ranking. Use rank_metric to change that.\n\nLots more available with workflow sets, like collect_metrics(), autoplot() methods, and more!"
+    "text": "Evaluate a workflow set\n\nworkflow_set(list(tip ~ .), list(tree_spec, rf_spec)) %&gt;%\n  workflow_map(\"fit_resamples\", resamples = taxi_folds) %&gt;%\n  rank_results()\n#&gt; # A tibble: 4 × 9\n#&gt;   wflow_id          .config .metric  mean std_err     n preprocessor model  rank\n#&gt;   &lt;chr&gt;             &lt;chr&gt;   &lt;chr&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;        &lt;chr&gt; &lt;int&gt;\n#&gt; 1 formula_rand_for… Prepro… accura… 0.813 0.00339    10 formula      rand…     1\n#&gt; 2 formula_rand_for… Prepro… roc_auc 0.833 0.00528    10 formula      rand…     1\n#&gt; 3 formula_decision… Prepro… accura… 0.773 0.00494    10 formula      deci…     2\n#&gt; 4 formula_decision… Prepro… roc_auc 0.713 0.00645    10 formula      deci…     2\n\nThe first metric of the metric set is used for ranking. Use rank_metric to change that.\n\nLots more available with workflow sets, like collect_metrics(), autoplot() methods, and more!"
   },
   {
     "objectID": "slides/04-evaluating-models.html#your-turn-5",
@@ -6340,5 +6340,12 @@
     "title": "Annotations",
     "section": "A tidymodels explainer",
     "text": "A tidymodels explainer\nFor our example, the angle was an original predictor. Recall that we made spline terms from this predictor, so there are derived features such as angle_ns_1 and so on.\nOriginal versus derived doesn’t affect local explainers since we are focused on a single prediction.\nFor global explainers, we should decide between:\n\nexplaining the overall affect of angle (lumping all its features into one importance score), or\nexplaining the effect of each term in the model (including angle_ns_1 and so on).\n\nThe choice depends on what you want. For example, if we have an original date predictor and make features for month and year, is it more informative to know if date is important (overall) or exactly how the date is important? You might want to look at it both ways."
+  },
+  {
+    "objectID": "slides/04-evaluating-models.html#evaluating-model-performance-3",
+    "href": "slides/04-evaluating-models.html#evaluating-model-performance-3",
+    "title": "4 - Evaluating models",
+    "section": "Evaluating model performance ",
+    "text": "Evaluating model performance \n\nctrl_taxi &lt;- control_resamples(save_pred = TRUE)\n\n# Random forest uses random numbers so set the seed first\n\nset.seed(2)\nrf_res &lt;- fit_resamples(rf_wflow, taxi_folds, control = ctrl_taxi)\ncollect_metrics(rf_res)\n#&gt; # A tibble: 2 × 6\n#&gt;   .metric  .estimator  mean     n std_err .config             \n#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 accuracy binary     0.813    10 0.00305 Preprocessor1_Model1\n#&gt; 2 roc_auc  binary     0.832    10 0.00513 Preprocessor1_Model1"
   }
 ]
