@@ -1,5 +1,5 @@
 ---
-title: "1 - Feature engineering"
+title: "1 - Feature Engineering"
 subtitle: "Advanced tidymodels"
 format:
   revealjs: 
@@ -27,6 +27,7 @@ knitr:
 
 # pak::pak("gadenbuie/countdown")
 # pak::pak("hadley/emo")
+library(modeldatatoo)
 library(countdown)
 library(emo)
 
@@ -73,9 +74,9 @@ Example representations:
 
 -   Interactions
 -   Polynomial expansions/splines
--   PCA feature extraction
+-   Principal component analysis (PCA) feature extraction
 
-There are a lot of examples in [_Feature Engineering and Selection_](https://bookdown.org/max/FES/).
+There are a lot of examples in [_Feature Engineering and Selection_](https://bookdown.org/max/FES/) (FES).
 
 
 
@@ -111,33 +112,60 @@ Mention that, for the Chicago data, the day or the week features are usually the
 
 The recipes package can handle both!
 
-In a little bit, we'll see successful (and unsuccessful) feature engineering methods for our example data. 
-
-
 ::: notes
 These terms are often used interchangeably in the ML community but we want to distinguish them.
 :::
 
-## The NHL data 🏒
 
--   From Pittsburgh Penguins games, `r format(nrow(ongoal::season_2015), big.mark = ",")` shots
+## Hotel Data
 
--   Data from the 2015-2016 season
+We'll use [data on hotels](https://www.sciencedirect.com/science/article/pii/S2352340918315191) to predict the cost of a room. 
 
-. . .
+The [data](https://modeldatatoo.tidymodels.org/dev/reference/data_hotel_rates.html) are in the modeldatatoo package. We'll sample down the data and refactor some columns: 
 
-Let's predict whether a shot is on-goal (a goal or blocked by goaltender) or not.
+:::: {.columns}
 
-## Case study
+::: {.column width="40%"}
 
-```{r hello-tidymodels}
+```{r}
+#| label: tune-startup
 library(tidymodels)
-library(ongoal)
+library(modeldatatoo)
 
+# Max's usual settings: 
 tidymodels_prefer()
-
-glimpse(season_2015)
+theme_set(theme_bw())
+options(
+  pillar.advice = FALSE, 
+  pillar.min_title_chars = Inf
+)
 ```
+
+:::
+
+::: {.column width="60%"}
+
+```{r}
+#| label: data-import
+set.seed(295)
+hotel_rates <- 
+  data_hotel_rates() %>% 
+  sample_n(5000) %>% 
+  arrange(arrival_date) %>% 
+  select(-arrival_date_num, -arrival_date) %>% 
+  mutate(
+    company = factor(as.character(company)),
+    country = factor(as.character(country)),
+    agent = factor(as.character(agent))
+  )
+```
+
+
+:::
+
+::::
+
+
 
 ## Data splitting strategy
 
@@ -148,78 +176,55 @@ knitr::include_graphics("images/whole-game-split.svg")
 ```
 
 
-## Why a validation set?
-
-Recall that resampling gives us performance measures without using the test set. 
-
-It's important to get good resampling statistics (e.g. $R^2$). 
-
- - That usually means having enough data to estimate performance. 
-
-When you have "a lot" of data, a validation set can be an efficient way to do this. 
 
 
-## Splitting the NHL data `r hexes("rsample")` {.annotation}
+## Data splitting strategy
 
-```{r split}
-set.seed(23)
-nhl_split <- initial_split(season_2015, prop = 3/4)
-nhl_split
+```{r spending-diagram, echo = FALSE}
+#| fig-align: "center"
 
-nhl_train_and_val <- training(nhl_split)
-nhl_test  <- testing(nhl_split)
-
-## not testing
-nrow(nhl_train_and_val)
- 
-## testing
-nrow(nhl_test)
+knitr::include_graphics("images/whole-game-split.svg")
 ```
 
-## Validation split `r hexes("rsample")`
 
-Since there are a lot of observations, we'll use a validation set: 
+## Data Spending
 
-```{r val}
-set.seed(234)
-nhl_val <- validation_split(nhl_train_and_val, prop = 0.80)
-nhl_val
+Let's split the data into a training set (75%) and testing set (25%):
+
+```{r}
+#| label: hotel-split
+set.seed(4028)
+hotel_split <-
+  initial_split(hotel_rates, strata = avg_price_per_room)
+
+hotel_tr <- training(hotel_split)
+hotel_te <- testing(hotel_split)
 ```
 
-. . .
-
-Remember that a validation split is a type of resample. 
 
 
 ## Your turn {transition="slide-in"}
 
-![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+Let's take some time and investigate the _training data_. The outcome is `avg_price_per_room`. 
 
-*Let's explore the training set data.*
+Are there any characteristics of the data that are interesting?
 
-*Use the function `plot_nhl_shots()` for nice spatial plots of the data.*
-
-::: columns
-::: {.column width="60%"}
-```{r rink-code}
-nhl_train <- analysis(nhl_val$splits[[1]])
-
-set.seed(100)
-nhl_train %>% 
-  sample_n(200) %>%
-  plot_nhl_shots(emphasis = shooter_type)
-```
-:::
-
-::: {.column width="50%"}
 ```{r}
+#| label: hotel-investigation-exercise
 #| echo: false
-countdown(minutes = 8, id = "nhl-explore")
+countdown(minutes = 10, id = "hotel-investigation")
 ```
-:::
-:::
 
+## Resampling Strategy
 
+We'll use simple 10-fold cross-validation (stratified sampling):
+
+```{r}
+#| label: hotel-rs
+set.seed(472)
+hotel_rs <- vfold_cv(hotel_tr, strata = avg_price_per_room)
+hotel_rs
+```
 
 ## Prepare your data for modeling `r hexes("recipes")`
 
@@ -236,8 +241,8 @@ countdown(minutes = 8, id = "nhl-explore")
 ## A first recipe `r hexes("recipes")`
 
 ```{r base-recipe}
-nhl_rec <- 
-  recipe(on_goal ~ ., data = nhl_train)
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr)
 ```
 
 . . .
@@ -247,15 +252,15 @@ nhl_rec <-
 ## A first recipe `r hexes("recipes")`
 
 ```{r rec-summary}
-summary(nhl_rec)
+summary(hotel_rec)
 ```
 
 ## Create indicator variables `r hexes("recipes")`
 
 ```{r}
 #| code-line-numbers: "3"
-nhl_rec <- 
-  recipe(on_goal ~ ., data = nhl_train) %>% 
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
   step_dummy(all_nominal_predictors())
 ```
 
@@ -269,8 +274,8 @@ nhl_rec <-
 
 ```{r}
 #| code-line-numbers: "4"
-nhl_rec <- 
-  recipe(on_goal ~ ., data = nhl_train) %>% 
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors())
 ```
@@ -289,8 +294,8 @@ Note that the selector chooses all columns with a role of "predictor"
 ```{r rec-norm}
 #| eval: false
 #| code-line-numbers: "5"
-nhl_rec <- 
-  recipe(on_goal ~ ., data = nhl_train) %>% 
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors())
@@ -301,7 +306,7 @@ nhl_rec <-
 - This centers and scales the numeric predictors.
 
 
-- The recipe will use the _training_ set to estimate the means and standard deviations of the data.
+- The recipe will use the _tring_ set to estimate the means and standard deviations of the data.
 
 . . .
 
@@ -312,8 +317,8 @@ nhl_rec <-
 ```{r }
 #| code-line-numbers: "6"
 #| eval: false
-nhl_rec <- 
-  recipe(on_goal ~ ., data = nhl_train) %>% 
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
@@ -329,8 +334,8 @@ To deal with highly correlated predictors, find the minimum set of predictor col
 ```{r}
 #| code-line-numbers: "6"
 #| eval: false
-nhl_rec <- 
-  recipe(on_goal ~ ., data = nhl_train) %>% 
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
@@ -346,12 +351,12 @@ PCA feature extraction...
 ```{r}
 #| code-line-numbers: "6"
 #| eval: false
-nhl_rec <- 
-  recipe(on_goal ~ ., data = nhl_train) %>% 
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
-  embed::step_umap(all_numeric_predictors(), outcome = on_goal)
+  embed::step_umap(all_numeric_predictors(), outcome = avg_price_per_room)
 ```
 
 . . . 
@@ -368,8 +373,8 @@ Note that this uses the outcome, and it is from an extension package
 ```{r}
 #| eval: false
 #| code-line-numbers: "6"
-nhl_rec <- 
-  recipe(on_goal ~ ., data = nhl_train) %>% 
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
@@ -390,9 +395,10 @@ Nonlinear transforms like natural splines, and so on!
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Create a `recipe()` for the on-goal data to :*
+*Create a `recipe()` for the hotel data to :*
 
--   *create one-hot indicator variables*
+-   *use a Yeo-Johnson (YJ) transformation on `lead_time`*
+-   *indicator variables*
 -   *remove zero-variance variables*
 
 ```{r}
@@ -404,8 +410,9 @@ countdown(minutes = 3, id = "make-recipe")
 ## Minimal recipe `r hexes("recipes")` 
 
 ```{r}
-nhl_indicators <-
-  recipe(on_goal ~ ., data = nhl_train) %>%
+hotel_indicators <-
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_YeoJohnson(lead_time) %>%
   step_dummy(all_nominal_predictors()) %>%
   step_zv(all_predictors())
 ```
@@ -417,17 +424,17 @@ nhl_indicators <-
 
 set.seed(9)
 
-nhl_glm_wflow <-
+hotel_lm_wflow <-
   workflow() %>%
-  add_recipe(nhl_indicators) %>%
-  add_model(logistic_reg())
+  add_recipe(hotel_indicators) %>%
+  add_model(linear_reg())
  
 ctrl <- control_resamples(save_pred = TRUE)
-nhl_glm_res <-
-  nhl_glm_wflow %>%
-  fit_resamples(nhl_val, control = ctrl)
+hotel_lm_res <-
+  hotel_lm_wflow %>%
+  fit_resamples(hotel_rs, control = ctrl)
 
-collect_metrics(nhl_glm_res)
+collect_metrics(hotel_lm_res)
 ```
 
 ## Your turn {transition="slide-in"}
@@ -449,114 +456,19 @@ countdown(minutes = 5, id = "resample-recipe")
 
 ```{r}
 # Since we used `save_pred = TRUE`
-glm_val_pred <- collect_predictions(nhl_glm_res)
-glm_val_pred %>% slice(1:7)
-```
-
-# Two class data
-
-Let's say we can define one class as the "event", like a shot being on goal.
-
-. . .
-
--   The **sensitivity** is the *true positive rate* (accuracy on actual events).
-
--   The **specificity** is the *true negative rate* (accuracy on actual non-events, or 1 - *false positive rate*).
-
-## Two class data
-
-These definitions assume that we know the threshold for converting "soft" probability predictions into "hard" class predictions.
-
-. . .
-
-Is a 50% threshold good? 
-
-What happens if we say that we need to be 80% sure to declare an event?
-
--   sensitivity ⬇️, specificity ⬆️
-
-. . .
-
-What happens for a 20% threshold?
-
--   sensitivity ⬆️, specificity ⬇️
-
-## Varying the threshold
-
-```{r}
-#| label: thresholds
-#| echo: false
-
-glm_val_pred %>% 
-  roc_curve(truth = on_goal, .pred_yes) %>% 
-  filter(is.finite(.threshold)) %>% 
-  pivot_longer(c(specificity, sensitivity), names_to = "statistic", values_to = "value") %>% 
-  rename(`event threshold` = .threshold) %>% 
-  ggplot(aes(x = `event threshold`, y = value, col = statistic, group = statistic)) + 
-  geom_line() +
-  scale_color_brewer(palette = "Dark2") +
-  labs(y = NULL) +
-  coord_equal() +
-  theme(legend.position = "top")
-```
-
-## ROC curves
-
-To make an ROC (receiver operator characteristic) curve, we:
-
-- calculate the sensitivity and specificity for all possible thresholds
-
-- plot false positive rate (x-axis) versus true positive rate (y-axis)
-
-. . .
-
-We can use the area under the ROC curve as a classification metric: 
-
-- ROC AUC = 1 💯 
-- ROC AUC = 1/2 😢
-
-:::notes
-ROC curves are insensitive to class imbalance.
-:::
-
-## ROC curves `r hexes("yardstick")`
-
-```{r}
-# Assumes _first_ factor level is event; there are options to change that
-roc_curve_points <- glm_val_pred %>% roc_curve(truth = on_goal, .pred_yes)
-roc_curve_points %>% slice(1, 50, 100)
-
-glm_val_pred %>% roc_auc(truth = on_goal, .pred_yes)
-```
-
-## ROC curve plot `r hexes("yardstick")`
-
-```{r roc-curve}
-#| fig-width: 6
-#| fig-height: 6
-#| fig-align: 'center'
-#| dev: 'svg'
-#| dev-args: list(bg = "transparent")
-autoplot(roc_curve_points)
-```
-
-## Your turn {transition="slide-in"}
-
-![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
-
-*Compute and plot an ROC curve for your current model.*
-
-*What data are being used for this ROC curve plot?*
-
-```{r}
-#| echo: false
-countdown(minutes = 5, id = "roc-curve")
+lm_val_pred <- collect_predictions(hotel_lm_res)
+lm_val_pred %>% slice(1:7)
 ```
 
 
-## What do we do with the player data? 🏒
+## Calibration
 
-There are `r length(unique(nhl_train$shooter))` unique player values in our training set. How can we include this information in our model?
+
+
+
+## What do we do with the agent and company data? 
+
+There are `r length(unique(hotel_tr$agent))` unique agent values and `r length(unique(hotel_tr$company))` companies in our training set. How can we include this information in our model?
 
 . . .
 
@@ -564,11 +476,11 @@ We could:
 
 -   make the full set of indicator variables 😳
 
--   lump players who rarely shoot into an "other" group
+-   lump agents who rarely occur into an "other" group
 
 -   use [feature hashing](https://www.tmwr.org/categorical.html#feature-hashing) to create a smaller set of indicator variables
 
--   use effect encoding to replace the `shooter` column with the estimated effect of that predictor
+-   use effect encoding to replace the `agent` and `company` columns with the estimated effect of that predictor
 
 
 . . .
@@ -578,31 +490,31 @@ Let's look at _othering_ then _effect encodings_.
 ```{r effects-calcs}
 #| include: false
 
-player_stats <- 
-  nhl_train %>%
-  group_by(shooter) %>%
+agent_stats <- 
+  hotel_tr %>%
+  group_by(agent) %>%
   summarize(
-    rate = mean(on_goal == "yes"), 
-    num_shots = n(),
+    ADR = mean(avg_price_per_room), 
+    num_reservations = n(),
     .groups = "drop"
     ) %>%
-  mutate(shooter = reorder(shooter, rate))
+  mutate(agent = reorder(agent, ADR))
 
 library(embed)
 
 estimates <- 
-  recipe(on_goal ~ ., data = nhl_train) %>% 
-  step_lencode_mixed(shooter, outcome = vars(on_goal), id = "encoding") %>%   #<<
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_lencode_mixed(agent, outcome = vars(avg_price_per_room), id = "encoding") %>%   #<<
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
   prep() %>% 
   tidy(id = "encoding") %>% 
-  select(shooter = level, estimate = value)
+  select(agent = level, estimate = value)
 
-before <- nhl_train %>% select(on_goal, shooter) %>% slice(1:7) %>% add_rowindex()
-after <- left_join(before, estimates, by = "shooter") %>% 
-  select(on_goal, shooter = estimate, .row)
+before <- hotel_tr %>% select(avg_price_per_room, agent) %>% slice(1:7) %>% add_rowindex()
+after <- left_join(before, estimates, by = "agent") %>% 
+  select(avg_price_per_room, agent = estimate, .row)
 ```
 
 
@@ -619,16 +531,15 @@ after <- left_join(before, estimates, by = "shooter") %>%
 #| dev: 'svg'
 #| dev-args: list(bg = "transparent")
   
-player_stats %>%   
-  ggplot(aes(x = num_shots)) +
+agent_stats %>%   
+  ggplot(aes(x = num_reservations)) +
   geom_histogram(bins = 30, col = "blue", fill = "blue", alpha = 1/3) +
-  scale_x_log10() +
-  labs(x = "Number of shots per player")
+  labs(x = "Number of reservations per player")
 ```
 :::
 
 ::: {.column width="50%"}
-```{r effects-rate}
+```{r effects-adr}
 #| echo: false
 #| out-width: '90%'
 #| fig-width: 6
@@ -637,10 +548,10 @@ player_stats %>%
 #| dev: 'svg'
 #| dev-args: list(bg = "transparent")
 
-player_stats %>%   
-  ggplot(aes(x = rate)) +
-  geom_histogram(binwidth = 1/40, col = "red", fill = "red", alpha = 1/3) +
-  labs(x = "On-goal rate per player")
+agent_stats %>%   
+  ggplot(aes(x = ADR)) +
+  geom_histogram(bins = 30, col = "red", fill = "red", alpha = 1/3) +
+  labs(x = "Average ADR per agent")
 ```
 :::
 :::
@@ -652,10 +563,10 @@ There is a recipe step that will redefine factor levels based on the their frequ
 ```{r}
 #| code-line-numbers: "3:4"
 
-nhl_other_rec <-
-  recipe(on_goal ~ ., data = nhl_train) %>%
-  # Any player with <= 0.01% of shots is set to "other"
-  step_other(shooter, threshold = 0.001) %>%
+hotel_other_rec <-
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_YeoJohnson(lead_time) %>%
+  step_other(agent, threshold = 0.001) %>%
   step_dummy(all_nominal_predictors()) %>%
   step_zv(all_predictors())
 ```
@@ -663,20 +574,20 @@ nhl_other_rec <-
 ```{r other-res}
 #| include: false
 
-retained_shooters <-
-  recipe(on_goal ~ ., data = nhl_train) %>%
-  step_mutate(original = shooter) %>% 
-  step_other(shooter, threshold = 0.001) %>%
+retained_agents <-
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>%
+  step_mutate(original = agent) %>% 
+  step_other(agent, threshold = 0.001) %>%
   step_dummy(all_nominal_predictors()) %>%
   step_zv(all_predictors()) %>% 
   prep() %>% 
   tidy(number = 2)
 
-num_shooters <- length(unique(nhl_train$shooter))
-num_other <- num_shooters - length(retained_shooters$retained)
+num_agents <- length(unique(hotel_tr$agent))
+num_other <- num_agents - length(retained_agents$retained)
 ```
 
-Using this code, `r num_other` players (out of `r num_shooters`) were collapsed into "other" based on the training set.
+Using this code, `r num_other` players (out of `r num_agents`) were collapsed into "other" based on the training set.
 
 We _could_ try to optimize the threshold for collapsing (see the next set of slides on model tuning).
 
@@ -684,18 +595,18 @@ We _could_ try to optimize the threshold for collapsing (see the next set of sli
 
 ```{r}
 #| code-line-numbers: "3|"
-nhl_other_wflow <-
-  nhl_glm_wflow %>%
-  update_recipe(nhl_other_rec)
+hotel_other_wflow <-
+  hotel_lm_wflow %>%
+  update_recipe(hotel_other_rec)
 
-nhl_other_res <-
-  nhl_other_wflow %>%
-  fit_resamples(nhl_val, control = ctrl)
+hotel_other_res <-
+  hotel_other_wflow %>%
+  fit_resamples(hotel_rs, control = ctrl)
 
-collect_metrics(nhl_other_res)
+collect_metrics(hotel_other_res)
 ```
 
-A little better ROC AUC and much faster to complete.  
+A little better MAE and much faster to complete.  
 
 Now let's look at a more sophisticated tool called effect encodings.
 
@@ -724,7 +635,7 @@ after
 :::
 :::
 
-The `shooter` column is replaced with the log-odds of being on goal. 
+The `agent` column is replaced with the log-odds of being on goal. 
 
 :::notes
 As a reminder:
@@ -751,15 +662,14 @@ For logistic regression, this is what the predictors are modeling. The log-odds 
 #| dev: 'svg'
 #| dev-args: list(bg = "transparent")
   
-player_stats %>%   
-  ggplot(aes(x = num_shots)) +
+agent_stats %>%   
+  ggplot(aes(x = num_reservations)) +
   geom_histogram(bins = 30, col = "blue", fill = "blue", alpha = 1/3) +
-  scale_x_log10() +
-  labs(x = "Number of shots per player")
-player_stats %>%   
-  ggplot(aes(x = rate)) +
-  geom_histogram(binwidth = 1/40, col = "red", fill = "red", alpha = 1/3) +
-  labs(x = "On-goal rate per player")
+  labs(x = "Number of reservations per player")
+agent_stats %>%   
+  ggplot(aes(x = ADR)) +
+  geom_histogram(bins = 30, col = "red", fill = "red", alpha = 1/3) +
+  labs(x = "Average ADR per agent")
 ```
 :::
 
@@ -778,7 +688,7 @@ player_stats %>%
 
 
 :::notes
-Partial pooling gives better estimates for players with fewer shots by shrinking the estimate to the overall on-goal rate (`r round(mean(on_goal$on_goal == "yes") * 100, 1)`%)
+Partial pooling gives better estimates for players with fewer shots by shrinking the estimate to the overall on-goal rate (`TODO)
 
 
 :::
@@ -793,15 +703,13 @@ Partial pooling gives better estimates for players with fewer shots by shrinking
 #| dev: 'svglite'
 #| dev-args: list(bg = "transparent")
 
-inner_join(player_stats, estimates, by = "shooter") %>% 
-  mutate(estimate = binomial()$linkinv(estimate)) %>% 
-  ggplot(aes(x = rate, y = estimate)) + 
+inner_join(agent_stats, estimates, by = "agent") %>% 
+  ggplot(aes(x = ADR, y = estimate)) + 
   geom_abline(col = "green", lty = 2) +
-  geom_point(aes(size = num_shots), alpha = 1/3) +
-  lims(x = 0:1, y = 0:1) +
-  coord_fixed() +
-  scale_size(range = c(1/3, 3)) +
-  labs(x = "Raw Rate", y = "Estimated via Effects Encoding")
+  geom_point(aes(size = num_reservations), alpha = 1/3) +
+  coord_obs_pred() +
+  scale_size(range = c(1/3, 5)) +
+  labs(x = "ADR Sample Mean", y = "Estimated via Effects Encoding")
 ```
 
 ## Player effects `r hexes("recipes","embed")` {.annotation}
@@ -810,9 +718,10 @@ inner_join(player_stats, estimates, by = "shooter") %>%
 #| code-line-numbers: "1,5"
 library(embed)
 
-nhl_effect_rec <-
-  recipe(on_goal ~ ., data = nhl_train) %>%
-  step_lencode_mixed(shooter, goaltender, outcome = vars(on_goal)) %>%
+hotel_effect_rec <-
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_YeoJohnson(lead_time) %>%
+  step_lencode_mixed(agent, company, outcome = vars(avg_price_per_room)) %>%
   step_dummy(all_nominal_predictors()) %>%
   step_zv(all_predictors())
 ```
@@ -843,110 +752,22 @@ When a recipe is part of a workflow, this estimation occurs when `fit()` is call
 
 ```{r resample-encoding}
 #| code-line-numbers: "3|"
-nhl_effect_wflow <-
-  nhl_glm_wflow %>%
-  update_recipe(nhl_effect_rec)
+hotel_effect_wflow <-
+  hotel_lm_wflow %>%
+  update_recipe(hotel_effect_rec)
 
-nhl_effect_res <-
-  nhl_effect_wflow %>%
-  fit_resamples(nhl_val, control = ctrl)
+hotel_effect_res <-
+  hotel_effect_wflow %>%
+  fit_resamples(hotel_rs, control = ctrl)
 
-collect_metrics(nhl_effect_res)
+collect_metrics(hotel_effect_res)
 ```
 
-Better and it can handle new players (if they occur).
+Not much worse but it can handle new agents (if they occur).
 
-# Where is the shot coming from? 🏒🧐 
 
-## Angle {.annotation}
 
-```{r}
-nhl_angle_rec <-
-  nhl_effect_rec %>%
-  step_mutate(
-    angle = abs( atan2(abs(coord_y), (89 - coord_x) ) * (180 / pi) )
-  )
-```
 
-```{r angle}
-#| echo: false
-#| out-width: '50%'
-#| fig-width: 7
-#| fig-height: 4
-#| fig-align: 'center'
-#| dev: 'svg'
-#| dev-args: list(bg = "transparent")
-
-example_data <- 
-  nhl_train %>% 
-  mutate(
-    angle = abs( atan2(abs(coord_y), (89 - coord_x) ) * (180 / pi)),
-    behind_goal_line = ifelse(coord_x >= 89, 1, 0)
-  )
-
-set.seed(42)
-example_data %>% 
-  filter(angle <= 10) %>% 
-  sample_n(500) %>% 
-  plot_nhl_shots(emphasis = on_goal, alpha = 1/2) +
-  ggtitle("<= 10 degree angle")
-```
-
-:::notes
- Note the danger of using `step_mutate()` -- easy to have data leakage 
-:::
-
-## Shot from the defensive zone
-
-```{r}
-nhl_zone_rec <-
-  nhl_angle_rec %>%
-  step_mutate(
-    defensive_zone = ifelse(coord_x <= -25.5, 1, 0)
-  )
-```
-
-```{r zone}
-#| echo: false
-#| out-width: '50%'
-#| fig-width: 7
-#| fig-height: 4
-#| fig-align: 'center'
-#| dev: 'svg'
-#| dev-args: list(bg = "transparent")
-
-set.seed(42)
-example_data %>% 
-  filter(coord_x <= -25.5) %>% 
-  sample_n(500) %>% 
-  plot_nhl_shots(emphasis = on_goal, alpha = 1/2) +
-  ggtitle("coord_x <= -25.5")
-```
-
-## Behind goal line
-
-```{r}
-nhl_behind_rec <-
-  nhl_zone_rec %>%
-  step_mutate(
-    behind_goal_line = ifelse(coord_x >= 89, 1, 0)
-  )
-```
-
-```{r goal-line}
-#| echo: false
-#| out-width: '50%'
-#| fig-width: 7
-#| fig-height: 4
-#| fig-align: 'center'
-#| dev: 'svg'
-#| dev-args: list(bg = "transparent")
-
-example_data %>% 
-  filter(behind_goal_line == 1) %>% 
-  plot_nhl_shots(emphasis = on_goal, alpha = 1/2) +
-  ggtitle("behind goal line")
-```
 
 ## Fit different recipes `r hexes("recipes","embed", "workflows", "tune")`
 
@@ -957,19 +778,19 @@ A workflow set can cross models and/or preprocessors and then resample them *en 
 #| results: 'markup'
 
 no_coord_rec <- 
-  nhl_indicators %>% 
+  hotel_indicators %>% 
   step_rm(starts_with("coord"))
 
 set.seed(9)
 
-nhl_glm_set_res <-
+hotel_lm_set_res <-
   workflow_set(
-    list(`1_no_coord` = no_coord_rec,   `2_other` = nhl_other_rec, 
-         `3_effects`  = nhl_effect_rec, `4_angle` = nhl_angle_rec, 
-         `5_zone`     = nhl_zone_rec,   `6_bgl`   = nhl_behind_rec),
+    list(`1_no_coord` = no_coord_rec,   `2_other` = hotel_other_rec, 
+         `3_effects`  = hotel_effect_rec, `4_angle` = hotel_angle_rec, 
+         `5_zone`     = hotel_zone_rec,   `6_bgl`   = hotel_behind_rec),
     list(logistic = logistic_reg())
   ) %>%
-  workflow_map(fn = "fit_resamples", resamples = nhl_val, verbose = TRUE, control = ctrl)
+  workflow_map(fn = "fit_resamples", resamples = hotel_rs, verbose = TRUE, control = ctrl)
 ```
 
 ## Your turn {transition="slide-in"}
@@ -995,7 +816,7 @@ countdown(minutes = 8, id = "hockey-wfset")
 #| out-width: '70%'
 
 library(forcats)
-collect_metrics(nhl_glm_set_res) %>%
+collect_metrics(hotel_lm_set_res) %>%
   filter(.metric == "roc_auc") %>%
   mutate(
     features = gsub("_logistic", "", wflow_id), 
@@ -1033,11 +854,11 @@ collect_metrics(nhl_glm_set_res) %>%
 ## Example
 
 ```{r}
-nhl_angle_fit <- prep(nhl_angle_rec)
+hotel_angle_fit <- prep(hotel_angle_rec)
 
-tidy(nhl_angle_fit, number = 1) %>% slice(1:4)
+tidy(hotel_angle_fit, number = 1) %>% slice(1:4)
 
-bake(nhl_angle_fit, nhl_train %>% slice(1:3), starts_with("coord"), angle, shooter)
+bake(hotel_angle_fit, hotel_tr %>% slice(1:3), starts_with("coord"), angle, agent)
 ```
 
 ## More on recipes
@@ -1063,17 +884,17 @@ parallel::stopCluster(cl)
 
 # Used in whole game slides in introduction
 roc_curves_part_5 <- 
-  nhl_glm_set_res %>% 
+  hotel_lm_set_res %>% 
   collect_predictions() %>% 
-  select(wflow_id, on_goal, .pred_yes) %>% 
+  select(wflow_id, avg_price_per_room, .pred_yes) %>% 
   bind_rows(
-    nhl_glm_res %>% 
+    hotel_lm_res %>% 
       collect_predictions() %>% 
       mutate(wflow_id = "dummy_logistic") %>% 
-      select(wflow_id, on_goal, .pred_yes)
+      select(wflow_id, avg_price_per_room, .pred_yes)
   ) %>% 
   group_by(wflow_id) %>% 
-  roc_curve(on_goal, .pred_yes)
+  roc_curve(avg_price_per_room, .pred_yes)
 
 save(roc_curves_part_5, file = "roc_curves_part_5.RData", compress = TRUE)
 ```
