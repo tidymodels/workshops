@@ -15,6 +15,7 @@ knitr:
     echo: true
     collapse: true
     comment: "#>"
+    fig.path: "figures/"
 ---
 
 ```{r setup}
@@ -37,11 +38,8 @@ options(width = 200)
 ggplot2::theme_set(ggplot2::theme_bw())
 ```
 
-## Hotel Data
 
-We'll use [data on hotels](https://www.sciencedirect.com/science/article/pii/S2352340918315191) to predict the cost of a room. 
-
-The [data](https://modeldatatoo.tidymodels.org/dev/reference/data_hotel_rates.html) are in the modeldatatoo package. We'll sample down the data and refactor some columns: 
+## Previously - Setup
 
 :::: {.columns}
 
@@ -51,6 +49,8 @@ The [data](https://modeldatatoo.tidymodels.org/dev/reference/data_hotel_rates.ht
 #| label: tune-startup
 library(tidymodels)
 library(modeldatatoo)
+library(textrecipes)
+library(bonsai)
 
 # Max's usual settings: 
 tidymodels_prefer()
@@ -86,33 +86,38 @@ hotel_rates <-
 ::::
 
 
-## Data Spending
-
-Let's split the data into a training set (75%) and testing set (25%):
+## Previously - Data Usage
 
 ```{r}
 #| label: hotel-split
 set.seed(4028)
-hotel_split <-
-  initial_split(hotel_rates, strata = avg_price_per_room)
+hotel_split <- initial_split(hotel_rates, strata = avg_price_per_room)
 
 hotel_tr <- training(hotel_split)
 hotel_te <- testing(hotel_split)
+
+set.seed(472)
+hotel_rs <- vfold_cv(hotel_tr, strata = avg_price_per_room)
 ```
 
 
-
-## Your turn {transition="slide-in"}
-
-Let's take some time and investigate the _training data_. The outcome is `avg_price_per_room`. 
-
-Are there any characteristics of the data that are interesting?
+## Previously - Feature engineering
 
 ```{r}
-#| label: hotel-investigation-exercise
-#| echo: false
-countdown(minutes = 10, id = "hotel-investigation")
+#| label: recipe
+library(textrecipes)
+
+hash_rec <-
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>%
+  step_YeoJohnson(lead_time) %>%
+  # Defaults to 32 signed indicator columns
+  step_dummy_hash(agent) %>%
+  step_dummy_hash(company) %>%
+  # Regular indicators for the others
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors())
 ```
+
 
 ## Measuring Performance
 
@@ -129,62 +134,6 @@ The focus will be on MAE for parameter optimization. We'll use a metric set to c
 #| label: metric-set
 
 reg_metrics <- metric_set(mae, rsq)
-```
-
-## Feature Engineering
-
-How should we represent our predictors? There are: 
-
- * Categorical predictors, some with many levels
- * Some skewed numeric predictor(s)
- * Interactions? 
-
-. . .
-
-Let's start a basic recipe: 
-
-```{r}
-#| label: hotel-rec-start
-
-hotel_rec <- 
-  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
-  step_YeoJohnson(lead_time)
-```
-
-. . .
-
-We'll add to this for different types of models. 
-
-## A Baseline Model
-
-A simple linear model with main effects
-
-```{r}
-#| label: hotel-base-model
-set.seed(472)
-hotel_rs <- vfold_cv(hotel_tr, strata = avg_price_per_room)
-
-base_rec <- 
-  hotel_rec %>% 
-  step_dummy(all_nominal_predictors()) %>% 
-  step_zv(all_predictors())
-
-base_wflow <- workflow(base_rec, linear_reg())
-```
-
-
-## A Baseline Model
-
-We'll try to optimize the mean absolute error: 
-
-```{r}
-#| label: hotel-base-res
-#| cache: true
-ctrl_rs <- control_resamples(save_pred = TRUE)
-
-base_res <- base_wflow %>% fit_resamples(hotel_rs, metrics = reg_metrics)
-
-collect_metrics(base_res)
 ```
 
 
@@ -261,6 +210,51 @@ Nope. It is not.
 - Once the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set.
 
 
+## Tagging parameters for tuning 
+
+With tidymodels, you can mark the parameters that you want to optimize with a value of `tune()`. 
+
+<br>
+
+The function itself just returns... itself: 
+
+```{r}
+#| label: tune
+
+tune()
+str(tune())
+
+# optionally add a label
+tune("I hope that the workshop is going well")
+```
+
+. . . 
+
+For example...
+
+## Optimizing the hash features
+
+Our new recipe is: 
+
+```{r}
+#| label: recipe-tune
+#| code-line-numbers: "4-5|"
+hash_rec <-
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>%
+  step_YeoJohnson(lead_time) %>%
+  step_dummy_hash(agent,   num_terms = tune("agent hash")) %>%
+  step_dummy_hash(company, num_terms = tune("company hash")) %>%
+  step_zv(all_predictors())
+```
+
+<br>
+
+We will be using a tree-based model in a minute. 
+
+ - The other categorical predictors are left as-is.
+ - That's why there is no `step_dummy()`. 
+
+
 ## Boosted Trees
 
 These are popular ensemble methods that build a _sequence_ of tree models. 
@@ -278,6 +272,8 @@ Each tree in the ensemble is saved and new samples are predicted using a weighte
 We'll focus on the popular lightgbm implementation. 
 
 ## Boosted Tree Tuning Parameters
+
+Some _possible_ parameters: 
 
 * `mtry`: The number of predictors randomly sampled at each split (in $[1, ncol(x)]$ or $(0, 1]$).
 * `trees`: The number of trees ($[1, \infty]$, but usually up to thousands)
@@ -310,8 +306,10 @@ lgbm_spec <-
   set_mode("regression") %>% 
   set_engine("lightgbm")
 
-lgbm_wflow <- workflow(hotel_rec, lgbm_spec)
+lgbm_wflow <- workflow(hash_rec, lgbm_spec)
 ```
+
+
 
 
 ## Optimize tuning parameters
@@ -405,7 +403,7 @@ A parameter set can be updated (e.g. to change the ranges).
 ## Create a grid `r hexes(c("dials", "workflows"))`
 
 ::: columns
-::: {.column width="50%"}
+::: {.column width="65%"}
 ```{r}
 #| label: get-grid 
 set.seed(12)
@@ -418,9 +416,9 @@ grid
 ```
 :::
 
-::: {.column width="50%"}
+::: {.column width="35%"}
 ::: fragment
--   A *space-filling design* like this tends to perform better than random grids.
+-   A *space-filling design*  tends to perform better than random grids.
 -   Space-filling designs are also usually more efficient than regular grids.
 :::
 :::
@@ -435,6 +433,7 @@ grid
 *Try creating a regular grid.*
 
 ```{r}
+#| label: make-grid
 #| echo: false
 countdown::countdown(minutes = 3, id = "make-grid")
 ```
@@ -448,21 +447,18 @@ set.seed(12)
 grid <- 
   lgbm_wflow %>% 
   extract_parameter_set_dials() %>% 
-  grid_regular(levels = 25)
+  grid_regular(levels = 4)
 
 grid
 ```
 
-:::notes
-Note that even though we requested 25x25=625 rows, we only got 15x15=225 back, since the `deg_free` parameters only have a range of `1->15`.
-:::
 
 ## Update parameter ranges `r hexes(c("dials", "workflows"))` {.annotation}
 
 
 ```{r mod-grid-code} 
 #| label: update-param
-#| code-line-numbers: "4-5"
+#| code-line-numbers: "4-5|"
 lgbm_param <- 
   lgbm_wflow %>% 
   extract_parameter_set_dials() %>% 
@@ -504,14 +500,20 @@ Let's take our previous model and tune more parameters:
 
 ```{r} 
 #| label: lgm-more-tune
-#| code-line-numbers: "2-3"
+#| code-line-numbers: "2,12-13|"
 lgbm_spec <- 
-  boost_tree(trees = tune(), learn_rate = tune(), mtry = tune(), 
-             min_n = tune()) %>% 
+  boost_tree(trees = tune(), learn_rate = tune(),  min_n = tune()) %>% 
   set_mode("regression") %>% 
   set_engine("lightgbm")
 
-lgbm_wflow <- workflow(hotel_rec, lgbm_spec)
+lgbm_wflow <- workflow(hash_rec, lgbm_spec)
+
+# Update the feature hash ranges (log-2 units)
+lgbm_param <-
+  lgbm_wflow %>%
+  extract_parameter_set_dials() %>%
+  update(`agent hash`   = num_hash(c(3, 8)),
+         `company hash` = num_hash(c(3, 8)))
 ```
 
 
@@ -520,6 +522,7 @@ lgbm_wflow <- workflow(hotel_rec, lgbm_spec)
 ```{r tuning} 
 #| label: lgb-grid-tune
 #| cache: true
+#| code-line-numbers: "2|"
 set.seed(9)
 ctrl <- control_grid(save_pred = TRUE, parallel_over = "everything")
 
@@ -528,6 +531,7 @@ lgbm_res <-
   tune_grid(
     resamples = hotel_rs,
     grid = 25,
+    param_info = lgbm_param, 
     control = ctrl,
     metrics = reg_metrics
   )
@@ -542,9 +546,9 @@ lgbm_res <-
 
 ## Grid Search `r hexes(c("dials", "workflows", "tune"))` 
 
-```{r tuning} 
+```{r} 
 #| label: lgb-grid-tune-res
-lgbm_res
+lgbm_res 
 ```
 
 
@@ -562,18 +566,21 @@ autoplot(lgbm_res)
 ## Tuning results `r hexes(c("tune"))`
 
 ```{r}
+#| label: lgbm-metrics
 collect_metrics(lgbm_res)
 ```
 
 ## Tuning results `r hexes(c("tune"))`
 
 ```{r}
+#| label: lgbm-metrics-raw
 collect_metrics(lgbm_res, summarize = FALSE)
 ```
 
 ## Choose a parameter combination `r hexes(c("tune"))`
 
 ```{r}
+#| label: lgbm-metrics-rsq
 show_best(lgbm_res, metric = "rsq")
 ```
 
@@ -582,6 +589,7 @@ show_best(lgbm_res, metric = "rsq")
 Create your own tibble for final parameters or use one of the `tune::select_*()` functions:
 
 ```{r}
+#| label: lgbm-metrics-best
 lgbm_best <- select_best(lgbm_res, metric = "mae")
 lgbm_best
 ```
@@ -631,7 +639,7 @@ lgbm_wflow
 
 We can use a *parallel backend* to do this:
 
-```{r, eval= FALSE}
+```{r}
 #| eval: false
 #| label: parallel-methods
 cores <- parallelly::availableCores(logical = FALSE)
@@ -701,18 +709,27 @@ Faceted on the expensiveness of preprocessing used.
 
 <br>
 
-We just tuned the model over the number of trees in the ensemble. 
+*We just tuned the model over the number of trees in the ensemble.* 
 
-What if we set a specific number of trees and tuned the "early stopping" parameters? 
+*What if we set a specific number of trees and tuned the "early stopping" parameters?* 
 
- - How many iterations of worst performance before we stop adding new trees? 
+ - *How many iterations of worst performance before we stop adding new trees?* 
 
-This is an alternate approach to tuning these models. 
+*This is an alternate approach to tuning these models.* 
 
-We could set `trees = 1000` and tune the `stop_iter` parameter. 
+*We could set `trees = 1000` and tune the `stop_iter` parameter.* 
+
+## Your turn {transition="slide-in"}
 
 ```{r}
+#| label: lgbm-stop
 #| echo: false
 countdown::countdown(minutes = 10, id = "lgbm-stop")
 ```
 
+```{r}
+#| label: teardown
+#| echo: false
+
+parallel::stopCluster(cl)
+```
