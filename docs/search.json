@@ -25,14 +25,14 @@
     "href": "index.html#slides",
     "title": "Machine learning with tidymodels",
     "section": "Slides",
-    "text": "Slides\nThese slides are designed to use with live teaching and are published for workshop participants’ convenience. There are not meant as standalone learning materials. For that, we recommend tidymodels.org and Tidy Modeling with R.\n\nIntroduction to tidymodels\n\n01: Introduction\n02: Your data budget\n03: What makes a model?\n04: Evaluating models\n\n\n\nAdvanced tidymodels\n\n02: Tuning hyperparameters (grid search)\n\nThere’s also a page for slide annotations; these are extra notes for selected slides."
+    "text": "Slides\nThese slides are designed to use with live teaching and are published for workshop participants’ convenience. There are not meant as standalone learning materials. For that, we recommend tidymodels.org and Tidy Modeling with R.\n\nIntroduction to tidymodels\n\n01: Introduction\n02: Your data budget\n03: What makes a model?\n04: Evaluating models\n\n\n\nAdvanced tidymodels\n\n01: Feature engineering using recipes\n02: Tuning hyperparameters (grid search)\n\nThere’s also a page for slide annotations; these are extra notes for selected slides."
   },
   {
     "objectID": "index.html#code",
     "href": "index.html#code",
     "title": "Machine learning with tidymodels",
     "section": "Code",
-    "text": "Code\nQuarto files (version 1.4.176) for working along are available on GitHub. (Don’t worry if you haven’t used Quarto before; it will feel familiar to R Markdown users.)"
+    "text": "Code\nQuarto files (version 1.3.433) for working along are available on GitHub. (Don’t worry if you haven’t used Quarto before; it will feel familiar to R Markdown users.)"
   },
   {
     "objectID": "index.html#past-workshops",
@@ -333,28 +333,28 @@
     "href": "slides/02-data-budget.html#data-splitting-and-spending-3",
     "title": "2 - Your data budget",
     "section": "Data splitting and spending ",
-    "text": "Data splitting and spending \n\nset.seed(123)\nfrog_split <- initial_split(tree_frogs)\nfrog_split\n#> <Training/Testing/Total>\n#> <429/143/572>\n\n\nHow much data in training vs testing? This function uses a good default, but this depends on your specific goal/data We will talk about more powerful ways of splitting, like stratification, later"
+    "text": "Data splitting and spending \n\nset.seed(123)\ntaxi_split &lt;- initial_split(taxi)\ntaxi_split\n#&gt; &lt;Training/Testing/Total&gt;\n#&gt; &lt;6605/2202/8807&gt;\n\n\nHow much data in training vs testing? This function uses a good default, but this depends on your specific goal/data We will talk about more powerful ways of splitting, like stratification, later"
   },
   {
     "objectID": "slides/02-data-budget.html#accessing-the-data",
     "href": "slides/02-data-budget.html#accessing-the-data",
     "title": "2 - Your data budget",
     "section": "Accessing the data ",
-    "text": "Accessing the data \n\nfrog_train <- training(frog_split)\nfrog_test <- testing(frog_split)"
+    "text": "Accessing the data \n\ntaxi_train &lt;- training(taxi_split)\ntaxi_test &lt;- testing(taxi_split)"
   },
   {
     "objectID": "slides/02-data-budget.html#the-training-set",
     "href": "slides/02-data-budget.html#the-training-set",
     "title": "2 - Your data budget",
     "section": "The training set",
-    "text": "The training set\n\nfrog_train\n#> # A tibble: 429 × 5\n#>    treatment  reflex   age t_o_d     latency\n#>    <chr>      <fct>  <dbl> <fct>       <dbl>\n#>  1 control    full    5.36 morning        36\n#>  2 gentamicin full    5.37 morning        72\n#>  3 gentamicin full    4.65 afternoon     141\n#>  4 control    full    5.42 morning        27\n#>  5 control    full    5.43 morning        27\n#>  6 gentamicin full    5.38 morning        73\n#>  7 gentamicin full    5.42 morning        68\n#>  8 gentamicin full    4.75 afternoon     124\n#>  9 control    full    5.00 night          62\n#> 10 control    full    5.39 morning        25\n#> # … with 419 more rows"
+    "text": "The training set\n\ntaxi_train\n#&gt; # A tibble: 6,605 × 7\n#&gt;    tip   distance company                   local dow   month  hour\n#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;                     &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;\n#&gt;  1 yes       4.54 City Service              no    Sat   Mar      16\n#&gt;  2 no       10.2  Flash Cab                 no    Mon   Feb       8\n#&gt;  3 yes      12.4  other                     no    Sun   Apr      15\n#&gt;  4 yes      15.3  Sun Taxi                  no    Mon   Apr      18\n#&gt;  5 no        6.41 Flash Cab                 no    Wed   Apr      14\n#&gt;  6 yes       1.56 other                     no    Tue   Jan      13\n#&gt;  7 yes       3.13 Flash Cab                 no    Sun   Apr      12\n#&gt;  8 yes       7.54 other                     no    Tue   Apr       8\n#&gt;  9 yes       6.98 Flash Cab                 no    Tue   Apr       5\n#&gt; 10 yes       0.7  Taxi Affiliation Services no    Tue   Jan       9\n#&gt; # ℹ 6,595 more rows"
   },
   {
     "objectID": "slides/02-data-budget.html#the-test-set",
     "href": "slides/02-data-budget.html#the-test-set",
     "title": "2 - Your data budget",
     "section": "The test set ",
-    "text": "The test set \n\nfrog_test\n#> # A tibble: 143 × 5\n#>    treatment  reflex   age t_o_d     latency\n#>    <chr>      <fct>  <dbl> <fct>       <dbl>\n#>  1 control    full    5.40 morning        22\n#>  2 control    low     4.18 night         360\n#>  3 control    full    4.63 afternoon     224\n#>  4 gentamicin full    4.75 afternoon     158\n#>  5 control    mid     4.22 night          91\n#>  6 gentamicin full    4.89 night         301\n#>  7 control    full    5.38 morning         2\n#>  8 control    full    4.80 afternoon      56\n#>  9 control    full    5.36 morning        11\n#> 10 control    full    5.40 morning        64\n#> # … with 133 more rows"
+    "text": "The test set \n🙈\n\nThere are 2202 rows and 7 columns in the test set."
   },
   {
     "objectID": "slides/02-data-budget.html#your-turn-1",
@@ -368,7 +368,7 @@
     "href": "slides/02-data-budget.html#data-splitting-and-spending-4",
     "title": "2 - Your data budget",
     "section": "Data splitting and spending ",
-    "text": "Data splitting and spending \n\nset.seed(123)\nfrog_split <- initial_split(tree_frogs, prop = 0.8)\nfrog_train <- training(frog_split)\nfrog_test <- testing(frog_split)\n\nnrow(frog_train)\n#> [1] 457\nnrow(frog_test)\n#> [1] 115"
+    "text": "Data splitting and spending \n\nset.seed(123)\ntaxi_split &lt;- initial_split(taxi, prop = 0.8)\ntaxi_train &lt;- training(taxi_split)\ntaxi_test &lt;- testing(taxi_split)\n\nnrow(taxi_train)\n#&gt; [1] 7045\nnrow(taxi_test)\n#&gt; [1] 1762"
   },
   {
     "objectID": "slides/02-data-budget.html#section-1",
@@ -382,49 +382,49 @@
     "href": "slides/02-data-budget.html#your-turn-2",
     "title": "2 - Your data budget",
     "section": "Your turn",
-    "text": "Your turn\n\nExplore the frog_train data on your own!\n\nWhat’s the distribution of the outcome, latency?\nWhat’s the distribution of numeric variables like age?\nHow does latency differ across the categorical variables?\n\n\n\n\n08:00\n\n\n\n\nMake a plot or summary and then share with neighbor"
+    "text": "Your turn\n\nExplore the taxi_train data on your own!\n\nWhat’s the distribution of the outcome, tip?\nWhat’s the distribution of numeric variables like distance?\nHow does tip differ across the categorical variables?\n\n\n\n\n08:00\n\n\n\n\nMake a plot or summary and then share with neighbor"
   },
   {
     "objectID": "slides/02-data-budget.html#section-3",
     "href": "slides/02-data-budget.html#section-3",
     "title": "2 - Your data budget",
     "section": "",
-    "text": "ggplot(frog_train, aes(latency)) +\n  geom_histogram(bins = 20)\n\n\n\n\n\n\n\n\n\nThis histogram brings up a concern. What if in our training set we get unlucky and sample few or none of these large values? That could mean that our model wouldn’t be able to predict such values. Let’s come back to that!"
+    "text": "ggplot(taxi_train, aes(x = tip)) +\n  geom_bar()"
   },
   {
     "objectID": "slides/02-data-budget.html#section-4",
     "href": "slides/02-data-budget.html#section-4",
     "title": "2 - Your data budget",
     "section": "",
-    "text": "ggplot(frog_train, aes(latency, treatment, fill = treatment)) +\n  geom_boxplot(alpha = 0.5, show.legend = FALSE)"
+    "text": "ggplot(taxi_train, aes(x = tip, fill = local)) +\n  geom_bar()"
   },
   {
     "objectID": "slides/02-data-budget.html#section-5",
     "href": "slides/02-data-budget.html#section-5",
     "title": "2 - Your data budget",
     "section": "",
-    "text": "frog_train %>%\n  ggplot(aes(latency, reflex, fill = reflex)) +\n  geom_boxplot(alpha = 0.3, show.legend = FALSE)"
+    "text": "ggplot(taxi_train, aes(x = hour, fill = tip)) +\n  geom_bar()"
   },
   {
     "objectID": "slides/02-data-budget.html#section-6",
     "href": "slides/02-data-budget.html#section-6",
     "title": "2 - Your data budget",
     "section": "",
-    "text": "ggplot(frog_train, aes(age, latency, color = reflex)) +\n  geom_point(alpha = .8, size = 2)"
+    "text": "ggplot(taxi_train, aes(x = hour, fill = tip)) +\n  geom_bar(position = \"fill\")"
   },
   {
     "objectID": "slides/02-data-budget.html#section-7",
     "href": "slides/02-data-budget.html#section-7",
     "title": "2 - Your data budget",
     "section": "",
-    "text": "Stratified sampling would split within each quartile\n\nBased on our exploration, we realized that stratifying by latency might help get a consistent distribution. For instance, we’d include high and low latency in both the test and training"
+    "text": "ggplot(taxi_train, aes(x = distance)) +\n  geom_histogram(bins = 100) +\n  facet_grid(vars(tip))"
   },
   {
     "objectID": "slides/02-data-budget.html#stratification",
     "href": "slides/02-data-budget.html#stratification",
     "title": "2 - Your data budget",
     "section": "Stratification",
-    "text": "Stratification\nUse strata = latency\n\nset.seed(123)\nfrog_split <- initial_split(tree_frogs, prop = 0.8, strata = latency)\nfrog_split\n#> <Training/Testing/Total>\n#> <456/116/572>\n\n\nStratification often helps, with very little downside\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Stratification\nUse strata = tip\n\nset.seed(123)\ntaxi_split &lt;- initial_split(taxi, prop = 0.8, strata = tip)\ntaxi_split\n#&gt; &lt;Training/Testing/Total&gt;\n#&gt; &lt;7045/1762/8807&gt;"
   },
   {
     "objectID": "slides/03-what-makes-a-model.html#your-turn",
@@ -4412,260 +4412,617 @@
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#hotel-data",
     "href": "slides/advanced-02-tuning-hyperparameters.html#hotel-data",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Hotel Data",
     "text": "Hotel Data\nWe’ll use data on hotels to predict the cost of a room.\nThe data are in the modeldatatoo package. We’ll sample down the data and refactor some columns:\n\n\n\nlibrary(tidymodels)\nlibrary(modeldatatoo)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\n\n\nset.seed(295)\nhotel_rates &lt;- \n  data_hotel_rates() %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date_num, -arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#data-spending",
     "href": "slides/advanced-02-tuning-hyperparameters.html#data-spending",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Data Spending",
     "text": "Data Spending\nLet’s split the data into a training set (75%) and testing set (25%):\n\nset.seed(4028)\nhotel_split &lt;-\n  initial_split(hotel_rates, strata = avg_price_per_room)\n\nhotel_tr &lt;- training(hotel_split)\nhotel_te &lt;- testing(hotel_split)"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#your-turn",
     "href": "slides/advanced-02-tuning-hyperparameters.html#your-turn",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Your turn",
-    "text": "Your turn\nLet’s take some time and investigate the training data. The outcome is avg_price_per_room.\nAre there any characteristics of the data that are interesting?\n\n\n\n−+\n10:00"
+    "text": "Your turn\nLet’s take some time and investigate the training data. The outcome is avg_price_per_room.\nAre there any characteristics of the data that are interesting?\n\n\n\n10:00"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#measuring-performance",
     "href": "slides/advanced-02-tuning-hyperparameters.html#measuring-performance",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Measuring Performance",
     "text": "Measuring Performance\nWe’ll compute two measures: mean absolute error and the coefficient of determination (a.k.a \\(R^2\\)).\n\\[\\begin{align}\nMAE &= \\frac{1}{n}\\sum_{i=1}^n |y_i - \\hat{y}_i| \\notag \\\\\nR^2 &= cor(y_i, \\hat{y}_i)^2\n\\end{align}\\]\nThe focus will be on MAE for parameter optimization. We’ll use a metric set to compute these:\n\nreg_metrics &lt;- metric_set(mae, rsq)"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#feature-engineering",
     "href": "slides/advanced-02-tuning-hyperparameters.html#feature-engineering",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Feature Engineering",
     "text": "Feature Engineering\nHow should we represent our predictors? There are:\n\nCategorical predictors, some with many levels\nSome skewed numeric predictor(s)\nInteractions?\n\n\nLet’s start a basic recipe:\n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_YeoJohnson(lead_time)\n\n\n\nWe’ll add to this for different types of models."
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#a-baseline-model",
     "href": "slides/advanced-02-tuning-hyperparameters.html#a-baseline-model",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "A Baseline Model",
     "text": "A Baseline Model\nA simple linear model with main effects\n\nset.seed(472)\nhotel_rs &lt;- vfold_cv(hotel_tr, strata = avg_price_per_room)\n\nbase_rec &lt;- \n  hotel_rec %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors())\n\nbase_wflow &lt;- workflow(base_rec, linear_reg())"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#a-baseline-model-1",
     "href": "slides/advanced-02-tuning-hyperparameters.html#a-baseline-model-1",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "A Baseline Model",
     "text": "A Baseline Model\nWe’ll try to optimize the mean absolute error:\n\nctrl_rs &lt;- control_resamples(save_pred = TRUE)\n\nbase_res &lt;- base_wflow %&gt;% fit_resamples(hotel_rs, metrics = reg_metrics)\n\ncollect_metrics(base_res)\n#&gt; # A tibble: 2 × 6\n#&gt;   .metric .estimator   mean     n std_err .config             \n#&gt;   &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 mae     standard   17.3      10 0.199   Preprocessor1_Model1\n#&gt; 2 rsq     standard    0.874    10 0.00400 Preprocessor1_Model1"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#tuning-parameters",
     "href": "slides/advanced-02-tuning-hyperparameters.html#tuning-parameters",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Tuning parameters",
     "text": "Tuning parameters\nSome model or preprocessing parameters cannot be estimated directly from the data.\n\nSome examples:\n\nTree depth in decision trees\nNumber of neighbors in a K-nearest neighbor model\nNumber of hashing features to retain"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#optimize-tuning-parameters",
     "href": "slides/advanced-02-tuning-hyperparameters.html#optimize-tuning-parameters",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Optimize tuning parameters",
     "text": "Optimize tuning parameters\n\nTry different values and measure their performance.\n\n\n\nFind good values for these parameters.\n\n\n\n\nOnce the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set."
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#boosted-trees",
     "href": "slides/advanced-02-tuning-hyperparameters.html#boosted-trees",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Boosted Trees",
     "text": "Boosted Trees\nThese are popular ensemble methods that build a sequence of tree models.\n\nEach tree uses the results of the previous tree to better predict samples, especially those that have been poorly predicted.\n\nEach tree in the ensemble is saved and new samples are predicted using a weighted average of the votes of each tree in the ensemble.\n\nWe’ll focus on the popular lightgbm implementation."
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#boosted-tree-tuning-parameters",
     "href": "slides/advanced-02-tuning-hyperparameters.html#boosted-tree-tuning-parameters",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Boosted Tree Tuning Parameters",
     "text": "Boosted Tree Tuning Parameters\n\nmtry: The number of predictors randomly sampled at each split (in \\([1, ncol(x)]\\) or \\((0, 1]\\)).\ntrees: The number of trees (\\([1, \\infty]\\), but usually up to thousands)\nmin_n: The number of samples needed to further split (\\([1, n]\\)).\nlearn_rate: The rate that each tree adapts from previous iterations (\\((0, \\infty]\\), usual maximum is 0.1).\nstop_iter: The number of iterations of boosting where no improvement was shown before stopping (\\([1, trees]\\))"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#boosted-tree-tuning-parameters-1",
     "href": "slides/advanced-02-tuning-hyperparameters.html#boosted-tree-tuning-parameters-1",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Boosted Tree Tuning Parameters",
     "text": "Boosted Tree Tuning Parameters\nTBH it is usually not difficult to optimize these models.\n\nOften, there are multiple candidate tuning parameter combinations that have very good results.\n\nTo demonstrate simple concepts, we’ll look at optimizing the number of trees in the ensemble (between 1 and 100) and the learning rate (\\(10^{-5}\\) to \\(10^{-1}\\))."
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#boosted-tree-tuning-parameters-2",
     "href": "slides/advanced-02-tuning-hyperparameters.html#boosted-tree-tuning-parameters-2",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Boosted Tree Tuning Parameters   ",
     "text": "Boosted Tree Tuning Parameters   \nWe’ll need to load the bonsai package. This has the information needed to use lightgbm\n\nlibrary(bonsai)\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#optimize-tuning-parameters-1",
     "href": "slides/advanced-02-tuning-hyperparameters.html#optimize-tuning-parameters-1",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Optimize tuning parameters",
     "text": "Optimize tuning parameters\nThe main two strategies for optimization are:\n\n\nGrid search 💠 which tests a pre-defined set of candidate values\nIterative search 🌀 which suggests/estimates new values of candidate parameters to evaluate"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#grid-search",
     "href": "slides/advanced-02-tuning-hyperparameters.html#grid-search",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Grid search",
     "text": "Grid search\nA small grid of points trying to minimize the error via learning rate:"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#grid-search-1",
     "href": "slides/advanced-02-tuning-hyperparameters.html#grid-search-1",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Grid search",
     "text": "Grid search\nIn reality we would probably sample the space more densely:"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#iterative-search",
     "href": "slides/advanced-02-tuning-hyperparameters.html#iterative-search",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Iterative Search",
     "text": "Iterative Search\nWe could start with a few points and search the space:"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#parameters",
     "href": "slides/advanced-02-tuning-hyperparameters.html#parameters",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Parameters",
     "text": "Parameters\n\nThe tidymodels framework provides pre-defined information on tuning parameters (such as their type, range, transformations, etc).\nThe extract_parameter_set_dials() function extracts these tuning parameters and the info.\n\n\n\nGrids\n\nCreate your grid manually or automatically.\nThe grid_*() functions can make a grid.\n\n\n\nMost basic (but very effective) way to tune models"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#create-a-grid",
     "href": "slides/advanced-02-tuning-hyperparameters.html#create-a-grid",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Create a grid  ",
     "text": "Create a grid  \n\nlgbm_wflow %&gt;% \n  extract_parameter_set_dials()\n#&gt; Collection of 2 parameters for tuning\n#&gt; \n#&gt;  identifier       type    object\n#&gt;       trees      trees nparam[+]\n#&gt;  learn_rate learn_rate nparam[+]\n\n# Individual functions: \ntrees()\n#&gt; # Trees (quantitative)\n#&gt; Range: [1, 2000]\nlearn_rate()\n#&gt; Learning Rate (quantitative)\n#&gt; Transformer: log-10 [1e-100, Inf]\n#&gt; Range (transformed scale): [-10, -1]\n\n\nA parameter set can be updated (e.g. to change the ranges)."
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#create-a-grid-1",
     "href": "slides/advanced-02-tuning-hyperparameters.html#create-a-grid-1",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Create a grid  ",
     "text": "Create a grid  \n\n\n\nset.seed(12)\ngrid &lt;- \n  lgbm_wflow %&gt;% \n  extract_parameter_set_dials() %&gt;% \n  grid_latin_hypercube(size = 25)\n\ngrid\n#&gt; # A tibble: 25 × 2\n#&gt;    trees learn_rate\n#&gt;    &lt;int&gt;      &lt;dbl&gt;\n#&gt;  1   510   4.40e- 6\n#&gt;  2    67   3.59e- 3\n#&gt;  3  1013   2.85e- 7\n#&gt;  4  1401   3.70e- 8\n#&gt;  5   453   1.44e-10\n#&gt;  6   768   5.78e- 5\n#&gt;  7  1226   5.57e- 2\n#&gt;  8  1564   7.02e- 3\n#&gt;  9   933   1.05e- 2\n#&gt; 10  1353   1.17e- 7\n#&gt; # ℹ 15 more rows\n\n\n\n\nA space-filling design like this tends to perform better than random grids.\nSpace-filling designs are also usually more efficient than regular grids."
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#your-turn-1",
     "href": "slides/advanced-02-tuning-hyperparameters.html#your-turn-1",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Your turn",
-    "text": "Your turn\n\nCreate a grid for our tunable workflow.\nTry creating a regular grid.\n\n\n\n−+\n03:00"
+    "text": "Your turn\n\nCreate a grid for our tunable workflow.\nTry creating a regular grid.\n\n\n\n03:00"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#create-a-grid-2",
     "href": "slides/advanced-02-tuning-hyperparameters.html#create-a-grid-2",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Create a grid  ",
     "text": "Create a grid  \n\nset.seed(12)\ngrid &lt;- \n  lgbm_wflow %&gt;% \n  extract_parameter_set_dials() %&gt;% \n  grid_regular(levels = 25)\n\ngrid\n#&gt; # A tibble: 625 × 2\n#&gt;    trees   learn_rate\n#&gt;    &lt;int&gt;        &lt;dbl&gt;\n#&gt;  1     1 0.0000000001\n#&gt;  2    84 0.0000000001\n#&gt;  3   167 0.0000000001\n#&gt;  4   250 0.0000000001\n#&gt;  5   334 0.0000000001\n#&gt;  6   417 0.0000000001\n#&gt;  7   500 0.0000000001\n#&gt;  8   584 0.0000000001\n#&gt;  9   667 0.0000000001\n#&gt; 10   750 0.0000000001\n#&gt; # ℹ 615 more rows\n\n\nNote that even though we requested 25x25=625 rows, we only got 15x15=225 back, since the deg_free parameters only have a range of 1-&gt;15."
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#update-parameter-ranges",
     "href": "slides/advanced-02-tuning-hyperparameters.html#update-parameter-ranges",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Update parameter ranges  ",
     "text": "Update parameter ranges  \n\nlgbm_param &lt;- \n  lgbm_wflow %&gt;% \n  extract_parameter_set_dials() %&gt;% \n  update(trees = trees(c(1L, 100L)),\n         learn_rate = learn_rate(c(-5, -1)))\n\nset.seed(121)\ngrid &lt;- \n  lgbm_param %&gt;% \n  grid_latin_hypercube(size = 25)\n\ngrid\n#&gt; # A tibble: 25 × 2\n#&gt;    trees learn_rate\n#&gt;    &lt;int&gt;      &lt;dbl&gt;\n#&gt;  1    17  0.00756  \n#&gt;  2    35  0.0000339\n#&gt;  3    77  0.000112 \n#&gt;  4    43  0.00124  \n#&gt;  5    58  0.0230   \n#&gt;  6     6  0.000471 \n#&gt;  7    91  0.000326 \n#&gt;  8    88  0.00899  \n#&gt;  9    15  0.00112  \n#&gt; 10    24  0.0777   \n#&gt; # ℹ 15 more rows"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#the-results",
     "href": "slides/advanced-02-tuning-hyperparameters.html#the-results",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "The results  ",
     "text": "The results  \n\n\ngrid %&gt;% \n  ggplot(aes(trees, learn_rate)) +\n  geom_point(size = 4) +\n  scale_y_log10()\n\n\n\n\n\n\n\n\n\n\nNote that the learning rates are uniform on the log-10 scale."
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#choosing-tuning-parameters",
     "href": "slides/advanced-02-tuning-hyperparameters.html#choosing-tuning-parameters",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Choosing tuning parameters     ",
-    "text": "Choosing tuning parameters     \nLet’s take our previous model and add more parameters:\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(), mtry = tune(), \n             min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)"
+    "text": "Choosing tuning parameters     \nLet’s take our previous model and tune more parameters:\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(), mtry = tune(), \n             min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#grid-search-3",
     "href": "slides/advanced-02-tuning-hyperparameters.html#grid-search-3",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Grid Search   ",
     "text": "Grid Search   \n\nset.seed(9)\nctrl &lt;- control_grid(save_pred = TRUE, parallel_over = \"everything\")\n\nlgbm_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_grid(\n    resamples = hotel_rs,\n    grid = 25,\n    control = ctrl,\n    metrics = reg_metrics\n  )\n\n\n\ntune_grid() is representative of tuning function syntax\nsimilar to fit_resamples()"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#grid-search-4",
     "href": "slides/advanced-02-tuning-hyperparameters.html#grid-search-4",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Grid Search   ",
     "text": "Grid Search   \n\nlgbm_res\n#&gt; # Tuning results\n#&gt; # 10-fold cross-validation using stratification \n#&gt; # A tibble: 10 × 5\n#&gt;    splits             id     .metrics          .notes           .predictions        \n#&gt;    &lt;list&gt;             &lt;chr&gt;  &lt;list&gt;            &lt;list&gt;           &lt;list&gt;              \n#&gt;  1 &lt;split [3372/377]&gt; Fold01 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,425 × 8]&gt;\n#&gt;  2 &lt;split [3373/376]&gt; Fold02 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  3 &lt;split [3373/376]&gt; Fold03 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  4 &lt;split [3373/376]&gt; Fold04 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  5 &lt;split [3373/376]&gt; Fold05 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,400 × 8]&gt;\n#&gt;  6 &lt;split [3374/375]&gt; Fold06 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,375 × 8]&gt;\n#&gt;  7 &lt;split [3375/374]&gt; Fold07 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,350 × 8]&gt;\n#&gt;  8 &lt;split [3376/373]&gt; Fold08 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,325 × 8]&gt;\n#&gt;  9 &lt;split [3376/373]&gt; Fold09 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,325 × 8]&gt;\n#&gt; 10 &lt;split [3376/373]&gt; Fold10 &lt;tibble [50 × 8]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [9,325 × 8]&gt;"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#grid-results",
     "href": "slides/advanced-02-tuning-hyperparameters.html#grid-results",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Grid results ",
     "text": "Grid results \n\nautoplot(lgbm_res)"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#tuning-results",
     "href": "slides/advanced-02-tuning-hyperparameters.html#tuning-results",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Tuning results ",
-    "text": "Tuning results \n\ncollect_metrics(lgbm_res)\n#&gt; # A tibble: 50 × 10\n#&gt;     mtry trees min_n   learn_rate .metric .estimator   mean     n std_err .config              \n#&gt;    &lt;int&gt; &lt;int&gt; &lt;int&gt;        &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                \n#&gt;  1     1  1632     3 0.0000000262 mae     standard   53.2      10 0.427   Preprocessor1_Model01\n#&gt;  2     1  1632     3 0.0000000262 rsq     standard    0.734    10 0.00749 Preprocessor1_Model01\n#&gt;  3     3   935    37 0.0780       mae     standard   11.1      10 0.155   Preprocessor1_Model02\n#&gt;  4     3   935    37 0.0780       rsq     standard    0.936    10 0.00272 Preprocessor1_Model02\n#&gt;  5     4   663    33 0.00000396   mae     standard   53.1      10 0.426   Preprocessor1_Model03\n#&gt;  6     4   663    33 0.00000396   rsq     standard    0.841    10 0.00516 Preprocessor1_Model03\n#&gt;  7     5   532    27 0.00000816   mae     standard   53.1      10 0.425   Preprocessor1_Model04\n#&gt;  8     5   532    27 0.00000816   rsq     standard    0.857    10 0.00502 Preprocessor1_Model04\n#&gt;  9     6  1166     5 0.000104     mae     standard   48.5      10 0.389   Preprocessor1_Model05\n#&gt; 10     6  1166     5 0.000104     rsq     standard    0.859    10 0.00456 Preprocessor1_Model05\n#&gt; # ℹ 40 more rows"
+    "text": "Tuning results \n\ncollect_metrics(lgbm_res)\n#&gt; # A tibble: 50 × 10\n#&gt;     mtry trees min_n   learn_rate .metric .estimator   mean     n std_err .config              \n#&gt;    &lt;int&gt; &lt;int&gt; &lt;int&gt;        &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                \n#&gt;  1     1  1632     3 0.0000000262 mae     standard   53.2      10 0.427   Preprocessor1_Model01\n#&gt;  2     1  1632     3 0.0000000262 rsq     standard    0.734    10 0.00879 Preprocessor1_Model01\n#&gt;  3     3   935    37 0.0780       mae     standard   11.1      10 0.237   Preprocessor1_Model02\n#&gt;  4     3   935    37 0.0780       rsq     standard    0.937    10 0.00324 Preprocessor1_Model02\n#&gt;  5     4   663    33 0.00000396   mae     standard   53.1      10 0.426   Preprocessor1_Model03\n#&gt;  6     4   663    33 0.00000396   rsq     standard    0.842    10 0.00534 Preprocessor1_Model03\n#&gt;  7     5   532    27 0.00000816   mae     standard   53.1      10 0.425   Preprocessor1_Model04\n#&gt;  8     5   532    27 0.00000816   rsq     standard    0.857    10 0.00496 Preprocessor1_Model04\n#&gt;  9     6  1166     5 0.000104     mae     standard   48.5      10 0.382   Preprocessor1_Model05\n#&gt; 10     6  1166     5 0.000104     rsq     standard    0.855    10 0.00522 Preprocessor1_Model05\n#&gt; # ℹ 40 more rows"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#tuning-results-1",
     "href": "slides/advanced-02-tuning-hyperparameters.html#tuning-results-1",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Tuning results ",
-    "text": "Tuning results \n\ncollect_metrics(lgbm_res, summarize = FALSE)\n#&gt; # A tibble: 500 × 9\n#&gt;    id      mtry trees min_n   learn_rate .metric .estimator .estimate .config              \n#&gt;    &lt;chr&gt;  &lt;int&gt; &lt;int&gt; &lt;int&gt;        &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;                \n#&gt;  1 Fold01     1  1632     3 0.0000000262 mae     standard      51.8   Preprocessor1_Model01\n#&gt;  2 Fold01     1  1632     3 0.0000000262 rsq     standard       0.773 Preprocessor1_Model01\n#&gt;  3 Fold02     1  1632     3 0.0000000262 mae     standard      52.1   Preprocessor1_Model01\n#&gt;  4 Fold02     1  1632     3 0.0000000262 rsq     standard       0.742 Preprocessor1_Model01\n#&gt;  5 Fold03     1  1632     3 0.0000000262 mae     standard      52.2   Preprocessor1_Model01\n#&gt;  6 Fold03     1  1632     3 0.0000000262 rsq     standard       0.737 Preprocessor1_Model01\n#&gt;  7 Fold04     1  1632     3 0.0000000262 mae     standard      51.7   Preprocessor1_Model01\n#&gt;  8 Fold04     1  1632     3 0.0000000262 rsq     standard       0.702 Preprocessor1_Model01\n#&gt;  9 Fold05     1  1632     3 0.0000000262 mae     standard      55.2   Preprocessor1_Model01\n#&gt; 10 Fold05     1  1632     3 0.0000000262 rsq     standard       0.771 Preprocessor1_Model01\n#&gt; # ℹ 490 more rows"
+    "text": "Tuning results \n\ncollect_metrics(lgbm_res, summarize = FALSE)\n#&gt; # A tibble: 500 × 9\n#&gt;    id      mtry trees min_n   learn_rate .metric .estimator .estimate .config              \n#&gt;    &lt;chr&gt;  &lt;int&gt; &lt;int&gt; &lt;int&gt;        &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;                \n#&gt;  1 Fold01     1  1632     3 0.0000000262 mae     standard      51.8   Preprocessor1_Model01\n#&gt;  2 Fold01     1  1632     3 0.0000000262 rsq     standard       0.789 Preprocessor1_Model01\n#&gt;  3 Fold02     1  1632     3 0.0000000262 mae     standard      52.1   Preprocessor1_Model01\n#&gt;  4 Fold02     1  1632     3 0.0000000262 rsq     standard       0.740 Preprocessor1_Model01\n#&gt;  5 Fold03     1  1632     3 0.0000000262 mae     standard      52.2   Preprocessor1_Model01\n#&gt;  6 Fold03     1  1632     3 0.0000000262 rsq     standard       0.734 Preprocessor1_Model01\n#&gt;  7 Fold04     1  1632     3 0.0000000262 mae     standard      51.7   Preprocessor1_Model01\n#&gt;  8 Fold04     1  1632     3 0.0000000262 rsq     standard       0.693 Preprocessor1_Model01\n#&gt;  9 Fold05     1  1632     3 0.0000000262 mae     standard      55.2   Preprocessor1_Model01\n#&gt; 10 Fold05     1  1632     3 0.0000000262 rsq     standard       0.765 Preprocessor1_Model01\n#&gt; # ℹ 490 more rows"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#choose-a-parameter-combination",
     "href": "slides/advanced-02-tuning-hyperparameters.html#choose-a-parameter-combination",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Choose a parameter combination ",
-    "text": "Choose a parameter combination \n\nshow_best(lgbm_res, metric = \"rsq\")\n#&gt; # A tibble: 5 × 10\n#&gt;    mtry trees min_n learn_rate .metric .estimator  mean     n std_err .config              \n#&gt;   &lt;int&gt; &lt;int&gt; &lt;int&gt;      &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                \n#&gt; 1    13  1309    13    0.0127  rsq     standard   0.940    10 0.00335 Preprocessor1_Model12\n#&gt; 2    14  1895    24    0.00730 rsq     standard   0.939    10 0.00310 Preprocessor1_Model13\n#&gt; 3    19   581    28    0.0231  rsq     standard   0.937    10 0.00315 Preprocessor1_Model18\n#&gt; 4     3   935    37    0.0780  rsq     standard   0.936    10 0.00272 Preprocessor1_Model02\n#&gt; 5    26  1094    17    0.00242 rsq     standard   0.918    10 0.00396 Preprocessor1_Model25"
+    "text": "Choose a parameter combination \n\nshow_best(lgbm_res, metric = \"rsq\")\n#&gt; # A tibble: 5 × 10\n#&gt;    mtry trees min_n learn_rate .metric .estimator  mean     n std_err .config              \n#&gt;   &lt;int&gt; &lt;int&gt; &lt;int&gt;      &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                \n#&gt; 1    13  1309    13    0.0127  rsq     standard   0.940    10 0.00326 Preprocessor1_Model12\n#&gt; 2    14  1895    24    0.00730 rsq     standard   0.939    10 0.00311 Preprocessor1_Model13\n#&gt; 3    19   581    28    0.0231  rsq     standard   0.938    10 0.00289 Preprocessor1_Model18\n#&gt; 4     3   935    37    0.0780  rsq     standard   0.937    10 0.00324 Preprocessor1_Model02\n#&gt; 5    26  1094    17    0.00242 rsq     standard   0.918    10 0.00401 Preprocessor1_Model25"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#choose-a-parameter-combination-1",
     "href": "slides/advanced-02-tuning-hyperparameters.html#choose-a-parameter-combination-1",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Choose a parameter combination ",
     "text": "Choose a parameter combination \nCreate your own tibble for final parameters or use one of the tune::select_*() functions:\n\nlgbm_best &lt;- select_best(lgbm_res, metric = \"mae\")\nlgbm_best\n#&gt; # A tibble: 1 × 5\n#&gt;    mtry trees min_n learn_rate .config              \n#&gt;   &lt;int&gt; &lt;int&gt; &lt;int&gt;      &lt;dbl&gt; &lt;chr&gt;                \n#&gt; 1    13  1309    13     0.0127 Preprocessor1_Model12"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#checking-calibration",
     "href": "slides/advanced-02-tuning-hyperparameters.html#checking-calibration",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Checking Calibration  ",
     "text": "Checking Calibration  \n\n\nlibrary(probably)\nlgbm_res %&gt;%\n  collect_predictions(\n    parameters = lgbm_best\n  ) %&gt;%\n  cal_plot_regression(\n    truth = avg_price_per_room,\n    estimate = .pred,\n    alpha = 1 / 3\n  )"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#updating-the-workflow",
     "href": "slides/advanced-02-tuning-hyperparameters.html#updating-the-workflow",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Updating the Workflow",
     "text": "Updating the Workflow\nIf we like this model, we might want to splice the best tuning parameter values into our lgbm_wflow object.\nThere is a function for that:\n\nlgbm_wflow &lt;- lgbm_wflow %&gt;% finalize_workflow(lgbm_best)\nlgbm_wflow\n#&gt; ══ Workflow ══════════════════════════════════════════════════════════\n#&gt; Preprocessor: Recipe\n#&gt; Model: boost_tree()\n#&gt; \n#&gt; ── Preprocessor ──────────────────────────────────────────────────────\n#&gt; 1 Recipe Step\n#&gt; \n#&gt; • step_YeoJohnson()\n#&gt; \n#&gt; ── Model ─────────────────────────────────────────────────────────────\n#&gt; Boosted Tree Model Specification (regression)\n#&gt; \n#&gt; Main Arguments:\n#&gt;   mtry = 13\n#&gt;   trees = 1309\n#&gt;   min_n = 13\n#&gt;   learn_rate = 0.012739722191806\n#&gt; \n#&gt; Computational engine: lightgbm"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#running-in-parallel",
     "href": "slides/advanced-02-tuning-hyperparameters.html#running-in-parallel",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Running in parallel",
     "text": "Running in parallel\n\n\n\nGrid search, combined with resampling, requires fitting a lot of models!\nThese models don’t depend on one another and can be run in parallel.\n\nWe can use a parallel backend to do this:\n\ncores &lt;- parallelly::availableCores(logical = FALSE)\ncl &lt;- parallel::makePSOCKcluster(cores)\ndoParallel::registerDoParallel(cl)\n\n# Now call `tune_grid()`!\n\n# Shut it down with:\nforeach::registerDoSEQ()\nparallel::stopCluster(cl)"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#running-in-parallel-1",
     "href": "slides/advanced-02-tuning-hyperparameters.html#running-in-parallel-1",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Running in parallel",
     "text": "Running in parallel\nSpeed-ups are fairly linear up to the number of physical cores (10 here).\n\n\nFaceted on the expensiveness of preprocessing used."
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#your-turn-2",
     "href": "slides/advanced-02-tuning-hyperparameters.html#your-turn-2",
-    "title": "1 - Tuning Hyperparameters",
+    "title": "2 - Tuning Hyperparameters",
     "section": "Your turn",
-    "text": "Your turn\n\n\nWe just tuned the model over the number of trees in the ensemble.\nWhat if we set a specific number of trees and tuned the “early stopping” parameters?\n\nHow many iterations of worst performance before we stop adding new trees?\n\nThis is an alternate approach to tuning these models.\nWe could set trees = 1000 and tune the stop_iter parameter.\n\n\n\n−+\n10:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Your turn\n\n\nWe just tuned the model over the number of trees in the ensemble.\nWhat if we set a specific number of trees and tuned the “early stopping” parameters?\n\nHow many iterations of worst performance before we stop adding new trees?\n\nThis is an alternate approach to tuning these models.\nWe could set trees = 1000 and tune the stop_iter parameter.\n\n\n\n10:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/02-data-budget.html#data-on-chicago-taxi-trips",
+    "href": "slides/02-data-budget.html#data-on-chicago-taxi-trips",
+    "title": "2 - Your data budget",
+    "section": "Data on Chicago taxi trips",
+    "text": "Data on Chicago taxi trips\n\n\n\nThe city of Chicago releases anonymized trip-level data on taxi trips in the city.\nWe pulled a sample of 10,000 rides occurring in early 2022.\nType ?modeldatatoo::data_taxi() to learn more about this dataset, including references.\n\n\n\n\n\n\nCredit: https://www.svgrepo.com/svg/8322/taxi"
+  },
+  {
+    "objectID": "slides/02-data-budget.html#data-on-chicago-taxi-trips-1",
+    "href": "slides/02-data-budget.html#data-on-chicago-taxi-trips-1",
+    "title": "2 - Your data budget",
+    "section": "Data on Chicago taxi trips",
+    "text": "Data on Chicago taxi trips\n\nWe are using a slightly modified version from the modeldatatoo data.\n\n\nlibrary(tidymodels)\nlibrary(modeldatatoo)\n\ntaxi &lt;- data_taxi()\n\ntaxi &lt;- taxi %&gt;%\n  mutate(month = factor(month, levels = c(\"Jan\", \"Feb\", \"Mar\", \"Apr\"))) %&gt;% \n  select(-c(id, duration, fare, tolls, extras, total_cost, payment_type)) %&gt;% \n  drop_na()"
+  },
+  {
+    "objectID": "slides/02-data-budget.html#data-on-chicago-taxi-trips-2",
+    "href": "slides/02-data-budget.html#data-on-chicago-taxi-trips-2",
+    "title": "2 - Your data budget",
+    "section": "Data on Chicago taxi trips",
+    "text": "Data on Chicago taxi trips\n\n\n\nN = 10,000\nA nominal outcome, tip, with levels \"yes\" and \"no\"\n6 other variables\n\ncompany, local, and dow, and month are nominal predictors\ndistance and hours are numeric predictors\n\n\n\n\n\n\n\nCredit: https://unsplash.com/photos/7_r85l4eht8\n\n\ntip: Whether the rider left a tip. A factor with levels “yes” and “no”.\ndistance: The trip distance, in odometer miles.\ncompany: The taxi company, as a factor. Companies that occurred few times were binned as “other”.\nlocal: Whether the trip started in the same community area as it began. See the source data for community area values.\ndow: The day of the week in which the trip began, as a factor.\nmonth: The month in which the trip began, as a factor.\nhour: The hour of the day in which the trip began, as a numeric."
+  },
+  {
+    "objectID": "slides/02-data-budget.html#data-on-chicago-taxi-trips-3",
+    "href": "slides/02-data-budget.html#data-on-chicago-taxi-trips-3",
+    "title": "2 - Your data budget",
+    "section": "Data on Chicago taxi trips",
+    "text": "Data on Chicago taxi trips\n\ntaxi\n#&gt; # A tibble: 8,807 × 7\n#&gt;    tip   distance company      local dow   month  hour\n#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;        &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;\n#&gt;  1 yes       1.24 Sun Taxi     no    Thu   Feb      13\n#&gt;  2 no        5.39 Flash Cab    no    Sat   Mar      12\n#&gt;  3 yes       3.01 City Service no    Wed   Feb      17\n#&gt;  4 no       18.4  Sun Taxi     no    Sat   Apr       6\n#&gt;  5 yes       1.76 Sun Taxi     no    Sun   Jan      15\n#&gt;  6 yes      13.6  Sun Taxi     no    Mon   Feb      17\n#&gt;  7 yes       3.71 City Service no    Mon   Mar      21\n#&gt;  8 yes       4.8  other        no    Tue   Mar       9\n#&gt;  9 yes      18.0  City Service no    Fri   Jan      19\n#&gt; 10 no       17.5  other        yes   Thu   Apr      12\n#&gt; # ℹ 8,797 more rows"
+  },
+  {
+    "objectID": "slides/02-data-budget.html#section-8",
+    "href": "slides/02-data-budget.html#section-8",
+    "title": "2 - Your data budget",
+    "section": "",
+    "text": "Stratified sampling would split within response values\n\nBased on our EDA, we know that the source data contains fewer \"no\" tip values than \"yes\". We want to make sure we allot equal proportions of those responses so that both the training and testing data have enough of each to give accurate estimates."
+  },
+  {
+    "objectID": "slides/02-data-budget.html#stratification-1",
+    "href": "slides/02-data-budget.html#stratification-1",
+    "title": "2 - Your data budget",
+    "section": "Stratification",
+    "text": "Stratification\nStratification often helps, with very little downside\n\n\n\nhttps://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#working-with-our-predictors",
+    "href": "slides/advanced-01-feature-engineering.html#working-with-our-predictors",
+    "title": "1 - Feature Engineering",
+    "section": "Working with our predictors",
+    "text": "Working with our predictors\nWe might want to modify our predictors columns for a few reasons:\n\n\nThe model requires them in a different format (e.g. dummy variables for lm()).\nThe model needs certain data qualities (e.g. same units for K-NN).\nThe outcome is better predicted when one or more columns are transformed in some way (a.k.a “feature engineering”).\n\n\n\nThe first two reasons are fairly predictable (next page).\nThe last one depends on your modeling problem."
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#what-is-feature-engineering",
+    "href": "slides/advanced-01-feature-engineering.html#what-is-feature-engineering",
+    "title": "1 - Feature Engineering",
+    "section": "What is feature engineering?",
+    "text": "What is feature engineering?\nThink of a feature as some representation of a predictor that will be used in a model.\n\nExample representations:\n\nInteractions\nPolynomial expansions/splines\nPrincipal component analysis (PCA) feature extraction\n\nThere are a lot of examples in Feature Engineering and Selection (FES)."
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#example-dates",
+    "href": "slides/advanced-01-feature-engineering.html#example-dates",
+    "title": "1 - Feature Engineering",
+    "section": "Example: Dates",
+    "text": "Example: Dates\nHow can we represent date columns for our model?\n\nWhen a date column is used in its native format, it is usually converted by an R model to an integer.\n\n\nIt can be re-engineered as:\n\nDays since a reference date\nDay of the week\nMonth\nYear\nIndicators for holidays\n\n\nThe main point is that we try to maximize performance with different versions of the predictors.\nMention that, for the Chicago data, the day or the week features are usually the most important ones in the model."
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#general-definitions",
+    "href": "slides/advanced-01-feature-engineering.html#general-definitions",
+    "title": "1 - Feature Engineering",
+    "section": "General definitions ",
+    "text": "General definitions \n\nData preprocessing steps allow your model to fit.\nFeature engineering steps help the model do the least work to predict the outcome as well as possible.\n\nThe recipes package can handle both!\n\nThese terms are often used interchangeably in the ML community but we want to distinguish them."
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#hotel-data",
+    "href": "slides/advanced-01-feature-engineering.html#hotel-data",
+    "title": "1 - Feature Engineering",
+    "section": "Hotel Data",
+    "text": "Hotel Data\nWe’ll use data on hotels to predict the cost of a room.\nThe data are in the modeldatatoo package. We’ll sample down the data and refactor some columns:\n\n\n\nlibrary(tidymodels)\nlibrary(modeldatatoo)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\n\n\nset.seed(295)\nhotel_rates &lt;- \n  data_hotel_rates() %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date_num, -arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#data-splitting-strategy",
+    "href": "slides/advanced-01-feature-engineering.html#data-splitting-strategy",
+    "title": "1 - Feature Engineering",
+    "section": "Data splitting strategy",
+    "text": "Data splitting strategy"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#data-spending",
+    "href": "slides/advanced-01-feature-engineering.html#data-spending",
+    "title": "1 - Feature Engineering",
+    "section": "Data Spending",
+    "text": "Data Spending\nLet’s split the data into a training set (75%) and testing set (25%):\n\nset.seed(4028)\nhotel_split &lt;-\n  initial_split(hotel_rates, strata = avg_price_per_room)\n\nhotel_tr &lt;- training(hotel_split)\nhotel_te &lt;- testing(hotel_split)"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#your-turn",
+    "href": "slides/advanced-01-feature-engineering.html#your-turn",
+    "title": "1 - Feature Engineering",
+    "section": "Your turn",
+    "text": "Your turn\nLet’s take some time and investigate the training data. The outcome is avg_price_per_room.\nAre there any characteristics of the data that are interesting?\n\n\n\n10:00"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#resampling-strategy",
+    "href": "slides/advanced-01-feature-engineering.html#resampling-strategy",
+    "title": "1 - Feature Engineering",
+    "section": "Resampling Strategy",
+    "text": "Resampling Strategy"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#resampling-strategy-1",
+    "href": "slides/advanced-01-feature-engineering.html#resampling-strategy-1",
+    "title": "1 - Feature Engineering",
+    "section": "Resampling Strategy",
+    "text": "Resampling Strategy\nWe’ll use simple 10-fold cross-validation (stratified sampling):\n\nset.seed(472)\nhotel_rs &lt;- vfold_cv(hotel_tr, strata = avg_price_per_room)\nhotel_rs\n#&gt; #  10-fold cross-validation using stratification \n#&gt; # A tibble: 10 × 2\n#&gt;    splits             id    \n#&gt;    &lt;list&gt;             &lt;chr&gt; \n#&gt;  1 &lt;split [3372/377]&gt; Fold01\n#&gt;  2 &lt;split [3373/376]&gt; Fold02\n#&gt;  3 &lt;split [3373/376]&gt; Fold03\n#&gt;  4 &lt;split [3373/376]&gt; Fold04\n#&gt;  5 &lt;split [3373/376]&gt; Fold05\n#&gt;  6 &lt;split [3374/375]&gt; Fold06\n#&gt;  7 &lt;split [3375/374]&gt; Fold07\n#&gt;  8 &lt;split [3376/373]&gt; Fold08\n#&gt;  9 &lt;split [3376/373]&gt; Fold09\n#&gt; 10 &lt;split [3376/373]&gt; Fold10"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#prepare-your-data-for-modeling",
+    "href": "slides/advanced-01-feature-engineering.html#prepare-your-data-for-modeling",
+    "title": "1 - Feature Engineering",
+    "section": "Prepare your data for modeling ",
+    "text": "Prepare your data for modeling \n\nThe recipes package is an extensible framework for pipeable sequences of feature engineering steps that provide preprocessing tools to be applied to data.\n\n\n\nStatistical parameters for the steps can be estimated from an initial data set and then applied to other data sets.\n\n\n\n\nThe resulting processed output can be used as inputs for statistical or machine learning models."
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#a-first-recipe",
+    "href": "slides/advanced-01-feature-engineering.html#a-first-recipe",
+    "title": "1 - Feature Engineering",
+    "section": "A first recipe ",
+    "text": "A first recipe \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr)\n\n\n\nThe recipe() function assigns columns to roles of “outcome” or “predictor” using the formula"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#a-first-recipe-1",
+    "href": "slides/advanced-01-feature-engineering.html#a-first-recipe-1",
+    "title": "1 - Feature Engineering",
+    "section": "A first recipe ",
+    "text": "A first recipe \n\nsummary(hotel_rec)\n#&gt; # A tibble: 28 × 4\n#&gt;    variable                  type      role      source  \n#&gt;    &lt;chr&gt;                     &lt;list&gt;    &lt;chr&gt;     &lt;chr&gt;   \n#&gt;  1 lead_time                 &lt;chr [2]&gt; predictor original\n#&gt;  2 arrival_date_day_of_month &lt;chr [2]&gt; predictor original\n#&gt;  3 stays_in_weekend_nights   &lt;chr [2]&gt; predictor original\n#&gt;  4 stays_in_week_nights      &lt;chr [2]&gt; predictor original\n#&gt;  5 adults                    &lt;chr [2]&gt; predictor original\n#&gt;  6 children                  &lt;chr [2]&gt; predictor original\n#&gt;  7 babies                    &lt;chr [2]&gt; predictor original\n#&gt;  8 meal                      &lt;chr [3]&gt; predictor original\n#&gt;  9 country                   &lt;chr [3]&gt; predictor original\n#&gt; 10 market_segment            &lt;chr [3]&gt; predictor original\n#&gt; # ℹ 18 more rows\n\nThe type column contains information on the variables"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#create-indicator-variables",
+    "href": "slides/advanced-01-feature-engineering.html#create-indicator-variables",
+    "title": "1 - Feature Engineering",
+    "section": "Create indicator variables ",
+    "text": "Create indicator variables \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_dummy(all_nominal_predictors())\n\n\n\nFor any factor or character predictors, make binary indicators.\nThere are many recipe steps that can convert categorical predictors to numeric columns."
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#filter-out-constant-columns",
+    "href": "slides/advanced-01-feature-engineering.html#filter-out-constant-columns",
+    "title": "1 - Feature Engineering",
+    "section": "Filter out constant columns ",
+    "text": "Filter out constant columns \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors())\n\n\nIn case there is a factor level that was never observed in the training data (resulting in a column of all 0s), we can delete any zero-variance predictors that have a single unique value.\n\nNote that the selector chooses all columns with a role of “predictor”"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#normalization",
+    "href": "slides/advanced-01-feature-engineering.html#normalization",
+    "title": "1 - Feature Engineering",
+    "section": "Normalization ",
+    "text": "Normalization \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors()) %&gt;% \n  step_normalize(all_numeric_predictors())\n\n\n\nThis centers and scales the numeric predictors.\nThe recipe will use the training set to estimate the means and standard deviations of the data.\n\n\n\n\nAll data the recipe is applied to will be normalized using those statistics (there is no re-estimation)."
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#reduce-correlation",
+    "href": "slides/advanced-01-feature-engineering.html#reduce-correlation",
+    "title": "1 - Feature Engineering",
+    "section": "Reduce correlation ",
+    "text": "Reduce correlation \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors()) %&gt;% \n  step_normalize(all_numeric_predictors()) %&gt;% \n  step_corr(all_numeric_predictors(), threshold = 0.9)\n\n\nTo deal with highly correlated predictors, find the minimum set of predictor columns that make the pairwise correlations less than the threshold."
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#other-possible-steps",
+    "href": "slides/advanced-01-feature-engineering.html#other-possible-steps",
+    "title": "1 - Feature Engineering",
+    "section": "Other possible steps ",
+    "text": "Other possible steps \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors()) %&gt;% \n  step_normalize(all_numeric_predictors()) %&gt;% \n  step_pca(all_numeric_predictors())\n\n\nPCA feature extraction…"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#other-possible-steps-1",
+    "href": "slides/advanced-01-feature-engineering.html#other-possible-steps-1",
+    "title": "1 - Feature Engineering",
+    "section": "Other possible steps  ",
+    "text": "Other possible steps  \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors()) %&gt;% \n  step_normalize(all_numeric_predictors()) %&gt;% \n  embed::step_umap(all_numeric_predictors(), outcome = avg_price_per_room)\n\n\nA fancy machine learning supervised dimension reduction technique…\n\nNote that this uses the outcome, and it is from an extension package"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#other-possible-steps-2",
+    "href": "slides/advanced-01-feature-engineering.html#other-possible-steps-2",
+    "title": "1 - Feature Engineering",
+    "section": "Other possible steps ",
+    "text": "Other possible steps \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors()) %&gt;% \n  step_normalize(all_numeric_predictors()) %&gt;% \n  step_spline_natural(year_day, deg_free = 10)\n\n\nNonlinear transforms like natural splines, and so on!"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#your-turn-1",
+    "href": "slides/advanced-01-feature-engineering.html#your-turn-1",
+    "title": "1 - Feature Engineering",
+    "section": "Your turn",
+    "text": "Your turn\nThat do you think are in the type columns for the lead_time and country columns?\n\n\n\n02:00"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#minimal-recipe",
+    "href": "slides/advanced-01-feature-engineering.html#minimal-recipe",
+    "title": "1 - Feature Engineering",
+    "section": "Minimal recipe ",
+    "text": "Minimal recipe \n\nhotel_indicators &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_YeoJohnson(lead_time) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors())"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#using-a-workflow",
+    "href": "slides/advanced-01-feature-engineering.html#using-a-workflow",
+    "title": "1 - Feature Engineering",
+    "section": "Using a workflow    ",
+    "text": "Using a workflow    \n\nset.seed(9)\n\nhotel_lm_wflow &lt;-\n  workflow() %&gt;%\n  add_recipe(hotel_indicators) %&gt;%\n  add_model(linear_reg())\n \nctrl &lt;- control_resamples(save_pred = TRUE)\nhotel_lm_res &lt;-\n  hotel_lm_wflow %&gt;%\n  fit_resamples(hotel_rs, control = ctrl)\n\ncollect_metrics(hotel_lm_res)\n#&gt; # A tibble: 2 × 6\n#&gt;   .metric .estimator   mean     n std_err .config             \n#&gt;   &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 rmse    standard   23.4      10 0.304   Preprocessor1_Model1\n#&gt; 2 rsq     standard    0.874    10 0.00400 Preprocessor1_Model1"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#your-turn-2",
+    "href": "slides/advanced-01-feature-engineering.html#your-turn-2",
+    "title": "1 - Feature Engineering",
+    "section": "Your turn",
+    "text": "Your turn\n\nCreate a recipe() for the hotel data to :\n\nuse a Yeo-Johnson (YJ) transformation on lead_time\nconvert factors to indicator variables\nremove zero-variance variables\n\n\n\n\n03:00"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#holdout-predictions",
+    "href": "slides/advanced-01-feature-engineering.html#holdout-predictions",
+    "title": "1 - Feature Engineering",
+    "section": "Holdout predictions    ",
+    "text": "Holdout predictions    \n\n# Since we used `save_pred = TRUE`\nlm_val_pred &lt;- collect_predictions(hotel_lm_res)\nlm_val_pred %&gt;% slice(1:7)\n#&gt; # A tibble: 7 × 5\n#&gt;   id     .pred  .row avg_price_per_room .config             \n#&gt;   &lt;chr&gt;  &lt;dbl&gt; &lt;int&gt;              &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 Fold01  62.1    20                 40 Preprocessor1_Model1\n#&gt; 2 Fold01  48.0    28                 54 Preprocessor1_Model1\n#&gt; 3 Fold01  64.6    45                 50 Preprocessor1_Model1\n#&gt; 4 Fold01  45.8    49                 42 Preprocessor1_Model1\n#&gt; 5 Fold01  45.8    61                 49 Preprocessor1_Model1\n#&gt; 6 Fold01  30.0    66                 40 Preprocessor1_Model1\n#&gt; 7 Fold01  38.8    88                 49 Preprocessor1_Model1"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#calibration",
+    "href": "slides/advanced-01-feature-engineering.html#calibration",
+    "title": "1 - Feature Engineering",
+    "section": "Calibration",
+    "text": "Calibration\n\nlibrary(probably)\n\nlm_val_pred %&gt;% cal_plot_regression(avg_price_per_room, .pred, alpha = 1 / 5)"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#what-do-we-do-with-the-agent-and-company-data",
+    "href": "slides/advanced-01-feature-engineering.html#what-do-we-do-with-the-agent-and-company-data",
+    "title": "1 - Feature Engineering",
+    "section": "What do we do with the agent and company data?",
+    "text": "What do we do with the agent and company data?\nThere are 98 unique agent values and 100 unique companies in our training set. How can we include this information in our model?\n\nWe could:\n\nmake the full set of indicator variables 😳\nlump agents and companies that rarely occur into an “other” group\nuse feature hashing to create a smaller set of indicator variables\nuse effect encoding to replace the agent and company columns with the estimated effect of that predictor (in the extra materials)"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#per-player-statistics",
+    "href": "slides/advanced-01-feature-engineering.html#per-player-statistics",
+    "title": "1 - Feature Engineering",
+    "section": "Per-player statistics",
+    "text": "Per-player statistics"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#collapsing-factor-levels",
+    "href": "slides/advanced-01-feature-engineering.html#collapsing-factor-levels",
+    "title": "1 - Feature Engineering",
+    "section": "Collapsing factor levels",
+    "text": "Collapsing factor levels\nThere is a recipe step that will redefine factor levels based on the their frequency in the training set:\n\nhotel_other_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_YeoJohnson(lead_time) %&gt;%\n  step_other(agent, threshold = 0.001) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors())\n\nUsing this code, 34 agents (out of 98) were collapsed into “other” based on the training set.\nWe could try to optimize the threshold for collapsing (see the next set of slides on model tuning)."
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#does-othering-help",
+    "href": "slides/advanced-01-feature-engineering.html#does-othering-help",
+    "title": "1 - Feature Engineering",
+    "section": "Does othering help?",
+    "text": "Does othering help?\n\nhotel_other_wflow &lt;-\n  hotel_lm_wflow %&gt;%\n  update_recipe(hotel_other_rec)\n\nhotel_other_res &lt;-\n  hotel_other_wflow %&gt;%\n  fit_resamples(hotel_rs, control = ctrl)\n\ncollect_metrics(hotel_other_res)\n#&gt; # A tibble: 2 × 6\n#&gt;   .metric .estimator   mean     n std_err .config             \n#&gt;   &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 rmse    standard   23.5      10 0.323   Preprocessor1_Model1\n#&gt; 2 rsq     standard    0.874    10 0.00417 Preprocessor1_Model1\n\nA little better MAE and much faster to complete.\nNow let’s look at a more sophisticated tool called effect feature hashing."
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#feature-hashing",
+    "href": "slides/advanced-01-feature-engineering.html#feature-hashing",
+    "title": "1 - Feature Engineering",
+    "section": "Feature Hashing",
+    "text": "Feature Hashing\nBetween agent and company, simple dummy variables would create 198 new columns (that are mostly zeros).\nAnother option is to have a binary indicator that combines some levels of these variables.\nFeature hashing (FES,SMLTAR, TMwR):\n\nuses the character value of the levels\nconverts them to integer hash value\nuses the integer to assign them to a specific indicator column."
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#feature-hashing-1",
+    "href": "slides/advanced-01-feature-engineering.html#feature-hashing-1",
+    "title": "1 - Feature Engineering",
+    "section": "Feature Hashing",
+    "text": "Feature Hashing\nSuppose we want to use 32 indicator variables for agent.\nFor a agent with value “Max_Kuhn”, a hashing function converts it to an integer (say 210397726).\nTo assign it to one of the 32 columns, we would use modular arithmetic to assign it to a column:\n\n# For \"Max_Kuhn\" but a '1' in column: \n210397726 %% 32\n#&gt; [1] 30\n\nHash functions are used in cryptology and are meant to emulate randomness."
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#fit-different-recipes",
+    "href": "slides/advanced-01-feature-engineering.html#fit-different-recipes",
+    "title": "1 - Feature Engineering",
+    "section": "Fit different recipes    ",
+    "text": "Fit different recipes    \nA workflow set can cross models and/or preprocessors and then resample them en masse.\n\n\nno_coord_rec &lt;- \n  hotel_indicators %&gt;% \n  step_rm(starts_with(\"coord\"))\n\nset.seed(9)\n\nhotel_lm_set_res &lt;-\n  workflow_set(\n    list(`1_no_coord` = no_coord_rec,   `2_other` = hotel_other_rec, \n         `3_effects`  = hotel_effect_rec, `4_angle` = hotel_angle_rec, \n         `5_zone`     = hotel_zone_rec,   `6_bgl`   = hotel_behind_rec),\n    list(logistic = logistic_reg())\n  ) %&gt;%\n  workflow_map(fn = \"fit_resamples\", resamples = hotel_rs, verbose = TRUE, control = ctrl)"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#your-turn-3",
+    "href": "slides/advanced-01-feature-engineering.html#your-turn-3",
+    "title": "1 - Feature Engineering",
+    "section": "Your turn",
+    "text": "Your turn\n\nUse fit_resamples() to fit your workflow with a recipe.\nCollect the predictions from the results.\n\n\n\n05:00"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#compare-recipes",
+    "href": "slides/advanced-01-feature-engineering.html#compare-recipes",
+    "title": "1 - Feature Engineering",
+    "section": "Compare recipes",
+    "text": "Compare recipes\n\nlibrary(forcats)\ncollect_metrics(hotel_lm_set_res) %&gt;%\n  filter(.metric == \"roc_auc\") %&gt;%\n  mutate(\n    features = gsub(\"_logistic\", \"\", wflow_id), \n    features = fct_reorder(features, mean)\n  ) %&gt;%\n  ggplot(aes(x = mean, y = features)) +\n  geom_point(size = 3) +\n  labs(y = NULL, x = \"ROC AUC (validation set)\")"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#compare-recipes-1",
+    "href": "slides/advanced-01-feature-engineering.html#compare-recipes-1",
+    "title": "1 - Feature Engineering",
+    "section": "Compare recipes",
+    "text": "Compare recipes"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#debugging-a-recipe",
+    "href": "slides/advanced-01-feature-engineering.html#debugging-a-recipe",
+    "title": "1 - Feature Engineering",
+    "section": "Debugging a recipe",
+    "text": "Debugging a recipe\n\nTypically, you will want to use a workflow to estimate and apply a recipe.\n\n\n\nIf you have an error and need to debug your recipe, the original recipe object (e.g. hash_rec) can be estimated manually with a function called prep(). It is analogous to fit(). See TMwR section 16.4\n\n\n\n\nAnother function (bake()) is analogous to predict(), and gives you the processed data back.\n\n\n\n\nThe tidy() function can be used to get specific results from the recipe."
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#example",
+    "href": "slides/advanced-01-feature-engineering.html#example",
+    "title": "1 - Feature Engineering",
+    "section": "Example",
+    "text": "Example\n\nhash_rec_fit &lt;- prep(hash_rec)\n\n# Get the transformation coefficient\ntidy(hash_rec_fit, number = 1) %&gt;% slice(1:4)\n\n# Get the processed data\nbake(hash_rec_fit, hotel_tr %&gt;% slice(1:3), contains(\"_agent_\"))"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#more-on-recipes",
+    "href": "slides/advanced-01-feature-engineering.html#more-on-recipes",
+    "title": "1 - Feature Engineering",
+    "section": "More on recipes",
+    "text": "More on recipes\n\nOnce fit() is called on a workflow, changing the model does not re-fit the recipe.\n\n\n\nA list of all known steps is at https://www.tidymodels.org/find/recipes/.\n\n\n\n\nSome steps can be skipped when using predict().\n\n\n\n\nThe order of the steps matters.\n\n\n\nhttps://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#feature-hashing-pros-and-cons",
+    "href": "slides/advanced-01-feature-engineering.html#feature-hashing-pros-and-cons",
+    "title": "1 - Feature Engineering",
+    "section": "Feature Hashing Pros and Cons",
+    "text": "Feature Hashing Pros and Cons\n\nThe procedure will automatically work on new values of the predictors.\nThe is no real logic behind which factor levels are combined.\nIt is fast.\nWe don’t know how many columns to add (more in the next section).\nSome columns may have all zeros.\n“Signed” hashes add a sign to help avoid aliasing.\nIf a indicator column is important to the model, we can’t easily determine why."
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#feature-hashing-in-recipes",
+    "href": "slides/advanced-01-feature-engineering.html#feature-hashing-in-recipes",
+    "title": "1 - Feature Engineering",
+    "section": "Feature Hashing in recipes",
+    "text": "Feature Hashing in recipes\nThe textrecipes package has a step that can be added to the recipe:\n\nlibrary(textrecipes)\n\nhash_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;%\n  step_YeoJohnson(lead_time) %&gt;%\n  # Defaults to 32 signed indicator columns\n  step_dummy_hash(agent) %&gt;%\n  step_dummy_hash(company) %&gt;%\n  # Regular indicators for the others\n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors())\n\nhotel_hash_wflow &lt;-\n  hotel_lm_wflow %&gt;%\n  update_recipe(hash_rec)"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#feature-hashing-in-recipes-1",
+    "href": "slides/advanced-01-feature-engineering.html#feature-hashing-in-recipes-1",
+    "title": "1 - Feature Engineering",
+    "section": "Feature Hashing in recipes",
+    "text": "Feature Hashing in recipes\n\nhotel_hash_res &lt;-\n  hotel_hash_wflow %&gt;%\n  fit_resamples(hotel_rs, control = ctrl)\n\ncollect_metrics(hotel_hash_res)\n#&gt; # A tibble: 2 × 6\n#&gt;   .metric .estimator   mean     n std_err .config             \n#&gt;   &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 rmse    standard   23.7       1      NA Preprocessor1_Model1\n#&gt; 2 rsq     standard    0.863     1      NA Preprocessor1_Model1\n\nAbout the same performance but now we can handle new values."
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#your-turn-4",
+    "href": "slides/advanced-01-feature-engineering.html#your-turn-4",
+    "title": "1 - Feature Engineering",
+    "section": "Your turn",
+    "text": "Your turn\n\nCreate a workflow set with 2 or 3 recipes.\n(Consider using recipes we’ve already created.)\nUse workflow_map() to resample the workflow set.\n\n\n\n08:00"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#calibration-plot",
+    "href": "slides/advanced-01-feature-engineering.html#calibration-plot",
+    "title": "1 - Feature Engineering",
+    "section": "Calibration Plot",
+    "text": "Calibration Plot\n\nlibrary(probably)\n\ncal_plot_regression(hotel_lm_res, alpha = 1 / 5)"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#per-agent-statistics",
+    "href": "slides/advanced-01-feature-engineering.html#per-agent-statistics",
+    "title": "1 - Feature Engineering",
+    "section": "Per-agent statistics",
+    "text": "Per-agent statistics"
   }
 ]
