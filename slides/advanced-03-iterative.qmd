@@ -1,5 +1,5 @@
 ---
-title: "3 - Iterative Search"
+title: "4 - Iterative Search"
 subtitle: "Advanced tidymodels"
 format:
   revealjs: 
@@ -205,6 +205,17 @@ We can make a "meta-model" with a small set of historical performance results.
 $$\operatorname{cov}(\boldsymbol{x}_i, \boldsymbol{x}_j) = \exp\left(-\frac{1}{2}|\boldsymbol{x}_i - \boldsymbol{x}_j|^2\right) + \sigma^2_{ij}$$
 
 
+:::notes
+GPs are good because 
+
+- they are flexible regression models (in the sense that splines are flexible). 
+- we need to get mean and variance predictions (and they are Bayesian)
+- their variability is based on spatial distances.
+
+Some people use random forests (with conformal variance estimates) or other methods but GPs are most popular.
+:::
+
+
 ## Predicting Candidates
 
 The GP model can take candidate tuning parameter combinations as inputs and make predictions for performance (e.g. MAE)
@@ -223,11 +234,11 @@ The predicted variance is zero at locations of actual data points and becomes ve
 
 ::: {.column width="50%"}
 
-Your GP makes predictions on two new candidate tuning parameters.  
+*Your GP makes predictions on two new candidate tuning parameters.*  
 
-We want to minimize MAE. 
+*We want to minimize MAE.* 
 
-Which should we choose?
+*Which should we choose?*
 
 :::
 
@@ -337,7 +348,11 @@ scaled_obj %>%
 
 Once we pick the candidate point, we measure performance for it (e.g. resampling). 
 
+<br> 
+
 Another GP is fit, EI is recomputed, and so on. 
+
+<br> 
 
 We stop when we have completed the allowed number of iterations _or_ if we don't see any improvement after a pre-set number of attempts. 
 
@@ -421,7 +436,11 @@ We'll use a function called `tune_bayes()` that has very similar syntax to `tune
 
 <br> 
 
-It has an additional `initial` argument for the initial set of performance estimates and parameter combinations for the GP model. This can be the results of another `tune_*()` function or an integer (in which case `tune_grid()` is used under to hood to make such an initial set of results).
+It has an additional `initial` argument for the initial set of performance estimates and parameter combinations for the GP model. 
+
+## Initial grid points
+
+`initial` can be the results of another `tune_*()` function or an integer (in which case `tune_grid()` is used under to hood to make such an initial set of results).
  
  - We'll run the optimization more than once, so let's make an initial grid of results to serve as the substrate for the BO. 
 
@@ -510,7 +529,7 @@ autoplot(lgbm_bayes_res, metric = "mae", type = "performance")
 ```
 
 
-## ENCHANCE
+## ENHANCE
 
 ```{r}
 #| label: autoplot-perf-zoomed
@@ -527,14 +546,14 @@ autoplot(lgbm_bayes_res, metric = "mae", type = "performance") +
 
 ## Your turn {transition="slide-in"}
 
-Let's try a different acquisition function: `conf_bound(kappa)`.
+*Let's try a different acquisition function: `conf_bound(kappa)`.*
 
-We'll use the `objective` argument to set it. 
+*We'll use the `objective` argument to set it.*
 
-Choose your own `kappa` value:
+*Choose your own `kappa` value:*
 
- - Larger values will explore the space more. 
- - "Large" values are usually less than one
+ - *Larger values will explore the space more.* 
+ - *"Large" values are usually less than one.*
 
 
 ```{r}
@@ -558,7 +577,7 @@ Let's say that we've tried a lot of different models and we like our lightgbm mo
 
 What do we do now? 
 
-  * Finalize the model by choosing the values for the tuning parameters. 
+  * Finalize the workflow by choosing the values for the tuning parameters. 
   * Fit the model on the entire training set. 
   * Verify performance using the test set. 
   * Document and publish the model(?)
@@ -647,13 +666,5 @@ final_res %>%
 
 ::::
 
-## Your turn {transition="slide-in"}
-
-Compute your test set results and plot the observed and predicted daily room rates. 
-
-```{r}
-#| echo: false
-countdown(minutes = 5, id = "test-res", left = "0")
-```
 
 
