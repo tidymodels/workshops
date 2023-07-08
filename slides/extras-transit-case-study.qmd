@@ -1,5 +1,5 @@
 ---
-title: "7 - Case Study on Transportation"
+title: "Case Study on Transportation"
 subtitle: "Machine learning with tidymodels"
 format:
   revealjs: 
@@ -15,6 +15,7 @@ knitr:
     echo: true
     collapse: true
     comment: "#>"
+    fig.path: "figures/"
 ---
 
 ```{r}
@@ -100,7 +101,7 @@ leaflet() %>%
 
 ## Your turn: Explore the Data
 
-Take a look at these data for a few minutes and see if you can find any interesting characteristics in the predictors or the outcome.  
+*Take a look at these data for a few minutes and see if you can find any interesting characteristics in the predictors or the outcome.*  
 
 
 ```{r}
@@ -114,6 +115,7 @@ stations
 ```
 
 ```{r}
+#| label: explore-chicago
 #| echo: false
 countdown::countdown(minutes = 5, id = "explore-chicago")
 ```
@@ -172,8 +174,9 @@ This image shows overlapping assessment sets. We will use non-overlapping data b
 ##  Times series resampling  `r hexes(c("rsample"))`
 
 ```{r}
+#| label: add-index
 #| eval: false
-#| code-line-numbers: "4"
+#| code-line-numbers: "4|"
 
 chi_rs <-
   chi_train %>%
@@ -192,8 +195,9 @@ Use the `date` column to find the date data.
 ##   Times series resampling  `r hexes(c("rsample"))`
 
 ```{r}
+#| label: add-preiod
 #| eval: false
-#| code-line-numbers: "5"
+#| code-line-numbers: "5|"
 
 chi_rs <-
   chi_train %>%
@@ -212,8 +216,9 @@ Our units will be weeks.
 ##   Times series resampling  `r hexes(c("rsample"))`
 
 ```{r}
+#| label: add-lookback
 #| eval: false
-#| code-line-numbers: "6"
+#| code-line-numbers: "6|"
 
 chi_rs <-
   chi_train %>%
@@ -233,8 +238,9 @@ Every analysis set has 15 years of data
 ##   Times series resampling  `r hexes(c("rsample"))`
 
 ```{r}
+#| label: add-assess
 #| eval: false
-#| code-line-numbers: "7"
+#| code-line-numbers: "7|"
 
 chi_rs <-
   chi_train %>%
@@ -253,7 +259,8 @@ Every assessment set has 2 weeks of data
 ##   Times series resampling  `r hexes(c("rsample"))`
 
 ```{r}
-#| code-line-numbers: "8"
+#| label: add-step
+#| code-line-numbers: "8|"
 
 chi_rs <-
   chi_train %>%
@@ -269,6 +276,7 @@ chi_rs <-
 Increment by 2 weeks so that there are no overlapping assessment sets. 
 
 ```{r}
+#| label: ranges
 chi_rs$splits[[1]] %>% assessment() %>% pluck("date") %>% range()
 chi_rs$splits[[2]] %>% assessment() %>% pluck("date") %>% range()
 ```
@@ -280,6 +288,7 @@ chi_rs$splits[[2]] %>% assessment() %>% pluck("date") %>% range()
 ::: {.column width="45%"}
 
 ```{r}
+#| label: resample-print
 chi_rs
 ```
 
@@ -304,6 +313,7 @@ We will average the  `r nrow(chi_rs)` metrics to get the resampling estimate of 
 ## Feature engineering with recipes  `r hexes(c("recipes"))`
 
 ```{r}
+#| label: chi-rec
 chi_rec <- 
   recipe(ridership ~ ., data = chi_train)
 ```
@@ -313,6 +323,7 @@ Based on the formula, the function assigns columns to roles of "outcome" or "pre
 ## A recipe
 
 ```{r}
+#| label: rec-summary
 summary(chi_rec)
 ```
 
@@ -321,7 +332,8 @@ summary(chi_rec)
 ## A recipe - work with dates `r hexes(c("recipes"))`
 
 ```{r}
-#| code-line-numbers: "3"
+#| label: step-date
+#| code-line-numbers: "3|"
 chi_rec <- 
   recipe(ridership ~ ., data = chi_train) %>% 
   step_date(date, features = c("dow", "month", "year")) 
@@ -333,7 +345,8 @@ This creates three new columns in the data based on the date. Note that the day-
 ## A recipe - work with dates `r hexes(c("recipes"))`
 
 ```{r}
-#| code-line-numbers: "4"
+#| label: holiday
+#| code-line-numbers: "4|"
 chi_rec <- 
   recipe(ridership ~ ., data = chi_train) %>% 
   step_date(date, features = c("dow", "month", "year")) %>% 
@@ -352,7 +365,8 @@ We might want to change the role (instead of removing the column) because it wil
 ## A recipe - work with dates `r hexes(c("recipes"))`
 
 ```{r}
-#| code-line-numbers: "5,6"
+#| label: update-role-req
+#| code-line-numbers: "5,6|"
 chi_rec <- 
   recipe(ridership ~ ., data = chi_train) %>% 
   step_date(date, features = c("dow", "month", "year")) %>% 
@@ -368,7 +382,8 @@ chi_rec <-
 ## A recipe - remove constant columns `r hexes(c("recipes"))`
 
 ```{r}
-#| code-line-numbers: "7"
+#| label: zv-step
+#| code-line-numbers: "7|"
 chi_rec <- 
   recipe(ridership ~ ., data = chi_train) %>% 
   step_date(date, features = c("dow", "month", "year")) %>% 
@@ -388,7 +403,8 @@ We might want to decorrelated them with principle component analysis to help the
 The vector `stations` contains all station names and can be used to identify all the relevant columns.
 
 ```{r}
-#| code-line-numbers: "7"
+#| label: pca-rec
+#| code-line-numbers: "7|"
 chi_pca_rec <- 
   chi_rec %>% 
   step_normalize(all_of(!!stations)) %>% 
@@ -401,7 +417,8 @@ We'll tune the number of PCA components for (default) values of one to four.
 
 Let's try three models. The first one requires the `rules` package (loaded earlier).
 
-```{r chi-specs}
+```{r}
+#| label: chi-specs
 cb_spec <- cubist_rules(committees = 25, neighbors = tune())
 mars_spec <- mars(prod_degree = tune()) %>% set_mode("regression")
 lm_spec <- linear_reg()
@@ -422,7 +439,8 @@ Briefly talk about Cubist being a (sort of) boosted rule-based model and MARS be
 
 ## Process them on the resamples
 
-```{r chi-res}
+```{r}
+#| label: chi-res
 #| cache: true
 #| results: markup
 
@@ -443,12 +461,14 @@ chi_res <-
 ## How do the results look? 
 
 ```{r}
+#| label: rank-results
 rank_results(chi_res)
 ```
 
 ## Plot the results `r hexes(c("ggplot2", "tune"))`
 
-```{r set-results}
+```{r}
+#| label: set-results
 #| fig-align: center
 autoplot(chi_res)
 ```
@@ -457,7 +477,8 @@ autoplot(chi_res)
 
 We can also pull out the specific tuning results and look at them: 
 
-```{r cubist-autoplot}
+```{r}
+#| label: cubist-autoplot
 #| fig-align: center
 chi_res %>% 
   extract_workflow_set_result("pca_cubist") %>% 
@@ -491,7 +512,8 @@ _Model stacks_ generate predictions that are informed by several models.
 
 ## Building a model stack `r hexes("stacks")`
 
-```{r load-stacks}
+```{r}
+#| label: load-stacks 
 library(stacks)
 ```
 
@@ -508,6 +530,7 @@ library(stacks)
 Collect all of the resampling results for all model configurations. 
 
 ```{r}
+#| label: add-cand
 chi_stack <- 
   stacks() %>% 
   add_candidates(chi_res)
@@ -519,6 +542,7 @@ chi_stack <-
 Which configurations should be retained? Uses a penalized linear model: 
 
 ```{r}
+#| label: blend-pred
 set.seed(122)
 chi_stack_res <- blend_predictions(chi_stack)
 
@@ -553,6 +577,7 @@ autoplot(chi_stack_res, type = "weights")
 For each model we retain in the stack, we need their model fit on the entire training set. 
 
 ```{r}
+#| label: plot-members
 chi_stack_res <- fit_members(chi_stack_res)
 ```
 
@@ -562,6 +587,7 @@ chi_stack_res <- fit_members(chi_stack_res)
 We can pull out the results and the workflow to fit the single best cubist model. 
 
 ```{r}
+#| label: best-cubist
 best_cubist <- 
   chi_res %>% 
   extract_workflow_set_result("pca_cubist") %>% 
@@ -579,6 +605,7 @@ cubist_res <-
 We don't have `last_fit()` for stacks (yet) so we manually make predictions. 
 
 ```{r}
+#| label: stack-pred
 stack_pred <- 
   predict(chi_stack_res, chi_test) %>% 
   bind_cols(chi_test)
@@ -589,6 +616,7 @@ stack_pred <-
 Single best versus the stack:
 
 ```{r}
+#| label: cubist-metrics
 collect_metrics(cubist_res)
 
 stack_pred %>% mae(ridership, .pred)
@@ -598,10 +626,12 @@ stack_pred %>% mae(ridership, .pred)
 ## Plot the test set `r hexes(c("ggplot2", "tune"))`
 
 ```{r}
+#| label: obs-pred
 #| output-location: column-fragment
 #| fig-width: 5
 #| fig-height: 5
 #| fig-align: center
+library(probably)
 cubist_res %>% 
   collect_predictions() %>% 
   ggplot(aes(ridership, .pred)) + 
