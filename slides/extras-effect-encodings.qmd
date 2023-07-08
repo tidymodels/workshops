@@ -1,0 +1,356 @@
+---
+title: "Extras - Effect Encodings"
+subtitle: "Advanced tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+---
+
+```{r}
+#| label: setup
+#| include: false
+#| file: setup.R
+```
+
+```{r more-setup}
+#| include: false
+library(modeldatatoo)
+library(probably)
+library(countdown)
+library(finetune)
+
+cores <- parallelly::availableCores(logical = FALSE)
+cl <- parallel::makePSOCKcluster(cores)
+doParallel::registerDoParallel(cl)
+
+options(width = 200)
+
+ggplot2::theme_set(ggplot2::theme_bw())
+```
+
+## Previously - Setup
+
+:::: {.columns}
+
+::: {.column width="40%"}
+
+```{r}
+#| label: tune-startup
+library(tidymodels)
+library(modeldatatoo)
+library(textrecipes)
+library(bonsai)
+
+# Max's usual settings: 
+tidymodels_prefer()
+theme_set(theme_bw())
+options(
+  pillar.advice = FALSE, 
+  pillar.min_title_chars = Inf
+)
+```
+
+:::
+
+::: {.column width="60%"}
+
+```{r}
+#| label: data-import
+set.seed(295)
+hotel_rates <- 
+  data_hotel_rates() %>% 
+  sample_n(5000) %>% 
+  arrange(arrival_date) %>% 
+  select(-arrival_date_num, -arrival_date) %>% 
+  mutate(
+    company = factor(as.character(company)),
+    country = factor(as.character(country)),
+    agent = factor(as.character(agent))
+  )
+```
+
+
+:::
+
+::::
+
+
+## Previously - Data Usage
+
+```{r}
+#| label: hotel-split
+set.seed(4028)
+hotel_split <-
+  initial_split(hotel_rates, strata = avg_price_per_room)
+
+hotel_tr <- training(hotel_split)
+hotel_te <- testing(hotel_split)
+
+set.seed(472)
+hotel_rs <- vfold_cv(hotel_tr, strata = avg_price_per_room)
+```
+
+
+## What do we do with the agent and company data? 
+
+There are `r length(unique(hotel_tr$agent))` unique agent values and `r length(unique(hotel_tr$company))` companies in our training set. How can we include this information in our model?
+
+. . .
+
+We could:
+
+-   make the full set of indicator variables 😳
+
+-   lump agents and companies that rarely occur into an "other" group
+
+-   use [feature hashing](https://www.tmwr.org/categorical.html#feature-hashing) to create a smaller set of indicator variables
+
+-   use effect encoding to replace the `agent` and `company` columns with the estimated effect of that predictor
+
+
+
+```{r}
+#| label: effects-calcs 
+#| include: false
+
+agent_stats <- 
+  hotel_tr %>%
+  group_by(agent) %>%
+  summarize(
+    ADR = mean(avg_price_per_room), 
+    num_reservations = n(),
+    .groups = "drop"
+    ) %>%
+  mutate(agent = reorder(agent, ADR))
+
+library(embed)
+
+estimates <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_lencode_mixed(agent, outcome = vars(avg_price_per_room), id = "encoding") %>%   #<<
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  prep() %>% 
+  tidy(id = "encoding") %>% 
+  select(agent = level, estimate = value)
+
+before <- hotel_tr %>% select(avg_price_per_room, agent) %>% slice(1:7) %>% add_rowindex()
+after <- left_join(before, estimates, by = "agent") %>% 
+  select(avg_price_per_room, agent = estimate, .row)
+```
+
+
+## Per-player statistics 
+
+::: columns
+::: {.column width="50%"}
+```{r}
+#| label: effects-freq 
+#| echo: false
+#| out-width: '90%'
+#| fig-width: 6
+#| fig-height: 3
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+  
+agent_stats %>%   
+  ggplot(aes(x = num_reservations)) +
+  geom_histogram(bins = 30, col = "blue", fill = "blue", alpha = 1/3) +
+  labs(x = "Number of reservations per player")
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: effects-adr 
+#| echo: false
+#| out-width: '90%'
+#| fig-width: 6
+#| fig-height: 3
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+agent_stats %>%   
+  ggplot(aes(x = ADR)) +
+  geom_histogram(bins = 30, col = "red", fill = "red", alpha = 1/3) +
+  labs(x = "Average ADR per agent")
+```
+:::
+:::
+
+
+## What is an effect encoding?
+
+We replace the qualitative’s predictor data with their _effect on the outcome_. 
+
+::: columns
+::: {.column width="50%"}
+Data before:
+
+```{r}
+#| label: before
+before
+```
+
+:::
+
+::: {.column width="50%"}
+
+Data after:
+
+```{r}
+#| label: after
+after
+```
+
+:::
+:::
+
+The `agent` column is replaced with an estimate of the ADR. 
+
+
+## Per-agent statistics again {.annotation}
+
+::: columns
+::: {.column width="50%"}
+```{r}
+#| label: effects-again 
+#| echo: false
+#| out-width: '90%'
+#| fig-width: 6
+#| fig-height: 3
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+  
+agent_stats %>%   
+  ggplot(aes(x = num_reservations)) +
+  geom_histogram(bins = 30, col = "blue", fill = "blue", alpha = 1/3) +
+  labs(x = "Number of reservations per agent")
+agent_stats %>%   
+  ggplot(aes(x = ADR)) +
+  geom_histogram(bins = 30, col = "red", fill = "red", alpha = 1/3) +
+  labs(x = "Average ADR per agent")
+```
+:::
+
+::: {.column width="50%"}
+
+- Good statistical methods for estimating these rates use *partial pooling*.
+
+
+- Pooling borrows strength across players and shrinks extreme values (e.g. zero or one) towards the mean for players with very few shots.
+
+
+- The embed package has recipe steps for effect encodings.
+
+:::
+:::
+
+
+:::notes
+Partial pooling gives better estimates for players with fewer shots by shrinking the estimate to the overall ADR mean
+
+
+:::
+
+## Partial pooling
+
+```{r}
+#| label: effect-compare 
+#| echo: false
+#| fig-width: 6
+#| fig-height: 6
+#| fig-align: 'center'
+#| dev: 'svglite'
+#| dev-args: list(bg = "transparent")
+
+inner_join(agent_stats, estimates, by = "agent") %>% 
+  ggplot(aes(x = ADR, y = estimate)) + 
+  geom_abline(col = "green", lty = 2) +
+  geom_point(aes(size = num_reservations), alpha = 1/3) +
+  coord_obs_pred() +
+  scale_size(range = c(1/3, 5)) +
+  labs(x = "ADR Sample Mean", y = "Estimated via Effects Encoding")
+```
+
+## Player effects `r hexes("recipes","embed")` {.annotation}
+
+```{r}
+#| label: lencode-rec
+#| code-line-numbers: "1,6|"
+library(embed)
+
+hotel_effect_rec <-
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_YeoJohnson(lead_time) %>%
+  step_lencode_mixed(agent, company, outcome = vars(avg_price_per_room)) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+. . .
+
+It is very important to appropriately validate the effect encoding step to make sure that we are not overfitting.
+
+## Recipes are estimated `r hexes("recipes")`
+
+Preprocessing steps in a recipe use the *training set* to compute quantities.
+
+. . .
+
+What kind of quantities are computed for preprocessing?
+
+-   Levels of a factor
+-   Whether a column has zero variance
+-   Normalization
+-   Feature extraction
+-   Effect encodings
+
+. . .
+
+When a recipe is part of a workflow, this estimation occurs when `fit()` is called.
+
+## Effect encoding results `r hexes("recipes","embed", "workflows", "tune")`
+
+```{r}
+#| label: resample-encoding
+#| code-line-numbers: "4|"
+hotel_effect_wflow <-
+  workflow() %>%
+  add_model(linear_reg()) %>% 
+  update_recipe(hotel_effect_rec)
+
+reg_metrics <- metric_set(mae, rsq)
+
+hotel_effect_res <-
+  hotel_effect_wflow %>%
+  fit_resamples(hotel_rs, metrics = reg_metrics)
+
+collect_metrics(hotel_effect_res)
+```
+
+Slightly worse but it can handle new agents (if they occur).
+
+```{r}
+#| label: teardown
+#| include: false
+
+parallel::stopCluster(cl)
+
+```
