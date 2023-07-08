@@ -394,7 +394,7 @@ hotel_rec <-
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
-  step_ns(coord_y, coord_x, deg_free = 10)
+  step_spline_natural(year_day, deg_free = 10)
 ```
 
 . . . 
@@ -504,10 +504,6 @@ We could:
 -   use effect encoding to replace the `agent` and `company` columns with the estimated effect of that predictor
 
 
-. . .
-
-Let's look at _othering_ then _effect encodings_.
-
 ```{r}
 #| label: effects-calcs 
 #| include: false
@@ -521,22 +517,6 @@ agent_stats <-
     .groups = "drop"
     ) %>%
   mutate(agent = reorder(agent, ADR))
-
-library(embed)
-
-estimates <- 
-  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
-  step_lencode_mixed(agent, outcome = vars(avg_price_per_room), id = "encoding") %>%   #<<
-  step_dummy(all_nominal_predictors()) %>% 
-  step_zv(all_predictors()) %>% 
-  step_normalize(all_numeric_predictors()) %>% 
-  prep() %>% 
-  tidy(id = "encoding") %>% 
-  select(agent = level, estimate = value)
-
-before <- hotel_tr %>% select(avg_price_per_room, agent) %>% slice(1:7) %>% add_rowindex()
-after <- left_join(before, estimates, by = "agent") %>% 
-  select(avg_price_per_room, agent = estimate, .row)
 ```
 
 
@@ -621,6 +601,7 @@ We _could_ try to optimize the threshold for collapsing (see the next set of sli
 
 ```{r}
 #| label: update-recipe
+#| cache: true
 #| code-line-numbers: "3|"
 hotel_other_wflow <-
   hotel_lm_wflow %>%
@@ -635,173 +616,36 @@ collect_metrics(hotel_other_res)
 
 A little better MAE and much faster to complete.  
 
-Now let's look at a more sophisticated tool called effect encodings.
+Now let's look at a more sophisticated tool called effect feature hashing. 
 
-## What is an effect encoding?
+## Feature Hashing
 
-We replace the qualitative’s predictor data with their _effect on the outcome_. 
+Between `agent` and `company`, simple dummy variables would create `r length(unique(hotel_tr$agent)) + length(unique(hotel_tr$company))` new columns (that are mostly zeros).
 
-::: columns
-::: {.column width="50%"}
-Data before:
+Another option is to have a binary indicator that combines some levels of these variables.
 
-```{r}
-#| label: before
-before
-```
+Feature hashing ([_FES_](https://bookdown.org/max/FES/encoding-predictors-with-many-categories.html),[_SMLTAR_](https://smltar.com/mlregression.html#case-study-feature-hashing), [_TMwR_](https://www.tmwr.org/categorical.html#feature-hashing)):  
 
-:::
+- uses the character value of the levels 
+- converts then to numeric hash value
+- uses the hash to assign them to a dummy column. 
 
-::: {.column width="50%"}
+## Feature Hashing
 
-Data after:
+Suppose we want to use 32 indicator variables for `agent`. 
 
-```{r}
-#| label: after
-after
-```
+For a agent with value "`Max_Kuhn`", a hashing function converts it to an integer (`r strtoi(substr(rlang::hash("Max_Kuhn"), 26, 32), 16)`). 
 
-:::
-:::
-
-The `agent` column is replaced with the log-odds of being on goal. 
-
-:::notes
-As a reminder:
-
-$$\text{log-odds} = log\left(\frac{\hat{p}}{1 - \hat{p}}\right)$$ 
-
-where $\hat{p}$ is the on goal rate estimate. 
-
-For logistic regression, this is what the predictors are modeling. The log-odds are more likely to be linear with the outcome. 
-
-:::
-
-
-## Per-player statistics again {.annotation}
-
-::: columns
-::: {.column width="50%"}
-```{r}
-#| label: effects-again 
-#| echo: false
-#| out-width: '90%'
-#| fig-width: 6
-#| fig-height: 3
-#| fig-align: 'center'
-#| dev: 'svg'
-#| dev-args: list(bg = "transparent")
-  
-agent_stats %>%   
-  ggplot(aes(x = num_reservations)) +
-  geom_histogram(bins = 30, col = "blue", fill = "blue", alpha = 1/3) +
-  labs(x = "Number of reservations per player")
-agent_stats %>%   
-  ggplot(aes(x = ADR)) +
-  geom_histogram(bins = 30, col = "red", fill = "red", alpha = 1/3) +
-  labs(x = "Average ADR per agent")
-```
-:::
-
-::: {.column width="50%"}
-
-- Good statistical methods for estimating these rates use *partial pooling*.
-
-
-- Pooling borrows strength across players and shrinks extreme values (e.g. zero or one) towards the mean for players with very few shots.
-
-
-- The embed package has recipe steps for effect encodings.
-
-:::
-:::
-
-
-:::notes
-Partial pooling gives better estimates for players with fewer shots by shrinking the estimate to the overall on-goal rate (`TODO)
-
-
-:::
-
-## Partial pooling
+To assign it to one of the 32 columns, we would use modular arithmetic to assign it to a column: 
 
 ```{r}
-#| label: effect-compare 
-#| echo: false
-#| fig-width: 6
-#| fig-height: 6
-#| fig-align: 'center'
-#| dev: 'svglite'
-#| dev-args: list(bg = "transparent")
+#| label: hash
 
-inner_join(agent_stats, estimates, by = "agent") %>% 
-  ggplot(aes(x = ADR, y = estimate)) + 
-  geom_abline(col = "green", lty = 2) +
-  geom_point(aes(size = num_reservations), alpha = 1/3) +
-  coord_obs_pred() +
-  scale_size(range = c(1/3, 5)) +
-  labs(x = "ADR Sample Mean", y = "Estimated via Effects Encoding")
+# For "Max_Kuhn" but a '1' in column: 
+210397726 %% 32
 ```
 
-## Player effects `r hexes("recipes","embed")` {.annotation}
-
-```{r}
-#| label: lencode-rec
-#| code-line-numbers: "1,5"
-library(embed)
-
-hotel_effect_rec <-
-  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
-  step_YeoJohnson(lead_time) %>%
-  step_lencode_mixed(agent, company, outcome = vars(avg_price_per_room)) %>%
-  step_dummy(all_nominal_predictors()) %>%
-  step_zv(all_predictors())
-```
-
-. . .
-
-It is very important to appropriately validate the effect encoding step to make sure that we are not overfitting.
-
-## Recipes are estimated `r hexes("recipes")`
-
-Preprocessing steps in a recipe use the *training set* to compute quantities.
-
-. . .
-
-What kind of quantities are computed for preprocessing?
-
--   Levels of a factor
--   Whether a column has zero variance
--   Normalization
--   Feature extraction
--   Effect encodings
-
-. . .
-
-When a recipe is part of a workflow, this estimation occurs when `fit()` is called.
-
-## Effect encoding results `r hexes("recipes","embed", "workflows", "tune")`
-
-```{r}
-#| label: resample-encoding
-#| code-line-numbers: "3|"
-hotel_effect_wflow <-
-  hotel_lm_wflow %>%
-  update_recipe(hotel_effect_rec)
-
-hotel_effect_res <-
-  hotel_effect_wflow %>%
-  fit_resamples(hotel_rs, control = ctrl)
-
-collect_metrics(hotel_effect_res)
-```
-
-Slightly worse but it can handle new agents (if they occur).
-
-## Another approach: feature hashing
-
-
-
+Hash functions are used in cryptology and are meant to _emulate_ randomness. 
 
 
 ## Fit different recipes `r hexes("recipes","embed", "workflows", "tune")`
