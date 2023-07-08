@@ -49,6 +49,7 @@ ggplot2::theme_set(ggplot2::theme_bw())
 #| label: tune-startup
 library(tidymodels)
 library(modeldatatoo)
+library(textrecipes)
 library(bonsai)
 
 # Max's usual settings: 
@@ -105,18 +106,27 @@ hotel_rs <- vfold_cv(hotel_tr, strata = avg_price_per_room)
 
 ```{r}
 #| label: setup-lgbm
-hotel_rec <- 
-  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
-  step_YeoJohnson(lead_time)
+hotel_rec <-
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>%
+  step_YeoJohnson(lead_time) %>%
+  step_dummy_hash(agent,   num_terms = tune("agent hash")) %>%
+  step_dummy_hash(company, num_terms = tune("company hash")) %>%
+  step_zv(all_predictors())
 
 lgbm_spec <- 
-  boost_tree(trees = tune(), learn_rate = tune(), mtry = tune(), 
-             min_n = tune()) %>% 
+  boost_tree(trees = tune(), learn_rate = tune(), min_n = tune()) %>% 
   set_mode("regression") %>% 
   set_engine("lightgbm")
 
 lgbm_wflow <- workflow(hotel_rec, lgbm_spec)
+
+lgbm_param <-
+  lgbm_wflow %>%
+  extract_parameter_set_dials() %>%
+  update(`agent hash`   = num_hash(c(3, 8)),
+         `company hash` = num_hash(c(3, 8)))
 ```
+
 
 ## Making Grid Search More Efficient
 
@@ -288,9 +298,16 @@ The [finetune](https://finetune.tidymodels.org/) package has functions `tune_rac
 ## Racing
 
 
-```{r tuning} 
+```{r } 
 #| label: lgb-grid-race
 #| cache: true
+#| code-line-numbers: "1,8|"
+# Let's use a larger grid
+set.seed(8945)
+lgbm_grid <- 
+  lgbm_param %>% 
+  grid_latin_hypercube(size = 50)
+
 library(finetune)
 
 reg_metrics <- metric_set(mae, rsq)
@@ -300,7 +317,7 @@ lgbm_race_res <-
   lgbm_wflow %>%
   tune_race_anova(
     resamples = hotel_rs,
-    grid = 25,
+    grid = lgbm_grid, 
     metrics = reg_metrics
   )
 ```
@@ -310,10 +327,18 @@ The syntax and helper functions are extremely similar to those shown for `tune_g
 
 ## Racing Results
 
+```{r}
+#| label: best-race
+
+show_best(lgbm_race_res, metric = "mae")
+```
+
+## Racing Results
+
 :::: {.columns}
 
 ::: {.column width="50%"}
-Only `r sum(map_int(lgbm_race_res$.metrics, ~ nrow(.x) / 2))` models were fit (out of 250). 
+Only `r sum(map_int(lgbm_race_res$.metrics, ~ nrow(.x) / 2))` models were fit (out of `r nrow(lgbm_race_res) * nrow(lgbm_grid)`). 
 
 `select_best()` never considers candidate models that did not get to the end of the race. 
 
@@ -342,13 +367,19 @@ plot_race(lgbm_race_res) +
 
 ## Your turn {transition="slide-in"}
 
-* Get the grid from the example results
-* Pass it in as the grid
-* Run `tune_race_anova()` with a different seed. 
+- *Run `tune_race_anova()` with a different seed.*
+- *Did you get the same or similar results?*
 
 
 ```{r}
 #| label: racing-repeat
 #| echo: false
 countdown(minutes = 10, id = "racing-repeat")
+```
+
+```{r}
+#| label: teardown
+#| echo: false
+
+parallel::stopCluster(cl)
 ```
