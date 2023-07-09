@@ -50,7 +50,7 @@ ggplot2::theme_set(ggplot2::theme_bw())
 We might want to modify our predictors columns for a few reasons: 
 
 ::: {.incremental}
-- The model requires them in a different format (e.g. dummy variables for `lm()`).
+- The model requires them in a different format (e.g. dummy variables for linear regression).
 - The model needs certain data qualities (e.g. same units for K-NN).
 - The outcome is better predicted when one or more columns are transformed in some way (a.k.a "feature engineering"). 
 :::
@@ -121,7 +121,7 @@ These terms are often used interchangeably in the ML community but we want to di
 :::
 
 
-## Hotel Data
+## Hotel Data `r hexes("tidymodels", "dplyr")`
 
 We'll use [data on hotels](https://www.sciencedirect.com/science/article/pii/S2352340918315191) to predict the cost of a room. 
 
@@ -182,7 +182,7 @@ knitr::include_graphics("images/initial-split.svg")
 ```
 
 
-## Data Spending
+## Data Spending `r hexes("rsample")`
 
 Let's split the data into a training set (75%) and testing set (25%):
 
@@ -222,7 +222,7 @@ knitr::include_graphics("images/10-Fold-CV.svg")
 ```
 
 
-## Resampling Strategy
+## Resampling Strategy `r hexes("rsample")`
 
 We'll use simple 10-fold cross-validation (stratified sampling):
 
@@ -295,6 +295,8 @@ hotel_rec <-
 - For any factor or character predictors, make binary indicators.
 
 - There are *many* recipe steps that can convert categorical predictors to numeric columns.
+
+- `step_dummy()` records the levels of the categorical predictors in the training set. 
 
 ## Filter out constant columns `r hexes("recipes")`
 
@@ -451,6 +453,25 @@ hotel_indicators <-
   step_zv(all_predictors())
 ```
 
+
+## Measuring Performance `r hexes("yardstick")`
+
+We'll compute two measures: mean absolute error and the coefficient of determination (a.k.a $R^2$). 
+
+\begin{align}
+MAE &= \frac{1}{n}\sum_{i=1}^n |y_i - \hat{y}_i| \notag \\
+R^2 &= cor(y_i, \hat{y}_i)^2
+\end{align}
+
+The focus will be on MAE for parameter optimization. We'll use a metric set to compute these: 
+
+```{r}
+#| label: metric-set
+
+reg_metrics <- metric_set(mae, rsq)
+```
+
+
 ## Using a workflow `r hexes("recipes", "workflows", "parsnip", "tune")` {.annotation}
 
 ```{r}
@@ -467,7 +488,7 @@ hotel_lm_wflow <-
 ctrl <- control_resamples(save_pred = TRUE)
 hotel_lm_res <-
   hotel_lm_wflow %>%
-  fit_resamples(hotel_rs, control = ctrl)
+  fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
 
 collect_metrics(hotel_lm_res)
 ```
@@ -588,7 +609,7 @@ agent_stats %>%
 :::
 :::
 
-## Collapsing factor levels
+## Collapsing factor levels `r hexes("recipes")`
 
 There is a recipe step that will redefine factor levels based on their frequency in the training set: 
 
@@ -625,7 +646,7 @@ Using this code, `r num_other` agents (out of `r num_agents`) were collapsed int
 
 We _could_ try to optimize the threshold for collapsing (see the next set of slides on model tuning).
 
-## Does othering help? 
+## Does othering help?  `r hexes("recipes", "tune")`
 
 ```{r}
 #| label: update-recipe
@@ -637,12 +658,12 @@ hotel_other_wflow <-
 
 hotel_other_res <-
   hotel_other_wflow %>%
-  fit_resamples(hotel_rs, control = ctrl)
+  fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
 
 collect_metrics(hotel_other_res)
 ```
 
-A little better MAE and much faster to complete.  
+Aabout the same MAE and much faster to complete.  
 
 Now let's look at a more sophisticated tool called effect feature hashing. 
 
@@ -673,21 +694,32 @@ To assign it to one of the 32 columns, we would use modular arithmetic to assign
 210397726 %% 32
 ```
 
-[Hash functions](https://www.metamorphosite.com/one-way-hash-encryption-sha1-data-software) are used in cryptology and are meant to _emulate_ randomness. 
+[Hash functions](https://www.metamorphosite.com/one-way-hash-encryption-sha1-data-software) are meant to _emulate_ randomness. 
 
 
-## Feature Hashing Pros and Cons
+## Feature Hashing Pros
+
+Pros:
 
 - The procedure will automatically work on new values of the predictors.
-- There is no real logic behind which factor levels are combined. 
 - It is fast. 
+- "Signed" hashes add a sign to help avoid aliasing. 
+
+## Feature Hashing Cons
+
+Cons: 
+
+- There is no real logic behind which factor levels are combined. 
 - We don't know how many columns to add (more in the next section).
 - Some columns may have all zeros. 
-- "Signed" hashes add a sign to help avoid aliasing. 
 - If a indicator column is important to the model, we can't easily determine why. 
 
+:::notes
+The signed hash make it slightly more possible to differentiate between confounded levels
+:::
 
-## Feature Hashing in recipes
+
+## Feature Hashing in recipes `r hexes("recipes", "textrecipes", "workflows")`
 
 The textrecipes package has a step that can be added to the recipe: 
 
@@ -712,7 +744,7 @@ hotel_hash_wflow <-
 ```
 
 
-## Feature Hashing in recipes
+## Feature Hashing in recipes `r hexes("recipes", "textrecipes", "tune")`
 
 ```{r}
 #| label: hash-res
@@ -720,7 +752,7 @@ hotel_hash_wflow <-
 
 hotel_hash_res <-
   hotel_hash_wflow %>%
-  fit_resamples(hotel_rs, control = ctrl)
+  fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
 
 collect_metrics(hotel_hash_res)
 ```
@@ -744,7 +776,7 @@ About the same performance but now we can handle new values.
 
 - The `tidy()` function can be used to get specific results from the recipe.
 
-## Example
+## Example `r hexes("recipes", "broom")`
 
 ```{r}
 #| label: prep-tidy-bake
@@ -757,6 +789,7 @@ tidy(hash_rec_fit, number = 1)
 # Get the processed data
 bake(hash_rec_fit, hotel_tr %>% slice(1:3), contains("_agent_"))
 ```
+
 
 ## More on recipes
 
