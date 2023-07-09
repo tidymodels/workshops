@@ -180,60 +180,6 @@ How would you know that? There are a few different ways:
 The first two options are best since they tell you a lot more about the particularities of each model engine (there are a lot for xgboost). 
 
 
-## The final fit to the NHL data
-
-Recall that `last_fit()` uses the objects produced by `initial_split()` to determine what data are used for the final model fit and which are used as the test set. 
-
-For the validation set, `last_fit()` will use the non-testing data to create the final model fit. This includes the training and validation set. 
-
-There is no agreement in the community on whether this is the best approach or if we should just use the training set. There are good arguments either way. 
-
-If you only want to use the training set for the final model, you can do this via: 
-
-```{r}
-#| eval: false
-
-training_data <- nhl_val$splits[[1]] %>% analysis()
-
-# Use `fit()` to train the model on just the training set
-final_glm_spline_wflow <- 
-  glm_spline_wflow %>% 
-  fit(data = training_data)
-
-# Create test set predictions
-test_set_pred <- augment(final_glm_spline_wflow, nhl_test)
-
-# Setup and compute the test set metrics
-cls_metrics <- metric_set(roc_auc, accuracy)
-
-test_res <- 
-  test_set_pred %>% 
-  cls_metrics(on_goal, estimate = .pred_class, .pred_yes)
-test_res
-```
-
-## Explain yourself
-
-Some other resources: 
-
- * [TMwR chapter _Explaining Models and Predictions_](https://www.tmwr.org/explain.html)
- * [_Explanatory Model Analysis_ book](https://ema.drwhy.ai)
- * [_Interpretable Machine Learning_ book](https://christophm.github.io/interpretable-ml-book/)
- * [_Definitions, methods, and applications in interpretable machine learning_](https://www.pnas.org/doi/10.1073/pnas.1900654116)
- 
-
-## A tidymodels explainer
-
-For our example, the angle was an original predictor. Recall that we made spline terms from this predictor, so there are derived features such as `angle_ns_1` and so on.
-
-Original versus derived doesn't affect local explainers since we are focused on a single prediction. 
-
-For global explainers, we should decide between: 
-
- * explaining the overall affect of angle (lumping all its features into one importance score), or
- * explaining the effect of each term in the model (including `angle_ns_1` and so on).
- 
-The choice depends on what you want. For example, if we have an original date predictor and make features for month and year, is it more informative to know if date is important (overall) or exactly _how_ the date is important? You might want to look at it both ways. 
 
 # Extras - Effect Encodings
 
