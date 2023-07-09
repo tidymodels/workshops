@@ -39,7 +39,7 @@ ggplot2::theme_set(ggplot2::theme_bw())
 ```
 
 
-## Previously - Setup
+## Previously - Setup  `r hexes("tidymodels")`
 
 :::: {.columns}
 
@@ -88,7 +88,7 @@ hotel_rates <-
 ::::
 
 
-## Previously - Data Usage
+## Previously - Data Usage  `r hexes("rsample")`
 
 ```{r}
 #| label: hotel-split
@@ -103,7 +103,7 @@ hotel_rs <- vfold_cv(hotel_tr, strata = avg_price_per_room)
 ```
 
 
-## Previously - Feature engineering
+## Previously - Feature engineering  `r hexes("recipes", "textrecipes")`
 
 ```{r}
 #| label: recipe
@@ -191,7 +191,7 @@ Nope. It is not.
 - Once the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set.
 
 
-## Tagging parameters for tuning 
+## Tagging parameters for tuning  `r hexes("tune")`
 
 With tidymodels, you can mark the parameters that you want to optimize with a value of `tune()`. 
 
@@ -213,7 +213,7 @@ tune("I hope that the workshop is going well")
 
 For example...
 
-## Optimizing the hash features
+## Optimizing the hash features `r hexes("tune", "recipes", "textrecipes")`
 
 Our new recipe is: 
 
@@ -465,7 +465,7 @@ grid
 ```
 
 
-## The results `r hexes(c("dials", "workflows"))`
+## The results `r hexes(c("dials", "ggplot2"))`
 
 ```{r show-grid-code} 
 #| label: sfd
@@ -515,7 +515,7 @@ lgbm_param <-
 #| cache: true
 #| code-line-numbers: "2|"
 set.seed(9)
-ctrl <- control_grid(save_pred = TRUE, parallel_over = "everything")
+ctrl <- control_grid(save_pred = TRUE)
 
 lgbm_res <-
   lgbm_wflow %>%
@@ -682,23 +682,30 @@ ggplot(times, aes(x = num_cores, y = speed_up, color = parallel_over, shape = pa
 Faceted on the expensiveness of preprocessing used.
 :::
 
+
+## Early stopping for boosted trees
+
+We have directly optimized the number of trees as a tuning parameter. 
+
+Instead we could 
+ 
+ - Set the number of trees to a single large number.
+ - Stop adding trees when performance gets worse. 
+ 
+This is known as "early stopping" and there is a parameter for that: `stop_iter`.
+
+Early stopping has a potential to decrease the tuning time. 
+
+
 ## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
 <br>
 
-*We just tuned the model over the number of trees in the ensemble.* 
 
-*What if we set a specific number of trees and tuned the "early stopping" parameters?* 
+*Set `trees = 2000` and tune the `stop_iter` parameter.* 
 
- - *How many iterations of worst performance before we stop adding new trees?* 
-
-*This is an alternate approach to tuning these models.* 
-
-*We could set `trees = 1000` and tune the `stop_iter` parameter.* 
-
-## Your turn {transition="slide-in"}
 
 ```{r}
 #| label: lgbm-stop
