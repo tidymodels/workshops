@@ -407,21 +407,24 @@
 
 </section>
 <section id="previously---setup" class="slide level2">
-<h2>Previously - Setup</h2>
+<h2>Previously - Setup <img data-src="hexes/tidymodels.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="columns">
 <div class="column" style="width:40%;">
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">library</span>(tidymodels)</span>
 <span id="cb1-2"><a href="#cb1-2"></a><span class="fu">library</span>(modeldatatoo)</span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="fu">library</span>(bonsai)</span>
-<span id="cb1-4"><a href="#cb1-4"></a></span>
-<span id="cb1-5"><a href="#cb1-5"></a><span class="co"># Max's usual settings: </span></span>
-<span id="cb1-6"><a href="#cb1-6"></a><span class="fu">tidymodels_prefer</span>()</span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
-<span id="cb1-8"><a href="#cb1-8"></a><span class="fu">options</span>(</span>
-<span id="cb1-9"><a href="#cb1-9"></a>  <span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, </span>
-<span id="cb1-10"><a href="#cb1-10"></a>  <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span></span>
-<span id="cb1-11"><a href="#cb1-11"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="fu">library</span>(textrecipes)</span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="fu">library</span>(bonsai)</span>
+<span id="cb1-5"><a href="#cb1-5"></a></span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="co"># Max's usual settings: </span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="fu">tidymodels_prefer</span>()</span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
+<span id="cb1-9"><a href="#cb1-9"></a><span class="fu">options</span>(</span>
+<span id="cb1-10"><a href="#cb1-10"></a>  <span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb1-11"><a href="#cb1-11"></a>  <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span></span>
+<span id="cb1-12"><a href="#cb1-12"></a>)</span>
+<span id="cb1-13"><a href="#cb1-13"></a></span>
+<span id="cb1-14"><a href="#cb1-14"></a>reg_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mae, rsq)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div><div class="column" style="width:60%;">
 <div class="cell">
@@ -441,7 +444,7 @@
 </div>
 </section>
 <section id="previously---data-usage" class="slide level2">
-<h2>Previously - Data Usage</h2>
+<h2>Previously - Data Usage <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">set.seed</span>(<span class="dv">4028</span>)</span>
 <span id="cb3-2"><a href="#cb3-2"></a>hotel_split <span class="ot">&lt;-</span></span>
@@ -455,19 +458,27 @@
 </div>
 </section>
 <section id="previously---boosting-model" class="slide level2">
-<h2>Previously - Boosting Model</h2>
+<h2>Previously - Boosting Model <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/textrecipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/bonsai.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>hotel_rec <span class="ot">&lt;-</span> </span>
-<span id="cb4-2"><a href="#cb4-2"></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_tr) <span class="sc">%&gt;%</span> </span>
-<span id="cb4-3"><a href="#cb4-3"></a>  <span class="fu">step_YeoJohnson</span>(lead_time)</span>
-<span id="cb4-4"><a href="#cb4-4"></a></span>
-<span id="cb4-5"><a href="#cb4-5"></a>lgbm_spec <span class="ot">&lt;-</span> </span>
-<span id="cb4-6"><a href="#cb4-6"></a>  <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>(), <span class="at">mtry =</span> <span class="fu">tune</span>(), </span>
-<span id="cb4-7"><a href="#cb4-7"></a>             <span class="at">min_n =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
-<span id="cb4-8"><a href="#cb4-8"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb4-9"><a href="#cb4-9"></a>  <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>)</span>
-<span id="cb4-10"><a href="#cb4-10"></a></span>
-<span id="cb4-11"><a href="#cb4-11"></a>lgbm_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(hotel_rec, lgbm_spec)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>hotel_rec <span class="ot">&lt;-</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_tr) <span class="sc">%&gt;%</span></span>
+<span id="cb4-3"><a href="#cb4-3"></a>  <span class="fu">step_YeoJohnson</span>(lead_time) <span class="sc">%&gt;%</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a>  <span class="fu">step_dummy_hash</span>(agent,   <span class="at">num_terms =</span> <span class="fu">tune</span>(<span class="st">"agent hash"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb4-5"><a href="#cb4-5"></a>  <span class="fu">step_dummy_hash</span>(company, <span class="at">num_terms =</span> <span class="fu">tune</span>(<span class="st">"company hash"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb4-6"><a href="#cb4-6"></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span>
+<span id="cb4-7"><a href="#cb4-7"></a></span>
+<span id="cb4-8"><a href="#cb4-8"></a>lgbm_spec <span class="ot">&lt;-</span> </span>
+<span id="cb4-9"><a href="#cb4-9"></a>  <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>(), <span class="at">min_n =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-10"><a href="#cb4-10"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-11"><a href="#cb4-11"></a>  <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>)</span>
+<span id="cb4-12"><a href="#cb4-12"></a></span>
+<span id="cb4-13"><a href="#cb4-13"></a>lgbm_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(hotel_rec, lgbm_spec)</span>
+<span id="cb4-14"><a href="#cb4-14"></a></span>
+<span id="cb4-15"><a href="#cb4-15"></a>lgbm_param <span class="ot">&lt;-</span></span>
+<span id="cb4-16"><a href="#cb4-16"></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb4-17"><a href="#cb4-17"></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb4-18"><a href="#cb4-18"></a>  <span class="fu">update</span>(<span class="st">`</span><span class="at">agent hash</span><span class="st">`</span>   <span class="ot">=</span> <span class="fu">num_hash</span>(<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">8</span>)),</span>
+<span id="cb4-19"><a href="#cb4-19"></a>         <span class="st">`</span><span class="at">company hash</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">num_hash</span>(<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">8</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="making-grid-search-more-efficient" class="slide level2">
@@ -544,34 +555,49 @@
 <p>The <a href="https://finetune.tidymodels.org/">finetune</a> package has functions <code>tune_race_anova()</code> and <code>tune_race_win_loss()</code>.</p>
 </section>
 <section id="racing" class="slide level2">
-<h2>Racing</h2>
-<div class="cell" data-hash="advanced-03-racing_cache/revealjs/lgb-grid-race_3da607e3403b16ab7c64e79fafc14272">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="fu">library</span>(finetune)</span>
-<span id="cb5-2"><a href="#cb5-2"></a></span>
-<span id="cb5-3"><a href="#cb5-3"></a>reg_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mae, rsq)</span>
-<span id="cb5-4"><a href="#cb5-4"></a></span>
-<span id="cb5-5"><a href="#cb5-5"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
-<span id="cb5-6"><a href="#cb5-6"></a>lgbm_race_res <span class="ot">&lt;-</span></span>
-<span id="cb5-7"><a href="#cb5-7"></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb5-8"><a href="#cb5-8"></a>  <span class="fu">tune_race_anova</span>(</span>
-<span id="cb5-9"><a href="#cb5-9"></a>    <span class="at">resamples =</span> hotel_rs,</span>
-<span id="cb5-10"><a href="#cb5-10"></a>    <span class="at">grid =</span> <span class="dv">25</span>,</span>
-<span id="cb5-11"><a href="#cb5-11"></a>    <span class="at">metrics =</span> reg_metrics</span>
-<span id="cb5-12"><a href="#cb5-12"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<h2>Racing <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/textrecipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/finetune.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "> <img data-src="hexes/bonsai.png" class="absolute" style="top: -20px; right: 256px; width: 64px; height: 74.24px; "></h2>
+<div class="cell" data-hash="advanced-03-racing_cache/revealjs/lgb-grid-race_371d88f09a4dfacc99d55933d0642b35">
+<div class="sourceCode cell-code" id="cb5" data-code-line-numbers="1,8|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co"># Let's use a larger grid</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a><span class="fu">set.seed</span>(<span class="dv">8945</span>)</span>
+<span id="cb5-3"><a href="#cb5-3"></a>lgbm_grid <span class="ot">&lt;-</span> </span>
+<span id="cb5-4"><a href="#cb5-4"></a>  lgbm_param <span class="sc">%&gt;%</span> </span>
+<span id="cb5-5"><a href="#cb5-5"></a>  <span class="fu">grid_latin_hypercube</span>(<span class="at">size =</span> <span class="dv">50</span>)</span>
+<span id="cb5-6"><a href="#cb5-6"></a></span>
+<span id="cb5-7"><a href="#cb5-7"></a><span class="fu">library</span>(finetune)</span>
+<span id="cb5-8"><a href="#cb5-8"></a></span>
+<span id="cb5-9"><a href="#cb5-9"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
+<span id="cb5-10"><a href="#cb5-10"></a>lgbm_race_res <span class="ot">&lt;-</span></span>
+<span id="cb5-11"><a href="#cb5-11"></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb5-12"><a href="#cb5-12"></a>  <span class="fu">tune_race_anova</span>(</span>
+<span id="cb5-13"><a href="#cb5-13"></a>    <span class="at">resamples =</span> hotel_rs,</span>
+<span id="cb5-14"><a href="#cb5-14"></a>    <span class="at">grid =</span> lgbm_grid, </span>
+<span id="cb5-15"><a href="#cb5-15"></a>    <span class="at">metrics =</span> reg_metrics</span>
+<span id="cb5-16"><a href="#cb5-16"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The syntax and helper functions are extremely similar to those shown for <code>tune_grid()</code>.</p>
 </section>
 <section id="racing-results" class="slide level2">
-<h2>Racing Results</h2>
+<h2>Racing Results <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="fu">show_best</span>(lgbm_race_res, <span class="at">metric =</span> <span class="st">"mae"</span>)</span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="co">#&gt; # A tibble: 2 × 11</span></span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="co">#&gt;   trees min_n learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config              </span></span>
+<span id="cb6-4"><a href="#cb6-4"></a><span class="co">#&gt;   &lt;int&gt; &lt;int&gt;      &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
+<span id="cb6-5"><a href="#cb6-5"></a><span class="co">#&gt; 1  1014     5     0.0791           35            181 mae     standard    10.3    10   0.202 Preprocessor06_Model1</span></span>
+<span id="cb6-6"><a href="#cb6-6"></a><span class="co">#&gt; 2  1516     7     0.0421          176             12 mae     standard    10.4    10   0.200 Preprocessor42_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="racing-results-1" class="slide level2">
+<h2>Racing Results <img data-src="hexes/finetune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="columns">
 <div class="column" style="width:50%;">
-<p>Only 83 models were fit (out of 250).</p>
+<p>Only 170 models were fit (out of 500).</p>
 <p><code>select_best()</code> never considers candidate models that did not get to the end of the race.</p>
 <p>There is a helper function to see how candidate models were removed from consideration.</p>
 </div><div class="column" style="width:50%;">
 <div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="fu">plot_race</span>(lgbm_race_res) <span class="sc">+</span> </span>
-<span id="cb6-2"><a href="#cb6-2"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">pretty_breaks</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="fu">plot_race</span>(lgbm_race_res) <span class="sc">+</span> </span>
+<span id="cb7-2"><a href="#cb7-2"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">pretty_breaks</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure>
@@ -586,9 +612,8 @@
 <section id="your-turn" class="slide level2" data-transition="slide-in">
 <h2>Your turn</h2>
 <ul>
-<li>Get the grid from the example results</li>
-<li>Pass it in as the grid</li>
-<li>Run <code>tune_race_anova()</code> with a different seed.</li>
+<li><em>Run <code>tune_race_anova()</code> with a different seed.</em></li>
+<li><em>Did you get the same or similar results?</em></li>
 </ul>
 <div class="cell">
 <div class="cell-output-display">
