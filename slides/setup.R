@@ -1,6 +1,6 @@
 hexes <- function(..., size = 64) {
   x <- c(...)
-  x <- sort(unique(x))
+  x <- sort(unique(x), decreasing = TRUE)
   right <- (seq_along(x) - 1) * size
 
   res <- glue::glue(
