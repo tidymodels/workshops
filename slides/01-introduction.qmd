@@ -222,12 +222,14 @@ If you are using your own laptop instead of RStudio Cloud:
 
 ```{r}
 #| eval: false
-install.packages(c("Cubist", "DALEXtra", "doParallel", "earth", "embed", 
-                   "forcats", "lme4", "parallelly", "ranger", "remotes", "rpart", 
-                   "rpart.plot", "rules", "stacks", "tidymodels",
-                   "vetiver", "xgboost"))
 
-remotes::install_github("topepo/ongoal@hockeyR")
+install.packages("pak")
+
+pkgs <- c("bonsai", "doParallel", "embed", "finetune", "lightgbm", "lme4", 
+          "parallelly", "plumber", "probably", "ranger", "rpart", "rpart.plot", 
+          "stacks", "textrecipes", "tidymodels", "tidymodels/modeldatatoo", 
+          "vetiver")
+pak::pak(pkgs)
 ```
 
 . . .
@@ -242,12 +244,14 @@ remotes::install_github("topepo/ongoal@hockeyR")
 ## Our versions
 
 ```{r pkg-list, echo = FALSE}
-deps <- c("DALEXtra", "doParallel", "embed", "forcats", "ranger", "remotes", "rpart", 
-          "rpart.plot", "stacks", "tidymodels", "vetiver", "xgboost")
+deps <- c("bonsai", "doParallel", "embed", "finetune", "lightgbm", "lme4", 
+          "parallelly", "plumber", "probably", "ranger", "rpart", "rpart.plot", 
+          "stacks", "textrecipes", "tidymodels", "modeldatatoo", 
+          "vetiver")
 loaded <- purrr::map(deps, ~ library(.x, character.only = TRUE))
-excl <- c("remotes", "iterators", "emo", "countdown", "stats", "graphics", 
+excl <- c("iterators", "emo", "countdown", "stats", "graphics", 
           "grDevices", "utils", "datasets", "methods", "base", "forcats", 
-          "infer", "foreach")
+          "infer", "foreach", "Matrix", "R6", "parallel", "devtools", "usethis")
 loaded <- loaded[[length(loaded)]]
 loaded <- loaded[!(loaded %in% excl)]
 pkgs <- 
@@ -256,17 +260,15 @@ pkgs <-
 df <- tibble::tibble(
   package = pkgs$package,
   version = pkgs$ondiskversion,
-  source = pkgs$source
+  source = ifelse(grepl("CRAN", pkgs$source), "CRAN", pkgs$source)
 ) %>% 
   mutate(
     source = gsub(" (R 4.2.0)", "", source, fixed = TRUE),
     source = substr(source, 1, 31),
     info = paste0(package, " (", version, ", ", source, ")")
   )
-pkg_info <- knitr::combine_words(df$info)
+quarto_info <- paste0("Quarto (", system("quarto --version", intern = TRUE), ")")
+version_info <- knitr::combine_words(c(df$info, quarto_info))
 ```
 
-`r pkg_info`
-
-Quarto: `r system("quarto --version", intern = TRUE)`
-
+`r version_info`
