@@ -64,18 +64,23 @@ Many thanks to Davis Vaughan, Julia Silge, David Robinson, Julie Jung, Alison Hi
 
 ## Tentative plan for this workshop
 
+::: columns
+::: {.column width="50%"}
 -   *Today:* 
 
     - Your data budget
     - What makes a model
     - Evaluating models
-
+:::
+::: {.column width="50%"}
 -   *Tomorrow:*
     
     - Feature engineering
     - Tuning hyperparameters
-    - Transportation case study
-    - Wrapping up!
+    - Racing methods
+    - Iterative search methods
+:::
+:::
 
 ##  {.center}
 
@@ -85,7 +90,7 @@ Many thanks to Davis Vaughan, Julia Silge, David Robinson, Julie Jung, Alison Hi
 
 ### <i class="fa fa-cloud"></i> Log in to RStudio Cloud here (free):
 
-[bit.ly/tidymodels-iceland-2022](https://bit.ly/tidymodels-iceland-2022)
+[bit.ly/tidymodels-nyr-2023](https://bit.ly/tidymodels-nyr-2023)
 
 ## What is machine learning?
 
@@ -141,3 +146,134 @@ inference vs. prediction
 library(tidymodels)
 ```
 
+##  {background-image="images/tm-org.png" background-size="contain"}
+
+## The whole game
+
+Part of any modelling process is
+
+* Splitting your data into training and test set
+* Using a resampling scheme
+* Fitting models
+* Assessing performance
+* Choosing a model
+* Fitting and assessing the final model
+
+
+## The whole game
+
+```{r diagram-split, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-split.jpg")
+```
+
+## The whole game
+
+```{r diagram-model-1, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-model-1.jpg")
+```
+
+:::notes
+Stress that we are **not** fitting a model on the entire training set other than for illustrative purposes in deck 2.
+:::
+
+## The whole game
+
+```{r diagram-model-n, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-model-n.jpg")
+```
+
+## The whole game
+
+```{r diagram-resamples, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-resamples.jpg")
+```
+
+## The whole game
+
+```{r diagram-select, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-select.jpg")
+```
+
+## The whole game
+
+```{r diagram-final-fit, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-final-fit.jpg")
+```
+
+## The whole game
+
+```{r diagram-final-performance, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-final-performance.jpg")
+```
+
+
+## Let's install some packages
+
+If you are using your own laptop instead of RStudio Cloud:
+
+```{r}
+#| eval: false
+
+install.packages("pak")
+
+pkgs <- c("bonsai", "doParallel", "embed", "finetune", "lightgbm", "lme4", 
+          "parallelly", "plumber", "probably", "ranger", "rpart", "rpart.plot", 
+          "stacks", "textrecipes", "tidymodels", "tidymodels/modeldatatoo", 
+          "vetiver")
+pak::pak(pkgs)
+```
+
+. . .
+
+<br></br>
+
+### <i class="fa fa-cloud"></i> Or log in to RStudio Cloud:
+
+[bit.ly/tidymodels-nyr-2023](http://bit.ly/tidymodels-nyr-2023)
+
+
+## Our versions
+
+```{r pkg-list, echo = FALSE}
+deps <- c("bonsai", "doParallel", "embed", "finetune", "lightgbm", "lme4", 
+          "parallelly", "plumber", "probably", "ranger", "rpart", "rpart.plot", 
+          "stacks", "textrecipes", "tidymodels", "modeldatatoo", 
+          "vetiver")
+loaded <- purrr::map(deps, ~ library(.x, character.only = TRUE))
+excl <- c("iterators", "emo", "countdown", "stats", "graphics", 
+          "grDevices", "utils", "datasets", "methods", "base", "forcats", 
+          "infer", "foreach", "Matrix", "R6", "parallel", "devtools", "usethis")
+loaded <- loaded[[length(loaded)]]
+loaded <- loaded[!(loaded %in% excl)]
+pkgs <- 
+  sessioninfo::package_info(loaded, dependencies = FALSE) %>% 
+  select(-date)
+df <- tibble::tibble(
+  package = pkgs$package,
+  version = pkgs$ondiskversion,
+  source = ifelse(grepl("CRAN", pkgs$source), "CRAN", pkgs$source)
+) %>% 
+  mutate(
+    source = gsub(" (R 4.2.0)", "", source, fixed = TRUE),
+    source = substr(source, 1, 31),
+    info = paste0(package, " (", version, ", ", source, ")")
+  )
+quarto_info <- paste0("Quarto (", system("quarto --version", intern = TRUE), ")")
+version_info <- knitr::combine_words(c(df$info, quarto_info))
+```
+
+`r version_info`
