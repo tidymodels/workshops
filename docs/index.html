@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.433">
+<meta name="generator" content="quarto-1.4.176">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -80,6 +80,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   "panel-placement": "end",
   "type": "overlay",
   "limit": 20,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -97,13 +102,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <link rel="stylesheet" href="styles.css">
 <meta property="og:title" content="">
-<meta property="og:description" content="">
-<meta property="og:image" content="https://workshops.tidymodels.org/slides/images/parsnip-flagger.jpg">
-<meta property="og:site-name" content="Machine learning with tidymodels">
+<meta property="og:description" content="This workshop provides an introduction to machine learning with R using the tidymodels framework, a collection of packages for modeling and machine learning using tidyverse principles.">
+<meta property="og:site_name" content="Machine learning with tidymodels">
 <meta name="twitter:title" content="">
-<meta name="twitter:description" content="">
-<meta name="twitter:image" content="https://workshops.tidymodels.org/slides/images/parsnip-flagger.jpg">
-<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:description" content="This workshop provides an introduction to machine learning with R using the tidymodels framework, a collection of packages for modeling and machine learning using tidyverse principles.">
+<meta name="twitter:card" content="summary">
 </head>
 
 <body class="nav-fixed fullcontent">
@@ -112,7 +115,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg navbar-dark ">
       <div class="navbar-container container-fluid">
-      <div class="navbar-brand-container">
+      <div class="navbar-brand-container mx-auto">
     <a href="./index.html" class="navbar-brand navbar-brand-logo">
     <img src="./tidymodels.png" alt="" class="navbar-logo">
     </a>
@@ -146,9 +149,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     </ul>
   </li>
 </ul>
-            <div class="quarto-navbar-tools">
-</div>
           </div> <!-- /navcollapse -->
+          <div class="quarto-navbar-tools">
+</div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -185,46 +188,57 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>The following R packages, which you can install from the R console:</li>
 </ul>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="fu">c</span>(<span class="st">"Cubist"</span>, <span class="st">"DALEXtra"</span>, <span class="st">"doParallel"</span>, <span class="st">"earth"</span>, <span class="st">"embed"</span>, </span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"forcats"</span>, <span class="st">"lme4"</span>, <span class="st">"parallelly"</span>, <span class="st">"ranger"</span>, <span class="st">"remotes"</span>, <span class="st">"rpart"</span>, </span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"rpart.plot"</span>, <span class="st">"rules"</span>, <span class="st">"stacks"</span>, <span class="st">"tidymodels"</span>,</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"vetiver"</span>, <span class="st">"xgboost"</span>))</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">"topepo/ongoal@hockeyR"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># First, install the pak package: </span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"pak"</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Then the packages for both days</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>pkgs <span class="ot">&lt;-</span> </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="st">"bonsai"</span>, <span class="st">"doParallel"</span>, <span class="st">"finetune"</span>, <span class="st">"lightgbm"</span>, <span class="st">"lme4"</span>, <span class="st">"plumber"</span>, </span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"probably"</span>, <span class="st">"ranger"</span>, <span class="st">"rpart"</span>, <span class="st">"rpart.plot"</span>, <span class="st">"stacks"</span>, <span class="st">"textrecipes"</span>, </span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"tidymodels"</span>, <span class="st">"tidymodels/modeldatatoo"</span>, <span class="st">"vetiver"</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>pak<span class="sc">::</span><span class="fu">pak</span>(pkgs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="slides" class="level2">
 <h2 class="anchored" data-anchor-id="slides">Slides</h2>
 <p>These slides are designed to use with live teaching and are published for workshop participants’ convenience. There are not meant as standalone learning materials. For that, we recommend <a href="https://www.tidymodels.org/start/">tidymodels.org</a> and <a href="https://www.tmwr.org/"><em>Tidy Modeling with R</em></a>.</p>
-<section id="day-one" class="level3">
-<h3 class="anchored" data-anchor-id="day-one">Day One</h3>
+<section id="introduction-to-tidymodels" class="level3">
+<h3 class="anchored" data-anchor-id="introduction-to-tidymodels">Introduction to tidymodels</h3>
 <ul>
-<li>01: <a href="slides/01-introduction.html">Introduction</a></li>
-<li>02: <a href="slides/02-data-budget.html">Your data budget</a></li>
-<li>03: <a href="slides/03-what-makes-a-model.html">What makes a model?</a></li>
-<li>04: <a href="slides/04-evaluating-models.html">Evaluating models</a></li>
+<li>01: <a href="slides/01-introduction.html" target="_blank">Introduction</a></li>
+<li>02: <a href="slides/02-data-budget.html" target="_blank">Your data budget</a></li>
+<li>03: <a href="slides/03-what-makes-a-model.html" target="_blank">What makes a model?</a></li>
+<li>04: <a href="slides/04-evaluating-models.html" target="_blank">Evaluating models</a></li>
 </ul>
 </section>
-<section id="day-two" class="level3">
-<h3 class="anchored" data-anchor-id="day-two">Day Two</h3>
+<section id="advanced-tidymodels" class="level3">
+<h3 class="anchored" data-anchor-id="advanced-tidymodels">Advanced tidymodels</h3>
 <ul>
-<li>05: <a href="slides/05-feature-engineering.html">Feature engineering</a></li>
-<li>06: <a href="slides/06-tuning-hyperparameters.html">Tuning hyperparameters</a></li>
-<li>07: <a href="./slides/07-transit-case-study.html">Transit Case Study</a></li>
-<li>08: <a href="slides/08-wrapping-up.html">Wrapping up</a></li>
+<li>01: <a href="slides/advanced-01-feature-engineering.html" target="_blank">Feature engineering using recipes</a></li>
+<li>02: <a href="slides/advanced-02-tuning-hyperparameters.html" target="_blank">Tuning hyperparameters (grid search)</a></li>
+<li>03: <a href="slides/advanced-03-racing.html" target="_blank">Grid search via racing</a></li>
+<li>04: <a href="slides/advanced-04-iterative.html" target="_blank">Iterative search</a></li>
 </ul>
-<p>There’s also a page for <a href="slides/annotations.html">slide annotations</a>; these are extra notes for selected slides.</p>
+</section>
+<section id="extra-content-time-permitting" class="level3">
+<h3 class="anchored" data-anchor-id="extra-content-time-permitting">Extra content (time permitting)</h3>
+<ul>
+<li><a href="slides/extras-transit-case-study.html" target="_blank">Transit Case Study (includes stacking)</a></li>
+<li><a href="slides/extras-effect-encodings.html" target="_blank">Effect encodings</a></li>
+</ul>
+<p>There’s also a page for <a href="slides/annotations.html" target="_blank">slide annotations</a>; these are extra notes for selected slides.</p>
 </section>
 </section>
 <section id="code" class="level2">
 <h2 class="anchored" data-anchor-id="code">Code</h2>
-<p>Quarto files (version 1.3.433) for working along <a href="https://github.com/tidymodels/workshops/tree/main/classwork">are available on GitHub</a>. (Don’t worry if you haven’t used Quarto before; it will feel familiar to R Markdown users.)</p>
+<p>Quarto files (version 1.4.176) for working along <a href="https://github.com/tidymodels/workshops/tree/main/classwork">are available on GitHub</a>. (Don’t worry if you haven’t used Quarto before; it will feel familiar to R Markdown users.)</p>
 </section>
 <section id="past-workshops" class="level2">
 <h2 class="anchored" data-anchor-id="past-workshops">Past workshops</h2>
 <ul>
-<li><a href="archive/2022-07-RStudio-conf/index.html">25-26 July 2022 at rstudio::conf()</a></li>
-<li><a href="archive/2022-08-Reykjavik-City/index.html/">16-17 August 2022 in Reykjavik Iceland</a></li>
+<li><a href="archive/2022-07-RStudio-conf/index.html">July 2022</a> at <a href="https://posit.co/blog/talks-and-workshops-from-rstudio-conf-2022/">rstudio::conf()</a></li>
+<li><a href="archive/2022-08-Reykjavik-City/">August 2022</a> in Reykjavik</li>
 </ul>
 </section>
 
@@ -318,10 +332,9 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     // clear code selection
     e.clearSelection();
   });
-  function tippyHover(el, contentFn) {
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -331,8 +344,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -345,6 +367,60 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
       return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    if (id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        for (let i = 0; i < 2; i++) {
+          container.appendChild(note.children[i].cloneNode(true));
+        }
+        return container.innerHTML
+      } else {
+        return note.innerHTML;
+      }
+    } else {
+      return note.innerHTML;
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      try { hash = new URL(url).hash; } catch {}
+      const id = hash.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note !== null) {
+        try {
+          const html = processXRef(id, note);
+          instance.setContent(html);
+        } finally {
+          instance.enable();
+          instance.show();
+        }
+      } else {
+        // See if we can fetch this
+        fetch(url.split('#')[0])
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.getElementById(id);
+          if (note !== null) {
+            const html = processXRef(id, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
     });
   }
       let selectedAnnoteEl;
@@ -388,6 +464,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             }
             div.style.top = top - 2 + "px";
             div.style.height = height + 4 + "px";
+            div.style.left = 0;
             let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
             if (gutterDiv === null) {
               gutterDiv = window.document.createElement("div");
@@ -475,7 +552,9 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </div> <!-- /content -->
 <footer class="footer">
   <div class="nav-footer">
-    <div class="nav-footer-left">Proudly supported by <a href="https://www.rstudio.com"><img src="https://www.rstudio.com/wp-content/uploads/2018/10/RStudio-Logo-flat.svg" class="img-fluid" alt="RStudio" width="65"></a></div>   
+    <div class="nav-footer-left">
+<p>Proudly supported by <a href="https://www.rstudio.com"><img src="https://www.rstudio.com/wp-content/uploads/2018/10/RStudio-Logo-flat.svg" class="img-fluid" alt="RStudio" width="65"></a></p>
+</div>   
     <div class="nav-footer-center">
       &nbsp;
     <div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/tidymodels/workshops/edit/main/index.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/tidymodels/workshops/issues/new" class="toc-action">Report an issue</a></p></div></div></div>
@@ -484,6 +563,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     </div>
   </div>
 </footer>
+
 
 
 

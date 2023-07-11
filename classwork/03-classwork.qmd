@@ -13,20 +13,20 @@ Setup from deck 2
 
 ```{r}
 library(tidymodels)
+library(modeldatatoo)
 
-data("tree_frogs", package = "stacks")
+taxi <- data_taxi()
 
-tree_frogs <- tree_frogs %>%
-  mutate(t_o_d = factor(t_o_d),
-         age = age / 86400) %>%
-  filter(!is.na(latency)) %>%
-  select(-c(clutch, hatched))
+taxi <- taxi %>%
+  mutate(month = factor(month, levels = c("Jan", "Feb", "Mar", "Apr"))) %>% 
+  select(-c(id, duration, fare, tolls, extras, total_cost, payment_type)) %>% 
+  drop_na()
 
 set.seed(123)
 
-frog_split <- initial_split(tree_frogs, prop = 0.8, strata = latency)
-frog_train <- training(frog_split)
-frog_test <- testing(frog_split)
+taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
+taxi_train <- training(taxi_split)
+taxi_test <- testing(taxi_split)
 ```
 
 ## Your turn
@@ -56,9 +56,11 @@ decision_tree() %>%
 
 Edit the chunk below to use a different model!
 
+All available models are listed at <https://www.tidymodels.org/find/parsnip/> 
+
 ```{r tree_spec}
 tree_spec <- decision_tree() %>% 
-  set_mode("regression")
+  set_mode("classification")
 
 tree_spec
 ```
@@ -68,65 +70,54 @@ tree_spec
 ```{r}
 tree_spec <-
   decision_tree() %>% 
-  set_mode("regression")
+  set_mode("classification")
 ```
 
 Fit with parsnip:
 
 ```{r}
 tree_spec %>% 
-  fit(latency ~ ., data = frog_train) 
+  fit(tip ~ ., data = taxi_train) 
 ```
 
 Fit with a workflow:
 
 ```{r}
 workflow() %>%
-  add_formula(latency ~ .) %>%
+  add_formula(tip ~ .) %>%
   add_model(tree_spec) %>%
-  fit(data = frog_train) 
+  fit(data = taxi_train) 
 ```
 
 "Shortcut" by specifying the preprocessor and model spec directly in the `workflow()` call:
 
 ```{r}
-workflow(latency ~ ., tree_spec) %>% 
-  fit(data = frog_train) 
+workflow(tip ~ ., tree_spec) %>% 
+  fit(data = taxi_train) 
 ```
 
 ## Your turn
 
-This is how you'd fit a decision model:
+Edit the chunk below to make a workflow with your own model of choice!
 
 ```{r tree_wflow}
 tree_spec <-
   decision_tree() %>% 
-  set_mode("regression")
+  set_mode("classification")
 
 tree_wflow <- workflow() %>%
-  add_formula(latency ~ .) %>%
+  add_formula(tip ~ .) %>%
   add_model(tree_spec)
 
 tree_wflow
 ```
 
-Now use a similar approach to fit a linear model! Call it `lm_wflow`.
-
-```{r}
-### Your code here
-
-```
-
 ## Predict with your model
 
 ```{r}
-tree_spec <-
-  decision_tree() %>% 
-  set_mode("regression")
-
 tree_fit <-
-  workflow(latency ~ ., tree_spec) %>% 
-  fit(data = frog_train) 
+  workflow(tip ~ ., tree_spec) %>% 
+  fit(data = taxi_train) 
 ```
 
 ## Your turn
@@ -134,7 +125,7 @@ tree_fit <-
 What do you get from running the following code? What do you notice about the structure of the result?
 
 ```{r}
-predict(tree_fit, new_data = frog_test)
+predict(tree_fit, new_data = taxi_test)
 ```
 
 ## Your turn
@@ -142,7 +133,7 @@ predict(tree_fit, new_data = frog_test)
 What do you get from running the following code? How is `augment()` different from `predict()`?
 
 ```{r}
-augment(tree_fit, new_data = frog_test)
+augment(tree_fit, new_data = taxi_test)
 ```
 
 ## Understand your model
@@ -157,7 +148,7 @@ tree_fit %>%
 
 ## Your turn
 
-Try extracting the model engine object from your fitted linear workflow, `lm_wflow`.
+Try extracting the model engine object from your fitted workflow!
 
 ```{r}
 ### Your code here
@@ -180,7 +171,7 @@ library(vetiver)
 library(plumber)
 
 # Create a vetiver model object
-v <- vetiver_model(tree_fit, "frog_hatching")
+v <- vetiver_model(tree_fit, "taxi_tips")
 v
 ```
 
