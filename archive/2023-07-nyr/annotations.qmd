@@ -1,0 +1,221 @@
+---
+title: "Annotations"
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+---
+
+```{r startup}
+#| include: false
+
+library(tidymodels)
+tidymodels_prefer()
+
+# To get `hexes()`
+source("setup.R")
+```
+
+<hr size="5">
+
+# 01 - Introduction
+
+## `r emo::ji("eyes")`
+
+This page contains _annotations_ for selected slides. 
+
+There's a lot that we want to tell you. We don't want people to have to frantically scribble down things that we say that are not on the slides. 
+
+We've added sections to this document with longer explanations and links to other resources. 
+
+<hr size="5">
+
+# 02 - Data Budget
+
+## The initial split
+
+What does `set.seed()` do? 
+
+We’ll use pseudo-random numbers (PRN) to partition the data into training and testing. PRN are numbers that emulate truly random numbers (but really are not truly random). 
+
+Think of PRN as a box that takes a starting value (the "seed") that produces random numbers using that starting value as an input into its process. 
+
+If we know a seed value, we can reproduce our "random" numbers. To use a different set of random numbers, choose a different seed value. 
+
+For example: 
+
+```{r}
+set.seed(1)
+runif(3)
+
+# Get a new set of random numbers:
+set.seed(2)
+runif(3)
+
+# We can reproduce the old ones with the same seed
+set.seed(1)
+runif(3)
+```
+
+If we _don’t_ set the seed, R uses the clock time and the process ID to create a seed. This isn’t reproducible. 
+
+Since we want our code to be reproducible, we set the seeds before random numbers are used. 
+
+In theory, you can set the seed once at the start of a script. However, if we do interactive data analysis, we might unwittingly use random numbers while coding. In that case, the stream is not the same and we don’t get reproducible results. 
+
+The value of the seed is an integer and really has no meaning. Max has a script to generate random integers to use as seeds to "spread the randomness around". It is basically:
+
+```{r}
+cat(paste0("set.seed(", sample.int(10000, 5), ")", collapse = "\n"))
+```
+
+<hr size="5">
+
+# 03 - What Makes A Model?
+
+## What is wrong with this? 
+
+If we treat the preprocessing as a separate task, it raises the risk that we might accidentally overfit to the data at hand. 
+
+For example, someone might estimate something from the entire data set (such as the principle components) and treat that data as if it were known (and not estimated). Depending on the what was done with the data, consequences in doing that could be:
+
+* Your performance metrics are slightly-to-moderately optimistic (e.g. you might think your accuracy is 85% when it is actually 75%)
+* A consequential component of the analysis is not right and the model just doesn’t work. 
+
+The big issue here is that you won’t be able to figure this out until you get a new piece of data, such as the test set. 
+
+A really good example of this is in [‘Selection bias in gene extraction on the basis of microarray gene-expression data’](https://pubmed.ncbi.nlm.nih.gov/11983868/). The authors re-analyze a previous publication and show that the original researchers did not include feature selection in the workflow. Because of that, their performance statistics were extremely optimistic. In one case, they could do the original analysis on complete noise and still achieve zero errors. 
+
+Generally speaking, this problem is referred to as [data leakage](https://en.wikipedia.org/wiki/Leakage_(machine_learning)). Some other references: 
+
+ * [Overfitting to Predictors and External Validation](https://bookdown.org/max/FES/selection-overfitting.html)
+ * [Are We Learning Yet? A Meta Review of Evaluation Failures Across Machine Learning](https://datasets-benchmarks-proceedings.neurips.cc/paper/2021/hash/757b505cfd34c64c85ca5b5690ee5293-Abstract-round2.html)
+ * [Navigating the pitfalls of applying machine learning in genomics](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=Navigating+the+pitfalls+of+applying+machine+learning+in+genomics&btnG=)
+ * [A review of feature selection techniques in bioinformatics](https://academic.oup.com/bioinformatics/article/23/19/2507/185254)
+ * [On Over-fitting in Model Selection and Subsequent Selection Bias in Performance Evaluation](https://www.jmlr.org/papers/volume11/cawley10a/cawley10a.pdf)
+
+<hr size="5">
+
+# 04 - Evaluating Models
+
+## Where are the fitted models?
+
+The primary purpose of resampling is to estimate model performance. The models are almost never needed again. 
+
+Also, if the data set is large, the model object may require a lot of memory to save so, by default, we don't keep them. 
+
+For more advanced use cases, you can extract and save them. See:
+
+ * <https://www.tmwr.org/resampling.html#extract>
+ * <https://www.tidymodels.org/learn/models/coefficients/> (an example)
+
+
+## Validation set
+
+The upcoming version of the rsample package (1.2.0) will have a new set of functions specific to validation sets. They will allow you to make an initial _three-way split_ and still use a validation set with the tune package. 
+
+<hr size="5">
+
+# 06 - Tuning Hyperparameters
+
+## Update parameter ranges
+
+In about 90% of the cases, the dials function that you use to update the parameter range has the same name as the argument. For example, if you were to update the `mtry` parameter in a random forests model, the code would look like
+
+```{r}
+#| eval: false
+
+parameter_object %>% 
+  update(mtry = mtry(c(1, 100)))
+```
+
+There are some cases where the parameter function, or its associated values, are different from the argument name. 
+
+For example, with `step_spline_naturall()`, we might want to tune the `deg_free` argument (for the degrees of freedom of a spline function. ). In this case, the argument name is `deg_free` but we update it with `spline_degree()`. 
+
+`deg_free` represents the general concept of degrees of freedom and could be associated with many different things. For example, if we ever had an argument that was the number of degrees of freedom for a $t$ distribution, we would call that argument `deg_free`. 
+
+For splines, we probably want a wider range for the degrees of freedom. We made a specialized function called `spline_degree()` to be used in these cases. 
+
+How can you tell when this happens? There is a helper function called `tunable()` and that gives information on how we make the default ranges for parameters. There is a column in these objects names `call_info`:
+
+```{r}
+library(tidymodels)
+ns_tunable <- 
+  recipe(mpg ~ ., data = mtcars) %>% 
+  step_spline_natural(dis, deg_free = tune()) %>% 
+  tunable()
+
+ns_tunable
+ns_tunable$call_info
+```
+
+
+## Early stopping for boosted trees
+
+When deciding on the number of boosting iterations, there are two main strategies:
+
+ * Directly tune it (`trees = tune()`)
+ 
+ * Set it to one value and tune the number of early stopping iterations (`trees = 500`, `stop_iter = tune()`).
+
+Early stopping is when we monitor the performance of the model. If the model doesn't make any improvements for `stop_iter` iterations, training stops. 
+
+Here's an example where, after eleven iterations, performance starts to get worse. 
+
+
+```{r early-stopping}
+#| echo: false
+
+roc_vals <- c(0.4994, 0.5075, 0.6131, 0.7077, 0.7376, 0.752, 0.7807, 0.7927, 
+              0.7969, 0.7915, 0.8118, 0.8019, 0.7926, 0.7772, 0.776)
+iterations <- seq_along(roc_vals)
+
+early_stop <- tibble(iterations = iterations, `ROC AUC` = roc_vals)
+
+early_stop %>% ggplot(aes(iterations, `ROC AUC`)) + geom_point() + theme_bw()
+```
+
+This is likely due to over-fitting so we stop the model at eleven boosting iterations.  
+
+Early stopping usually has good results and takes far less time. 
+
+We _could_ an engine argument called `validation` here. That's not an argument to any function in the lightgbm package. 
+
+bonsai has its own wrapper around (`lightgbm::lgb.train()`) called `bonsai::train_lightgbm()`. We use that here and it has a `validation` argument.
+
+How would you know that? There are a few different ways:
+
+ * Look at the documentation in `?boost_tree` and click on the `lightgbm` entry in the engine list. 
+ * Check out the pkgdown reference website <https://parsnip.tidymodels.org/reference/index.html>
+ * Run the `translate()` function on the parsnip specification object. 
+
+The first two options are best since they tell you a lot more about the particularities of each model engine (there are a lot for lightgbm). 
+
+<hr size="5">
+
+# Extras - Effect Encodings
+
+## Per-agent statistics
+
+The effect encoding method essentially takes the effect of a variable, like agent, and makes a data column for that effect. In our example, affect of the agent on the ADR is quantified by a model and then added as a data column to be used in the model. 
+
+Suppose agent Max has a single reservation in the data and it had an ADR of €200. If we used a naive estimate for Max’s effect, the model is being told that Max should always produce an effect of €200. That’s a very poor estimate since it is from a single data point. 
+
+Contrast this with seasoned agent Davis, who has taken 250 reservations with an average ADR of €100. Davis’s mean is more predictive because it is estimated with better data (i.e., more total reservations). 
+Partial pooling leverages the entire data set and can borrow strength from all of the agents. It is a common tool in Bayesian estimation and non-Bayesian mixed models. If a agent’s data is of good quality, the partial pooling effect estimate is closer to the raw mean. Max’s data is not great and is "shrunk" towards the center of the overall average. Since there is so little known about Max’s reservation history, this is a better effect estimate (until more data is available for him). 
+
+The Stan documentation has a pretty good vignette on this:  <https://cran.r-project.org/web/packages/rstanarm/vignettes/pooling.html>
+
+Also, _Bayes Rules!_ has a nice section on this: <https://www.bayesrulesbook.com/chapter-15.html>
+
+Since this example has a numeric outcome, partial pooling is very similar to the James–Stein estimator: <https://en.wikipedia.org/wiki/James–Stein_estimator>
+
+## Agent effects
+
+Effect encoding might result in a somewhat circular argument: the column is more likely to be important to the model since it is the output of a separate model. The risk here is that we might over-fit the effect to the data. For this reason, it is super important to make sure that we verify that we aren’t overfitting by checking with resampling (or a validation set). 
+
+Partial pooling somewhat lowers the risk of overfitting since it tends to correct for agents with small sample sizes. It can’t correct for improper data usage or data leakage though. 
+

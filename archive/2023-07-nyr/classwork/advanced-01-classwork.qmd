@@ -1,0 +1,271 @@
+---
+title: "1 - Feature Engineering - Classwork"
+subtitle: "Advanced tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Hotel data
+
+```{r}
+library(tidymodels)
+library(modeldatatoo)
+
+# Max's usual settings: 
+tidymodels_prefer()
+theme_set(theme_bw())
+options(
+  pillar.advice = FALSE, 
+  pillar.min_title_chars = Inf
+)
+
+set.seed(295)
+hotel_rates <- 
+  data_hotel_rates() %>% 
+  sample_n(5000) %>% 
+  arrange(arrival_date) %>% 
+  select(-arrival_date_num, -arrival_date) %>% 
+  mutate(
+    company = factor(as.character(company)),
+    country = factor(as.character(country)),
+    agent = factor(as.character(agent))
+  )
+```
+
+## Data spending
+
+```{r}
+set.seed(4028)
+hotel_split <-
+  initial_split(hotel_rates, strata = avg_price_per_room)
+
+hotel_tr <- training(hotel_split)
+hotel_te <- testing(hotel_split)
+```
+
+## Your turn
+
+Let's take some time and investigate the _training data_. The outcome is `avg_price_per_room`. 
+
+Are there any interesting characteristics of the data?
+
+```{r}
+# Your code here!
+
+```
+
+## Resampling Strategy
+
+```{r}
+set.seed(472)
+hotel_rs <- vfold_cv(hotel_tr, strata = avg_price_per_room)
+hotel_rs
+```
+
+## A first recipe
+
+```{r}
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr)
+
+summary(hotel_rec)
+```
+
+## Your turn
+
+What do you think are in the `type` vectors for the `lead_time` and `country` columns?
+
+```{r}
+# Your code here!
+
+```
+
+## A base recipe
+
+```{r}
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  # create indicator variables
+  step_dummy(all_nominal_predictors()) %>% 
+  # filter out constant columns
+  step_zv(all_predictors()) %>% 
+  # normalize
+  step_normalize(all_numeric_predictors())
+```
+
+## Different options to reduce correlation
+
+```{r}
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_corr(all_numeric_predictors(), threshold = 0.9)
+
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_pca(all_numeric_predictors())
+
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  embed::step_umap(all_numeric_predictors(), outcome = vars(avg_price_per_room))
+```
+
+## Other possible steps
+
+For example, natural splines:
+
+```{r}
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_spline_natural(year_day, deg_free = 10)
+```
+
+## Your turn 
+
+Create a `recipe()` for the hotel data to:
+
+- use a Yeo-Johnson (YJ) transformation on `lead_time`
+- convert factors to indicator variables
+- remove zero-variance variables
+
+```{r}
+# Your code here!
+
+```
+
+## Minimal recipe for the hotel data
+
+```{r}
+hotel_indicators <-
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_YeoJohnson(lead_time) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+
+## Measuring Performance
+
+We'll compute two measures, mean absolute error (MAE) and the coefficient of determination (a.k.a $R^2$), and focus on the MAE for parameter optimization. 
+
+```{r}
+reg_metrics <- metric_set(mae, rsq)
+```
+
+```{r}
+set.seed(9)
+
+hotel_lm_wflow <-
+  workflow() %>%
+  add_recipe(hotel_indicators) %>%
+  add_model(linear_reg())
+ 
+ctrl <- control_resamples(save_pred = TRUE)
+hotel_lm_res <-
+  hotel_lm_wflow %>%
+  fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
+
+collect_metrics(hotel_lm_res)
+```
+
+## Your turn
+
+Use `fit_resamples()` to fit your workflow with a recipe.
+
+Collect the predictions from the results.
+
+```{r}
+# Your code here!
+
+```
+
+## Holdout predictions
+
+```{r}
+# Since we used `save_pred = TRUE`
+lm_val_pred <- collect_predictions(hotel_lm_res)
+lm_val_pred %>% slice(1:7)
+```
+
+## Calibration Plot 
+
+```{r}
+library(probably)
+
+cal_plot_regression(hotel_lm_res, alpha = 1 / 5)
+```
+
+## What do we do with the agent and company data? 
+
+Collapsing factor levels: 
+
+```{r}
+hotel_other_rec <-
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_YeoJohnson(lead_time) %>%
+  step_other(agent, threshold = 0.001) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+
+hotel_other_wflow <-
+  hotel_lm_wflow %>%
+  update_recipe(hotel_other_rec)
+
+hotel_other_res <-
+  hotel_other_wflow %>%
+  fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
+
+collect_metrics(hotel_other_res)
+```
+
+Feature Hashing:
+
+```{r}
+library(textrecipes)
+
+hash_rec <-
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>%
+  step_YeoJohnson(lead_time) %>%
+  # Defaults to 32 signed indicator columns
+  step_dummy_hash(agent) %>%
+  step_dummy_hash(company) %>%
+  # Regular indicators for the others
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors())
+
+hotel_hash_wflow <-
+  hotel_lm_wflow %>%
+  update_recipe(hash_rec)
+
+hotel_hash_res <-
+  hotel_hash_wflow %>%
+  fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
+
+collect_metrics(hotel_hash_res)
+```
+
+## Debugging a recipe
+
+```{r}
+# Estimate the transformation coefficients
+hash_rec_fit <- prep(hash_rec)
+
+# Get the transformation coefficient
+tidy(hash_rec_fit, number = 1)
+
+# Get the processed data
+bake(hash_rec_fit, hotel_tr %>% slice(1:3), contains("_agent_"))
+```

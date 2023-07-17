@@ -1,0 +1,273 @@
+---
+title: "1 - Introduction"
+subtitle: "Machine learning with tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+---
+
+```{r}
+#| include: false
+#| file: setup.R
+```
+
+::: r-fit-text
+Welcome!
+:::
+
+## Who are you?
+
+-   You can use the magrittr `%>%` or base R `|>` pipe
+
+-   You are familiar with functions from dplyr, tidyr, ggplot2
+
+-   You have exposure to basic statistical concepts
+
+-   You do **not** need intermediate or expert familiarity with modeling or ML
+
+## Who are tidymodels?
+
+-   Simon Couch
+-   Hannah Frick
+-   Emil Hvitfeldt
+-   Max Kuhn
+
+. . .
+
+Many thanks to Davis Vaughan, Julia Silge, David Robinson, Julie Jung, Alison Hill, and Desirée De Leon for their role in creating these materials!
+
+## Asking for help
+
+. . .
+
+🟪 "I'm stuck and need help!"
+
+. . .
+
+🟩 "I finished the exercise"
+
+
+## `r emo::ji("eyes")` {.annotation}
+
+![](images/pointing.svg){.absolute top="0" right="0"}
+
+## Tentative plan for this workshop
+
+::: columns
+::: {.column width="50%"}
+-   *Today:* 
+
+    - Your data budget
+    - What makes a model
+    - Evaluating models
+:::
+::: {.column width="50%"}
+-   *Tomorrow:*
+    
+    - Feature engineering
+    - Tuning hyperparameters
+    - Racing methods
+    - Iterative search methods
+:::
+:::
+
+##  {.center}
+
+### Introduce yourself to your neighbors 👋
+
+<br></br>
+
+Check Slack (`#ml-ws-2023`) for an RStudio Cloud link.
+
+## What is machine learning?
+
+![](https://imgs.xkcd.com/comics/machine_learning.png){fig-align="center"}
+
+::: footer
+<https://xkcd.com/1838/>
+:::
+
+## What is machine learning?
+
+![](images/what_is_ml.jpg){fig-align="center"}
+
+::: footer
+Illustration credit: <https://vas3k.com/blog/machine_learning/>
+:::
+
+## What is machine learning?
+
+![](images/ml_illustration.jpg){fig-align="center"}
+
+::: footer
+Illustration credit: <https://vas3k.com/blog/machine_learning/>
+:::
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+. . .
+
+*How are statistics and machine learning related?*
+
+*How are they similar? Different?*
+
+```{r}
+#| echo: false
+countdown::countdown(minutes = 3, id = "statistics-vs-ml")
+```
+
+::: notes
+the "two cultures"
+
+model first vs. data first
+
+inference vs. prediction
+:::
+
+## What is tidymodels? `r hexes("tidymodels")`
+
+```{r}
+#| message: true
+library(tidymodels)
+```
+
+##  {background-image="images/tm-org.png" background-size="contain"}
+
+## The whole game
+
+Part of any modelling process is
+
+* Splitting your data into training and test set
+* Using a resampling scheme
+* Fitting models
+* Assessing performance
+* Choosing a model
+* Fitting and assessing the final model
+
+
+## The whole game
+
+```{r diagram-split, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-split.jpg")
+```
+
+## The whole game
+
+```{r diagram-model-1, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-model-1.jpg")
+```
+
+:::notes
+Stress that we are **not** fitting a model on the entire training set other than for illustrative purposes in deck 2.
+:::
+
+## The whole game
+
+```{r diagram-model-n, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-model-n.jpg")
+```
+
+## The whole game
+
+```{r diagram-resamples, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-resamples.jpg")
+```
+
+## The whole game
+
+```{r diagram-select, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-select.jpg")
+```
+
+## The whole game
+
+```{r diagram-final-fit, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-final-fit.jpg")
+```
+
+## The whole game
+
+```{r diagram-final-performance, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-final-performance.jpg")
+```
+
+
+## Let's install some packages
+
+If you are using your own laptop instead of RStudio Cloud:
+
+```{r}
+#| eval: false
+
+install.packages("pak")
+
+pkgs <- c("bonsai", "doParallel", "embed", "finetune", "lightgbm", "lme4", 
+          "parallelly", "plumber", "probably", "ranger", "rpart", "rpart.plot", 
+          "stacks", "textrecipes", "tidymodels", "tidymodels/modeldatatoo", 
+          "vetiver")
+pak::pak(pkgs)
+```
+
+. . .
+
+Check Slack (`#ml-ws-2023`) for an RStudio Cloud link.
+
+
+## Our versions
+
+```{r pkg-list, echo = FALSE}
+deps <- c("bonsai", "doParallel", "embed", "finetune", "lightgbm", "lme4", 
+          "parallelly", "plumber", "probably", "ranger", "rpart", "rpart.plot", 
+          "stacks", "textrecipes", "tidymodels", "modeldatatoo", 
+          "vetiver")
+loaded <- purrr::map(deps, ~ library(.x, character.only = TRUE))
+excl <- c("iterators", "emo", "countdown", "stats", "graphics", 
+          "grDevices", "utils", "datasets", "methods", "base", "forcats", 
+          "infer", "foreach", "Matrix", "R6", "parallel", "devtools", "usethis")
+loaded <- loaded[[length(loaded)]]
+loaded <- loaded[!(loaded %in% excl)]
+pkgs <- 
+  sessioninfo::package_info(loaded, dependencies = FALSE) %>% 
+  select(-date)
+df <- tibble::tibble(
+  package = pkgs$package,
+  version = pkgs$ondiskversion,
+  source = ifelse(grepl("CRAN", pkgs$source), "CRAN", pkgs$source)
+) %>% 
+  mutate(
+    source = gsub(" (R 4.2.0)", "", source, fixed = TRUE),
+    source = substr(source, 1, 31),
+    info = paste0(package, " (", version, ", ", source, ")")
+  )
+quarto_info <- paste0("Quarto (", system("quarto --version", intern = TRUE), ")")
+version_info <- knitr::combine_words(c(df$info, quarto_info))
+```
+
+`r version_info`
