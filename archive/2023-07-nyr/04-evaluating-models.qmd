@@ -1,0 +1,795 @@
+---
+title: "4 - Evaluating models"
+subtitle: "Machine learning with tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+---
+
+```{r}
+#| include: false
+#| file: setup.R
+```
+
+## Looking at predictions
+
+```{r}
+#| echo: false
+library(countdown)
+library(tidymodels)
+library(modeldatatoo)
+taxi <- data_taxi() %>%
+  mutate(month = factor(month, levels = c("Jan", "Feb", "Mar", "Apr"))) %>% 
+  select(-c(id, duration, fare, tolls, extras, total_cost, payment_type)) %>%
+  drop_na()
+
+set.seed(123)
+taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
+taxi_train <- training(taxi_split)
+taxi_test <- testing(taxi_split)
+
+tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
+taxi_wflow <- workflow(tip ~ ., tree_spec)
+taxi_fit <- fit(taxi_wflow, taxi_train)
+```
+
+```{r}
+augment(taxi_fit, new_data = taxi_train) %>%
+  relocate(tip, .pred_class, .pred_yes, .pred_no)
+```
+
+## Confusion matrix `r hexes("yardstick")`
+
+![](images/confusion-matrix.png)
+
+## Confusion matrix `r hexes("yardstick")`
+
+```{r}
+augment(taxi_fit, new_data = taxi_train) %>%
+  conf_mat(truth = tip, estimate = .pred_class)
+```
+
+## Confusion matrix `r hexes("yardstick")`
+
+```{r}
+augment(taxi_fit, new_data = taxi_train) %>%
+  conf_mat(truth = tip, estimate = .pred_class) %>%
+  autoplot(type = "heatmap")
+```
+
+## Metrics for model performance `r hexes("yardstick")`
+
+::: columns
+::: {.column width="60%"}
+```{r}
+augment(taxi_fit, new_data = taxi_train) %>%
+  accuracy(truth = tip, estimate = .pred_class)
+```
+:::
+
+::: {.column width="40%"}
+![](images/confusion-matrix-accuracy.png)
+:::
+:::
+
+## Dangers of accuracy `r hexes("yardstick")`
+
+We need to be careful of using `accuracy()` since it can give "good" performance by only predicting one way with imbalanced data
+
+```{r}
+augment(taxi_fit, new_data = taxi_train) %>%
+  mutate(.pred_class = factor("yes", levels = c("yes", "no"))) %>%
+  accuracy(truth = tip, estimate = .pred_class)
+```
+
+## Metrics for model performance `r hexes("yardstick")`
+
+::: columns
+::: {.column width="60%"}
+```{r}
+augment(taxi_fit, new_data = taxi_train) %>%
+  sensitivity(truth = tip, estimate = .pred_class)
+```
+:::
+
+::: {.column width="40%"}
+![](images/confusion-matrix-sensitivity.png)
+:::
+:::
+
+
+## Metrics for model performance `r hexes("yardstick")`
+
+::: columns
+::: {.column width="60%"}
+```{r}
+#| code-line-numbers: "3-6"
+augment(taxi_fit, new_data = taxi_train) %>%
+  sensitivity(truth = tip, estimate = .pred_class)
+```
+
+<br>
+
+```{r}
+augment(taxi_fit, new_data = taxi_train) %>%
+  specificity(truth = tip, estimate = .pred_class)
+```
+:::
+
+::: {.column width="40%"}
+![](images/confusion-matrix-specificity.png)
+:::
+:::
+
+## Metrics for model performance `r hexes("yardstick")`
+
+We can use `metric_set()` to combine multiple calculations into one
+
+```{r}
+taxi_metrics <- metric_set(accuracy, specificity, sensitivity)
+
+augment(taxi_fit, new_data = taxi_train) %>%
+  taxi_metrics(truth = tip, estimate = .pred_class)
+```
+
+## Metrics for model performance `r hexes("yardstick")`
+
+```{r}
+taxi_metrics <- metric_set(accuracy, specificity, sensitivity)
+
+augment(taxi_fit, new_data = taxi_train) %>%
+  group_by(local) %>%
+  taxi_metrics(truth = tip, estimate = .pred_class)
+```
+
+## Two class data
+
+These metrics assume that we know the threshold for converting "soft" probability predictions into "hard" class predictions.
+
+. . .
+
+Is a 50% threshold good? 
+
+What happens if we say that we need to be 80% sure to declare an event?
+
+-   sensitivity ⬇️, specificity ⬆️
+
+. . .
+
+What happens for a 20% threshold?
+
+-   sensitivity ⬆️, specificity ⬇️
+
+## Varying the threshold
+
+```{r}
+#| label: thresholds
+#| echo: false
+
+augment(taxi_fit, new_data = taxi_train) %>% 
+  roc_curve(truth = tip, .pred_yes) %>% 
+  filter(is.finite(.threshold)) %>% 
+  pivot_longer(c(specificity, sensitivity), names_to = "statistic", values_to = "value") %>% 
+  rename(`event threshold` = .threshold) %>% 
+  ggplot(aes(x = `event threshold`, y = value, col = statistic, group = statistic)) + 
+  geom_line() +
+  scale_color_brewer(palette = "Dark2") +
+  labs(y = NULL) +
+  coord_equal() +
+  theme(legend.position = "top")
+```
+
+## ROC curves
+
+To make an ROC (receiver operator characteristic) curve, we:
+
+- calculate the sensitivity and specificity for all possible thresholds
+
+- plot false positive rate (x-axis) versus true positive rate (y-axis)
+
+given that sensitivity is the true positive rate, and specificity is the true negative rate. Hence `1 - specificity` is the false positive rate.
+
+. . .
+
+We can use the area under the ROC curve as a classification metric: 
+
+- ROC AUC = 1 💯 
+- ROC AUC = 1/2 😢
+
+:::notes
+ROC curves are insensitive to class imbalance.
+:::
+
+## ROC curves `r hexes("yardstick")`
+
+```{r}
+# Assumes _first_ factor level is event; there are options to change that
+augment(taxi_fit, new_data = taxi_train) %>% 
+  roc_curve(truth = tip, .pred_yes) %>%
+  slice(1, 20, 50)
+
+augment(taxi_fit, new_data = taxi_train) %>% 
+  roc_auc(truth = tip, .pred_yes)
+```
+
+## ROC curve plot `r hexes("yardstick")`
+
+```{r roc-curve}
+#| fig-width: 6
+#| fig-height: 6
+#| output-location: "column"
+
+augment(taxi_fit, new_data = taxi_train) %>% 
+  roc_curve(truth = tip, .pred_yes) %>%
+  autoplot()
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Compute and plot an ROC curve for your current model.*
+
+*What data are being used for this ROC curve plot?*
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "roc-curve")
+```
+
+##  {background-iframe="https://yardstick.tidymodels.org/reference/index.html"}
+
+::: footer
+:::
+
+# ⚠️ DANGERS OF OVERFITTING ⚠️
+
+## Dangers of overfitting ⚠️
+
+![](https://raw.githubusercontent.com/topepo/2022-nyr-workshop/main/images/tuning-overfitting-train-1.svg)
+
+## Dangers of overfitting ⚠️
+
+![](https://raw.githubusercontent.com/topepo/2022-nyr-workshop/main/images/tuning-overfitting-test-1.svg)
+
+## Dangers of overfitting ⚠️ `r hexes("yardstick")`
+
+```{r}
+taxi_fit %>%
+  augment(taxi_train)
+```
+
+We call this "resubstitution" or "repredicting the training set"
+
+## Dangers of overfitting ⚠️ `r hexes("yardstick")`
+
+```{r}
+taxi_fit %>%
+  augment(taxi_train) %>%
+  accuracy(tip, .pred_class)
+```
+
+We call this a "resubstitution estimate"
+
+## Dangers of overfitting ⚠️ `r hexes("yardstick")`
+
+::: columns
+::: {.column width="50%"}
+```{r}
+taxi_fit %>%
+  augment(taxi_train) %>%
+  accuracy(tip, .pred_class)
+```
+:::
+
+::: {.column width="50%"}
+:::
+:::
+
+## Dangers of overfitting ⚠️ `r hexes("yardstick")`
+
+::: columns
+::: {.column width="50%"}
+```{r}
+taxi_fit %>%
+  augment(taxi_train) %>%
+  accuracy(tip, .pred_class)
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+taxi_fit %>%
+  augment(taxi_test) %>%
+  accuracy(tip, .pred_class)
+```
+:::
+:::
+
+. . .
+
+⚠️ Remember that we're demonstrating overfitting 
+
+. . .
+
+⚠️ Don't use the test set until the *end* of your modeling analysis
+
+
+##  {background-image="https://media.giphy.com/media/55itGuoAJiZEEen9gg/giphy.gif" background-size="70%"}
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute bottom="0" left="0" width="150" height="150"}
+
+*Use `augment()` and and a metric function to compute a classification metric like `brier_class()`.*
+
+*Compute the metrics for both training and testing data to demonstrate overfitting!*
+
+*Notice the evidence of overfitting!* ⚠️
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "augment-metrics")
+```
+
+## Dangers of overfitting ⚠️ `r hexes("yardstick")`
+
+::: columns
+::: {.column width="50%"}
+```{r}
+taxi_fit %>%
+  augment(taxi_train) %>%
+  brier_class(tip, .pred_yes)
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+taxi_fit %>%
+  augment(taxi_test) %>%
+  brier_class(tip, .pred_yes)
+```
+:::
+:::
+
+. . .
+
+What if we want to compare more models?
+
+. . .
+
+And/or more model configurations?
+
+. . .
+
+And we want to understand if these are important differences?
+
+# The testing data are precious 💎
+
+# How can we use the *training* data to compare and evaluate different models? 🤔
+
+##  {background-color="white" background-image="https://www.tmwr.org/premade/resampling.svg" background-size="80%"}
+
+## Cross-validation
+
+![](https://www.tmwr.org/premade/three-CV.svg)
+
+## Cross-validation
+
+![](https://www.tmwr.org/premade/three-CV-iter.svg)
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*If we use 10 folds, what percent of the training data*
+
+-   *ends up in analysis*
+-   *ends up in assessment*
+
+*for* **each** *fold?*
+
+![](images/taxi_spinning.svg){width="300"}
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "percent-in-folds")
+```
+
+## Cross-validation `r hexes("rsample")`
+
+```{r}
+vfold_cv(taxi_train) # v = 10 is default
+```
+
+## Cross-validation `r hexes("rsample")`
+
+What is in this?
+
+```{r}
+taxi_folds <- vfold_cv(taxi_train)
+taxi_folds$splits[1:3]
+```
+
+::: notes
+Talk about a list column, storing non-atomic types in dataframe
+:::
+
+## Cross-validation `r hexes("rsample")`
+
+```{r}
+vfold_cv(taxi_train, v = 5)
+```
+
+## Cross-validation `r hexes("rsample")`
+
+```{r}
+vfold_cv(taxi_train, strata = tip)
+```
+
+. . .
+
+Stratification often helps, with very little downside
+
+## Cross-validation `r hexes("rsample")`
+
+We'll use this setup:
+
+```{r}
+set.seed(123)
+taxi_folds <- vfold_cv(taxi_train, v = 10, strata = tip)
+taxi_folds
+```
+
+. . .
+
+Set the seed when creating resamples
+
+# We are equipped with metrics and resamples!
+
+## Fit our model to the resamples
+
+```{r}
+taxi_res <- fit_resamples(taxi_wflow, taxi_folds)
+taxi_res
+```
+
+## Evaluating model performance `r hexes("tune")`
+
+```{r}
+taxi_res %>%
+  collect_metrics()
+```
+
+. . .
+
+We can reliably measure performance using only the **training** data 🎉
+
+## Comparing metrics `r hexes("yardstick")`
+
+How do the metrics from resampling compare to the metrics from training and testing?
+
+```{r}
+#| echo: false
+taxi_training_roc_auc <-
+  taxi_fit %>%
+  augment(taxi_train) %>%
+  roc_auc(tip, .pred_yes) %>%
+  pull(.estimate) %>%
+  round(digits = 2)
+
+taxi_testing_roc_auc <-
+  taxi_fit %>%
+  augment(taxi_test) %>%
+  roc_auc(tip, .pred_yes) %>%
+  pull(.estimate) %>%
+  round(digits = 2)
+```
+
+::: columns
+::: {.column width="50%"}
+```{r}
+taxi_res %>%
+  collect_metrics() %>% 
+  select(.metric, mean, n)
+```
+:::
+
+::: {.column width="50%"}
+The ROC AUC previously was
+
+- `r taxi_training_roc_auc` for the training set
+- `r taxi_testing_roc_auc` for test set
+:::
+:::
+
+. . .
+
+Remember that:
+
+⚠️ the training set gives you overly optimistic metrics
+
+⚠️ the test set is precious
+
+## Evaluating model performance `r hexes("tune")`
+
+```{r}
+# Save the assessment set results
+ctrl_taxi <- control_resamples(save_pred = TRUE)
+taxi_res <- fit_resamples(taxi_wflow, taxi_folds, control = ctrl_taxi)
+
+taxi_preds <- collect_predictions(taxi_res)
+taxi_preds
+```
+
+## Evaluating model performance `r hexes("tune")`
+
+```{r}
+taxi_preds %>% 
+  group_by(id) %>%
+  taxi_metrics(truth = tip, estimate = .pred_class)
+```
+
+## Where are the fitted models? `r hexes("tune")`  {.annotation}
+
+```{r}
+taxi_res
+```
+
+. . .
+
+🗑️
+
+# Alternate resampling schemes
+
+## Bootstrapping
+
+![](https://www.tmwr.org/premade/bootstraps.svg)
+
+## Bootstrapping `r hexes("rsample")`
+
+```{r}
+set.seed(3214)
+bootstraps(taxi_train)
+```
+
+##  {background-iframe="https://rsample.tidymodels.org/reference/index.html"}
+
+::: footer
+:::
+
+## The whole game - status update
+
+```{r diagram-resamples, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-resamples.jpg")
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Create:*
+
+-   *Monte Carlo Cross-Validation sets*
+-   *validation set*
+
+(use the reference guide to find the function)
+
+*Don't forget to set a seed when you resample!*
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "try-rsample")
+```
+
+## Monte Carlo Cross-Validation `r hexes("rsample")`
+
+```{r}
+set.seed(322)
+mc_cv(taxi_train, times = 10)
+```
+
+## Validation set `r hexes("rsample")` {.annotation}
+
+```{r}
+set.seed(853)
+validation_split(taxi_train, strata = tip)
+```
+
+. . .
+
+A validation set is just another type of resample
+
+# Decision tree 🌳
+
+# Random forest 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌵🌴🌲🌳🌴🌵🌳🌴🌳
+
+## Random forest 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵
+
+- Ensemble many decision tree models
+
+- All the trees vote! 🗳️
+
+- Bootstrap aggregating + random predictor sampling
+
+. . .
+
+- Often works well without tuning hyperparameters (more on this tomorrow!), as long as there are enough trees
+
+## Create a random forest model `r hexes("parsnip")`
+
+```{r}
+rf_spec <- rand_forest(trees = 1000, mode = "classification")
+rf_spec
+```
+
+## Create a random forest model `r hexes("workflows")`
+
+```{r}
+rf_wflow <- workflow(tip ~ ., rf_spec)
+rf_wflow
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Use `fit_resamples()` and `rf_wflow` to:*
+
+-   *keep predictions*
+-   *compute metrics*
+
+```{r}
+#| echo: false
+countdown(minutes = 8, id = "try-fit-resamples")
+```
+
+## Evaluating model performance `r hexes("tune")`
+
+```{r}
+ctrl_taxi <- control_resamples(save_pred = TRUE)
+
+# Random forest uses random numbers so set the seed first
+
+set.seed(2)
+rf_res <- fit_resamples(rf_wflow, taxi_folds, control = ctrl_taxi)
+collect_metrics(rf_res)
+```
+
+## How can we compare multiple model workflows at once?
+
+```{r taxi-spinning, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/taxi_spinning.svg")
+```
+
+
+## Evaluate a workflow set
+
+```{r}
+workflow_set(list(tip ~ .), list(tree_spec, rf_spec))
+```
+
+## Evaluate a workflow set
+
+```{r}
+workflow_set(list(tip ~ .), list(tree_spec, rf_spec)) %>%
+  workflow_map("fit_resamples", resamples = taxi_folds)
+```
+
+## Evaluate a workflow set
+
+```{r}
+workflow_set(list(tip ~ .), list(tree_spec, rf_spec)) %>%
+  workflow_map("fit_resamples", resamples = taxi_folds) %>%
+  rank_results()
+```
+
+The first metric of the metric set is used for ranking. Use `rank_metric` to change that.
+
+. . .
+
+Lots more available with workflow sets, like `collect_metrics()`, `autoplot()` methods, and more!
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*When do you think a workflow set would be useful?*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "discuss-workflow-sets")
+```
+
+## The whole game - status update
+
+```{r diagram-select, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-select.jpg")
+```
+
+## The final fit `r hexes("tune")` 
+
+Suppose that we are happy with our random forest model.
+
+Let's fit the model on the training set and verify our performance using the test set.
+
+. . .
+
+We've shown you `fit()` and `predict()` (+ `augment()`) but there is a shortcut:
+
+```{r}
+# taxi_split has train + test info
+final_fit <- last_fit(rf_wflow, taxi_split) 
+
+final_fit
+```
+
+## What is in `final_fit`? `r hexes("tune")`
+
+```{r}
+collect_metrics(final_fit)
+```
+
+. . .
+
+These are metrics computed with the **test** set
+
+## What is in `final_fit`? `r hexes("tune")`
+
+```{r}
+collect_predictions(final_fit)
+```
+
+## What is in `final_fit`? `r hexes("tune")`
+
+```{r}
+extract_workflow(final_fit)
+```
+
+. . .
+
+Use this for **prediction** on new data, like for deploying
+
+## The whole game
+
+```{r diagram-final-performance, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-final-performance.jpg")
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*End of the day discussion!*
+
+*Which model do you think you would decide to use?*
+
+*What surprised you the most?*
+
+*What is one thing you are looking forward to for tomorrow?*
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "discuss-which-model")
+```
+

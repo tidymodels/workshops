@@ -1,0 +1,812 @@
+---
+title: "1 - Feature Engineering"
+subtitle: "Advanced tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+---
+
+```{r}
+#| label: setup
+#| include: false
+#| file: setup.R
+```
+
+```{r}
+#| label: more-setup 
+#| include: false
+
+# pak::pak("gadenbuie/countdown")
+# pak::pak("hadley/emo")
+library(modeldatatoo)
+library(probably)
+library(countdown)
+library(emo)
+
+library(doParallel)
+
+cores <- parallelly::availableCores(logical = FALSE)
+cl <- makePSOCKcluster(cores)
+registerDoParallel(cl)
+
+ggplot2::theme_set(ggplot2::theme_bw())
+```
+
+
+## Working with our predictors
+
+We might want to modify our predictors columns for a few reasons: 
+
+::: {.incremental}
+- The model requires them in a different format (e.g. dummy variables for linear regression).
+- The model needs certain data qualities (e.g. same units for K-NN).
+- The outcome is better predicted when one or more columns are transformed in some way (a.k.a "feature engineering"). 
+:::
+
+. . .
+
+The first two reasons are fairly predictable ([next page](https://www.tmwr.org/pre-proc-table.html#tab:preprocessing)).
+
+The last one depends on your modeling problem. 
+
+
+##  {background-iframe="https://www.tmwr.org/pre-proc-table.html#tab:preprocessing"}
+
+::: footer
+:::
+
+
+## What is feature engineering?
+
+Think of a feature as some *representation* of a predictor that will be used in a model.
+
+. . .
+
+Example representations:
+
+-   Interactions
+-   Polynomial expansions/splines
+-   Principal component analysis (PCA) feature extraction
+
+There are a lot of examples in [_Feature Engineering and Selection_](https://bookdown.org/max/FES/) (FES).
+
+
+
+## Example: Dates
+
+How can we represent date columns for our model?
+
+. . .
+
+When we use a date column in its native format, most models in R convert it to an integer.
+
+. . .
+
+We can re-engineer it as:
+
+-   Days since a reference date
+-   Day of the week
+-   Month
+-   Year
+-   Indicators for holidays
+
+::: notes
+The main point is that we try to maximize performance with different versions of the predictors. 
+
+Mention that, for the Chicago data, the day or the week features are usually the most important ones in the model.
+:::
+
+## General definitions `r hexes("recipes")`
+
+-   *Data preprocessing* steps allow your model to fit.
+
+-   *Feature engineering* steps help the model do the least work to predict the outcome as well as possible.
+
+The recipes package can handle both!
+
+::: notes
+These terms are often used interchangeably in the ML community but we want to distinguish them.
+:::
+
+
+## Hotel Data `r hexes("tidymodels", "dplyr")`
+
+We'll use [data on hotels](https://www.sciencedirect.com/science/article/pii/S2352340918315191) to predict the cost of a room. 
+
+The [data](https://modeldatatoo.tidymodels.org/dev/reference/data_hotel_rates.html) are in the modeldatatoo package. We'll sample down the data and refactor some columns: 
+
+:::: {.columns}
+
+::: {.column width="40%"}
+
+```{r}
+#| label: tune-startup
+library(tidymodels)
+library(modeldatatoo)
+
+# Max's usual settings: 
+tidymodels_prefer()
+theme_set(theme_bw())
+options(
+  pillar.advice = FALSE, 
+  pillar.min_title_chars = Inf
+)
+```
+
+:::
+
+::: {.column width="60%"}
+
+```{r}
+#| label: data-import
+set.seed(295)
+hotel_rates <- 
+  data_hotel_rates() %>% 
+  sample_n(5000) %>% 
+  arrange(arrival_date) %>% 
+  select(-arrival_date_num, -arrival_date) %>% 
+  mutate(
+    company = factor(as.character(company)),
+    country = factor(as.character(country)),
+    agent = factor(as.character(agent))
+  )
+```
+
+
+:::
+
+::::
+
+
+## Data splitting strategy
+
+```{r}
+#| label: spending-diagram
+#| fig-align: "center"
+#| out-width: "20%"
+#| echo: false
+
+knitr::include_graphics("images/initial-split.svg")
+```
+
+
+## Data Spending `r hexes("rsample")`
+
+Let's split the data into a training set (75%) and testing set (25%):
+
+```{r}
+#| label: hotel-split
+set.seed(4028)
+hotel_split <-
+  initial_split(hotel_rates, strata = avg_price_per_room)
+
+hotel_tr <- training(hotel_split)
+hotel_te <- testing(hotel_split)
+```
+
+
+
+## Your turn {transition="slide-in"}
+
+Let's take some time and investigate the _training data_. The outcome is `avg_price_per_room`. 
+
+Are there any interesting characteristics of the data?
+
+```{r}
+#| label: hotel-investigation-exercise
+#| echo: false
+countdown(minutes = 10, id = "hotel-investigation")
+```
+
+## Resampling Strategy
+
+```{r}
+#| label: 10-fold-diagram
+#| fig-align: "center"
+#| out-width: "100%"
+#| echo: false
+
+knitr::include_graphics("images/10-Fold-CV.svg")
+```
+
+
+## Resampling Strategy `r hexes("rsample")`
+
+We'll use simple 10-fold cross-validation (stratified sampling):
+
+```{r}
+#| label: hotel-rs
+set.seed(472)
+hotel_rs <- vfold_cv(hotel_tr, strata = avg_price_per_room)
+hotel_rs
+```
+
+
+## Prepare your data for modeling `r hexes("recipes")`
+
+- The recipes package is an extensible framework for pipeable sequences of preprocessing and feature engineering steps.
+
+. . .
+
+- Statistical parameters for the steps can be _estimated_ from an initial data set and then _applied_ to other data sets.
+
+. . .
+
+- The resulting processed output can be used as inputs for statistical or machine learning models.
+
+## A first recipe `r hexes("recipes")`
+
+```{r}
+#| label: base-recipe
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr)
+```
+
+. . .
+
+- The `recipe()` function assigns columns to roles of "outcome" or "predictor" using the formula
+
+## A first recipe `r hexes("recipes")`
+
+```{r}
+#| label: rec-summary
+summary(hotel_rec)
+```
+
+The `type` column contains information on the variables
+
+
+## Your turn {transition="slide-in"}
+
+What do you think are in the `type` vectors for the `lead_time` and `country` columns?
+
+```{r}
+#| label: var-type-exercise
+#| echo: false
+countdown(minutes = 2, id = "var-types")
+```
+
+
+
+## Create indicator variables `r hexes("recipes")`
+
+```{r}
+#| label: step-dummy
+#| code-line-numbers: "3"
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_dummy(all_nominal_predictors())
+```
+
+. . .
+
+- For any factor or character predictors, make binary indicators.
+
+- There are *many* recipe steps that can convert categorical predictors to numeric columns.
+
+- `step_dummy()` records the levels of the categorical predictors in the training set. 
+
+## Filter out constant columns `r hexes("recipes")`
+
+```{r}
+#| label: step-zv
+#| code-line-numbers: "4"
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors())
+```
+
+. . .
+
+In case there is a factor level that was never observed in the training data (resulting in a column of all `0`s), we can delete any *zero-variance* predictors that have a single unique value.
+
+:::notes
+Note that the selector chooses all columns with a role of "predictor"
+:::
+
+
+## Normalization `r hexes("recipes")`
+
+```{r}
+#| label: rec-norm 
+#| eval: false
+#| code-line-numbers: "5"
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors())
+```
+
+. . .
+
+- This centers and scales the numeric predictors.
+
+
+- The recipe will use the _training_ set to estimate the means and standard deviations of the data.
+
+. . .
+
+- All data the recipe is applied to will be normalized using those statistics (there is no re-estimation).
+
+## Reduce correlation `r hexes("recipes")`
+
+```{r}
+#| label: corr
+#| code-line-numbers: "6"
+#| eval: false
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_corr(all_numeric_predictors(), threshold = 0.9)
+```
+
+. . .
+
+To deal with highly correlated predictors, find the minimum set of predictor columns that make the pairwise correlations less than the threshold.
+
+## Other possible steps `r hexes("recipes")`
+
+```{r}
+#| label: pca
+#| code-line-numbers: "6"
+#| eval: false
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_pca(all_numeric_predictors())
+```
+
+. . . 
+
+PCA feature extraction...
+
+## Other possible steps `r hexes("recipes", "embed")`
+
+```{r}
+#| label: umap
+#| code-line-numbers: "6"
+#| eval: false
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  embed::step_umap(all_numeric_predictors(), outcome = avg_price_per_room)
+```
+
+. . . 
+
+A fancy machine learning supervised dimension reduction technique...
+
+:::notes
+Note that this uses the outcome, and it is from an extension package
+:::
+
+
+## Other possible steps `r hexes("recipes")`
+
+```{r}
+#| label: splines
+#| eval: false
+#| code-line-numbers: "6"
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_spline_natural(year_day, deg_free = 10)
+```
+
+. . . 
+
+Nonlinear transforms like natural splines, and so on!
+
+##  {background-iframe="https://recipes.tidymodels.org/reference/index.html"}
+
+::: footer
+:::
+
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Create a `recipe()` for the hotel data to:*
+
+-   *use a Yeo-Johnson (YJ) transformation on `lead_time`*
+-   *convert factors to indicator variables*
+-   *remove zero-variance variables*
+
+```{r}
+#| label: your-turn-make-recipe
+#| echo: false
+countdown(minutes = 3, id = "make-recipe")
+```
+
+
+## Minimal recipe `r hexes("recipes")` 
+
+```{r}
+#| label: hotel-rec
+hotel_indicators <-
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_YeoJohnson(lead_time) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+
+## Measuring Performance `r hexes("yardstick")`
+
+We'll compute two measures: mean absolute error and the coefficient of determination (a.k.a $R^2$). 
+
+\begin{align}
+MAE &= \frac{1}{n}\sum_{i=1}^n |y_i - \hat{y}_i| \notag \\
+R^2 &= cor(y_i, \hat{y}_i)^2
+\end{align}
+
+The focus will be on MAE for parameter optimization. We'll use a metric set to compute these: 
+
+```{r}
+#| label: metric-set
+
+reg_metrics <- metric_set(mae, rsq)
+```
+
+
+## Using a workflow `r hexes("recipes", "workflows", "parsnip", "tune")` 
+
+```{r}
+#| label: lm-model
+#| cache: false
+
+set.seed(9)
+
+hotel_lm_wflow <-
+  workflow() %>%
+  add_recipe(hotel_indicators) %>%
+  add_model(linear_reg())
+ 
+ctrl <- control_resamples(save_pred = TRUE)
+hotel_lm_res <-
+  hotel_lm_wflow %>%
+  fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
+
+collect_metrics(hotel_lm_res)
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Use `fit_resamples()` to fit your workflow with a recipe.*
+
+*Collect the predictions from the results.*
+
+
+```{r}
+#| label: your-turn-resample-recipe
+#| echo: false
+countdown(minutes = 5, id = "resample-recipe")
+```
+
+
+## Holdout predictions `r hexes("recipes", "workflows", "parsnip", "tune")`
+
+```{r}
+#| label: goldout-pred
+# Since we used `save_pred = TRUE`
+lm_val_pred <- collect_predictions(hotel_lm_res)
+lm_val_pred %>% slice(1:7)
+```
+
+
+## Calibration Plot `r hexes("probably")`
+
+
+```{r}
+#| label: lm-cal-plot
+#| out-width: 40%
+#| fig-width: 5
+#| fig-height: 5
+#| fig-align: "center"
+
+library(probably)
+
+cal_plot_regression(hotel_lm_res, alpha = 1 / 5)
+```
+
+
+
+## What do we do with the agent and company data? 
+
+There are `r length(unique(hotel_tr$agent))` unique agent values and `r length(unique(hotel_tr$company))` unique companies in our training set. How can we include this information in our model?
+
+. . .
+
+We could:
+
+-   make the full set of indicator variables 😳
+
+-   lump agents and companies that rarely occur into an "other" group
+
+-   use [feature hashing](https://www.tmwr.org/categorical.html#feature-hashing) to create a smaller set of indicator variables
+
+-   use effect encoding to replace the `agent` and `company` columns with the estimated effect of that predictor (in the extra materials)
+
+
+```{r}
+#| label: effects-calcs 
+#| include: false
+
+agent_stats <- 
+  hotel_tr %>%
+  group_by(agent) %>%
+  summarize(
+    ADR = mean(avg_price_per_room), 
+    num_reservations = n(),
+    .groups = "drop"
+    ) %>%
+  mutate(agent = reorder(agent, ADR))
+```
+
+
+## Per-agent statistics 
+
+::: columns
+::: {.column width="50%"}
+```{r}
+#| label: effects-freq 
+#| echo: false
+#| out-width: '90%'
+#| fig-width: 6
+#| fig-height: 3
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+  
+agent_stats %>%   
+  ggplot(aes(x = num_reservations)) +
+  geom_histogram(bins = 30, col = "blue", fill = "blue", alpha = 1/3) +
+  labs(x = "Number of reservations per agent")
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: effects-adr 
+#| echo: false
+#| out-width: '90%'
+#| fig-width: 6
+#| fig-height: 3
+#| fig-align: 'center'
+#| dev: 'svg'
+#| dev-args: list(bg = "transparent")
+
+agent_stats %>%   
+  ggplot(aes(x = ADR)) +
+  geom_histogram(bins = 30, col = "red", fill = "red", alpha = 1/3) +
+  labs(x = "Average ADR per agent")
+```
+:::
+:::
+
+## Collapsing factor levels `r hexes("recipes")`
+
+There is a recipe step that will redefine factor levels based on their frequency in the training set: 
+
+```{r}
+#| label: step-other
+#| code-line-numbers: "4|"
+
+hotel_other_rec <-
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  step_YeoJohnson(lead_time) %>%
+  step_other(agent, threshold = 0.001) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors())
+```
+
+```{r}
+#| label: other-res 
+#| include: false
+
+retained_agents <-
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>%
+  step_mutate(original = agent) %>% 
+  step_other(agent, threshold = 0.001) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors()) %>% 
+  prep() %>% 
+  tidy(number = 2)
+
+num_agents <- length(unique(hotel_tr$agent))
+num_other <- num_agents - length(retained_agents$retained)
+```
+
+Using this code, `r num_other` agents (out of `r num_agents`) were collapsed into "other" based on the training set.
+
+We _could_ try to optimize the threshold for collapsing (see the next set of slides on model tuning).
+
+## Does othering help?  `r hexes("recipes", "tune")`
+
+```{r}
+#| label: update-recipe
+#| cache: false
+#| code-line-numbers: "3|"
+hotel_other_wflow <-
+  hotel_lm_wflow %>%
+  update_recipe(hotel_other_rec)
+
+hotel_other_res <-
+  hotel_other_wflow %>%
+  fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
+
+collect_metrics(hotel_other_res)
+```
+
+Aabout the same MAE and much faster to complete.  
+
+Now let's look at a more sophisticated tool called effect feature hashing. 
+
+## Feature Hashing
+
+Between `agent` and `company`, simple dummy variables would create `r length(unique(hotel_tr$agent)) + length(unique(hotel_tr$company))` new columns (that are mostly zeros).
+
+Another option is to have a binary indicator that combines some levels of these variables.
+
+Feature hashing (for more see [_FES_](https://bookdown.org/max/FES/encoding-predictors-with-many-categories.html), [_SMLTAR_](https://smltar.com/mlregression.html#case-study-feature-hashing), and [_TMwR_](https://www.tmwr.org/categorical.html#feature-hashing)):  
+
+- uses the character values of the levels 
+- converts them to integer hash values
+- uses the integers to assign them to a specific indicator column. 
+
+## Feature Hashing
+
+Suppose we want to use 32 indicator variables for `agent`. 
+
+For a agent with value "`Max_Kuhn`", a hashing function converts it to an integer (say `r strtoi(substr(rlang::hash("Max_Kuhn"), 26, 32), 16)`). 
+
+To assign it to one of the 32 columns, we would use modular arithmetic to assign it to a column: 
+
+```{r}
+#| label: hash
+
+# For "Max_Kuhn" put a '1' in column: 
+210397726 %% 32
+```
+
+[Hash functions](https://www.metamorphosite.com/one-way-hash-encryption-sha1-data-software) are meant to _emulate_ randomness. 
+
+
+## Feature Hashing Pros
+
+
+- The procedure will automatically work on new values of the predictors.
+- It is fast. 
+- "Signed" hashes add a sign to help avoid aliasing. 
+
+## Feature Hashing Cons
+
+- There is no real logic behind which factor levels are combined. 
+- We don't know how many columns to add (more in the next section).
+- Some columns may have all zeros. 
+- If a indicator column is important to the model, we can't easily determine why. 
+
+:::notes
+The signed hash make it slightly more possible to differentiate between confounded levels
+:::
+
+
+## Feature Hashing in recipes `r hexes("recipes", "textrecipes", "workflows")`
+
+The textrecipes package has a step that can be added to the recipe: 
+
+```{r}
+#| label: hash-rec
+#| code-line-numbers: "6-8|"
+library(textrecipes)
+
+hash_rec <-
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>%
+  step_YeoJohnson(lead_time) %>%
+  # Defaults to 32 signed indicator columns
+  step_dummy_hash(agent) %>%
+  step_dummy_hash(company) %>%
+  # Regular indicators for the others
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors())
+
+hotel_hash_wflow <-
+  hotel_lm_wflow %>%
+  update_recipe(hash_rec)
+```
+
+
+## Feature Hashing in recipes `r hexes("recipes", "textrecipes", "tune")`
+
+```{r}
+#| label: hash-res
+#| cache: false
+
+hotel_hash_res <-
+  hotel_hash_wflow %>%
+  fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
+
+collect_metrics(hotel_hash_res)
+```
+
+About the same performance but now we can handle new values. 
+
+
+## Debugging a recipe
+
+- Typically, you will want to use a workflow to estimate and apply a recipe.
+
+. . .
+
+- If you have an error and need to debug your recipe, the original recipe object (e.g. `hash_rec`) can be estimated manually with a function called `prep()`. It is analogous to `fit()`. See [TMwR section 16.4](https://www.tmwr.org/dimensionality.html#recipe-functions)
+
+. . .
+
+- Another function (`bake()`) is analogous to `predict()`, and gives you the processed data back.
+
+. . .
+
+- The `tidy()` function can be used to get specific results from the recipe.
+
+## Example `r hexes("recipes", "broom")`
+
+```{r}
+#| label: prep-tidy-bake
+#| eval: false
+hash_rec_fit <- prep(hash_rec)
+
+# Get the transformation coefficient
+tidy(hash_rec_fit, number = 1)
+
+# Get the processed data
+bake(hash_rec_fit, hotel_tr %>% slice(1:3), contains("_agent_"))
+```
+
+## More on recipes
+
+-   Once `fit()` is called on a workflow, changing the model does not re-fit the recipe.
+
+. . .
+
+-   A list of all known steps is at <https://www.tidymodels.org/find/recipes/>.
+
+. . .
+
+-   Some steps can be [skipped](https://recipes.tidymodels.org/articles/Skipping.html) when using `predict()`.
+
+. . .
+
+-   The [order](https://recipes.tidymodels.org/articles/Ordering.html) of the steps matters.
+
+```{r}
+#| label: teardown
+#| include: false
+
+parallel::stopCluster(cl)
+
+```

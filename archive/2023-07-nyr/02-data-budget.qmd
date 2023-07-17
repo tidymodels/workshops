@@ -1,0 +1,382 @@
+---
+title: "2 - Your data budget"
+subtitle: "Machine learning with tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+---
+
+```{r}
+#| include: false
+#| file: setup.R
+```
+
+##  {background-image="https://media.giphy.com/media/Lr3UeH9tYu3qJtsSUg/giphy.gif" background-size="40%"}
+
+
+## Data on Chicago taxi trips
+
+::: columns
+::: {.column width="60%"}
+-   The city of Chicago releases anonymized trip-level data on taxi trips in the city.
+-   We pulled a sample of 10,000 rides occurring in early 2022.
+-   Type `?modeldatatoo::data_taxi()` to learn more about this dataset, including references.
+:::
+
+::: {.column width="40%"}
+![](images/taxi_spinning.svg)
+:::
+
+:::
+
+::: footer
+Credit: <https://www.svgrepo.com/svg/8322/taxi>
+:::
+
+## Which of these variables can we use?
+
+```{r}
+library(tidymodels)
+library(modeldatatoo)
+
+taxi <- data_taxi()
+
+names(taxi)
+```
+
+## Checklist for predictors
+
+- Is it ethical to use this variable? (Or even legal?)
+
+- Will this variable be available at prediction time?
+
+- Does this variable contribute to explainability?
+
+
+## Data on Chicago taxi trips
+
+We are using a slightly modified version from the modeldatatoo data.
+
+```{r}
+taxi <- taxi %>%
+  mutate(month = factor(month, levels = c("Jan", "Feb", "Mar", "Apr"))) %>% 
+  select(-c(id, duration, fare, tolls, extras, total_cost, payment_type)) %>% 
+  drop_na()
+```
+
+## Data on Chicago taxi trips
+
+::: columns
+::: {.column width="60%"}
+-   `N = 10,000`
+-   A nominal outcome, `tip`, with levels `"yes"` and `"no"`
+-   6 other variables
+    -   `company`, `local`, and `dow`, and `month` are **nominal** predictors
+    -   `distance` and `hours` are **numeric** predictors
+:::
+
+::: {.column width="40%"}
+![](images/taxi.png)
+:::
+:::
+
+::: footer
+Credit: <https://unsplash.com/photos/7_r85l4eht8>
+:::
+
+:::notes
+`tip`: Whether the rider left a tip. A factor with levels "yes" and "no".
+
+`distance`: The trip distance, in odometer miles.
+
+`company`: The taxi company, as a factor. Companies that occurred few times were binned as "other".
+
+`local`: Whether the trip started in the same community area as it began. See the source data for community area values.
+
+`dow`: The day of the week in which the trip began, as a factor.
+
+`month`: The month in which the trip began, as a factor.
+
+`hour`: The hour of the day in which the trip began, as a numeric.
+
+:::
+
+## Data on Chicago taxi trips
+
+```{r}
+taxi
+```
+
+
+## Data splitting and spending
+
+For machine learning, we typically split data into training and test sets:
+
+. . .
+
+-   The **training set** is used to estimate model parameters.
+-   The **test set** is used to find an independent assessment of model performance.
+
+. . .
+
+Do not 🚫 use the test set during training.
+
+## Data splitting and spending
+
+```{r test-train-split}
+#| echo: false
+#| fig.width: 12
+#| fig.height: 3
+#| 
+set.seed(123)
+library(forcats)
+one_split <- slice(taxi, 1:30) %>% 
+  initial_split() %>% 
+  tidy() %>% 
+  add_row(Row = 1:30, Data = "Original") %>% 
+  mutate(Data = case_when(
+    Data == "Analysis" ~ "Training",
+    Data == "Assessment" ~ "Testing",
+    TRUE ~ Data
+  )) %>% 
+  mutate(Data = factor(Data, levels = c("Original", "Training", "Testing")))
+all_split <-
+  ggplot(one_split, aes(x = Row, y = fct_rev(Data), fill = Data)) + 
+  geom_tile(color = "white",
+            size = 1) + 
+  scale_fill_manual(values = splits_pal, guide = "none") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = rel(2)),
+        axis.text.x = element_blank(),
+        legend.position = "top",
+        panel.grid = element_blank()) +
+  coord_equal(ratio = 1) +
+  labs(x = NULL, y = NULL)
+all_split
+```
+
+# The more data<br>we spend 🤑<br><br>the better estimates<br>we'll get.
+
+## Data splitting and spending
+
+-   Spending too much data in **training** prevents us from computing a good assessment of predictive **performance**.
+
+. . .
+
+-   Spending too much data in **testing** prevents us from computing a good estimate of model **parameters**.
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*When is a good time to split your data?*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "when-to-split")
+```
+
+# The testing data is precious 💎
+
+## The initial split `r hexes("rsample")` {.annotation}
+
+```{r}
+set.seed(123)
+taxi_split <- initial_split(taxi)
+taxi_split
+```
+
+:::notes
+How much data in training vs testing?
+This function uses a good default, but this depends on your specific goal/data
+We will talk about more powerful ways of splitting, like stratification, later
+:::
+
+## Accessing the data `r hexes("rsample")`
+
+```{r}
+taxi_train <- training(taxi_split)
+taxi_test <- testing(taxi_split)
+```
+
+## The training set`r hexes("rsample")`
+
+```{r}
+taxi_train
+```
+
+## The test set `r hexes("rsample")`
+
+🙈
+
+. . .
+
+There are `r nrow(taxi_test)` rows and `r ncol(taxi_test)` columns in the test set.
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Split your data so 20% is held out for the test set.*
+
+*Try out different values in `set.seed()` to see how the results change.*
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "try-splitting")
+```
+
+## Data splitting and spending `r hexes("rsample")`
+
+```{r}
+set.seed(123)
+taxi_split <- initial_split(taxi, prop = 0.8)
+taxi_train <- training(taxi_split)
+taxi_test <- testing(taxi_split)
+
+nrow(taxi_train)
+nrow(taxi_test)
+```
+
+# What about a validation set?
+
+##  {background-color="white" background-image="https://www.tmwr.org/premade/validation.svg" background-size="50%"}
+
+:::notes
+We will use this tomorrow
+:::
+
+##  {background-color="white" background-image="https://www.tmwr.org/premade/validation-alt.svg" background-size="40%"}
+
+# Exploratory data analysis for ML 🧐
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Explore the `taxi_train` data on your own!*
+
+* *What's the distribution of the outcome, tip?*
+* *What's the distribution of numeric variables like distance?*
+* *How does tip differ across the categorical variables?*
+
+```{r}
+#| echo: false
+countdown(minutes = 8, id = "explore-taxi")
+```
+
+::: notes
+Make a plot or summary and then share with neighbor
+:::
+
+## 
+
+```{r taxi-tip-counts}
+#| fig-align: 'center'
+taxi_train %>% 
+  ggplot(aes(x = tip)) +
+  geom_bar()
+```
+
+## 
+
+```{r taxi-tip-by-local}
+#| fig-align: 'center'
+taxi_train %>% 
+  ggplot(aes(x = tip, fill = local)) +
+  geom_bar() +
+  scale_fill_viridis_d(end = .5)
+```
+
+## 
+
+```{r taxi-tip-by-hour}
+#| fig-align: 'center'
+taxi_train %>% 
+  mutate(tip = forcats::fct_rev(tip)) %>% 
+  ggplot(aes(x = hour, fill = tip)) +
+  geom_bar()
+```
+
+## 
+
+```{r taxi-tip-by-hour-fill}
+#| fig-align: 'center'
+taxi_train %>% 
+  mutate(tip = forcats::fct_rev(tip)) %>% 
+  ggplot(aes(x = hour, fill = tip)) +
+  geom_bar(position = "fill")
+```
+
+## 
+
+```{r taxi-tip-by-distance}
+#| fig-align: 'center'
+taxi_train %>% 
+  mutate(tip = forcats::fct_rev(tip)) %>% 
+  ggplot(aes(x = distance)) +
+  geom_histogram(bins = 100) +
+  facet_grid(vars(tip))
+```
+
+# Split smarter
+
+##
+
+```{r taxi-tip-pct, echo = FALSE}
+taxi %>%
+  mutate(tip = forcats::fct_rev(tip)) %>% 
+  ggplot(aes(x = "", fill = tip)) +
+  geom_bar(position = "fill") +
+  labs(x = "")
+```
+
+Stratified sampling would split within response values
+
+:::notes
+Based on our EDA, we know that the source data contains fewer `"no"` tip values than `"yes"`. We want to make sure we allot equal proportions of those responses so that both the training and testing data have enough of each to give accurate estimates.
+:::
+
+## Stratification
+
+Use `strata = tip`
+
+```{r}
+set.seed(123)
+taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
+taxi_split
+```
+
+## Stratification
+
+Stratification often helps, with very little downside
+
+```{r taxi-tip-pct-by-split, echo = FALSE}
+bind_rows(
+  taxi_train %>% mutate(split = "train"),
+  taxi_test %>% mutate(split = "test")
+) %>%
+  mutate(tip = forcats::fct_rev(tip)) %>% 
+  ggplot(aes(x = split, fill = tip)) +
+  geom_bar(position = "fill")
+```
+
+## The whole game - status update
+
+```{r diagram-split, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-split.jpg")
+```

@@ -1,0 +1,189 @@
+---
+title: "3 - What makes a model? - Classwork"
+subtitle: "Machine learning with tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Setup
+
+Setup from deck 2
+
+```{r}
+library(tidymodels)
+library(modeldatatoo)
+
+taxi <- data_taxi()
+
+taxi <- taxi %>%
+  mutate(month = factor(month, levels = c("Jan", "Feb", "Mar", "Apr"))) %>% 
+  select(-c(id, duration, fare, tolls, extras, total_cost, payment_type)) %>% 
+  drop_na()
+
+set.seed(123)
+
+taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
+taxi_train <- training(taxi_split)
+taxi_test <- testing(taxi_split)
+```
+
+## Your turn
+
+How do you fit a linear model in R?
+
+How many different ways can you think of?
+
+Discuss with your neighbor!
+
+## To specify a model
+
+```{r}
+# Model
+linear_reg()
+
+# Engine
+linear_reg() %>%
+  set_engine("glmnet")
+
+# Mode - Some models have a default mode, others don't
+decision_tree() %>% 
+  set_mode("regression")
+```
+
+## Your turn
+
+Edit the chunk below to use a different model!
+
+All available models are listed at <https://www.tidymodels.org/find/parsnip/> 
+
+```{r tree_spec}
+tree_spec <- decision_tree() %>% 
+  set_mode("classification")
+
+tree_spec
+```
+
+## A model workflow
+
+```{r}
+tree_spec <-
+  decision_tree() %>% 
+  set_mode("classification")
+```
+
+Fit with parsnip:
+
+```{r}
+tree_spec %>% 
+  fit(tip ~ ., data = taxi_train) 
+```
+
+Fit with a workflow:
+
+```{r}
+workflow() %>%
+  add_formula(tip ~ .) %>%
+  add_model(tree_spec) %>%
+  fit(data = taxi_train) 
+```
+
+"Shortcut" by specifying the preprocessor and model spec directly in the `workflow()` call:
+
+```{r}
+workflow(tip ~ ., tree_spec) %>% 
+  fit(data = taxi_train) 
+```
+
+## Your turn
+
+Edit the chunk below to make a workflow with your own model of choice!
+
+```{r tree_wflow}
+tree_spec <-
+  decision_tree() %>% 
+  set_mode("classification")
+
+tree_wflow <- workflow() %>%
+  add_formula(tip ~ .) %>%
+  add_model(tree_spec)
+
+tree_wflow
+```
+
+## Predict with your model
+
+```{r}
+tree_fit <-
+  workflow(tip ~ ., tree_spec) %>% 
+  fit(data = taxi_train) 
+```
+
+## Your turn
+
+What do you get from running the following code? What do you notice about the structure of the result?
+
+```{r}
+predict(tree_fit, new_data = taxi_test)
+```
+
+## Your turn
+
+What do you get from running the following code? How is `augment()` different from `predict()`?
+
+```{r}
+augment(tree_fit, new_data = taxi_test)
+```
+
+## Understand your model
+
+```{r}
+library(rpart.plot)
+
+tree_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+
+## Your turn
+
+Try extracting the model engine object from your fitted workflow!
+
+```{r}
+### Your code here
+
+```
+
+What kind of object is it? What can you do with it?
+
+⚠️ Never `predict()` with any extracted components!
+
+You can also read the documentation for object extraction:
+https://workflows.tidymodels.org/reference/extract-workflow.html
+
+## Your turn
+
+Explore how you might deploy your `tree_fit` model using vetiver.
+
+```{r vetiver, eval = FALSE}
+library(vetiver)
+library(plumber)
+
+# Create a vetiver model object
+v <- vetiver_model(tree_fit, "taxi_tips")
+v
+```
+
+```{r, eval = FALSE}
+# Create a predictable Plumber API
+pr <- pr() %>%
+  vetiver_api(v)
+
+pr
+```
+
+```{r, eval = FALSE}
+# Run the API server in a new window
+pr_run(pr)
+```

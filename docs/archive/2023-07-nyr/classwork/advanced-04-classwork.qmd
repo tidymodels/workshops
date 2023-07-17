@@ -1,0 +1,184 @@
+---
+title: "4 - Iterative Search - Classwork"
+subtitle: "Advanced tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Setup
+
+Setup from deck 3
+
+```{r}
+library(tidymodels)
+library(modeldatatoo)
+library(textrecipes)
+library(bonsai)
+library(probably)
+
+# Max's usual settings: 
+tidymodels_prefer()
+theme_set(theme_bw())
+options(
+  pillar.advice = FALSE, 
+  pillar.min_title_chars = Inf
+)
+
+set.seed(295)
+hotel_rates <- 
+  data_hotel_rates() %>% 
+  sample_n(5000) %>% 
+  arrange(arrival_date) %>% 
+  select(-arrival_date_num, -arrival_date) %>% 
+  mutate(
+    company = factor(as.character(company)),
+    country = factor(as.character(country)),
+    agent = factor(as.character(agent))
+  )
+
+set.seed(4028)
+hotel_split <-
+  initial_split(hotel_rates, strata = avg_price_per_room)
+
+hotel_tr <- training(hotel_split)
+hotel_te <- testing(hotel_split)
+
+set.seed(472)
+hotel_rs <- vfold_cv(hotel_tr, strata = avg_price_per_room)
+
+hotel_rec <-
+  recipe(avg_price_per_room ~ ., data = hotel_tr) %>%
+  step_YeoJohnson(lead_time) %>%
+  step_dummy_hash(agent,   num_terms = tune("agent hash")) %>%
+  step_dummy_hash(company, num_terms = tune("company hash")) %>%
+  step_zv(all_predictors())
+
+lgbm_spec <- 
+  boost_tree(trees = tune(), learn_rate = tune(), min_n = tune()) %>% 
+  set_mode("regression") %>% 
+  set_engine("lightgbm")
+
+lgbm_wflow <- workflow(hotel_rec, lgbm_spec)
+
+lgbm_param <-
+  lgbm_wflow %>%
+  extract_parameter_set_dials() %>%
+  update(`agent hash`   = num_hash(c(3, 8)),
+         `company hash` = num_hash(c(3, 8)))
+```
+
+## Your turn
+
+Your GP makes predictions on two new candidate tuning parameters. We want to minimize MAE.
+
+Which should we choose?
+
+```{r}
+set.seed(28383)
+num_points <- 5000
+exerc_data <- 
+  tibble(MAE = c(rnorm(num_points, 10, 2), rnorm(num_points, 13, 1 / 2)),
+         `Choose:` = rep(paste("candidate", 1:2), each = num_points))
+
+exerc_data %>% 
+  ggplot(aes(MAE, col = `Choose:`)) + 
+  geom_line(stat = "density", adjust = 1.25, trim = TRUE, linewidth = 1) +
+  theme(legend.position = "top")
+```
+
+## An Initial Grid
+
+```{r} 
+reg_metrics <- metric_set(mae, rsq)
+
+set.seed(12)
+init_res <-
+  lgbm_wflow %>%
+  tune_grid(
+    resamples = hotel_rs,
+    grid = nrow(lgbm_param) + 2,
+    param_info = lgbm_param,
+    metrics = reg_metrics
+  )
+
+show_best(init_res, metric = "mae")
+```
+
+## Bayesian Optimization 
+
+```{r} 
+set.seed(15)
+lgbm_bayes_res <-
+  lgbm_wflow %>%
+  tune_bayes(
+    resamples = hotel_rs,
+    initial = init_res,     # <- initial results
+    iter = 20,
+    param_info = lgbm_param,
+    metrics = reg_metrics
+  )
+
+show_best(lgbm_bayes_res, metric = "mae")
+```
+
+Plotting results
+
+```{r}
+autoplot(lgbm_bayes_res, metric = "mae")
+autoplot(lgbm_bayes_res, metric = "mae", type = "parameters")
+autoplot(lgbm_bayes_res, metric = "mae", type = "performance")
+```
+
+## Your turn
+
+Let's try a different acquisition function: `conf_bound(kappa)`.
+
+We'll use the `objective` argument to set it.
+
+Choose your own `kappa` value:
+
+- Larger values will explore the space more.
+- "Large" values are usually less than one.
+
+```{r}
+# Your code here!
+
+```
+
+## Finalize the workflow
+
+```{r}
+best_param <- select_best(lgbm_bayes_res, metric = "mae")
+
+final_wflow <- 
+  lgbm_wflow %>% 
+  finalize_workflow(best_param)
+
+final_wflow
+```
+
+## The Final Fit
+
+```{r}
+set.seed(3893)
+final_res <- final_wflow %>% last_fit(hotel_split, metrics = reg_metrics)
+
+final_res
+```
+
+## Test Set Results
+
+```{r}
+final_res %>% 
+  collect_predictions() %>% 
+  cal_plot_regression(
+    truth = avg_price_per_room, 
+    estimate = .pred, 
+    alpha = 1 / 4)
+```
+
+```{r}
+final_res %>% collect_metrics()
+```

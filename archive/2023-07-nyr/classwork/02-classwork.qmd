@@ -1,0 +1,83 @@
+---
+title: "2 - Your data budget - Classwork"
+subtitle: "Machine learning with tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Data on taxi trips in Chicago in 2022
+
+```{r}
+library(tidymodels)
+library(modeldatatoo)
+
+taxi <- data_taxi()
+
+# Slightly modify the original data for the purposes of this workshop
+taxi <- taxi %>%
+  mutate(month = factor(month, levels = c("Jan", "Feb", "Mar", "Apr"))) %>% 
+  select(-c(id, duration, fare, tolls, extras, total_cost, payment_type)) %>% 
+  drop_na()
+```
+
+```{r}
+taxi
+```
+
+## Your turn
+
+When is a good time to split your data?
+
+## Data splitting and spending
+
+```{r}
+set.seed(123)
+
+taxi_split <- initial_split(taxi)
+taxi_split
+```
+
+Extract the training and testing sets
+
+```{r}
+taxi_train <- training(taxi_split)
+taxi_test <- testing(taxi_split)
+```
+
+## Your turn
+
+Split your data so 20% is held out for the test set.
+
+Try out different values in `set.seed()` to see how the results change.
+
+Hint: Which argument in `initial_split()` handles the proportion split into training vs testing?
+
+```{r}
+# Your code here!
+
+```
+
+## Your turn
+
+Explore the `taxi_train` data on your own!
+
+- What's the distribution of the outcome, tip?
+- What's the distribution of numeric variables like distance?
+- How does tip differ across the categorical variables?
+
+```{r}
+# Your code here!
+
+```
+
+## Stratification
+
+```{r}
+set.seed(123)
+
+taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
+taxi_train <- training(taxi_split)
+taxi_test <- testing(taxi_split)
+```
