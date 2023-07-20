@@ -18,14 +18,14 @@ knitr:
     fig.path: "figures/"
 ---
 
-```{r}
+```{r setup}
 #| include: false
 #| file: setup.R
 ```
 
 ## Looking at predictions
 
-```{r}
+```{r setup-previous}
 #| echo: false
 library(countdown)
 library(tidymodels)
@@ -45,7 +45,7 @@ taxi_wflow <- workflow(tip ~ ., tree_spec)
 taxi_fit <- fit(taxi_wflow, taxi_train)
 ```
 
-```{r}
+```{r taxi-fit-augment}
 augment(taxi_fit, new_data = taxi_train) %>%
   relocate(tip, .pred_class, .pred_yes, .pred_no)
 ```
@@ -56,14 +56,14 @@ augment(taxi_fit, new_data = taxi_train) %>%
 
 ## Confusion matrix `r hexes("yardstick")`
 
-```{r}
+```{r conf-mat}
 augment(taxi_fit, new_data = taxi_train) %>%
   conf_mat(truth = tip, estimate = .pred_class)
 ```
 
 ## Confusion matrix `r hexes("yardstick")`
 
-```{r}
+```{r conf-mat-plot}
 augment(taxi_fit, new_data = taxi_train) %>%
   conf_mat(truth = tip, estimate = .pred_class) %>%
   autoplot(type = "heatmap")
@@ -73,7 +73,7 @@ augment(taxi_fit, new_data = taxi_train) %>%
 
 ::: columns
 ::: {.column width="60%"}
-```{r}
+```{r acc}
 augment(taxi_fit, new_data = taxi_train) %>%
   accuracy(truth = tip, estimate = .pred_class)
 ```
@@ -88,7 +88,7 @@ augment(taxi_fit, new_data = taxi_train) %>%
 
 We need to be careful of using `accuracy()` since it can give "good" performance by only predicting one way with imbalanced data
 
-```{r}
+```{r acc-2}
 augment(taxi_fit, new_data = taxi_train) %>%
   mutate(.pred_class = factor("yes", levels = c("yes", "no"))) %>%
   accuracy(truth = tip, estimate = .pred_class)
@@ -98,7 +98,7 @@ augment(taxi_fit, new_data = taxi_train) %>%
 
 ::: columns
 ::: {.column width="60%"}
-```{r}
+```{r sens}
 augment(taxi_fit, new_data = taxi_train) %>%
   sensitivity(truth = tip, estimate = .pred_class)
 ```
@@ -114,7 +114,7 @@ augment(taxi_fit, new_data = taxi_train) %>%
 
 ::: columns
 ::: {.column width="60%"}
-```{r}
+```{r sens-2}
 #| code-line-numbers: "3-6"
 augment(taxi_fit, new_data = taxi_train) %>%
   sensitivity(truth = tip, estimate = .pred_class)
@@ -122,7 +122,7 @@ augment(taxi_fit, new_data = taxi_train) %>%
 
 <br>
 
-```{r}
+```{r spec}
 augment(taxi_fit, new_data = taxi_train) %>%
   specificity(truth = tip, estimate = .pred_class)
 ```
@@ -137,7 +137,7 @@ augment(taxi_fit, new_data = taxi_train) %>%
 
 We can use `metric_set()` to combine multiple calculations into one
 
-```{r}
+```{r taxi-metrics}
 taxi_metrics <- metric_set(accuracy, specificity, sensitivity)
 
 augment(taxi_fit, new_data = taxi_train) %>%
@@ -146,7 +146,7 @@ augment(taxi_fit, new_data = taxi_train) %>%
 
 ## Metrics for model performance `r hexes("yardstick")`
 
-```{r}
+```{r taxi-metrics-grouped}
 taxi_metrics <- metric_set(accuracy, specificity, sensitivity)
 
 augment(taxi_fit, new_data = taxi_train) %>%
@@ -214,7 +214,7 @@ ROC curves are insensitive to class imbalance.
 
 ## ROC curves `r hexes("yardstick")`
 
-```{r}
+```{r roc-auc}
 # Assumes _first_ factor level is event; there are options to change that
 augment(taxi_fit, new_data = taxi_train) %>% 
   roc_curve(truth = tip, .pred_yes) %>%
@@ -244,7 +244,7 @@ augment(taxi_fit, new_data = taxi_train) %>%
 
 *What data are being used for this ROC curve plot?*
 
-```{r}
+```{r ex-roc-curve}
 #| echo: false
 countdown(minutes = 5, id = "roc-curve")
 ```
@@ -266,7 +266,7 @@ countdown(minutes = 5, id = "roc-curve")
 
 ## Dangers of overfitting ⚠️ `r hexes("yardstick")`
 
-```{r}
+```{r augment-train}
 taxi_fit %>%
   augment(taxi_train)
 ```
@@ -275,7 +275,7 @@ We call this "resubstitution" or "repredicting the training set"
 
 ## Dangers of overfitting ⚠️ `r hexes("yardstick")`
 
-```{r}
+```{r augment-acc}
 taxi_fit %>%
   augment(taxi_train) %>%
   accuracy(tip, .pred_class)
@@ -287,7 +287,7 @@ We call this a "resubstitution estimate"
 
 ::: columns
 ::: {.column width="50%"}
-```{r}
+```{r augment-acc-2}
 taxi_fit %>%
   augment(taxi_train) %>%
   accuracy(tip, .pred_class)
@@ -302,7 +302,7 @@ taxi_fit %>%
 
 ::: columns
 ::: {.column width="50%"}
-```{r}
+```{r augment-acc-3}
 taxi_fit %>%
   augment(taxi_train) %>%
   accuracy(tip, .pred_class)
@@ -310,7 +310,7 @@ taxi_fit %>%
 :::
 
 ::: {.column width="50%"}
-```{r}
+```{r augment-acc-test}
 taxi_fit %>%
   augment(taxi_test) %>%
   accuracy(tip, .pred_class)
@@ -339,7 +339,7 @@ taxi_fit %>%
 
 *Notice the evidence of overfitting!* ⚠️
 
-```{r}
+```{r ex-augment-metrics}
 #| echo: false
 countdown(minutes = 5, id = "augment-metrics")
 ```
@@ -348,7 +348,7 @@ countdown(minutes = 5, id = "augment-metrics")
 
 ::: columns
 ::: {.column width="50%"}
-```{r}
+```{r brier-class}
 taxi_fit %>%
   augment(taxi_train) %>%
   brier_class(tip, .pred_yes)
@@ -356,7 +356,7 @@ taxi_fit %>%
 :::
 
 ::: {.column width="50%"}
-```{r}
+```{r brier-class-2}
 taxi_fit %>%
   augment(taxi_test) %>%
   brier_class(tip, .pred_yes)
@@ -403,14 +403,14 @@ And we want to understand if these are important differences?
 
 ![](images/taxi_spinning.svg){width="300"}
 
-```{r}
+```{r ex-percent-in-folds}
 #| echo: false
 countdown(minutes = 3, id = "percent-in-folds")
 ```
 
 ## Cross-validation `r hexes("rsample")`
 
-```{r}
+```{r vfold-cv}
 vfold_cv(taxi_train) # v = 10 is default
 ```
 
@@ -418,7 +418,7 @@ vfold_cv(taxi_train) # v = 10 is default
 
 What is in this?
 
-```{r}
+```{r taxi-splits}
 taxi_folds <- vfold_cv(taxi_train)
 taxi_folds$splits[1:3]
 ```
@@ -429,13 +429,13 @@ Talk about a list column, storing non-atomic types in dataframe
 
 ## Cross-validation `r hexes("rsample")`
 
-```{r}
+```{r vfold-cv-v}
 vfold_cv(taxi_train, v = 5)
 ```
 
 ## Cross-validation `r hexes("rsample")`
 
-```{r}
+```{r vfold-cv-strata}
 vfold_cv(taxi_train, strata = tip)
 ```
 
@@ -447,7 +447,7 @@ Stratification often helps, with very little downside
 
 We'll use this setup:
 
-```{r}
+```{r taxi-folds}
 set.seed(123)
 taxi_folds <- vfold_cv(taxi_train, v = 10, strata = tip)
 taxi_folds
@@ -461,14 +461,14 @@ Set the seed when creating resamples
 
 ## Fit our model to the resamples
 
-```{r}
+```{r fit-resamples}
 taxi_res <- fit_resamples(taxi_wflow, taxi_folds)
 taxi_res
 ```
 
 ## Evaluating model performance `r hexes("tune")`
 
-```{r}
+```{r collect-metrics}
 taxi_res %>%
   collect_metrics()
 ```
@@ -485,7 +485,7 @@ We can reliably measure performance using only the **training** data 🎉
 
 How do the metrics from resampling compare to the metrics from training and testing?
 
-```{r}
+```{r calc-roc-auc}
 #| echo: false
 taxi_training_roc_auc <-
   taxi_fit %>%
@@ -504,7 +504,7 @@ taxi_testing_roc_auc <-
 
 ::: columns
 ::: {.column width="50%"}
-```{r}
+```{r collect-metrics-2}
 taxi_res %>%
   collect_metrics() %>% 
   select(.metric, mean, n)
@@ -529,7 +529,7 @@ Remember that:
 
 ## Evaluating model performance `r hexes("tune")`
 
-```{r}
+```{r collect-predictions}
 # Save the assessment set results
 ctrl_taxi <- control_resamples(save_pred = TRUE)
 taxi_res <- fit_resamples(taxi_wflow, taxi_folds, control = ctrl_taxi)
@@ -540,7 +540,7 @@ taxi_preds
 
 ## Evaluating model performance `r hexes("tune")`
 
-```{r}
+```{r taxi-metrics-by-id}
 taxi_preds %>% 
   group_by(id) %>%
   taxi_metrics(truth = tip, estimate = .pred_class)
@@ -548,7 +548,7 @@ taxi_preds %>%
 
 ## Where are the fitted models? `r hexes("tune")`  {.annotation}
 
-```{r}
+```{r taxi-res}
 taxi_res
 ```
 
@@ -564,7 +564,7 @@ taxi_res
 
 ## Bootstrapping `r hexes("rsample")`
 
-```{r}
+```{r bootstraps}
 set.seed(3214)
 bootstraps(taxi_train)
 ```
@@ -595,21 +595,21 @@ knitr::include_graphics("images/whole-game-resamples.jpg")
 
 *Don't forget to set a seed when you resample!*
 
-```{r}
+```{r ex-try-rsample}
 #| echo: false
 countdown(minutes = 5, id = "try-rsample")
 ```
 
 ## Monte Carlo Cross-Validation `r hexes("rsample")`
 
-```{r}
+```{r mc-cv}
 set.seed(322)
 mc_cv(taxi_train, times = 10)
 ```
 
 ## Validation set `r hexes("rsample")` {.annotation}
 
-```{r}
+```{r validation-split}
 set.seed(853)
 validation_split(taxi_train, strata = tip)
 ```
@@ -636,14 +636,14 @@ A validation set is just another type of resample
 
 ## Create a random forest model `r hexes("parsnip")`
 
-```{r}
+```{r rf-spec}
 rf_spec <- rand_forest(trees = 1000, mode = "classification")
 rf_spec
 ```
 
 ## Create a random forest model `r hexes("workflows")`
 
-```{r}
+```{r rf-wflow}
 rf_wflow <- workflow(tip ~ ., rf_spec)
 rf_wflow
 ```
@@ -657,14 +657,14 @@ rf_wflow
 -   *keep predictions*
 -   *compute metrics*
 
-```{r}
+```{r ex-try-fit-resamples}
 #| echo: false
 countdown(minutes = 8, id = "try-fit-resamples")
 ```
 
 ## Evaluating model performance `r hexes("tune")`
 
-```{r}
+```{r collect-metrics-rf}
 ctrl_taxi <- control_resamples(save_pred = TRUE)
 
 # Random forest uses random numbers so set the seed first
@@ -685,20 +685,20 @@ knitr::include_graphics("images/taxi_spinning.svg")
 
 ## Evaluate a workflow set
 
-```{r}
+```{r workflow-set}
 workflow_set(list(tip ~ .), list(tree_spec, rf_spec))
 ```
 
 ## Evaluate a workflow set
 
-```{r}
+```{r workflow-map}
 workflow_set(list(tip ~ .), list(tree_spec, rf_spec)) %>%
   workflow_map("fit_resamples", resamples = taxi_folds)
 ```
 
 ## Evaluate a workflow set
 
-```{r}
+```{r rank-results}
 workflow_set(list(tip ~ .), list(tree_spec, rf_spec)) %>%
   workflow_map("fit_resamples", resamples = taxi_folds) %>%
   rank_results()
@@ -716,7 +716,7 @@ Lots more available with workflow sets, like `collect_metrics()`, `autoplot()` m
 
 *When do you think a workflow set would be useful?*
 
-```{r}
+```{r ex-discuss-workflow-sets}
 #| echo: false
 countdown(minutes = 3, id = "discuss-workflow-sets")
 ```
@@ -739,7 +739,7 @@ Let's fit the model on the training set and verify our performance using the tes
 
 We've shown you `fit()` and `predict()` (+ `augment()`) but there is a shortcut:
 
-```{r}
+```{r final-fit}
 # taxi_split has train + test info
 final_fit <- last_fit(rf_wflow, taxi_split) 
 
@@ -748,7 +748,7 @@ final_fit
 
 ## What is in `final_fit`? `r hexes("tune")`
 
-```{r}
+```{r collect-metrics-final-fit}
 collect_metrics(final_fit)
 ```
 
@@ -758,13 +758,13 @@ These are metrics computed with the **test** set
 
 ## What is in `final_fit`? `r hexes("tune")`
 
-```{r}
+```{r collect-predictions-final-fit}
 collect_predictions(final_fit)
 ```
 
 ## What is in `final_fit`? `r hexes("tune")`
 
-```{r}
+```{r extract-workflow}
 extract_workflow(final_fit)
 ```
 
@@ -792,7 +792,7 @@ knitr::include_graphics("images/whole-game-final-performance.jpg")
 
 *What is one thing you are looking forward to for tomorrow?*
 
-```{r}
+```{r ex-discuss-which-model}
 #| echo: false
 countdown(minutes = 5, id = "discuss-which-model")
 ```
