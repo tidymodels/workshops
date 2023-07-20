@@ -95,17 +95,17 @@ set.seed(4028)
 hotel_split <-
   initial_split(hotel_rates, strata = avg_price_per_room)
 
-hotel_tr <- training(hotel_split)
-hotel_te <- testing(hotel_split)
+hotel_train <- training(hotel_split)
+hotel_test <- testing(hotel_split)
 
 set.seed(472)
-hotel_rs <- vfold_cv(hotel_tr, strata = avg_price_per_room)
+hotel_rs <- vfold_cv(hotel_train, strata = avg_price_per_room)
 ```
 
 
 ## What do we do with the agent and company data? 
 
-There are `r length(unique(hotel_tr$agent))` unique agent values and `r length(unique(hotel_tr$company))` companies in our training set. How can we include this information in our model?
+There are `r length(unique(hotel_train$agent))` unique agent values and `r length(unique(hotel_train$company))` companies in our training set. How can we include this information in our model?
 
 . . .
 
@@ -126,7 +126,7 @@ We could:
 #| include: false
 
 agent_stats <- 
-  hotel_tr %>%
+  hotel_train %>%
   group_by(agent) %>%
   summarize(
     ADR = mean(avg_price_per_room), 
@@ -138,7 +138,7 @@ agent_stats <-
 library(embed)
 
 estimates <- 
-  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
   step_lencode_mixed(agent, outcome = vars(avg_price_per_room), id = "encoding") %>%   #<<
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
@@ -147,7 +147,7 @@ estimates <-
   tidy(id = "encoding") %>% 
   select(agent = level, estimate = value)
 
-before <- hotel_tr %>% select(avg_price_per_room, agent) %>% slice(1:7) %>% add_rowindex()
+before <- hotel_train %>% select(avg_price_per_room, agent) %>% slice(1:7) %>% add_rowindex()
 after <- left_join(before, estimates, by = "agent") %>% 
   select(avg_price_per_room, agent = estimate, .row)
 ```
@@ -297,7 +297,7 @@ inner_join(agent_stats, estimates, by = "agent") %>%
 library(embed)
 
 hotel_effect_rec <-
-  recipe(avg_price_per_room ~ ., data = hotel_tr) %>% 
+  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
   step_YeoJohnson(lead_time) %>%
   step_lencode_mixed(agent, company, outcome = vars(avg_price_per_room)) %>%
   step_dummy(all_nominal_predictors()) %>%
