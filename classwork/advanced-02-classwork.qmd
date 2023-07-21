@@ -42,14 +42,14 @@ set.seed(4028)
 hotel_split <-
   initial_split(hotel_rates, strata = avg_price_per_room)
 
-hotel_tr <- training(hotel_split)
-hotel_te <- testing(hotel_split)
+hotel_train <- training(hotel_split)
+hotel_test <- testing(hotel_split)
 
 set.seed(472)
-hotel_rs <- vfold_cv(hotel_tr, strata = avg_price_per_room)
+hotel_rs <- vfold_cv(hotel_train, strata = avg_price_per_room)
 
 hash_rec <-
-  recipe(avg_price_per_room ~ ., data = hotel_tr) %>%
+  recipe(avg_price_per_room ~ ., data = hotel_train) %>%
   step_YeoJohnson(lead_time) %>%
   # Defaults to 32 signed indicator columns
   step_dummy_hash(agent) %>%
@@ -63,7 +63,7 @@ hash_rec <-
 
 ```{r}
 hash_rec <-
-  recipe(avg_price_per_room ~ ., data = hotel_tr) %>%
+  recipe(avg_price_per_room ~ ., data = hotel_train) %>%
   step_YeoJohnson(lead_time) %>%
   step_dummy_hash(agent,   num_terms = tune("agent hash")) %>%
   step_dummy_hash(company, num_terms = tune("company hash")) %>%
