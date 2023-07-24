@@ -25,6 +25,7 @@ To archive previous workshop notes:
 * Copy the contents of `slides/` into `archive/YYYY-MM-workshop-name`.
 * Copy the contents of `classwork/` into `archive/YYYY-MM-workshop-name`.
 * Copy `index.qmd` into `archive/YYYY-MM-workshop-name`.
+* In `index.qmd`, remove `slides/` from links to slides.
 * In `_quarto.yml`:
 	* add an entry `"archive/YYYY-MM-workshop-name/*qmd"` under `render`.
 	* add an entry `"archive/YYYY-MM-workshop-name/classwork/*qmd"` under `resources`.
