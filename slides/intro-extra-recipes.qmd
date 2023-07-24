@@ -1,0 +1,61 @@
+---
+title: "Extras - Recipes"
+subtitle: "Introduction to tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+---
+
+```{r}
+#| label: setup
+#| include: false
+#| file: setup.R
+```
+
+```{r setup-previous}
+#| echo: false
+library(countdown)
+library(tidymodels)
+library(modeldatatoo)
+taxi <- data_taxi() %>%
+  mutate(month = factor(month, levels = c("Jan", "Feb", "Mar", "Apr"))) %>% 
+  select(-c(id, duration, fare, tolls, extras, total_cost, payment_type)) %>%
+  drop_na()
+
+set.seed(123)
+taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
+taxi_train <- training(taxi_split)
+taxi_test <- testing(taxi_split)
+
+tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
+taxi_wflow <- workflow(tip ~ ., tree_spec)
+taxi_fit <- fit(taxi_wflow, taxi_train)
+```
+
+```{r more-setup}
+#| include: false
+library(modeldatatoo)
+library(probably)
+library(countdown)
+library(finetune)
+
+cores <- parallelly::availableCores(logical = FALSE)
+cl <- parallel::makePSOCKcluster(cores)
+doParallel::registerDoParallel(cl)
+
+options(width = 200)
+
+ggplot2::theme_set(ggplot2::theme_bw())
+```
