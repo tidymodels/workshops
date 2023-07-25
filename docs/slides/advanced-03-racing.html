@@ -9,7 +9,7 @@
 <link href="../site_libs/quarto-html/light-border.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.4.176">
+  <meta name="generator" content="quarto-1.4.104">
 
   <title>Machine learning with tidymodels - 3 - Grid Search via Racing</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -221,8 +221,7 @@
   }
 
   .callout.callout-titled .callout-body > .callout-content > :last-child {
-    padding-bottom: 0.5rem;
-    margin-bottom: 0;
+    margin-bottom: 0.5rem;
   }
 
   .callout.callout-titled .callout-icon::before {
@@ -389,7 +388,7 @@
   <script src="../site_libs/countdown-0.4.0/countdown.js"></script>
 <meta property="og:title" content="Machine learning with tidymodels - 3 - Grid Search via Racing">
 <meta property="og:description" content="Advanced tidymodels">
-<meta property="og:site_name" content="Machine learning with tidymodels">
+<meta property="og:site-name" content="Machine learning with tidymodels">
 <meta name="twitter:title" content="Machine learning with tidymodels - 3 - Grid Search via Racing">
 <meta name="twitter:description" content="Advanced tidymodels">
 <meta name="twitter:card" content="summary">
@@ -451,18 +450,18 @@
 <span id="cb3-2"><a href="#cb3-2"></a>hotel_split <span class="ot">&lt;-</span></span>
 <span id="cb3-3"><a href="#cb3-3"></a>  <span class="fu">initial_split</span>(hotel_rates, <span class="at">strata =</span> avg_price_per_room)</span>
 <span id="cb3-4"><a href="#cb3-4"></a></span>
-<span id="cb3-5"><a href="#cb3-5"></a>hotel_tr <span class="ot">&lt;-</span> <span class="fu">training</span>(hotel_split)</span>
-<span id="cb3-6"><a href="#cb3-6"></a>hotel_te <span class="ot">&lt;-</span> <span class="fu">testing</span>(hotel_split)</span>
+<span id="cb3-5"><a href="#cb3-5"></a>hotel_train <span class="ot">&lt;-</span> <span class="fu">training</span>(hotel_split)</span>
+<span id="cb3-6"><a href="#cb3-6"></a>hotel_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(hotel_split)</span>
 <span id="cb3-7"><a href="#cb3-7"></a></span>
 <span id="cb3-8"><a href="#cb3-8"></a><span class="fu">set.seed</span>(<span class="dv">472</span>)</span>
-<span id="cb3-9"><a href="#cb3-9"></a>hotel_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(hotel_tr, <span class="at">strata =</span> avg_price_per_room)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-9"><a href="#cb3-9"></a>hotel_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(hotel_train, <span class="at">strata =</span> avg_price_per_room)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="previously---boosting-model" class="slide level2">
 <h2>Previously - Boosting Model <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/textrecipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/bonsai.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>hotel_rec <span class="ot">&lt;-</span></span>
-<span id="cb4-2"><a href="#cb4-2"></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_tr) <span class="sc">%&gt;%</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">%&gt;%</span></span>
 <span id="cb4-3"><a href="#cb4-3"></a>  <span class="fu">step_YeoJohnson</span>(lead_time) <span class="sc">%&gt;%</span></span>
 <span id="cb4-4"><a href="#cb4-4"></a>  <span class="fu">step_dummy_hash</span>(agent,   <span class="at">num_terms =</span> <span class="fu">tune</span>(<span class="st">"agent hash"</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb4-5"><a href="#cb4-5"></a>  <span class="fu">step_dummy_hash</span>(company, <span class="at">num_terms =</span> <span class="fu">tune</span>(<span class="st">"company hash"</span>)) <span class="sc">%&gt;%</span></span>
@@ -558,7 +557,7 @@
 <section id="racing" class="slide level2">
 <h2>Racing <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/textrecipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/finetune.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "> <img data-src="hexes/bonsai.png" class="absolute" style="top: -20px; right: 256px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5" data-code-line-numbers="1,8|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co"># Let's use a larger grid</span></span>
+<div class="sourceCode cell-code" id="cb5" data-code-line-numbers="12|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co"># Let's use a larger grid</span></span>
 <span id="cb5-2"><a href="#cb5-2"></a><span class="fu">set.seed</span>(<span class="dv">8945</span>)</span>
 <span id="cb5-3"><a href="#cb5-3"></a>lgbm_grid <span class="ot">&lt;-</span> </span>
 <span id="cb5-4"><a href="#cb5-4"></a>  lgbm_param <span class="sc">%&gt;%</span> </span>

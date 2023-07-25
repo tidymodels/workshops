@@ -9,7 +9,7 @@
 <link href="../site_libs/quarto-html/light-border.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.4.176">
+  <meta name="generator" content="quarto-1.4.104">
 
   <title>Machine learning with tidymodels - Extras - Effect Encodings</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -221,8 +221,7 @@
   }
 
   .callout.callout-titled .callout-body > .callout-content > :last-child {
-    padding-bottom: 0.5rem;
-    margin-bottom: 0;
+    margin-bottom: 0.5rem;
   }
 
   .callout.callout-titled .callout-icon::before {
@@ -387,7 +386,7 @@
   </style>
 <meta property="og:title" content="Machine learning with tidymodels - Extras - Effect Encodings">
 <meta property="og:description" content="Advanced tidymodels">
-<meta property="og:site_name" content="Machine learning with tidymodels">
+<meta property="og:site-name" content="Machine learning with tidymodels">
 <meta name="twitter:title" content="Machine learning with tidymodels - Extras - Effect Encodings">
 <meta name="twitter:description" content="Advanced tidymodels">
 <meta name="twitter:card" content="summary">
@@ -447,11 +446,11 @@
 <span id="cb3-2"><a href="#cb3-2"></a>hotel_split <span class="ot">&lt;-</span></span>
 <span id="cb3-3"><a href="#cb3-3"></a>  <span class="fu">initial_split</span>(hotel_rates, <span class="at">strata =</span> avg_price_per_room)</span>
 <span id="cb3-4"><a href="#cb3-4"></a></span>
-<span id="cb3-5"><a href="#cb3-5"></a>hotel_tr <span class="ot">&lt;-</span> <span class="fu">training</span>(hotel_split)</span>
-<span id="cb3-6"><a href="#cb3-6"></a>hotel_te <span class="ot">&lt;-</span> <span class="fu">testing</span>(hotel_split)</span>
+<span id="cb3-5"><a href="#cb3-5"></a>hotel_train <span class="ot">&lt;-</span> <span class="fu">training</span>(hotel_split)</span>
+<span id="cb3-6"><a href="#cb3-6"></a>hotel_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(hotel_split)</span>
 <span id="cb3-7"><a href="#cb3-7"></a></span>
 <span id="cb3-8"><a href="#cb3-8"></a><span class="fu">set.seed</span>(<span class="dv">472</span>)</span>
-<span id="cb3-9"><a href="#cb3-9"></a>hotel_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(hotel_tr, <span class="at">strata =</span> avg_price_per_room)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-9"><a href="#cb3-9"></a>hotel_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(hotel_train, <span class="at">strata =</span> avg_price_per_room)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="what-do-we-do-with-the-agent-and-company-data" class="slide level2">
@@ -583,7 +582,7 @@
 <div class="sourceCode cell-code" id="cb6" data-code-line-numbers="1,6|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="fu">library</span>(embed)</span>
 <span id="cb6-2"><a href="#cb6-2"></a></span>
 <span id="cb6-3"><a href="#cb6-3"></a>hotel_effect_rec <span class="ot">&lt;-</span></span>
-<span id="cb6-4"><a href="#cb6-4"></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_tr) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-4"><a href="#cb6-4"></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">%&gt;%</span> </span>
 <span id="cb6-5"><a href="#cb6-5"></a>  <span class="fu">step_YeoJohnson</span>(lead_time) <span class="sc">%&gt;%</span></span>
 <span id="cb6-6"><a href="#cb6-6"></a>  <span class="fu">step_lencode_mixed</span>(agent, company, <span class="at">outcome =</span> <span class="fu">vars</span>(avg_price_per_room)) <span class="sc">%&gt;%</span></span>
 <span id="cb6-7"><a href="#cb6-7"></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span></span>
