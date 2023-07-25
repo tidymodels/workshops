@@ -1817,7 +1817,7 @@
     "href": "slides/extras-effect-encodings.html#previously---data-usage",
     "title": "Extras - Effect Encodings",
     "section": "Previously - Data Usage",
-    "text": "Previously - Data Usage\n\nset.seed(4028)\nhotel_split &lt;-\n  initial_split(hotel_rates, strata = avg_price_per_room)\n\nhotel_tr &lt;- training(hotel_split)\nhotel_te &lt;- testing(hotel_split)\n\nset.seed(472)\nhotel_rs &lt;- vfold_cv(hotel_tr, strata = avg_price_per_room)"
+    "text": "Previously - Data Usage\n\nset.seed(4028)\nhotel_split &lt;-\n  initial_split(hotel_rates, strata = avg_price_per_room)\n\nhotel_train &lt;- training(hotel_split)\nhotel_test &lt;- testing(hotel_split)\n\nset.seed(472)\nhotel_rs &lt;- vfold_cv(hotel_train, strata = avg_price_per_room)"
   },
   {
     "objectID": "slides/extras-effect-encodings.html#what-do-we-do-with-the-agent-and-company-data",
@@ -1859,7 +1859,7 @@
     "href": "slides/extras-effect-encodings.html#agent-effects",
     "title": "Extras - Effect Encodings",
     "section": "Agent effects  ",
-    "text": "Agent effects  \n\nlibrary(embed)\n\nhotel_effect_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_YeoJohnson(lead_time) %&gt;%\n  step_lencode_mixed(agent, company, outcome = vars(avg_price_per_room)) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors())\n\n\nIt is very important to appropriately validate the effect encoding step to make sure that we are not overfitting."
+    "text": "Agent effects  \n\nlibrary(embed)\n\nhotel_effect_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;% \n  step_YeoJohnson(lead_time) %&gt;%\n  step_lencode_mixed(agent, company, outcome = vars(avg_price_per_room)) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors())\n\n\nIt is very important to appropriately validate the effect encoding step to make sure that we are not overfitting."
   },
   {
     "objectID": "slides/extras-effect-encodings.html#effect-encoding-results",
@@ -1880,14 +1880,14 @@
     "href": "slides/advanced-04-iterative.html#previously---data-usage",
     "title": "4 - Iterative Search",
     "section": "Previously - Data Usage",
-    "text": "Previously - Data Usage\n\nset.seed(4028)\nhotel_split &lt;- initial_split(hotel_rates, strata = avg_price_per_room)\n\nhotel_tr &lt;- training(hotel_split)\nhotel_te &lt;- testing(hotel_split)\n\nset.seed(472)\nhotel_rs &lt;- vfold_cv(hotel_tr, strata = avg_price_per_room)"
+    "text": "Previously - Data Usage\n\nset.seed(4028)\nhotel_split &lt;- initial_split(hotel_rates, strata = avg_price_per_room)\n\nhotel_train &lt;- training(hotel_split)\nhotel_test &lt;- testing(hotel_split)\n\nset.seed(472)\nhotel_rs &lt;- vfold_cv(hotel_train, strata = avg_price_per_room)"
   },
   {
     "objectID": "slides/advanced-04-iterative.html#previously---boosting-model",
     "href": "slides/advanced-04-iterative.html#previously---boosting-model",
     "title": "4 - Iterative Search",
     "section": "Previously - Boosting Model",
-    "text": "Previously - Boosting Model\n\nhotel_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;%\n  step_YeoJohnson(lead_time) %&gt;%\n  step_dummy_hash(agent,   num_terms = tune(\"agent hash\")) %&gt;%\n  step_dummy_hash(company, num_terms = tune(\"company hash\")) %&gt;%\n  step_zv(all_predictors())\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(), min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)\n\nlgbm_param &lt;-\n  lgbm_wflow %&gt;%\n  extract_parameter_set_dials() %&gt;%\n  update(`agent hash`   = num_hash(c(3, 8)),\n         `company hash` = num_hash(c(3, 8)))"
+    "text": "Previously - Boosting Model\n\nhotel_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;%\n  step_YeoJohnson(lead_time) %&gt;%\n  step_dummy_hash(agent,   num_terms = tune(\"agent hash\")) %&gt;%\n  step_dummy_hash(company, num_terms = tune(\"company hash\")) %&gt;%\n  step_zv(all_predictors())\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(), min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)\n\nlgbm_param &lt;-\n  lgbm_wflow %&gt;%\n  extract_parameter_set_dials() %&gt;%\n  update(`agent hash`   = num_hash(c(3, 8)),\n         `company hash` = num_hash(c(3, 8)))"
   },
   {
     "objectID": "slides/advanced-04-iterative.html#iterative-search",
@@ -2090,7 +2090,7 @@
     "href": "slides/advanced-04-iterative.html#the-final-fit",
     "title": "4 - Iterative Search",
     "section": "The Final Fit",
-    "text": "The Final Fit\nWe can use individual functions:\nfinal_fit &lt;- final_wflow %&gt;% fit(data = hotel_tr)\n\n# then predict() or augment() \n# then compute metrics\n\nRemember that there is also a convenience function to do all of this:\n\nset.seed(3893)\nfinal_res &lt;- final_wflow %&gt;% last_fit(hotel_split, metrics = reg_metrics)\nfinal_res\n#&gt; # Resampling results\n#&gt; # Manual resampling \n#&gt; # A tibble: 1 × 6\n#&gt;   splits              id               .metrics         .notes           .predictions         .workflow \n#&gt;   &lt;list&gt;              &lt;chr&gt;            &lt;list&gt;           &lt;list&gt;           &lt;list&gt;               &lt;list&gt;    \n#&gt; 1 &lt;split [3749/1251]&gt; train/test split &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [1,251 × 4]&gt; &lt;workflow&gt;"
+    "text": "The Final Fit\nWe can use individual functions:\nfinal_fit &lt;- final_wflow %&gt;% fit(data = hotel_train)\n\n# then predict() or augment() \n# then compute metrics\n\nRemember that there is also a convenience function to do all of this:\n\nset.seed(3893)\nfinal_res &lt;- final_wflow %&gt;% last_fit(hotel_split, metrics = reg_metrics)\nfinal_res\n#&gt; # Resampling results\n#&gt; # Manual resampling \n#&gt; # A tibble: 1 × 6\n#&gt;   splits              id               .metrics         .notes           .predictions         .workflow \n#&gt;   &lt;list&gt;              &lt;chr&gt;            &lt;list&gt;           &lt;list&gt;           &lt;list&gt;               &lt;list&gt;    \n#&gt; 1 &lt;split [3749/1251]&gt; train/test split &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [1,251 × 4]&gt; &lt;workflow&gt;"
   },
   {
     "objectID": "slides/advanced-04-iterative.html#test-set-results",
@@ -2111,14 +2111,14 @@
     "href": "slides/advanced-02-tuning-hyperparameters.html#previously---data-usage",
     "title": "2 - Tuning Hyperparameters",
     "section": "Previously - Data Usage ",
-    "text": "Previously - Data Usage \n\nset.seed(4028)\nhotel_split &lt;- initial_split(hotel_rates, strata = avg_price_per_room)\n\nhotel_tr &lt;- training(hotel_split)\nhotel_te &lt;- testing(hotel_split)\n\nset.seed(472)\nhotel_rs &lt;- vfold_cv(hotel_tr, strata = avg_price_per_room)"
+    "text": "Previously - Data Usage \n\nset.seed(4028)\nhotel_split &lt;- initial_split(hotel_rates, strata = avg_price_per_room)\n\nhotel_train &lt;- training(hotel_split)\nhotel_test &lt;- testing(hotel_split)\n\nset.seed(472)\nhotel_rs &lt;- vfold_cv(hotel_train, strata = avg_price_per_room)"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#previously---feature-engineering",
     "href": "slides/advanced-02-tuning-hyperparameters.html#previously---feature-engineering",
     "title": "2 - Tuning Hyperparameters",
     "section": "Previously - Feature engineering  ",
-    "text": "Previously - Feature engineering  \n\nlibrary(textrecipes)\n\nhash_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;%\n  step_YeoJohnson(lead_time) %&gt;%\n  # Defaults to 32 signed indicator columns\n  step_dummy_hash(agent) %&gt;%\n  step_dummy_hash(company) %&gt;%\n  # Regular indicators for the others\n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors())"
+    "text": "Previously - Feature engineering  \n\nlibrary(textrecipes)\n\nhash_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;%\n  step_YeoJohnson(lead_time) %&gt;%\n  # Defaults to 32 signed indicator columns\n  step_dummy_hash(agent) %&gt;%\n  step_dummy_hash(company) %&gt;%\n  # Regular indicators for the others\n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors())"
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#tuning-parameters",
@@ -2146,7 +2146,7 @@
     "href": "slides/advanced-02-tuning-hyperparameters.html#optimizing-the-hash-features",
     "title": "2 - Tuning Hyperparameters",
     "section": "Optimizing the hash features   ",
-    "text": "Optimizing the hash features   \nOur new recipe is:\n\nhash_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;%\n  step_YeoJohnson(lead_time) %&gt;%\n  step_dummy_hash(agent,   num_terms = tune(\"agent hash\")) %&gt;%\n  step_dummy_hash(company, num_terms = tune(\"company hash\")) %&gt;%\n  step_zv(all_predictors())\n\n\nWe will be using a tree-based model in a minute.\n\nThe other categorical predictors are left as-is.\nThat’s why there is no step_dummy()."
+    "text": "Optimizing the hash features   \nOur new recipe is:\n\nhash_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;%\n  step_YeoJohnson(lead_time) %&gt;%\n  step_dummy_hash(agent,   num_terms = tune(\"agent hash\")) %&gt;%\n  step_dummy_hash(company, num_terms = tune(\"company hash\")) %&gt;%\n  step_zv(all_predictors())\n\n\nWe will be using a tree-based model in a minute.\n\nThe other categorical predictors are left as-is.\nThat’s why there is no step_dummy()."
   },
   {
     "objectID": "slides/advanced-02-tuning-hyperparameters.html#boosted-trees",
@@ -2349,7 +2349,7 @@
     "href": "slides/advanced-02-tuning-hyperparameters.html#your-turn-2",
     "title": "2 - Tuning Hyperparameters",
     "section": "Your turn",
-    "text": "Your turn\n\n\nSet trees = 2000 and tune the stop_iter parameter.\n\n\n\n−+\n10:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Your turn\n\n\nSet trees = 2000 and tune the stop_iter parameter.\nNote that you will need to regenerate lgbm_param with your new workflow!\n\n\n\n−+\n10:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
     "objectID": "slides/08-wrapping-up.html#your-turn",
@@ -2797,7 +2797,7 @@
     "href": "index.html#preparation",
     "title": "Machine learning with tidymodels",
     "section": "Preparation",
-    "text": "Preparation\nPlease join the workshop with a computer that has the following installed (all available for free):\n\nA recent version of R, available at https://cran.r-project.org/\nA recent version of RStudio Desktop (RStudio Desktop Open Source License, at least v2022.02), available at https://www.rstudio.com/download\nThe following R packages, which you can install from the R console:\n\n\n# First, install the pak package: \n\ninstall.packages(\"pak\")\n\n# Then the packages for both days\npkgs &lt;- \n  c(\"bonsai\", \"doParallel\", \"finetune\", \"lightgbm\", \"lme4\", \"plumber\", \n    \"probably\", \"ranger\", \"rpart\", \"rpart.plot\", \"stacks\", \"textrecipes\", \n    \"tidymodels\", \"tidymodels/modeldatatoo\", \"vetiver\")\npak::pak(pkgs)"
+    "text": "Preparation\nPlease join the workshop with a computer that has the following installed (all available for free):\n\nA recent version of R, available at https://cran.r-project.org/\nA recent version of RStudio Desktop (RStudio Desktop Open Source License, at least v2022.02), available at https://www.rstudio.com/download\nThe following R packages, which you can install from the R console:\n\n\n# Install the packages for the workshop\npkgs &lt;- \n  c(\"bonsai\", \"doParallel\", \"finetune\", \"lightgbm\", \"lme4\", \"plumber\", \n    \"probably\", \"ranger\", \"rpart\", \"rpart.plot\", \"stacks\", \"textrecipes\", \n    \"tidymodels\", \"vetiver\", \"remotes\")\n\ninstall.packages(pkgs)\n\nremotes::install_github(\"tidymodels/modeldatatoo\")"
   },
   {
     "objectID": "index.html#slides",
@@ -2811,14 +2811,14 @@
     "href": "index.html#code",
     "title": "Machine learning with tidymodels",
     "section": "Code",
-    "text": "Code\nQuarto files (version 1.4.176) for working along are available on GitHub. (Don’t worry if you haven’t used Quarto before; it will feel familiar to R Markdown users.)"
+    "text": "Code\nQuarto files (version 1.4.104) for working along are available on GitHub. (Don’t worry if you haven’t used Quarto before; it will feel familiar to R Markdown users.)"
   },
   {
     "objectID": "index.html#past-workshops",
     "href": "index.html#past-workshops",
     "title": "Machine learning with tidymodels",
     "section": "Past workshops",
-    "text": "Past workshops\n\nJuly 2022 at rstudio::conf()\nAugust 2022 in Reykjavik"
+    "text": "Past workshops\n\nJuly 2022 at rstudio::conf()\nAugust 2022 in Reykjavik\nJuly 2023 at the New York R Conference"
   },
   {
     "objectID": "index.html#acknowledgments",
@@ -3497,7 +3497,7 @@
     "href": "slides/advanced-01-feature-engineering.html#data-spending",
     "title": "1 - Feature Engineering",
     "section": "Data Spending ",
-    "text": "Data Spending \nLet’s split the data into a training set (75%) and testing set (25%):\n\nset.seed(4028)\nhotel_split &lt;-\n  initial_split(hotel_rates, strata = avg_price_per_room)\n\nhotel_tr &lt;- training(hotel_split)\nhotel_te &lt;- testing(hotel_split)"
+    "text": "Data Spending \nLet’s split the data into a training set (75%) and testing set (25%):\n\nset.seed(4028)\nhotel_split &lt;-\n  initial_split(hotel_rates, strata = avg_price_per_room)\n\nhotel_train &lt;- training(hotel_split)\nhotel_test &lt;- testing(hotel_split)"
   },
   {
     "objectID": "slides/advanced-01-feature-engineering.html#your-turn",
@@ -3518,7 +3518,7 @@
     "href": "slides/advanced-01-feature-engineering.html#resampling-strategy-1",
     "title": "1 - Feature Engineering",
     "section": "Resampling Strategy ",
-    "text": "Resampling Strategy \nWe’ll use simple 10-fold cross-validation (stratified sampling):\n\nset.seed(472)\nhotel_rs &lt;- vfold_cv(hotel_tr, strata = avg_price_per_room)\nhotel_rs\n#&gt; #  10-fold cross-validation using stratification \n#&gt; # A tibble: 10 × 2\n#&gt;    splits             id    \n#&gt;    &lt;list&gt;             &lt;chr&gt; \n#&gt;  1 &lt;split [3372/377]&gt; Fold01\n#&gt;  2 &lt;split [3373/376]&gt; Fold02\n#&gt;  3 &lt;split [3373/376]&gt; Fold03\n#&gt;  4 &lt;split [3373/376]&gt; Fold04\n#&gt;  5 &lt;split [3373/376]&gt; Fold05\n#&gt;  6 &lt;split [3374/375]&gt; Fold06\n#&gt;  7 &lt;split [3375/374]&gt; Fold07\n#&gt;  8 &lt;split [3376/373]&gt; Fold08\n#&gt;  9 &lt;split [3376/373]&gt; Fold09\n#&gt; 10 &lt;split [3376/373]&gt; Fold10"
+    "text": "Resampling Strategy \nWe’ll use simple 10-fold cross-validation (stratified sampling):\n\nset.seed(472)\nhotel_rs &lt;- vfold_cv(hotel_train, strata = avg_price_per_room)\nhotel_rs\n#&gt; #  10-fold cross-validation using stratification \n#&gt; # A tibble: 10 × 2\n#&gt;    splits             id    \n#&gt;    &lt;list&gt;             &lt;chr&gt; \n#&gt;  1 &lt;split [3372/377]&gt; Fold01\n#&gt;  2 &lt;split [3373/376]&gt; Fold02\n#&gt;  3 &lt;split [3373/376]&gt; Fold03\n#&gt;  4 &lt;split [3373/376]&gt; Fold04\n#&gt;  5 &lt;split [3373/376]&gt; Fold05\n#&gt;  6 &lt;split [3374/375]&gt; Fold06\n#&gt;  7 &lt;split [3375/374]&gt; Fold07\n#&gt;  8 &lt;split [3376/373]&gt; Fold08\n#&gt;  9 &lt;split [3376/373]&gt; Fold09\n#&gt; 10 &lt;split [3376/373]&gt; Fold10"
   },
   {
     "objectID": "slides/advanced-01-feature-engineering.html#prepare-your-data-for-modeling",
@@ -3532,7 +3532,7 @@
     "href": "slides/advanced-01-feature-engineering.html#a-first-recipe",
     "title": "1 - Feature Engineering",
     "section": "A first recipe ",
-    "text": "A first recipe \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr)\n\n\n\nThe recipe() function assigns columns to roles of “outcome” or “predictor” using the formula"
+    "text": "A first recipe \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_train)\n\n\n\nThe recipe() function assigns columns to roles of “outcome” or “predictor” using the formula"
   },
   {
     "objectID": "slides/advanced-01-feature-engineering.html#a-first-recipe-1",
@@ -3553,49 +3553,49 @@
     "href": "slides/advanced-01-feature-engineering.html#create-indicator-variables",
     "title": "1 - Feature Engineering",
     "section": "Create indicator variables ",
-    "text": "Create indicator variables \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_dummy(all_nominal_predictors())\n\n\n\nFor any factor or character predictors, make binary indicators.\nThere are many recipe steps that can convert categorical predictors to numeric columns.\nstep_dummy() records the levels of the categorical predictors in the training set."
+    "text": "Create indicator variables \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;% \n  step_dummy(all_nominal_predictors())\n\n\n\nFor any factor or character predictors, make binary indicators.\nThere are many recipe steps that can convert categorical predictors to numeric columns.\nstep_dummy() records the levels of the categorical predictors in the training set."
   },
   {
     "objectID": "slides/advanced-01-feature-engineering.html#filter-out-constant-columns",
     "href": "slides/advanced-01-feature-engineering.html#filter-out-constant-columns",
     "title": "1 - Feature Engineering",
     "section": "Filter out constant columns ",
-    "text": "Filter out constant columns \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors())\n\n\nIn case there is a factor level that was never observed in the training data (resulting in a column of all 0s), we can delete any zero-variance predictors that have a single unique value.\n\nNote that the selector chooses all columns with a role of “predictor”"
+    "text": "Filter out constant columns \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors())\n\n\nIn case there is a factor level that was never observed in the training data (resulting in a column of all 0s), we can delete any zero-variance predictors that have a single unique value.\n\nNote that the selector chooses all columns with a role of “predictor”"
   },
   {
     "objectID": "slides/advanced-01-feature-engineering.html#normalization",
     "href": "slides/advanced-01-feature-engineering.html#normalization",
     "title": "1 - Feature Engineering",
     "section": "Normalization ",
-    "text": "Normalization \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors()) %&gt;% \n  step_normalize(all_numeric_predictors())\n\n\n\nThis centers and scales the numeric predictors.\nThe recipe will use the training set to estimate the means and standard deviations of the data.\n\n\n\n\nAll data the recipe is applied to will be normalized using those statistics (there is no re-estimation)."
+    "text": "Normalization \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors()) %&gt;% \n  step_normalize(all_numeric_predictors())\n\n\n\nThis centers and scales the numeric predictors.\nThe recipe will use the training set to estimate the means and standard deviations of the data.\n\n\n\n\nAll data the recipe is applied to will be normalized using those statistics (there is no re-estimation)."
   },
   {
     "objectID": "slides/advanced-01-feature-engineering.html#reduce-correlation",
     "href": "slides/advanced-01-feature-engineering.html#reduce-correlation",
     "title": "1 - Feature Engineering",
     "section": "Reduce correlation ",
-    "text": "Reduce correlation \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors()) %&gt;% \n  step_normalize(all_numeric_predictors()) %&gt;% \n  step_corr(all_numeric_predictors(), threshold = 0.9)\n\n\nTo deal with highly correlated predictors, find the minimum set of predictor columns that make the pairwise correlations less than the threshold."
+    "text": "Reduce correlation \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors()) %&gt;% \n  step_normalize(all_numeric_predictors()) %&gt;% \n  step_corr(all_numeric_predictors(), threshold = 0.9)\n\n\nTo deal with highly correlated predictors, find the minimum set of predictor columns that make the pairwise correlations less than the threshold."
   },
   {
     "objectID": "slides/advanced-01-feature-engineering.html#other-possible-steps",
     "href": "slides/advanced-01-feature-engineering.html#other-possible-steps",
     "title": "1 - Feature Engineering",
     "section": "Other possible steps ",
-    "text": "Other possible steps \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors()) %&gt;% \n  step_normalize(all_numeric_predictors()) %&gt;% \n  step_pca(all_numeric_predictors())\n\n\nPCA feature extraction…"
+    "text": "Other possible steps \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors()) %&gt;% \n  step_normalize(all_numeric_predictors()) %&gt;% \n  step_pca(all_numeric_predictors())\n\n\nPCA feature extraction…"
   },
   {
     "objectID": "slides/advanced-01-feature-engineering.html#other-possible-steps-1",
     "href": "slides/advanced-01-feature-engineering.html#other-possible-steps-1",
     "title": "1 - Feature Engineering",
     "section": "Other possible steps  ",
-    "text": "Other possible steps  \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors()) %&gt;% \n  step_normalize(all_numeric_predictors()) %&gt;% \n  embed::step_umap(all_numeric_predictors(), outcome = avg_price_per_room)\n\n\nA fancy machine learning supervised dimension reduction technique…\n\nNote that this uses the outcome, and it is from an extension package"
+    "text": "Other possible steps  \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors()) %&gt;% \n  step_normalize(all_numeric_predictors()) %&gt;% \n  embed::step_umap(all_numeric_predictors(), outcome = vars(avg_price_per_room))\n\n\nA fancy machine learning supervised dimension reduction technique…\n\nNote that this uses the outcome, and it is from an extension package"
   },
   {
     "objectID": "slides/advanced-01-feature-engineering.html#other-possible-steps-2",
     "href": "slides/advanced-01-feature-engineering.html#other-possible-steps-2",
     "title": "1 - Feature Engineering",
     "section": "Other possible steps ",
-    "text": "Other possible steps \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors()) %&gt;% \n  step_normalize(all_numeric_predictors()) %&gt;% \n  step_spline_natural(year_day, deg_free = 10)\n\n\nNonlinear transforms like natural splines, and so on!"
+    "text": "Other possible steps \n\nhotel_rec &lt;- \n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;% \n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors()) %&gt;% \n  step_normalize(all_numeric_predictors()) %&gt;% \n  step_spline_natural(year_day, deg_free = 10)\n\n\nNonlinear transforms like natural splines, and so on!"
   },
   {
     "objectID": "slides/advanced-01-feature-engineering.html#your-turn-2",
@@ -3609,7 +3609,7 @@
     "href": "slides/advanced-01-feature-engineering.html#minimal-recipe",
     "title": "1 - Feature Engineering",
     "section": "Minimal recipe ",
-    "text": "Minimal recipe \n\nhotel_indicators &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_YeoJohnson(lead_time) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors())"
+    "text": "Minimal recipe \n\nhotel_indicators &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;% \n  step_YeoJohnson(lead_time) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors())"
   },
   {
     "objectID": "slides/advanced-01-feature-engineering.html#measuring-performance",
@@ -3665,14 +3665,14 @@
     "href": "slides/advanced-01-feature-engineering.html#collapsing-factor-levels",
     "title": "1 - Feature Engineering",
     "section": "Collapsing factor levels ",
-    "text": "Collapsing factor levels \nThere is a recipe step that will redefine factor levels based on their frequency in the training set:\n\nhotel_other_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;% \n  step_YeoJohnson(lead_time) %&gt;%\n  step_other(agent, threshold = 0.001) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors())\n\nUsing this code, 34 agents (out of 98) were collapsed into “other” based on the training set.\nWe could try to optimize the threshold for collapsing (see the next set of slides on model tuning)."
+    "text": "Collapsing factor levels \nThere is a recipe step that will redefine factor levels based on their frequency in the training set:\n\nhotel_other_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;% \n  step_YeoJohnson(lead_time) %&gt;%\n  step_other(agent, threshold = 0.001) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors())\n\nUsing this code, 34 agents (out of 98) were collapsed into “other” based on the training set.\nWe could try to optimize the threshold for collapsing (see the next set of slides on model tuning)."
   },
   {
     "objectID": "slides/advanced-01-feature-engineering.html#does-othering-help",
     "href": "slides/advanced-01-feature-engineering.html#does-othering-help",
     "title": "1 - Feature Engineering",
     "section": "Does othering help?  ",
-    "text": "Does othering help?  \n\nhotel_other_wflow &lt;-\n  hotel_lm_wflow %&gt;%\n  update_recipe(hotel_other_rec)\n\nhotel_other_res &lt;-\n  hotel_other_wflow %&gt;%\n  fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)\n\ncollect_metrics(hotel_other_res)\n#&gt; # A tibble: 2 × 6\n#&gt;   .metric .estimator   mean     n std_err .config             \n#&gt;   &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 mae     standard   17.4      10 0.205   Preprocessor1_Model1\n#&gt; 2 rsq     standard    0.874    10 0.00417 Preprocessor1_Model1\n\nAabout the same MAE and much faster to complete.\nNow let’s look at a more sophisticated tool called effect feature hashing."
+    "text": "Does othering help?  \n\nhotel_other_wflow &lt;-\n  hotel_lm_wflow %&gt;%\n  update_recipe(hotel_other_rec)\n\nhotel_other_res &lt;-\n  hotel_other_wflow %&gt;%\n  fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)\n\ncollect_metrics(hotel_other_res)\n#&gt; # A tibble: 2 × 6\n#&gt;   .metric .estimator   mean     n std_err .config             \n#&gt;   &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 mae     standard   17.4      10 0.205   Preprocessor1_Model1\n#&gt; 2 rsq     standard    0.874    10 0.00417 Preprocessor1_Model1\n\nAbout the same MAE and much faster to complete.\nNow let’s look at a more sophisticated tool called effect feature hashing."
   },
   {
     "objectID": "slides/advanced-01-feature-engineering.html#feature-hashing",
@@ -3707,7 +3707,7 @@
     "href": "slides/advanced-01-feature-engineering.html#feature-hashing-in-recipes",
     "title": "1 - Feature Engineering",
     "section": "Feature Hashing in recipes   ",
-    "text": "Feature Hashing in recipes   \nThe textrecipes package has a step that can be added to the recipe:\n\nlibrary(textrecipes)\n\nhash_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;%\n  step_YeoJohnson(lead_time) %&gt;%\n  # Defaults to 32 signed indicator columns\n  step_dummy_hash(agent) %&gt;%\n  step_dummy_hash(company) %&gt;%\n  # Regular indicators for the others\n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors())\n\nhotel_hash_wflow &lt;-\n  hotel_lm_wflow %&gt;%\n  update_recipe(hash_rec)"
+    "text": "Feature Hashing in recipes   \nThe textrecipes package has a step that can be added to the recipe:\n\nlibrary(textrecipes)\n\nhash_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;%\n  step_YeoJohnson(lead_time) %&gt;%\n  # Defaults to 32 signed indicator columns\n  step_dummy_hash(agent) %&gt;%\n  step_dummy_hash(company) %&gt;%\n  # Regular indicators for the others\n  step_dummy(all_nominal_predictors()) %&gt;% \n  step_zv(all_predictors())\n\nhotel_hash_wflow &lt;-\n  hotel_lm_wflow %&gt;%\n  update_recipe(hash_rec)"
   },
   {
     "objectID": "slides/advanced-01-feature-engineering.html#feature-hashing-in-recipes-1",
@@ -3728,7 +3728,7 @@
     "href": "slides/advanced-01-feature-engineering.html#example",
     "title": "1 - Feature Engineering",
     "section": "Example  ",
-    "text": "Example  \n\nhash_rec_fit &lt;- prep(hash_rec)\n\n# Get the transformation coefficient\ntidy(hash_rec_fit, number = 1)\n\n# Get the processed data\nbake(hash_rec_fit, hotel_tr %&gt;% slice(1:3), contains(\"_agent_\"))"
+    "text": "Example  \n\nhash_rec_fit &lt;- prep(hash_rec)\n\n# Get the transformation coefficient\ntidy(hash_rec_fit, number = 1)\n\n# Get the processed data\nbake(hash_rec_fit, hotel_train %&gt;% slice(1:3), contains(\"_agent_\"))"
   },
   {
     "objectID": "slides/advanced-01-feature-engineering.html#more-on-recipes",
@@ -3749,14 +3749,14 @@
     "href": "slides/advanced-03-racing.html#previously---data-usage",
     "title": "3 - Grid Search via Racing",
     "section": "Previously - Data Usage ",
-    "text": "Previously - Data Usage \n\nset.seed(4028)\nhotel_split &lt;-\n  initial_split(hotel_rates, strata = avg_price_per_room)\n\nhotel_tr &lt;- training(hotel_split)\nhotel_te &lt;- testing(hotel_split)\n\nset.seed(472)\nhotel_rs &lt;- vfold_cv(hotel_tr, strata = avg_price_per_room)"
+    "text": "Previously - Data Usage \n\nset.seed(4028)\nhotel_split &lt;-\n  initial_split(hotel_rates, strata = avg_price_per_room)\n\nhotel_train &lt;- training(hotel_split)\nhotel_test &lt;- testing(hotel_split)\n\nset.seed(472)\nhotel_rs &lt;- vfold_cv(hotel_train, strata = avg_price_per_room)"
   },
   {
     "objectID": "slides/advanced-03-racing.html#previously---boosting-model",
     "href": "slides/advanced-03-racing.html#previously---boosting-model",
     "title": "3 - Grid Search via Racing",
     "section": "Previously - Boosting Model    ",
-    "text": "Previously - Boosting Model    \n\nhotel_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_tr) %&gt;%\n  step_YeoJohnson(lead_time) %&gt;%\n  step_dummy_hash(agent,   num_terms = tune(\"agent hash\")) %&gt;%\n  step_dummy_hash(company, num_terms = tune(\"company hash\")) %&gt;%\n  step_zv(all_predictors())\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(), min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)\n\nlgbm_param &lt;-\n  lgbm_wflow %&gt;%\n  extract_parameter_set_dials() %&gt;%\n  update(`agent hash`   = num_hash(c(3, 8)),\n         `company hash` = num_hash(c(3, 8)))"
+    "text": "Previously - Boosting Model    \n\nhotel_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;%\n  step_YeoJohnson(lead_time) %&gt;%\n  step_dummy_hash(agent,   num_terms = tune(\"agent hash\")) %&gt;%\n  step_dummy_hash(company, num_terms = tune(\"company hash\")) %&gt;%\n  step_zv(all_predictors())\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(), min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)\n\nlgbm_param &lt;-\n  lgbm_wflow %&gt;%\n  extract_parameter_set_dials() %&gt;%\n  update(`agent hash`   = num_hash(c(3, 8)),\n         `company hash` = num_hash(c(3, 8)))"
   },
   {
     "objectID": "slides/advanced-03-racing.html#making-grid-search-more-efficient",
@@ -8888,5 +8888,1090 @@
     "title": "Machine learning with tidymodels",
     "section": "Reuse and licensing",
     "text": "Reuse and licensing\n\nUnless otherwise noted (i.e. not an original creation and reused from another source), these educational materials are licensed under Creative Commons Attribution CC BY-SA 4.0."
+  },
+  {
+    "objectID": "slides/intro-05-wrapping-up.html#your-turn",
+    "href": "slides/intro-05-wrapping-up.html#your-turn",
+    "title": "8 - Wrapping up",
+    "section": "Your turn",
+    "text": "Your turn\n\nWhat is one thing you learned that surprised you?\nWhat is one thing you learned that you plan to use?\n\n\n\n−+\n05:00"
+  },
+  {
+    "objectID": "slides/intro-05-wrapping-up.html#resources-to-keep-learning",
+    "href": "slides/intro-05-wrapping-up.html#resources-to-keep-learning",
+    "title": "8 - Wrapping up",
+    "section": "Resources to keep learning",
+    "text": "Resources to keep learning\n\n\nhttps://www.tidymodels.org/\n\n\n\n\nhttps://www.tmwr.org/\n\n\n\n\nhttp://www.feat.engineering/\n\n\n\n\nhttps://smltar.com/\n\n\n\nFollow us on Mastodon and at the tidyverse blog for updates!\n\n\nhttps://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#your-turn",
+    "href": "slides/intro-03-what-makes-a-model.html#your-turn",
+    "title": "3 - What makes a model?",
+    "section": "Your turn",
+    "text": "Your turn\n\nHow do you fit a linear model in R?\nHow many different ways can you think of?\n\n\n\n−+\n03:00\n\n\n\n\n\nlm for linear model\nglm for generalized linear model (e.g. logistic regression)\nglmnet for regularized regression\nkeras for regression using TensorFlow\nstan for Bayesian regression\nspark for large data sets"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#to-specify-a-model",
+    "href": "slides/intro-03-what-makes-a-model.html#to-specify-a-model",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\n\n\n\nChoose a model\nSpecify an engine\nSet the mode"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#to-specify-a-model-1",
+    "href": "slides/intro-03-what-makes-a-model.html#to-specify-a-model-1",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\nlogistic_reg()\n#&gt; Logistic Regression Model Specification (classification)\n#&gt; \n#&gt; Computational engine: glm\n\n\nModels have default engines"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#to-specify-a-model-2",
+    "href": "slides/intro-03-what-makes-a-model.html#to-specify-a-model-2",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\n\n\nChoose a model\nSpecify an engine\nSet the mode"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#to-specify-a-model-3",
+    "href": "slides/intro-03-what-makes-a-model.html#to-specify-a-model-3",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\nlogistic_reg() %&gt;%\n  set_engine(\"glmnet\")\n#&gt; Logistic Regression Model Specification (classification)\n#&gt; \n#&gt; Computational engine: glmnet"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#to-specify-a-model-4",
+    "href": "slides/intro-03-what-makes-a-model.html#to-specify-a-model-4",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\nlogistic_reg() %&gt;%\n  set_engine(\"stan\")\n#&gt; Logistic Regression Model Specification (classification)\n#&gt; \n#&gt; Computational engine: stan"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#to-specify-a-model-5",
+    "href": "slides/intro-03-what-makes-a-model.html#to-specify-a-model-5",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\n\n\nChoose a model\nSpecify an engine\nSet the mode"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#to-specify-a-model-6",
+    "href": "slides/intro-03-what-makes-a-model.html#to-specify-a-model-6",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\ndecision_tree()\n#&gt; Decision Tree Model Specification (unknown mode)\n#&gt; \n#&gt; Computational engine: rpart\n\n\nSome models have a default mode"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#to-specify-a-model-7",
+    "href": "slides/intro-03-what-makes-a-model.html#to-specify-a-model-7",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\ndecision_tree() %&gt;% \n  set_mode(\"classification\")\n#&gt; Decision Tree Model Specification (classification)\n#&gt; \n#&gt; Computational engine: rpart\n\n\n\n\nAll available models are listed at https://www.tidymodels.org/find/parsnip/"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#to-specify-a-model-8",
+    "href": "slides/intro-03-what-makes-a-model.html#to-specify-a-model-8",
+    "title": "3 - What makes a model?",
+    "section": "To specify a model ",
+    "text": "To specify a model \n\n\n\nChoose a model\nSpecify an engine\nSet the mode"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#your-turn-1",
+    "href": "slides/intro-03-what-makes-a-model.html#your-turn-1",
+    "title": "3 - What makes a model?",
+    "section": "Your turn",
+    "text": "Your turn\n\nRun the tree_spec chunk in your .qmd.\nEdit this code to use a different model.\n\n\n\n−+\n05:00\n\n\n\n\n\nAll available models are listed at https://www.tidymodels.org/find/parsnip/"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#models-well-be-using-today",
+    "href": "slides/intro-03-what-makes-a-model.html#models-well-be-using-today",
+    "title": "3 - What makes a model?",
+    "section": "Models we’ll be using today",
+    "text": "Models we’ll be using today\n\nLogistic regression\nDecision trees"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#logistic-regression",
+    "href": "slides/intro-03-what-makes-a-model.html#logistic-regression",
+    "title": "3 - What makes a model?",
+    "section": "Logistic regression",
+    "text": "Logistic regression"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#logistic-regression-1",
+    "href": "slides/intro-03-what-makes-a-model.html#logistic-regression-1",
+    "title": "3 - What makes a model?",
+    "section": "Logistic regression",
+    "text": "Logistic regression"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#logistic-regression-2",
+    "href": "slides/intro-03-what-makes-a-model.html#logistic-regression-2",
+    "title": "3 - What makes a model?",
+    "section": "Logistic regression",
+    "text": "Logistic regression\n\n\n\n\n\n\n\n\n\nLogit of outcome probability modeled as linear combination of predictors:\n\n\\(log(\\frac{p}{1 - p}) = \\beta_0 + \\beta_1\\cdot \\text{distance}\\)\n\nFind a sigmoid line that separates the two classes"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#decision-trees",
+    "href": "slides/intro-03-what-makes-a-model.html#decision-trees",
+    "title": "3 - What makes a model?",
+    "section": "Decision trees",
+    "text": "Decision trees"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#decision-trees-1",
+    "href": "slides/intro-03-what-makes-a-model.html#decision-trees-1",
+    "title": "3 - What makes a model?",
+    "section": "Decision trees",
+    "text": "Decision trees\n\n\n\n\n\n\n\n\n\n\n\n\n\nSeries of splits or if/then statements based on predictors\nFirst the tree grows until some condition is met (maximum depth, no more data)\nThen the tree is pruned to reduce its complexity"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#decision-trees-2",
+    "href": "slides/intro-03-what-makes-a-model.html#decision-trees-2",
+    "title": "3 - What makes a model?",
+    "section": "Decision trees",
+    "text": "Decision trees"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#all-models-are-wrong-but-some-are-useful",
+    "href": "slides/intro-03-what-makes-a-model.html#all-models-are-wrong-but-some-are-useful",
+    "title": "3 - What makes a model?",
+    "section": "All models are wrong, but some are useful!",
+    "text": "All models are wrong, but some are useful!\n\n\nLogistic regression\n\n\n\n\n\n\nDecision trees"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#workflows-bind-preprocessors-and-models",
+    "href": "slides/intro-03-what-makes-a-model.html#workflows-bind-preprocessors-and-models",
+    "title": "3 - What makes a model?",
+    "section": "Workflows bind preprocessors and models",
+    "text": "Workflows bind preprocessors and models\n\n\nExplain that PCA that is a preprocessor / dimensionality reduction, used to decorrelate data"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#what-is-wrong-with-this",
+    "href": "slides/intro-03-what-makes-a-model.html#what-is-wrong-with-this",
+    "title": "3 - What makes a model?",
+    "section": "What is wrong with this?",
+    "text": "What is wrong with this?"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#why-a-workflow",
+    "href": "slides/intro-03-what-makes-a-model.html#why-a-workflow",
+    "title": "3 - What makes a model?",
+    "section": "Why a workflow()? ",
+    "text": "Why a workflow()? \n\n\nWorkflows handle new data better than base R tools in terms of new factor levels\n\n\n\n\nYou can use other preprocessors besides formulas (more on feature engineering in Advanced tidymodels!)\n\n\n\n\nThey can help organize your work when working with multiple models\n\n\n\n\nMost importantly, a workflow captures the entire modeling process: fit() and predict() apply to the preprocessing steps in addition to the actual model fit\n\n\nTwo ways workflows handle levels better than base R:\n\nEnforces that new levels are not allowed at prediction time (this is an optional check that can be turned off)\nRestores missing levels that were present at fit time, but happen to be missing at prediction time (like, if your “new” data just doesn’t have an instance of that level)"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#a-model-workflow-1",
+    "href": "slides/intro-03-what-makes-a-model.html#a-model-workflow-1",
+    "title": "3 - What makes a model?",
+    "section": "A model workflow  ",
+    "text": "A model workflow  \n\ntree_spec &lt;-\n  decision_tree() %&gt;% \n  set_mode(\"classification\")\n\ntree_spec %&gt;% \n  fit(tip ~ ., data = taxi_train) \n#&gt; parsnip model object\n#&gt; \n#&gt; n= 7045 \n#&gt; \n#&gt; node), split, n, loss, yval, (yprob)\n#&gt;       * denotes terminal node\n#&gt; \n#&gt;  1) root 7045 2069 yes (0.70631654 0.29368346)  \n#&gt;    2) company=Chicago Independents,City Service,Sun Taxi,Taxicab Insurance Agency Llc,other 4328  744 yes (0.82809612 0.17190388)  \n#&gt;      4) distance&lt; 4.615 2365  254 yes (0.89260042 0.10739958) *\n#&gt;      5) distance&gt;=4.615 1963  490 yes (0.75038207 0.24961793)  \n#&gt;       10) distance&gt;=12.565 1069   81 yes (0.92422825 0.07577175) *\n#&gt;       11) distance&lt; 12.565 894  409 yes (0.54250559 0.45749441)  \n#&gt;         22) company=Chicago Independents,Sun Taxi,Taxicab Insurance Agency Llc 278   71 yes (0.74460432 0.25539568) *\n#&gt;         23) company=City Service,other 616  278 no (0.45129870 0.54870130)  \n#&gt;           46) distance&lt; 7.205 178   59 yes (0.66853933 0.33146067) *\n#&gt;           47) distance&gt;=7.205 438  159 no (0.36301370 0.63698630) *\n#&gt;    3) company=Flash Cab,Taxi Affiliation Services 2717 1325 yes (0.51232978 0.48767022)  \n#&gt;      6) distance&lt; 3.235 1331  391 yes (0.70623591 0.29376409) *\n#&gt;      7) distance&gt;=3.235 1386  452 no (0.32611833 0.67388167)  \n#&gt;       14) distance&gt;=12.39 344   90 yes (0.73837209 0.26162791) *\n#&gt;       15) distance&lt; 12.39 1042  198 no (0.19001919 0.80998081) *"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#a-model-workflow-2",
+    "href": "slides/intro-03-what-makes-a-model.html#a-model-workflow-2",
+    "title": "3 - What makes a model?",
+    "section": "A model workflow  ",
+    "text": "A model workflow  \n\ntree_spec &lt;-\n  decision_tree() %&gt;% \n  set_mode(\"classification\")\n\nworkflow() %&gt;%\n  add_formula(tip ~ .) %&gt;%\n  add_model(tree_spec) %&gt;%\n  fit(data = taxi_train) \n#&gt; ══ Workflow [trained] ════════════════════════════════════════════════\n#&gt; Preprocessor: Formula\n#&gt; Model: decision_tree()\n#&gt; \n#&gt; ── Preprocessor ──────────────────────────────────────────────────────\n#&gt; tip ~ .\n#&gt; \n#&gt; ── Model ─────────────────────────────────────────────────────────────\n#&gt; n= 7045 \n#&gt; \n#&gt; node), split, n, loss, yval, (yprob)\n#&gt;       * denotes terminal node\n#&gt; \n#&gt;  1) root 7045 2069 yes (0.70631654 0.29368346)  \n#&gt;    2) company=Chicago Independents,City Service,Sun Taxi,Taxicab Insurance Agency Llc,other 4328  744 yes (0.82809612 0.17190388)  \n#&gt;      4) distance&lt; 4.615 2365  254 yes (0.89260042 0.10739958) *\n#&gt;      5) distance&gt;=4.615 1963  490 yes (0.75038207 0.24961793)  \n#&gt;       10) distance&gt;=12.565 1069   81 yes (0.92422825 0.07577175) *\n#&gt;       11) distance&lt; 12.565 894  409 yes (0.54250559 0.45749441)  \n#&gt;         22) company=Chicago Independents,Sun Taxi,Taxicab Insurance Agency Llc 278   71 yes (0.74460432 0.25539568) *\n#&gt;         23) company=City Service,other 616  278 no (0.45129870 0.54870130)  \n#&gt;           46) distance&lt; 7.205 178   59 yes (0.66853933 0.33146067) *\n#&gt;           47) distance&gt;=7.205 438  159 no (0.36301370 0.63698630) *\n#&gt;    3) company=Flash Cab,Taxi Affiliation Services 2717 1325 yes (0.51232978 0.48767022)  \n#&gt;      6) distance&lt; 3.235 1331  391 yes (0.70623591 0.29376409) *\n#&gt;      7) distance&gt;=3.235 1386  452 no (0.32611833 0.67388167)  \n#&gt;       14) distance&gt;=12.39 344   90 yes (0.73837209 0.26162791) *\n#&gt;       15) distance&lt; 12.39 1042  198 no (0.19001919 0.80998081) *"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#a-model-workflow-3",
+    "href": "slides/intro-03-what-makes-a-model.html#a-model-workflow-3",
+    "title": "3 - What makes a model?",
+    "section": "A model workflow  ",
+    "text": "A model workflow  \n\ntree_spec &lt;-\n  decision_tree() %&gt;% \n  set_mode(\"classification\")\n\nworkflow(tip ~ ., tree_spec) %&gt;% \n  fit(data = taxi_train) \n#&gt; ══ Workflow [trained] ════════════════════════════════════════════════\n#&gt; Preprocessor: Formula\n#&gt; Model: decision_tree()\n#&gt; \n#&gt; ── Preprocessor ──────────────────────────────────────────────────────\n#&gt; tip ~ .\n#&gt; \n#&gt; ── Model ─────────────────────────────────────────────────────────────\n#&gt; n= 7045 \n#&gt; \n#&gt; node), split, n, loss, yval, (yprob)\n#&gt;       * denotes terminal node\n#&gt; \n#&gt;  1) root 7045 2069 yes (0.70631654 0.29368346)  \n#&gt;    2) company=Chicago Independents,City Service,Sun Taxi,Taxicab Insurance Agency Llc,other 4328  744 yes (0.82809612 0.17190388)  \n#&gt;      4) distance&lt; 4.615 2365  254 yes (0.89260042 0.10739958) *\n#&gt;      5) distance&gt;=4.615 1963  490 yes (0.75038207 0.24961793)  \n#&gt;       10) distance&gt;=12.565 1069   81 yes (0.92422825 0.07577175) *\n#&gt;       11) distance&lt; 12.565 894  409 yes (0.54250559 0.45749441)  \n#&gt;         22) company=Chicago Independents,Sun Taxi,Taxicab Insurance Agency Llc 278   71 yes (0.74460432 0.25539568) *\n#&gt;         23) company=City Service,other 616  278 no (0.45129870 0.54870130)  \n#&gt;           46) distance&lt; 7.205 178   59 yes (0.66853933 0.33146067) *\n#&gt;           47) distance&gt;=7.205 438  159 no (0.36301370 0.63698630) *\n#&gt;    3) company=Flash Cab,Taxi Affiliation Services 2717 1325 yes (0.51232978 0.48767022)  \n#&gt;      6) distance&lt; 3.235 1331  391 yes (0.70623591 0.29376409) *\n#&gt;      7) distance&gt;=3.235 1386  452 no (0.32611833 0.67388167)  \n#&gt;       14) distance&gt;=12.39 344   90 yes (0.73837209 0.26162791) *\n#&gt;       15) distance&lt; 12.39 1042  198 no (0.19001919 0.80998081) *"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#your-turn-2",
+    "href": "slides/intro-03-what-makes-a-model.html#your-turn-2",
+    "title": "3 - What makes a model?",
+    "section": "Your turn",
+    "text": "Your turn\n\nRun the tree_wflow chunk in your .qmd.\nEdit this code to make a workflow with your own model of choice.\n\n\n\n−+\n05:00"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#predict-with-your-model",
+    "href": "slides/intro-03-what-makes-a-model.html#predict-with-your-model",
+    "title": "3 - What makes a model?",
+    "section": "Predict with your model  ",
+    "text": "Predict with your model  \nHow do you use your new tree_fit model?\n\ntree_spec &lt;-\n  decision_tree() %&gt;% \n  set_mode(\"classification\")\n\ntree_fit &lt;-\n  workflow(tip ~ ., tree_spec) %&gt;% \n  fit(data = taxi_train)"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#your-turn-3",
+    "href": "slides/intro-03-what-makes-a-model.html#your-turn-3",
+    "title": "3 - What makes a model?",
+    "section": "Your turn",
+    "text": "Your turn\n\nRun:\npredict(tree_fit, new_data = taxi_test)\nWhat do you get?\n\n\n\n−+\n03:00"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#your-turn-4",
+    "href": "slides/intro-03-what-makes-a-model.html#your-turn-4",
+    "title": "3 - What makes a model?",
+    "section": "Your turn",
+    "text": "Your turn\n\nRun:\naugment(tree_fit, new_data = taxi_test)\nWhat do you get?\n\n\n\n−+\n03:00"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#understand-your-model",
+    "href": "slides/intro-03-what-makes-a-model.html#understand-your-model",
+    "title": "3 - What makes a model?",
+    "section": "Understand your model  ",
+    "text": "Understand your model  \nHow do you understand your new tree_fit model?"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#understand-your-model-1",
+    "href": "slides/intro-03-what-makes-a-model.html#understand-your-model-1",
+    "title": "3 - What makes a model?",
+    "section": "Understand your model  ",
+    "text": "Understand your model  \nHow do you understand your new tree_fit model?\n\nlibrary(rpart.plot)\ntree_fit %&gt;%\n  extract_fit_engine() %&gt;%\n  rpart.plot(roundint = FALSE)\n\nYou can extract_*() several components of your fitted workflow.\n\n⚠️ Never predict() with any extracted components!\n\nroundint = FALSE is only to quiet a warning"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#understand-your-model-2",
+    "href": "slides/intro-03-what-makes-a-model.html#understand-your-model-2",
+    "title": "3 - What makes a model?",
+    "section": "Understand your model  ",
+    "text": "Understand your model  \nHow do you understand your new tree_fit model?\n\nYou can use your fitted workflow for model and/or prediction explanations:\n\n\n\noverall variable importance, such as with the vip package\n\n\n\n\nflexible model explainers, such as with the DALEXtra package\n\n\n\nLearn more at https://www.tmwr.org/explain.html"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#your-turn-5",
+    "href": "slides/intro-03-what-makes-a-model.html#your-turn-5",
+    "title": "3 - What makes a model?",
+    "section": "Your turn",
+    "text": "Your turn\n\nExtract the model engine object from your fitted workflow and check it out.\n\n\n\n−+\n05:00\n\n\n\n\nAfterward, ask what kind of object people got from the extraction, and what they did with it (e.g. give it to summary(), plot(), broom::tidy() ). Live code along"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#deploying-a-model",
+    "href": "slides/intro-03-what-makes-a-model.html#deploying-a-model",
+    "title": "3 - What makes a model?",
+    "section": "Deploying a model ",
+    "text": "Deploying a model \nHow do you use your new tree_fit model in production?\n\nlibrary(vetiver)\nv &lt;- vetiver_model(tree_fit, \"taxi\")\nv\n#&gt; \n#&gt; ── taxi ─ &lt;bundled_workflow&gt; model for deployment \n#&gt; A rpart classification modeling workflow using 6 features\n\nLearn more at https://vetiver.rstudio.com"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#deploy-your-model-1",
+    "href": "slides/intro-03-what-makes-a-model.html#deploy-your-model-1",
+    "title": "3 - What makes a model?",
+    "section": "Deploy your model ",
+    "text": "Deploy your model \nHow do you use your new model tree_fit in production?\n\nlibrary(plumber)\npr() %&gt;%\n  vetiver_api(v)\n#&gt; # Plumber router with 2 endpoints, 4 filters, and 1 sub-router.\n#&gt; # Use `pr_run()` on this object to start the API.\n#&gt; ├──[queryString]\n#&gt; ├──[body]\n#&gt; ├──[cookieParser]\n#&gt; ├──[sharedSecret]\n#&gt; ├──/logo\n#&gt; │  │ # Plumber static router serving from directory: /Library/Frameworks/R.framework/Versions/4.2-arm64/Resources/library/vetiver\n#&gt; ├──/ping (GET)\n#&gt; └──/predict (POST)\n\nLearn more at https://vetiver.rstudio.com\n\nLive-code making a prediction"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#your-turn-6",
+    "href": "slides/intro-03-what-makes-a-model.html#your-turn-6",
+    "title": "3 - What makes a model?",
+    "section": "Your turn",
+    "text": "Your turn\n\nRun the vetiver chunk in your .qmd.\nCheck out the automated visual documentation.\n\n\n\n−+\n05:00"
+  },
+  {
+    "objectID": "slides/intro-03-what-makes-a-model.html#the-whole-game---status-update",
+    "href": "slides/intro-03-what-makes-a-model.html#the-whole-game---status-update",
+    "title": "3 - What makes a model?",
+    "section": "The whole game - status update",
+    "text": "The whole game - status update\n\n\nStress that fitting a model on the entire training set was only for illustrating how to fit a model\n\n\n\nhttps://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#who-are-you",
+    "href": "slides/intro-01-introduction.html#who-are-you",
+    "title": "1 - Introduction",
+    "section": "Who are you?",
+    "text": "Who are you?\n\nYou can use the magrittr %&gt;% or base R |&gt; pipe\nYou are familiar with functions from dplyr, tidyr, ggplot2\nYou have exposure to basic statistical concepts\nYou do not need intermediate or expert familiarity with modeling or ML"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#who-are-tidymodels",
+    "href": "slides/intro-01-introduction.html#who-are-tidymodels",
+    "title": "1 - Introduction",
+    "section": "Who are tidymodels?",
+    "text": "Who are tidymodels?\n\nSimon Couch\nHannah Frick\nEmil Hvitfeldt\nMax Kuhn\n\n\nSilvia Canelón is TAing today!\n\n\nMany thanks to Davis Vaughan, Julia Silge, David Robinson, Julie Jung, Alison Hill, and Desirée De Leon for their role in creating these materials!"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#asking-for-help",
+    "href": "slides/intro-01-introduction.html#asking-for-help",
+    "title": "1 - Introduction",
+    "section": "Asking for help",
+    "text": "Asking for help\n\n🟪 “I’m stuck and need help!”\n\n\n🟩 “I finished the exercise”"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#section",
+    "href": "slides/intro-01-introduction.html#section",
+    "title": "1 - Introduction",
+    "section": "👀",
+    "text": "👀"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#tentative-plan-for-this-workshop",
+    "href": "slides/intro-01-introduction.html#tentative-plan-for-this-workshop",
+    "title": "1 - Introduction",
+    "section": "Tentative plan for this workshop",
+    "text": "Tentative plan for this workshop\n\nYour data budget\nWhat makes a model\nEvaluating models\n\n\nThis workshop will well-prepare folks going on to the Advanced tidymodels workshop, which will cover feature engineering and hyperparameter tuning."
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#section-1",
+    "href": "slides/intro-01-introduction.html#section-1",
+    "title": "1 - Introduction",
+    "section": "",
+    "text": "Introduce yourself to your neighbors 👋\n\nCheck Slack (#ml-ws-2023) for an RStudio Cloud link."
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#what-is-machine-learning",
+    "href": "slides/intro-01-introduction.html#what-is-machine-learning",
+    "title": "1 - Introduction",
+    "section": "What is machine learning?",
+    "text": "What is machine learning?\n\n\nhttps://xkcd.com/1838/"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#what-is-machine-learning-1",
+    "href": "slides/intro-01-introduction.html#what-is-machine-learning-1",
+    "title": "1 - Introduction",
+    "section": "What is machine learning?",
+    "text": "What is machine learning?\n\n\nIllustration credit: https://vas3k.com/blog/machine_learning/"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#what-is-machine-learning-2",
+    "href": "slides/intro-01-introduction.html#what-is-machine-learning-2",
+    "title": "1 - Introduction",
+    "section": "What is machine learning?",
+    "text": "What is machine learning?\n\n\nIllustration credit: https://vas3k.com/blog/machine_learning/"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#your-turn",
+    "href": "slides/intro-01-introduction.html#your-turn",
+    "title": "1 - Introduction",
+    "section": "Your turn",
+    "text": "Your turn\n\n\nHow are statistics and machine learning related?\nHow are they similar? Different?\n\n\n\n−+\n03:00\n\n\n\n\nthe “two cultures”\nmodel first vs. data first\ninference vs. prediction"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#what-is-tidymodels",
+    "href": "slides/intro-01-introduction.html#what-is-tidymodels",
+    "title": "1 - Introduction",
+    "section": "What is tidymodels? ",
+    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n#&gt; ── Attaching packages ──────────────────────────── tidymodels 1.1.0 ──\n#&gt; ✔ broom        1.0.5          ✔ rsample      1.1.1.9000\n#&gt; ✔ dials        1.2.0          ✔ tibble       3.2.1     \n#&gt; ✔ dplyr        1.1.2          ✔ tidyr        1.3.0     \n#&gt; ✔ infer        1.0.4          ✔ tune         1.1.1.9001\n#&gt; ✔ modeldata    1.1.0          ✔ workflows    1.1.3     \n#&gt; ✔ parsnip      1.1.0.9003     ✔ workflowsets 1.0.1     \n#&gt; ✔ purrr        1.0.1          ✔ yardstick    1.2.0.9001\n#&gt; ✔ recipes      1.0.6\n#&gt; ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#&gt; ✖ purrr::discard() masks scales::discard()\n#&gt; ✖ dplyr::filter()  masks stats::filter()\n#&gt; ✖ dplyr::lag()     masks stats::lag()\n#&gt; ✖ recipes::step()  masks stats::step()\n#&gt; • Use tidymodels_prefer() to resolve common conflicts."
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#the-whole-game",
+    "href": "slides/intro-01-introduction.html#the-whole-game",
+    "title": "1 - Introduction",
+    "section": "The whole game",
+    "text": "The whole game\nPart of any modelling process is\n\nSplitting your data into training and test set\nUsing a resampling scheme\nFitting models\nAssessing performance\nChoosing a model\nFitting and assessing the final model"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#the-whole-game-1",
+    "href": "slides/intro-01-introduction.html#the-whole-game-1",
+    "title": "1 - Introduction",
+    "section": "The whole game",
+    "text": "The whole game"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#the-whole-game-2",
+    "href": "slides/intro-01-introduction.html#the-whole-game-2",
+    "title": "1 - Introduction",
+    "section": "The whole game",
+    "text": "The whole game\n\n\nStress that we are not fitting a model on the entire training set other than for illustrative purposes in deck 2."
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#the-whole-game-3",
+    "href": "slides/intro-01-introduction.html#the-whole-game-3",
+    "title": "1 - Introduction",
+    "section": "The whole game",
+    "text": "The whole game"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#the-whole-game-4",
+    "href": "slides/intro-01-introduction.html#the-whole-game-4",
+    "title": "1 - Introduction",
+    "section": "The whole game",
+    "text": "The whole game"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#the-whole-game-5",
+    "href": "slides/intro-01-introduction.html#the-whole-game-5",
+    "title": "1 - Introduction",
+    "section": "The whole game",
+    "text": "The whole game"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#the-whole-game-6",
+    "href": "slides/intro-01-introduction.html#the-whole-game-6",
+    "title": "1 - Introduction",
+    "section": "The whole game",
+    "text": "The whole game"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#the-whole-game-7",
+    "href": "slides/intro-01-introduction.html#the-whole-game-7",
+    "title": "1 - Introduction",
+    "section": "The whole game",
+    "text": "The whole game"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#lets-install-some-packages",
+    "href": "slides/intro-01-introduction.html#lets-install-some-packages",
+    "title": "1 - Introduction",
+    "section": "Let’s install some packages",
+    "text": "Let’s install some packages\nIf you are using your own laptop instead of RStudio Cloud:\n\n# Install the packages for the workshop\npkgs &lt;- \n  c(\"bonsai\", \"doParallel\", \"finetune\", \"lightgbm\", \"lme4\", \"plumber\", \n    \"probably\", \"ranger\", \"rpart\", \"rpart.plot\", \"stacks\", \"textrecipes\", \n    \"tidymodels\", \"vetiver\", \"remotes\")\n\ninstall.packages(pkgs)\n\nremotes::install_github(\"tidymodels/modeldatatoo\")\n\n\nCheck Slack (#ml-ws-2023) for an RStudio Cloud link."
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#our-versions",
+    "href": "slides/intro-01-introduction.html#our-versions",
+    "title": "1 - Introduction",
+    "section": "Our versions",
+    "text": "Our versions\nbonsai (0.2.1.9000, Github (tidymodels/bonsai@aab79), broom (1.0.5, local), dials (1.2.0, CRAN), doParallel (1.0.17, CRAN), dplyr (1.1.2, CRAN), embed (1.0.0, CRAN), finetune (1.1.0.9000, Github (tidymodels/finetune@52d), ggplot2 (3.4.2, CRAN), lightgbm (3.3.5, CRAN), lme4 (1.1-33, CRAN), modeldata (1.1.0, CRAN), modeldatatoo (0.1.0.9000, Github (tidymodels/modeldatatoo), parallelly (1.36.0, CRAN), parsnip (1.1.0.9003, Github (tidymodels/parsnip@e627), plumber (1.2.1, CRAN), probably (1.0.2, CRAN), purrr (1.0.1, CRAN), ranger (0.15.1, CRAN), recipes (1.0.6, CRAN), rpart (4.1.19, CRAN), rpart.plot (3.1.1, CRAN), rsample (1.1.1.9000, Github (tidymodels/rsample@afc4), scales (1.2.1, CRAN), stacks (1.0.2.9000, local), textrecipes (1.0.2, CRAN), tibble (3.2.1, CRAN), tidymodels (1.1.0, CRAN), tidyr (1.3.0, CRAN), tune (1.1.1.9001, Github (tidymodels/tune@fea8b02), vetiver (0.2.0, CRAN), workflows (1.1.3, CRAN), workflowsets (1.0.1, CRAN), yardstick (1.2.0.9001, Github (tidymodels/yardstick@6c), and Quarto (1.4.104)\n\n\nhttps://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#who-are-you",
+    "href": "slides/advanced-01-feature-engineering.html#who-are-you",
+    "title": "1 - Feature Engineering",
+    "section": "Who are you?",
+    "text": "Who are you?\n\nYou have used tidymodels packages like recipes, rsample, and parsnip\nYou are comfortable with tidyverse syntax (e.g. piping, mutates, pivoting)\nYou have some experience with resampling and modeling (e.g., linear regression, random forests, etc.), but we don’t expect you to be an expert in these"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#who-are-tidymodels",
+    "href": "slides/advanced-01-feature-engineering.html#who-are-tidymodels",
+    "title": "1 - Feature Engineering",
+    "section": "Who are tidymodels?",
+    "text": "Who are tidymodels?\n\nSimon Couch\nHannah Frick\nEmil Hvitfeldt\nMax Kuhn\n\n\nIjeamaka Anyene (Day 1), Edgar Ruiz (Days 1 & 2), Hannah Frick, and Silvia Canelón (Day 2) are TAing this workshop!"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#asking-for-help",
+    "href": "slides/advanced-01-feature-engineering.html#asking-for-help",
+    "title": "1 - Feature Engineering",
+    "section": "Asking for help",
+    "text": "Asking for help\n\n🟪 “I’m stuck and need help!”\n\n\n🟩 “I finished the exercise”"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#section",
+    "href": "slides/advanced-01-feature-engineering.html#section",
+    "title": "1 - Feature Engineering",
+    "section": "👀",
+    "text": "👀"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#tentative-plan-for-this-workshop",
+    "href": "slides/advanced-01-feature-engineering.html#tentative-plan-for-this-workshop",
+    "title": "1 - Feature Engineering",
+    "section": "Tentative plan for this workshop",
+    "text": "Tentative plan for this workshop\n\nFeature engineering\nTuning hyperparameters\nRacing methods\nIterative search methods"
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#section-1",
+    "href": "slides/advanced-01-feature-engineering.html#section-1",
+    "title": "1 - Feature Engineering",
+    "section": "",
+    "text": "Introduce yourself to your neighbors 👋\n\nCheck Slack (#ml-ws-2023) for an RStudio Cloud link."
+  },
+  {
+    "objectID": "slides/advanced-01-feature-engineering.html#lets-install-some-packages",
+    "href": "slides/advanced-01-feature-engineering.html#lets-install-some-packages",
+    "title": "1 - Feature Engineering",
+    "section": "Let’s install some packages",
+    "text": "Let’s install some packages\nIf you are using your own laptop instead of RStudio Cloud:\n\n# Install the packages for the workshop\npkgs &lt;- \n  c(\"bonsai\", \"doParallel\", \"finetune\", \"lightgbm\", \"lme4\", \"plumber\", \n    \"probably\", \"ranger\", \"rpart\", \"rpart.plot\", \"stacks\", \"textrecipes\", \n    \"tidymodels\", \"vetiver\", \"remotes\")\n\ninstall.packages(pkgs)\n\nremotes::install_github(\"tidymodels/modeldatatoo\")"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#data-on-chicago-taxi-trips",
+    "href": "slides/intro-02-data-budget.html#data-on-chicago-taxi-trips",
+    "title": "2 - Your data budget",
+    "section": "Data on Chicago taxi trips",
+    "text": "Data on Chicago taxi trips\n\n\n\nThe city of Chicago releases anonymized trip-level data on taxi trips in the city.\nWe pulled a sample of 10,000 rides occurring in early 2022.\nType ?modeldatatoo::data_taxi() to learn more about this dataset, including references.\n\n\n\n\n\n\nCredit: https://www.svgrepo.com/svg/8322/taxi"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#which-of-these-variables-can-we-use",
+    "href": "slides/intro-02-data-budget.html#which-of-these-variables-can-we-use",
+    "title": "2 - Your data budget",
+    "section": "Which of these variables can we use?",
+    "text": "Which of these variables can we use?\n\nlibrary(tidymodels)\nlibrary(modeldatatoo)\n\ntaxi &lt;- data_taxi()\n\nnames(taxi)\n#&gt;  [1] \"tip\"          \"id\"           \"duration\"     \"distance\"     \"fare\"        \n#&gt;  [6] \"tolls\"        \"extras\"       \"total_cost\"   \"payment_type\" \"company\"     \n#&gt; [11] \"local\"        \"dow\"          \"month\"        \"hour\""
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#checklist-for-predictors",
+    "href": "slides/intro-02-data-budget.html#checklist-for-predictors",
+    "title": "2 - Your data budget",
+    "section": "Checklist for predictors",
+    "text": "Checklist for predictors\n\nIs it ethical to use this variable? (Or even legal?)\nWill this variable be available at prediction time?\nDoes this variable contribute to explainability?"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#data-on-chicago-taxi-trips-1",
+    "href": "slides/intro-02-data-budget.html#data-on-chicago-taxi-trips-1",
+    "title": "2 - Your data budget",
+    "section": "Data on Chicago taxi trips",
+    "text": "Data on Chicago taxi trips\nWe are using a slightly modified version from the modeldatatoo data.\n\ntaxi &lt;- taxi %&gt;%\n  mutate(month = factor(month, levels = c(\"Jan\", \"Feb\", \"Mar\", \"Apr\"))) %&gt;% \n  select(-c(id, duration, fare, tolls, extras, total_cost, payment_type)) %&gt;% \n  drop_na()"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#data-on-chicago-taxi-trips-2",
+    "href": "slides/intro-02-data-budget.html#data-on-chicago-taxi-trips-2",
+    "title": "2 - Your data budget",
+    "section": "Data on Chicago taxi trips",
+    "text": "Data on Chicago taxi trips\n\n\n\nN = 10,000\nA nominal outcome, tip, with levels \"yes\" and \"no\"\n6 other variables\n\ncompany, local, and dow, and month are nominal predictors\ndistance and hours are numeric predictors\n\n\n\n\n\n\n\nCredit: https://unsplash.com/photos/7_r85l4eht8\n\n\ntip: Whether the rider left a tip. A factor with levels “yes” and “no”.\ndistance: The trip distance, in odometer miles.\ncompany: The taxi company, as a factor. Companies that occurred few times were binned as “other”.\nlocal: Whether the trip started in the same community area as it began. See the source data for community area values.\ndow: The day of the week in which the trip began, as a factor.\nmonth: The month in which the trip began, as a factor.\nhour: The hour of the day in which the trip began, as a numeric."
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#data-on-chicago-taxi-trips-3",
+    "href": "slides/intro-02-data-budget.html#data-on-chicago-taxi-trips-3",
+    "title": "2 - Your data budget",
+    "section": "Data on Chicago taxi trips",
+    "text": "Data on Chicago taxi trips\n\ntaxi\n#&gt; # A tibble: 8,807 × 7\n#&gt;    tip   distance company      local dow   month  hour\n#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;        &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;\n#&gt;  1 yes       1.24 Sun Taxi     no    Thu   Feb      13\n#&gt;  2 no        5.39 Flash Cab    no    Sat   Mar      12\n#&gt;  3 yes       3.01 City Service no    Wed   Feb      17\n#&gt;  4 no       18.4  Sun Taxi     no    Sat   Apr       6\n#&gt;  5 yes       1.76 Sun Taxi     no    Sun   Jan      15\n#&gt;  6 yes      13.6  Sun Taxi     no    Mon   Feb      17\n#&gt;  7 yes       3.71 City Service no    Mon   Mar      21\n#&gt;  8 yes       4.8  other        no    Tue   Mar       9\n#&gt;  9 yes      18.0  City Service no    Fri   Jan      19\n#&gt; 10 no       17.5  other        yes   Thu   Apr      12\n#&gt; # ℹ 8,797 more rows"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#data-splitting-and-spending",
+    "href": "slides/intro-02-data-budget.html#data-splitting-and-spending",
+    "title": "2 - Your data budget",
+    "section": "Data splitting and spending",
+    "text": "Data splitting and spending\nFor machine learning, we typically split data into training and test sets:\n\n\nThe training set is used to estimate model parameters.\nThe test set is used to find an independent assessment of model performance.\n\n\n\nDo not 🚫 use the test set during training."
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#data-splitting-and-spending-1",
+    "href": "slides/intro-02-data-budget.html#data-splitting-and-spending-1",
+    "title": "2 - Your data budget",
+    "section": "Data splitting and spending",
+    "text": "Data splitting and spending"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#data-splitting-and-spending-2",
+    "href": "slides/intro-02-data-budget.html#data-splitting-and-spending-2",
+    "title": "2 - Your data budget",
+    "section": "Data splitting and spending",
+    "text": "Data splitting and spending\n\nSpending too much data in training prevents us from computing a good assessment of predictive performance.\n\n\n\nSpending too much data in testing prevents us from computing a good estimate of model parameters."
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#your-turn",
+    "href": "slides/intro-02-data-budget.html#your-turn",
+    "title": "2 - Your data budget",
+    "section": "Your turn",
+    "text": "Your turn\n\nWhen is a good time to split your data?\n\n\n\n−+\n03:00"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#the-initial-split",
+    "href": "slides/intro-02-data-budget.html#the-initial-split",
+    "title": "2 - Your data budget",
+    "section": "The initial split ",
+    "text": "The initial split \n\nset.seed(123)\ntaxi_split &lt;- initial_split(taxi)\ntaxi_split\n#&gt; &lt;Training/Testing/Total&gt;\n#&gt; &lt;6605/2202/8807&gt;\n\n\nHow much data in training vs testing? This function uses a good default, but this depends on your specific goal/data We will talk about more powerful ways of splitting, like stratification, later"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#accessing-the-data",
+    "href": "slides/intro-02-data-budget.html#accessing-the-data",
+    "title": "2 - Your data budget",
+    "section": "Accessing the data ",
+    "text": "Accessing the data \n\ntaxi_train &lt;- training(taxi_split)\ntaxi_test &lt;- testing(taxi_split)"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#the-training-set",
+    "href": "slides/intro-02-data-budget.html#the-training-set",
+    "title": "2 - Your data budget",
+    "section": "The training set",
+    "text": "The training set\n\ntaxi_train\n#&gt; # A tibble: 6,605 × 7\n#&gt;    tip   distance company                   local dow   month  hour\n#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;                     &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;\n#&gt;  1 yes       4.54 City Service              no    Sat   Mar      16\n#&gt;  2 no       10.2  Flash Cab                 no    Mon   Feb       8\n#&gt;  3 yes      12.4  other                     no    Sun   Apr      15\n#&gt;  4 yes      15.3  Sun Taxi                  no    Mon   Apr      18\n#&gt;  5 no        6.41 Flash Cab                 no    Wed   Apr      14\n#&gt;  6 yes       1.56 other                     no    Tue   Jan      13\n#&gt;  7 yes       3.13 Flash Cab                 no    Sun   Apr      12\n#&gt;  8 yes       7.54 other                     no    Tue   Apr       8\n#&gt;  9 yes       6.98 Flash Cab                 no    Tue   Apr       5\n#&gt; 10 yes       0.7  Taxi Affiliation Services no    Tue   Jan       9\n#&gt; # ℹ 6,595 more rows"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#the-test-set",
+    "href": "slides/intro-02-data-budget.html#the-test-set",
+    "title": "2 - Your data budget",
+    "section": "The test set ",
+    "text": "The test set \n🙈\n\nThere are 2202 rows and 7 columns in the test set."
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#your-turn-1",
+    "href": "slides/intro-02-data-budget.html#your-turn-1",
+    "title": "2 - Your data budget",
+    "section": "Your turn",
+    "text": "Your turn\n\nSplit your data so 20% is held out for the test set.\nTry out different values in set.seed() to see how the results change.\n\n\n\n−+\n05:00"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#data-splitting-and-spending-3",
+    "href": "slides/intro-02-data-budget.html#data-splitting-and-spending-3",
+    "title": "2 - Your data budget",
+    "section": "Data splitting and spending ",
+    "text": "Data splitting and spending \n\nset.seed(123)\ntaxi_split &lt;- initial_split(taxi, prop = 0.8)\ntaxi_train &lt;- training(taxi_split)\ntaxi_test &lt;- testing(taxi_split)\n\nnrow(taxi_train)\n#&gt; [1] 7045\nnrow(taxi_test)\n#&gt; [1] 1762"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#section-1",
+    "href": "slides/intro-02-data-budget.html#section-1",
+    "title": "2 - Your data budget",
+    "section": "",
+    "text": "We will use this in Advanced tidymodels"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#your-turn-2",
+    "href": "slides/intro-02-data-budget.html#your-turn-2",
+    "title": "2 - Your data budget",
+    "section": "Your turn",
+    "text": "Your turn\n\nExplore the taxi_train data on your own!\n\nWhat’s the distribution of the outcome, tip?\nWhat’s the distribution of numeric variables like distance?\nHow does tip differ across the categorical variables?\n\n\n\n\n−+\n08:00\n\n\n\n\nMake a plot or summary and then share with neighbor"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#section-3",
+    "href": "slides/intro-02-data-budget.html#section-3",
+    "title": "2 - Your data budget",
+    "section": "",
+    "text": "taxi_train %&gt;% \n  ggplot(aes(x = tip)) +\n  geom_bar()"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#section-4",
+    "href": "slides/intro-02-data-budget.html#section-4",
+    "title": "2 - Your data budget",
+    "section": "",
+    "text": "taxi_train %&gt;% \n  ggplot(aes(x = tip, fill = local)) +\n  geom_bar() +\n  scale_fill_viridis_d(end = .5)"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#section-5",
+    "href": "slides/intro-02-data-budget.html#section-5",
+    "title": "2 - Your data budget",
+    "section": "",
+    "text": "taxi_train %&gt;% \n  ggplot(aes(x = hour, fill = tip)) +\n  geom_bar()"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#section-6",
+    "href": "slides/intro-02-data-budget.html#section-6",
+    "title": "2 - Your data budget",
+    "section": "",
+    "text": "taxi_train %&gt;% \n  ggplot(aes(x = hour, fill = tip)) +\n  geom_bar(position = \"fill\")"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#section-7",
+    "href": "slides/intro-02-data-budget.html#section-7",
+    "title": "2 - Your data budget",
+    "section": "",
+    "text": "taxi_train %&gt;% \n  ggplot(aes(x = distance)) +\n  geom_histogram(bins = 100) +\n  facet_grid(vars(tip))"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#section-8",
+    "href": "slides/intro-02-data-budget.html#section-8",
+    "title": "2 - Your data budget",
+    "section": "",
+    "text": "Stratified sampling would split within response values\n\nBased on our EDA, we know that the source data contains fewer \"no\" tip values than \"yes\". We want to make sure we allot equal proportions of those responses so that both the training and testing data have enough of each to give accurate estimates."
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#stratification",
+    "href": "slides/intro-02-data-budget.html#stratification",
+    "title": "2 - Your data budget",
+    "section": "Stratification",
+    "text": "Stratification\nUse strata = tip\n\nset.seed(123)\ntaxi_split &lt;- initial_split(taxi, prop = 0.8, strata = tip)\ntaxi_split\n#&gt; &lt;Training/Testing/Total&gt;\n#&gt; &lt;7045/1762/8807&gt;"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#stratification-1",
+    "href": "slides/intro-02-data-budget.html#stratification-1",
+    "title": "2 - Your data budget",
+    "section": "Stratification",
+    "text": "Stratification\nStratification often helps, with very little downside"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#the-whole-game---status-update",
+    "href": "slides/intro-02-data-budget.html#the-whole-game---status-update",
+    "title": "2 - Your data budget",
+    "section": "The whole game - status update",
+    "text": "The whole game - status update\n\n\n\nhttps://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#looking-at-predictions",
+    "href": "slides/intro-04-evaluating-models.html#looking-at-predictions",
+    "title": "4 - Evaluating models",
+    "section": "Looking at predictions",
+    "text": "Looking at predictions\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  relocate(tip, .pred_class, .pred_yes, .pred_no)\n#&gt; # A tibble: 7,045 × 10\n#&gt;    tip   .pred_class .pred_yes .pred_no distance company local dow   month  hour\n#&gt;    &lt;fct&gt; &lt;fct&gt;           &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;fct&gt;   &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;\n#&gt;  1 no    no             0.0625   0.937      5.39 Flash … no    Sat   Mar      12\n#&gt;  2 no    yes            0.924    0.0758    18.4  Sun Ta… no    Sat   Apr       6\n#&gt;  3 no    no             0.391    0.609      5.8  other   no    Tue   Jan      10\n#&gt;  4 no    no             0.112    0.888      6.85 Flash … no    Fri   Apr       8\n#&gt;  5 no    no             0.129    0.871      9.5  City S… no    Wed   Jan       7\n#&gt;  6 no    no             0.326    0.674     12    other   no    Fri   Apr      11\n#&gt;  7 no    no             0.0917   0.908      8.9  Taxi A… no    Mon   Feb      14\n#&gt;  8 no    yes            0.902    0.0980     1.38 other   no    Fri   Apr      16\n#&gt;  9 no    no             0.0917   0.908      9.12 Flash … no    Wed   Apr       9\n#&gt; 10 no    yes            0.933    0.0668     2.28 City S… no    Thu   Apr      16\n#&gt; # ℹ 7,035 more rows"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#confusion-matrix",
+    "href": "slides/intro-04-evaluating-models.html#confusion-matrix",
+    "title": "4 - Evaluating models",
+    "section": "Confusion matrix ",
+    "text": "Confusion matrix"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#confusion-matrix-1",
+    "href": "slides/intro-04-evaluating-models.html#confusion-matrix-1",
+    "title": "4 - Evaluating models",
+    "section": "Confusion matrix ",
+    "text": "Confusion matrix \n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  conf_mat(truth = tip, estimate = .pred_class)\n#&gt;           Truth\n#&gt; Prediction  yes   no\n#&gt;        yes 4639  660\n#&gt;        no   337 1409"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#confusion-matrix-2",
+    "href": "slides/intro-04-evaluating-models.html#confusion-matrix-2",
+    "title": "4 - Evaluating models",
+    "section": "Confusion matrix ",
+    "text": "Confusion matrix \n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  conf_mat(truth = tip, estimate = .pred_class) %&gt;%\n  autoplot(type = \"heatmap\")"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#metrics-for-model-performance",
+    "href": "slides/intro-04-evaluating-models.html#metrics-for-model-performance",
+    "title": "4 - Evaluating models",
+    "section": "Metrics for model performance ",
+    "text": "Metrics for model performance \n\n\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  accuracy(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric  .estimator .estimate\n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy binary         0.858"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#dangers-of-accuracy",
+    "href": "slides/intro-04-evaluating-models.html#dangers-of-accuracy",
+    "title": "4 - Evaluating models",
+    "section": "Dangers of accuracy ",
+    "text": "Dangers of accuracy \nWe need to be careful of using accuracy() since it can give “good” performance by only predicting one way with imbalanced data\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  mutate(.pred_class = factor(\"yes\", levels = c(\"yes\", \"no\"))) %&gt;%\n  accuracy(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric  .estimator .estimate\n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy binary         0.706"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#metrics-for-model-performance-1",
+    "href": "slides/intro-04-evaluating-models.html#metrics-for-model-performance-1",
+    "title": "4 - Evaluating models",
+    "section": "Metrics for model performance ",
+    "text": "Metrics for model performance \n\n\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  sensitivity(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric     .estimator .estimate\n#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 sensitivity binary         0.932"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#metrics-for-model-performance-2",
+    "href": "slides/intro-04-evaluating-models.html#metrics-for-model-performance-2",
+    "title": "4 - Evaluating models",
+    "section": "Metrics for model performance ",
+    "text": "Metrics for model performance \n\n\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  sensitivity(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric     .estimator .estimate\n#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 sensitivity binary         0.932\n\n\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  specificity(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric     .estimator .estimate\n#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 specificity binary         0.681"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#metrics-for-model-performance-3",
+    "href": "slides/intro-04-evaluating-models.html#metrics-for-model-performance-3",
+    "title": "4 - Evaluating models",
+    "section": "Metrics for model performance ",
+    "text": "Metrics for model performance \nWe can use metric_set() to combine multiple calculations into one\n\ntaxi_metrics &lt;- metric_set(accuracy, specificity, sensitivity)\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  taxi_metrics(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 3 × 3\n#&gt;   .metric     .estimator .estimate\n#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy    binary         0.858\n#&gt; 2 specificity binary         0.681\n#&gt; 3 sensitivity binary         0.932"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#metrics-for-model-performance-4",
+    "href": "slides/intro-04-evaluating-models.html#metrics-for-model-performance-4",
+    "title": "4 - Evaluating models",
+    "section": "Metrics for model performance ",
+    "text": "Metrics for model performance \n\ntaxi_metrics &lt;- metric_set(accuracy, specificity, sensitivity)\n\naugment(taxi_fit, new_data = taxi_train) %&gt;%\n  group_by(local) %&gt;%\n  taxi_metrics(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 6 × 4\n#&gt;   local .metric     .estimator .estimate\n#&gt;   &lt;fct&gt; &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 yes   accuracy    binary         0.840\n#&gt; 2 no    accuracy    binary         0.862\n#&gt; 3 yes   specificity binary         0.346\n#&gt; 4 no    specificity binary         0.719\n#&gt; 5 yes   sensitivity binary         0.969\n#&gt; 6 no    sensitivity binary         0.925"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#two-class-data",
+    "href": "slides/intro-04-evaluating-models.html#two-class-data",
+    "title": "4 - Evaluating models",
+    "section": "Two class data",
+    "text": "Two class data\nThese metrics assume that we know the threshold for converting “soft” probability predictions into “hard” class predictions.\n\nIs a 50% threshold good?\nWhat happens if we say that we need to be 80% sure to declare an event?\n\nsensitivity ⬇️, specificity ⬆️\n\n\n\nWhat happens for a 20% threshold?\n\nsensitivity ⬆️, specificity ⬇️"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#varying-the-threshold",
+    "href": "slides/intro-04-evaluating-models.html#varying-the-threshold",
+    "title": "4 - Evaluating models",
+    "section": "Varying the threshold",
+    "text": "Varying the threshold"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#roc-curves",
+    "href": "slides/intro-04-evaluating-models.html#roc-curves",
+    "title": "4 - Evaluating models",
+    "section": "ROC curves",
+    "text": "ROC curves\nTo make an ROC (receiver operator characteristic) curve, we:\n\ncalculate the sensitivity and specificity for all possible thresholds\nplot false positive rate (x-axis) versus true positive rate (y-axis)\n\ngiven that sensitivity is the true positive rate, and specificity is the true negative rate. Hence 1 - specificity is the false positive rate.\n\nWe can use the area under the ROC curve as a classification metric:\n\nROC AUC = 1 💯\nROC AUC = 1/2 😢\n\n\nROC curves are insensitive to class imbalance."
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#roc-curves-1",
+    "href": "slides/intro-04-evaluating-models.html#roc-curves-1",
+    "title": "4 - Evaluating models",
+    "section": "ROC curves ",
+    "text": "ROC curves \n\n# Assumes _first_ factor level is event; there are options to change that\naugment(taxi_fit, new_data = taxi_train) %&gt;% \n  roc_curve(truth = tip, .pred_yes) %&gt;%\n  slice(1, 20, 50)\n#&gt; # A tibble: 3 × 3\n#&gt;   .threshold specificity sensitivity\n#&gt;        &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;\n#&gt; 1    -Inf          0           1    \n#&gt; 2       0.25       0.486       0.972\n#&gt; 3       0.6        0.705       0.920\n\naugment(taxi_fit, new_data = taxi_train) %&gt;% \n  roc_auc(truth = tip, .pred_yes)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric .estimator .estimate\n#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 roc_auc binary         0.868"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#roc-curve-plot",
+    "href": "slides/intro-04-evaluating-models.html#roc-curve-plot",
+    "title": "4 - Evaluating models",
+    "section": "ROC curve plot ",
+    "text": "ROC curve plot \n\n\naugment(taxi_fit, new_data = taxi_train) %&gt;% \n  roc_curve(truth = tip, .pred_yes) %&gt;%\n  autoplot()"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#your-turn",
+    "href": "slides/intro-04-evaluating-models.html#your-turn",
+    "title": "4 - Evaluating models",
+    "section": "Your turn",
+    "text": "Your turn\n\nCompute and plot an ROC curve for your current model.\nWhat data are being used for this ROC curve plot?\n\n\n\n−+\n05:00"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#dangers-of-overfitting-1",
+    "href": "slides/intro-04-evaluating-models.html#dangers-of-overfitting-1",
+    "title": "4 - Evaluating models",
+    "section": "Dangers of overfitting ⚠️",
+    "text": "Dangers of overfitting ⚠️"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#dangers-of-overfitting-2",
+    "href": "slides/intro-04-evaluating-models.html#dangers-of-overfitting-2",
+    "title": "4 - Evaluating models",
+    "section": "Dangers of overfitting ⚠️",
+    "text": "Dangers of overfitting ⚠️"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#dangers-of-overfitting-3",
+    "href": "slides/intro-04-evaluating-models.html#dangers-of-overfitting-3",
+    "title": "4 - Evaluating models",
+    "section": "Dangers of overfitting ⚠️ ",
+    "text": "Dangers of overfitting ⚠️ \n\ntaxi_fit %&gt;%\n  augment(taxi_train)\n#&gt; # A tibble: 7,045 × 10\n#&gt;    tip   distance company local dow   month  hour .pred_class .pred_yes .pred_no\n#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;   &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt; &lt;fct&gt;           &lt;dbl&gt;    &lt;dbl&gt;\n#&gt;  1 no        5.39 Flash … no    Sat   Mar      12 no             0.0625   0.937 \n#&gt;  2 no       18.4  Sun Ta… no    Sat   Apr       6 yes            0.924    0.0758\n#&gt;  3 no        5.8  other   no    Tue   Jan      10 no             0.391    0.609 \n#&gt;  4 no        6.85 Flash … no    Fri   Apr       8 no             0.112    0.888 \n#&gt;  5 no        9.5  City S… no    Wed   Jan       7 no             0.129    0.871 \n#&gt;  6 no       12    other   no    Fri   Apr      11 no             0.326    0.674 \n#&gt;  7 no        8.9  Taxi A… no    Mon   Feb      14 no             0.0917   0.908 \n#&gt;  8 no        1.38 other   no    Fri   Apr      16 yes            0.902    0.0980\n#&gt;  9 no        9.12 Flash … no    Wed   Apr       9 no             0.0917   0.908 \n#&gt; 10 no        2.28 City S… no    Thu   Apr      16 yes            0.933    0.0668\n#&gt; # ℹ 7,035 more rows\n\nWe call this “resubstitution” or “repredicting the training set”"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#dangers-of-overfitting-4",
+    "href": "slides/intro-04-evaluating-models.html#dangers-of-overfitting-4",
+    "title": "4 - Evaluating models",
+    "section": "Dangers of overfitting ⚠️ ",
+    "text": "Dangers of overfitting ⚠️ \n\ntaxi_fit %&gt;%\n  augment(taxi_train) %&gt;%\n  accuracy(tip, .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric  .estimator .estimate\n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy binary         0.858\n\nWe call this a “resubstitution estimate”"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#dangers-of-overfitting-5",
+    "href": "slides/intro-04-evaluating-models.html#dangers-of-overfitting-5",
+    "title": "4 - Evaluating models",
+    "section": "Dangers of overfitting ⚠️ ",
+    "text": "Dangers of overfitting ⚠️ \n\n\n\ntaxi_fit %&gt;%\n  augment(taxi_train) %&gt;%\n  accuracy(tip, .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric  .estimator .estimate\n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy binary         0.858"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#dangers-of-overfitting-6",
+    "href": "slides/intro-04-evaluating-models.html#dangers-of-overfitting-6",
+    "title": "4 - Evaluating models",
+    "section": "Dangers of overfitting ⚠️ ",
+    "text": "Dangers of overfitting ⚠️ \n\n\n\ntaxi_fit %&gt;%\n  augment(taxi_train) %&gt;%\n  accuracy(tip, .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric  .estimator .estimate\n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy binary         0.858\n\n\n\ntaxi_fit %&gt;%\n  augment(taxi_test) %&gt;%\n  accuracy(tip, .pred_class)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric  .estimator .estimate\n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 accuracy binary         0.795\n\n\n\n\n⚠️ Remember that we’re demonstrating overfitting\n\n\n⚠️ Don’t use the test set until the end of your modeling analysis"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#your-turn-1",
+    "href": "slides/intro-04-evaluating-models.html#your-turn-1",
+    "title": "4 - Evaluating models",
+    "section": "Your turn",
+    "text": "Your turn\n\nUse augment() and and a metric function to compute a classification metric like brier_class().\nCompute the metrics for both training and testing data to demonstrate overfitting!\nNotice the evidence of overfitting! ⚠️\n\n\n\n−+\n05:00"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#dangers-of-overfitting-7",
+    "href": "slides/intro-04-evaluating-models.html#dangers-of-overfitting-7",
+    "title": "4 - Evaluating models",
+    "section": "Dangers of overfitting ⚠️ ",
+    "text": "Dangers of overfitting ⚠️ \n\n\n\ntaxi_fit %&gt;%\n  augment(taxi_train) %&gt;%\n  brier_class(tip, .pred_yes)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric     .estimator .estimate\n#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 brier_class binary         0.113\n\n\n\ntaxi_fit %&gt;%\n  augment(taxi_test) %&gt;%\n  brier_class(tip, .pred_yes)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric     .estimator .estimate\n#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 brier_class binary         0.152\n\n\n\n\nWhat if we want to compare more models?\n\n\nAnd/or more model configurations?\n\n\nAnd we want to understand if these are important differences?"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#cross-validation",
+    "href": "slides/intro-04-evaluating-models.html#cross-validation",
+    "title": "4 - Evaluating models",
+    "section": "Cross-validation",
+    "text": "Cross-validation"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#cross-validation-1",
+    "href": "slides/intro-04-evaluating-models.html#cross-validation-1",
+    "title": "4 - Evaluating models",
+    "section": "Cross-validation",
+    "text": "Cross-validation"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#your-turn-2",
+    "href": "slides/intro-04-evaluating-models.html#your-turn-2",
+    "title": "4 - Evaluating models",
+    "section": "Your turn",
+    "text": "Your turn\n\nIf we use 10 folds, what percent of the training data\n\nends up in analysis\nends up in assessment\n\nfor each fold?\n\n\n\n\n−+\n03:00"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#cross-validation-2",
+    "href": "slides/intro-04-evaluating-models.html#cross-validation-2",
+    "title": "4 - Evaluating models",
+    "section": "Cross-validation ",
+    "text": "Cross-validation \n\nvfold_cv(taxi_train) # v = 10 is default\n#&gt; #  10-fold cross-validation \n#&gt; # A tibble: 10 × 2\n#&gt;    splits             id    \n#&gt;    &lt;list&gt;             &lt;chr&gt; \n#&gt;  1 &lt;split [6340/705]&gt; Fold01\n#&gt;  2 &lt;split [6340/705]&gt; Fold02\n#&gt;  3 &lt;split [6340/705]&gt; Fold03\n#&gt;  4 &lt;split [6340/705]&gt; Fold04\n#&gt;  5 &lt;split [6340/705]&gt; Fold05\n#&gt;  6 &lt;split [6341/704]&gt; Fold06\n#&gt;  7 &lt;split [6341/704]&gt; Fold07\n#&gt;  8 &lt;split [6341/704]&gt; Fold08\n#&gt;  9 &lt;split [6341/704]&gt; Fold09\n#&gt; 10 &lt;split [6341/704]&gt; Fold10"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#cross-validation-3",
+    "href": "slides/intro-04-evaluating-models.html#cross-validation-3",
+    "title": "4 - Evaluating models",
+    "section": "Cross-validation ",
+    "text": "Cross-validation \nWhat is in this?\n\ntaxi_folds &lt;- vfold_cv(taxi_train)\ntaxi_folds$splits[1:3]\n#&gt; [[1]]\n#&gt; &lt;Analysis/Assess/Total&gt;\n#&gt; &lt;6340/705/7045&gt;\n#&gt; \n#&gt; [[2]]\n#&gt; &lt;Analysis/Assess/Total&gt;\n#&gt; &lt;6340/705/7045&gt;\n#&gt; \n#&gt; [[3]]\n#&gt; &lt;Analysis/Assess/Total&gt;\n#&gt; &lt;6340/705/7045&gt;\n\n\nTalk about a list column, storing non-atomic types in dataframe"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#cross-validation-4",
+    "href": "slides/intro-04-evaluating-models.html#cross-validation-4",
+    "title": "4 - Evaluating models",
+    "section": "Cross-validation ",
+    "text": "Cross-validation \n\nvfold_cv(taxi_train, v = 5)\n#&gt; #  5-fold cross-validation \n#&gt; # A tibble: 5 × 2\n#&gt;   splits              id   \n#&gt;   &lt;list&gt;              &lt;chr&gt;\n#&gt; 1 &lt;split [5636/1409]&gt; Fold1\n#&gt; 2 &lt;split [5636/1409]&gt; Fold2\n#&gt; 3 &lt;split [5636/1409]&gt; Fold3\n#&gt; 4 &lt;split [5636/1409]&gt; Fold4\n#&gt; 5 &lt;split [5636/1409]&gt; Fold5"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#cross-validation-5",
+    "href": "slides/intro-04-evaluating-models.html#cross-validation-5",
+    "title": "4 - Evaluating models",
+    "section": "Cross-validation ",
+    "text": "Cross-validation \n\nvfold_cv(taxi_train, strata = tip)\n#&gt; #  10-fold cross-validation using stratification \n#&gt; # A tibble: 10 × 2\n#&gt;    splits             id    \n#&gt;    &lt;list&gt;             &lt;chr&gt; \n#&gt;  1 &lt;split [6340/705]&gt; Fold01\n#&gt;  2 &lt;split [6340/705]&gt; Fold02\n#&gt;  3 &lt;split [6340/705]&gt; Fold03\n#&gt;  4 &lt;split [6340/705]&gt; Fold04\n#&gt;  5 &lt;split [6340/705]&gt; Fold05\n#&gt;  6 &lt;split [6340/705]&gt; Fold06\n#&gt;  7 &lt;split [6341/704]&gt; Fold07\n#&gt;  8 &lt;split [6341/704]&gt; Fold08\n#&gt;  9 &lt;split [6341/704]&gt; Fold09\n#&gt; 10 &lt;split [6342/703]&gt; Fold10\n\n\nStratification often helps, with very little downside"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#cross-validation-6",
+    "href": "slides/intro-04-evaluating-models.html#cross-validation-6",
+    "title": "4 - Evaluating models",
+    "section": "Cross-validation ",
+    "text": "Cross-validation \nWe’ll use this setup:\n\nset.seed(123)\ntaxi_folds &lt;- vfold_cv(taxi_train, v = 10, strata = tip)\ntaxi_folds\n#&gt; #  10-fold cross-validation using stratification \n#&gt; # A tibble: 10 × 2\n#&gt;    splits             id    \n#&gt;    &lt;list&gt;             &lt;chr&gt; \n#&gt;  1 &lt;split [6340/705]&gt; Fold01\n#&gt;  2 &lt;split [6340/705]&gt; Fold02\n#&gt;  3 &lt;split [6340/705]&gt; Fold03\n#&gt;  4 &lt;split [6340/705]&gt; Fold04\n#&gt;  5 &lt;split [6340/705]&gt; Fold05\n#&gt;  6 &lt;split [6340/705]&gt; Fold06\n#&gt;  7 &lt;split [6341/704]&gt; Fold07\n#&gt;  8 &lt;split [6341/704]&gt; Fold08\n#&gt;  9 &lt;split [6341/704]&gt; Fold09\n#&gt; 10 &lt;split [6342/703]&gt; Fold10\n\n\nSet the seed when creating resamples"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#fit-our-model-to-the-resamples",
+    "href": "slides/intro-04-evaluating-models.html#fit-our-model-to-the-resamples",
+    "title": "4 - Evaluating models",
+    "section": "Fit our model to the resamples",
+    "text": "Fit our model to the resamples\n\ntaxi_res &lt;- fit_resamples(taxi_wflow, taxi_folds)\ntaxi_res\n#&gt; # Resampling results\n#&gt; # 10-fold cross-validation using stratification \n#&gt; # A tibble: 10 × 4\n#&gt;    splits             id     .metrics         .notes          \n#&gt;    &lt;list&gt;             &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;          \n#&gt;  1 &lt;split [6340/705]&gt; Fold01 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;\n#&gt;  2 &lt;split [6340/705]&gt; Fold02 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;\n#&gt;  3 &lt;split [6340/705]&gt; Fold03 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;\n#&gt;  4 &lt;split [6340/705]&gt; Fold04 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;\n#&gt;  5 &lt;split [6340/705]&gt; Fold05 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;\n#&gt;  6 &lt;split [6340/705]&gt; Fold06 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;\n#&gt;  7 &lt;split [6341/704]&gt; Fold07 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;\n#&gt;  8 &lt;split [6341/704]&gt; Fold08 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;\n#&gt;  9 &lt;split [6341/704]&gt; Fold09 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;\n#&gt; 10 &lt;split [6342/703]&gt; Fold10 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#evaluating-model-performance",
+    "href": "slides/intro-04-evaluating-models.html#evaluating-model-performance",
+    "title": "4 - Evaluating models",
+    "section": "Evaluating model performance ",
+    "text": "Evaluating model performance \n\ntaxi_res %&gt;%\n  collect_metrics()\n#&gt; # A tibble: 2 × 6\n#&gt;   .metric  .estimator  mean     n std_err .config             \n#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 accuracy binary     0.793    10 0.00293 Preprocessor1_Model1\n#&gt; 2 roc_auc  binary     0.809    10 0.00461 Preprocessor1_Model1\n\n\ncollect_metrics() is one of a suite of collect_*() functions that can be used to work with columns of tuning results. Most columns in a tuning result prefixed with . have a corresponding collect_*() function with options for common summaries.\n\n\nWe can reliably measure performance using only the training data 🎉"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#comparing-metrics",
+    "href": "slides/intro-04-evaluating-models.html#comparing-metrics",
+    "title": "4 - Evaluating models",
+    "section": "Comparing metrics ",
+    "text": "Comparing metrics \nHow do the metrics from resampling compare to the metrics from training and testing?\n\n\n\ntaxi_res %&gt;%\n  collect_metrics() %&gt;% \n  select(.metric, mean, n)\n#&gt; # A tibble: 2 × 3\n#&gt;   .metric   mean     n\n#&gt;   &lt;chr&gt;    &lt;dbl&gt; &lt;int&gt;\n#&gt; 1 accuracy 0.793    10\n#&gt; 2 roc_auc  0.809    10\n\n\nThe ROC AUC previously was\n\n0.87 for the training set\n0.81 for test set\n\n\n\n\nRemember that:\n⚠️ the training set gives you overly optimistic metrics\n⚠️ the test set is precious"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#evaluating-model-performance-1",
+    "href": "slides/intro-04-evaluating-models.html#evaluating-model-performance-1",
+    "title": "4 - Evaluating models",
+    "section": "Evaluating model performance ",
+    "text": "Evaluating model performance \n\n# Save the assessment set results\nctrl_taxi &lt;- control_resamples(save_pred = TRUE)\ntaxi_res &lt;- fit_resamples(taxi_wflow, taxi_folds, control = ctrl_taxi)\n\ntaxi_preds &lt;- collect_predictions(taxi_res)\ntaxi_preds\n#&gt; # A tibble: 7,045 × 7\n#&gt;    id     .pred_yes .pred_no  .row .pred_class tip   .config             \n#&gt;    &lt;chr&gt;      &lt;dbl&gt;    &lt;dbl&gt; &lt;int&gt; &lt;fct&gt;       &lt;fct&gt; &lt;chr&gt;               \n#&gt;  1 Fold01    0.936    0.0638    10 yes         no    Preprocessor1_Model1\n#&gt;  2 Fold01    0.898    0.102     20 yes         no    Preprocessor1_Model1\n#&gt;  3 Fold01    0.898    0.102     47 yes         no    Preprocessor1_Model1\n#&gt;  4 Fold01    0.101    0.899     51 no          no    Preprocessor1_Model1\n#&gt;  5 Fold01    0.871    0.129     59 yes         no    Preprocessor1_Model1\n#&gt;  6 Fold01    0.0815   0.918     60 no          no    Preprocessor1_Model1\n#&gt;  7 Fold01    0.162    0.838     92 no          no    Preprocessor1_Model1\n#&gt;  8 Fold01    0.26     0.74      97 no          no    Preprocessor1_Model1\n#&gt;  9 Fold01    0.274    0.726     98 no          no    Preprocessor1_Model1\n#&gt; 10 Fold01    0.804    0.196    104 yes         no    Preprocessor1_Model1\n#&gt; # ℹ 7,035 more rows"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#evaluating-model-performance-2",
+    "href": "slides/intro-04-evaluating-models.html#evaluating-model-performance-2",
+    "title": "4 - Evaluating models",
+    "section": "Evaluating model performance ",
+    "text": "Evaluating model performance \n\ntaxi_preds %&gt;% \n  group_by(id) %&gt;%\n  taxi_metrics(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 30 × 4\n#&gt;    id     .metric  .estimator .estimate\n#&gt;    &lt;chr&gt;  &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt;  1 Fold01 accuracy binary         0.793\n#&gt;  2 Fold02 accuracy binary         0.8  \n#&gt;  3 Fold03 accuracy binary         0.786\n#&gt;  4 Fold04 accuracy binary         0.804\n#&gt;  5 Fold05 accuracy binary         0.796\n#&gt;  6 Fold06 accuracy binary         0.789\n#&gt;  7 Fold07 accuracy binary         0.793\n#&gt;  8 Fold08 accuracy binary         0.808\n#&gt;  9 Fold09 accuracy binary         0.783\n#&gt; 10 Fold10 accuracy binary         0.780\n#&gt; # ℹ 20 more rows"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#where-are-the-fitted-models",
+    "href": "slides/intro-04-evaluating-models.html#where-are-the-fitted-models",
+    "title": "4 - Evaluating models",
+    "section": "Where are the fitted models? ",
+    "text": "Where are the fitted models? \n\ntaxi_res\n#&gt; # Resampling results\n#&gt; # 10-fold cross-validation using stratification \n#&gt; # A tibble: 10 × 5\n#&gt;    splits             id     .metrics         .notes           .predictions\n#&gt;    &lt;list&gt;             &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;           &lt;list&gt;      \n#&gt;  1 &lt;split [6340/705]&gt; Fold01 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt;  2 &lt;split [6340/705]&gt; Fold02 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt;  3 &lt;split [6340/705]&gt; Fold03 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt;  4 &lt;split [6340/705]&gt; Fold04 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt;  5 &lt;split [6340/705]&gt; Fold05 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt;  6 &lt;split [6340/705]&gt; Fold06 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt;  7 &lt;split [6341/704]&gt; Fold07 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt;  8 &lt;split [6341/704]&gt; Fold08 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt;  9 &lt;split [6341/704]&gt; Fold09 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt; 10 &lt;split [6342/703]&gt; Fold10 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;\n\n\n🗑️"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#bootstrapping",
+    "href": "slides/intro-04-evaluating-models.html#bootstrapping",
+    "title": "4 - Evaluating models",
+    "section": "Bootstrapping",
+    "text": "Bootstrapping"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#bootstrapping-1",
+    "href": "slides/intro-04-evaluating-models.html#bootstrapping-1",
+    "title": "4 - Evaluating models",
+    "section": "Bootstrapping ",
+    "text": "Bootstrapping \n\nset.seed(3214)\nbootstraps(taxi_train)\n#&gt; # Bootstrap sampling \n#&gt; # A tibble: 25 × 2\n#&gt;    splits              id         \n#&gt;    &lt;list&gt;              &lt;chr&gt;      \n#&gt;  1 &lt;split [7045/2561]&gt; Bootstrap01\n#&gt;  2 &lt;split [7045/2577]&gt; Bootstrap02\n#&gt;  3 &lt;split [7045/2648]&gt; Bootstrap03\n#&gt;  4 &lt;split [7045/2616]&gt; Bootstrap04\n#&gt;  5 &lt;split [7045/2616]&gt; Bootstrap05\n#&gt;  6 &lt;split [7045/2599]&gt; Bootstrap06\n#&gt;  7 &lt;split [7045/2654]&gt; Bootstrap07\n#&gt;  8 &lt;split [7045/2593]&gt; Bootstrap08\n#&gt;  9 &lt;split [7045/2624]&gt; Bootstrap09\n#&gt; 10 &lt;split [7045/2615]&gt; Bootstrap10\n#&gt; # ℹ 15 more rows"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#the-whole-game---status-update",
+    "href": "slides/intro-04-evaluating-models.html#the-whole-game---status-update",
+    "title": "4 - Evaluating models",
+    "section": "The whole game - status update",
+    "text": "The whole game - status update"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#your-turn-3",
+    "href": "slides/intro-04-evaluating-models.html#your-turn-3",
+    "title": "4 - Evaluating models",
+    "section": "Your turn",
+    "text": "Your turn\n\nCreate:\n\nMonte Carlo Cross-Validation sets\nvalidation set\n\n(use the reference guide to find the function)\nDon’t forget to set a seed when you resample!\n\n\n\n−+\n05:00"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#monte-carlo-cross-validation",
+    "href": "slides/intro-04-evaluating-models.html#monte-carlo-cross-validation",
+    "title": "4 - Evaluating models",
+    "section": "Monte Carlo Cross-Validation ",
+    "text": "Monte Carlo Cross-Validation \n\nset.seed(322)\nmc_cv(taxi_train, times = 10)\n#&gt; # Monte Carlo cross-validation (0.75/0.25) with 10 resamples  \n#&gt; # A tibble: 10 × 2\n#&gt;    splits              id        \n#&gt;    &lt;list&gt;              &lt;chr&gt;     \n#&gt;  1 &lt;split [5283/1762]&gt; Resample01\n#&gt;  2 &lt;split [5283/1762]&gt; Resample02\n#&gt;  3 &lt;split [5283/1762]&gt; Resample03\n#&gt;  4 &lt;split [5283/1762]&gt; Resample04\n#&gt;  5 &lt;split [5283/1762]&gt; Resample05\n#&gt;  6 &lt;split [5283/1762]&gt; Resample06\n#&gt;  7 &lt;split [5283/1762]&gt; Resample07\n#&gt;  8 &lt;split [5283/1762]&gt; Resample08\n#&gt;  9 &lt;split [5283/1762]&gt; Resample09\n#&gt; 10 &lt;split [5283/1762]&gt; Resample10"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#validation-set",
+    "href": "slides/intro-04-evaluating-models.html#validation-set",
+    "title": "4 - Evaluating models",
+    "section": "Validation set ",
+    "text": "Validation set \n\nset.seed(853)\nvalidation_split(taxi_train, strata = tip)\n#&gt; # Validation Set Split (0.75/0.25)  using stratification \n#&gt; # A tibble: 1 × 2\n#&gt;   splits              id        \n#&gt;   &lt;list&gt;              &lt;chr&gt;     \n#&gt; 1 &lt;split [5283/1762]&gt; validation\n\n\nA validation set is just another type of resample"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#random-forest-1",
+    "href": "slides/intro-04-evaluating-models.html#random-forest-1",
+    "title": "4 - Evaluating models",
+    "section": "Random forest 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵",
+    "text": "Random forest 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵\n\nEnsemble many decision tree models\nAll the trees vote! 🗳️\nBootstrap aggregating + random predictor sampling\n\n\n\nOften works well without tuning hyperparameters (more on this in Advanced tidymodels!), as long as there are enough trees"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#create-a-random-forest-model",
+    "href": "slides/intro-04-evaluating-models.html#create-a-random-forest-model",
+    "title": "4 - Evaluating models",
+    "section": "Create a random forest model ",
+    "text": "Create a random forest model \n\nrf_spec &lt;- rand_forest(trees = 1000, mode = \"classification\")\nrf_spec\n#&gt; Random Forest Model Specification (classification)\n#&gt; \n#&gt; Main Arguments:\n#&gt;   trees = 1000\n#&gt; \n#&gt; Computational engine: ranger"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#create-a-random-forest-model-1",
+    "href": "slides/intro-04-evaluating-models.html#create-a-random-forest-model-1",
+    "title": "4 - Evaluating models",
+    "section": "Create a random forest model ",
+    "text": "Create a random forest model \n\nrf_wflow &lt;- workflow(tip ~ ., rf_spec)\nrf_wflow\n#&gt; ══ Workflow ══════════════════════════════════════════════════════════\n#&gt; Preprocessor: Formula\n#&gt; Model: rand_forest()\n#&gt; \n#&gt; ── Preprocessor ──────────────────────────────────────────────────────\n#&gt; tip ~ .\n#&gt; \n#&gt; ── Model ─────────────────────────────────────────────────────────────\n#&gt; Random Forest Model Specification (classification)\n#&gt; \n#&gt; Main Arguments:\n#&gt;   trees = 1000\n#&gt; \n#&gt; Computational engine: ranger"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#your-turn-4",
+    "href": "slides/intro-04-evaluating-models.html#your-turn-4",
+    "title": "4 - Evaluating models",
+    "section": "Your turn",
+    "text": "Your turn\n\nUse fit_resamples() and rf_wflow to:\n\nkeep predictions\ncompute metrics\n\n\n\n\n−+\n08:00"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#evaluating-model-performance-3",
+    "href": "slides/intro-04-evaluating-models.html#evaluating-model-performance-3",
+    "title": "4 - Evaluating models",
+    "section": "Evaluating model performance ",
+    "text": "Evaluating model performance \n\nctrl_taxi &lt;- control_resamples(save_pred = TRUE)\n\n# Random forest uses random numbers so set the seed first\n\nset.seed(2)\nrf_res &lt;- fit_resamples(rf_wflow, taxi_folds, control = ctrl_taxi)\ncollect_metrics(rf_res)\n#&gt; # A tibble: 2 × 6\n#&gt;   .metric  .estimator  mean     n std_err .config             \n#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 accuracy binary     0.813    10 0.00305 Preprocessor1_Model1\n#&gt; 2 roc_auc  binary     0.832    10 0.00513 Preprocessor1_Model1"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#how-can-we-compare-multiple-model-workflows-at-once",
+    "href": "slides/intro-04-evaluating-models.html#how-can-we-compare-multiple-model-workflows-at-once",
+    "title": "4 - Evaluating models",
+    "section": "How can we compare multiple model workflows at once?",
+    "text": "How can we compare multiple model workflows at once?"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#evaluate-a-workflow-set",
+    "href": "slides/intro-04-evaluating-models.html#evaluate-a-workflow-set",
+    "title": "4 - Evaluating models",
+    "section": "Evaluate a workflow set",
+    "text": "Evaluate a workflow set\n\nworkflow_set(list(tip ~ .), list(tree_spec, rf_spec))\n#&gt; # A workflow set/tibble: 2 × 4\n#&gt;   wflow_id              info             option    result    \n#&gt;   &lt;chr&gt;                 &lt;list&gt;           &lt;list&gt;    &lt;list&gt;    \n#&gt; 1 formula_decision_tree &lt;tibble [1 × 4]&gt; &lt;opts[0]&gt; &lt;list [0]&gt;\n#&gt; 2 formula_rand_forest   &lt;tibble [1 × 4]&gt; &lt;opts[0]&gt; &lt;list [0]&gt;"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#evaluate-a-workflow-set-1",
+    "href": "slides/intro-04-evaluating-models.html#evaluate-a-workflow-set-1",
+    "title": "4 - Evaluating models",
+    "section": "Evaluate a workflow set",
+    "text": "Evaluate a workflow set\n\nworkflow_set(list(tip ~ .), list(tree_spec, rf_spec)) %&gt;%\n  workflow_map(\"fit_resamples\", resamples = taxi_folds)\n#&gt; # A workflow set/tibble: 2 × 4\n#&gt;   wflow_id              info             option    result   \n#&gt;   &lt;chr&gt;                 &lt;list&gt;           &lt;list&gt;    &lt;list&gt;   \n#&gt; 1 formula_decision_tree &lt;tibble [1 × 4]&gt; &lt;opts[1]&gt; &lt;rsmp[+]&gt;\n#&gt; 2 formula_rand_forest   &lt;tibble [1 × 4]&gt; &lt;opts[1]&gt; &lt;rsmp[+]&gt;"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#evaluate-a-workflow-set-2",
+    "href": "slides/intro-04-evaluating-models.html#evaluate-a-workflow-set-2",
+    "title": "4 - Evaluating models",
+    "section": "Evaluate a workflow set",
+    "text": "Evaluate a workflow set\n\nworkflow_set(list(tip ~ .), list(tree_spec, rf_spec)) %&gt;%\n  workflow_map(\"fit_resamples\", resamples = taxi_folds) %&gt;%\n  rank_results()\n#&gt; # A tibble: 4 × 9\n#&gt;   wflow_id          .config .metric  mean std_err     n preprocessor model  rank\n#&gt;   &lt;chr&gt;             &lt;chr&gt;   &lt;chr&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;        &lt;chr&gt; &lt;int&gt;\n#&gt; 1 formula_rand_for… Prepro… accura… 0.813 0.00339    10 formula      rand…     1\n#&gt; 2 formula_rand_for… Prepro… roc_auc 0.833 0.00528    10 formula      rand…     1\n#&gt; 3 formula_decision… Prepro… accura… 0.793 0.00293    10 formula      deci…     2\n#&gt; 4 formula_decision… Prepro… roc_auc 0.809 0.00461    10 formula      deci…     2\n\nThe first metric of the metric set is used for ranking. Use rank_metric to change that.\n\nLots more available with workflow sets, like collect_metrics(), autoplot() methods, and more!"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#your-turn-5",
+    "href": "slides/intro-04-evaluating-models.html#your-turn-5",
+    "title": "4 - Evaluating models",
+    "section": "Your turn",
+    "text": "Your turn\n\nWhen do you think a workflow set would be useful?\n\n\n\n−+\n03:00"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#the-whole-game---status-update-1",
+    "href": "slides/intro-04-evaluating-models.html#the-whole-game---status-update-1",
+    "title": "4 - Evaluating models",
+    "section": "The whole game - status update",
+    "text": "The whole game - status update"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#the-final-fit",
+    "href": "slides/intro-04-evaluating-models.html#the-final-fit",
+    "title": "4 - Evaluating models",
+    "section": "The final fit ",
+    "text": "The final fit \nSuppose that we are happy with our random forest model.\nLet’s fit the model on the training set and verify our performance using the test set.\n\nWe’ve shown you fit() and predict() (+ augment()) but there is a shortcut:\n\n# taxi_split has train + test info\nfinal_fit &lt;- last_fit(rf_wflow, taxi_split) \n\nfinal_fit\n#&gt; # Resampling results\n#&gt; # Manual resampling \n#&gt; # A tibble: 1 × 6\n#&gt;   splits              id               .metrics .notes   .predictions .workflow \n#&gt;   &lt;list&gt;              &lt;chr&gt;            &lt;list&gt;   &lt;list&gt;   &lt;list&gt;       &lt;list&gt;    \n#&gt; 1 &lt;split [7045/1762]&gt; train/test split &lt;tibble&gt; &lt;tibble&gt; &lt;tibble&gt;     &lt;workflow&gt;"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#what-is-in-final_fit",
+    "href": "slides/intro-04-evaluating-models.html#what-is-in-final_fit",
+    "title": "4 - Evaluating models",
+    "section": "What is in final_fit? ",
+    "text": "What is in final_fit? \n\ncollect_metrics(final_fit)\n#&gt; # A tibble: 2 × 4\n#&gt;   .metric  .estimator .estimate .config             \n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 accuracy binary         0.810 Preprocessor1_Model1\n#&gt; 2 roc_auc  binary         0.817 Preprocessor1_Model1\n\n\nThese are metrics computed with the test set"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#what-is-in-final_fit-1",
+    "href": "slides/intro-04-evaluating-models.html#what-is-in-final_fit-1",
+    "title": "4 - Evaluating models",
+    "section": "What is in final_fit? ",
+    "text": "What is in final_fit? \n\ncollect_predictions(final_fit)\n#&gt; # A tibble: 1,762 × 7\n#&gt;    id               .pred_yes .pred_no  .row .pred_class tip   .config          \n#&gt;    &lt;chr&gt;                &lt;dbl&gt;    &lt;dbl&gt; &lt;int&gt; &lt;fct&gt;       &lt;fct&gt; &lt;chr&gt;            \n#&gt;  1 train/test split     0.732   0.268     10 yes         no    Preprocessor1_Mo…\n#&gt;  2 train/test split     0.827   0.173     29 yes         yes   Preprocessor1_Mo…\n#&gt;  3 train/test split     0.899   0.101     35 yes         yes   Preprocessor1_Mo…\n#&gt;  4 train/test split     0.914   0.0856    42 yes         yes   Preprocessor1_Mo…\n#&gt;  5 train/test split     0.911   0.0889    47 yes         no    Preprocessor1_Mo…\n#&gt;  6 train/test split     0.848   0.152     54 yes         yes   Preprocessor1_Mo…\n#&gt;  7 train/test split     0.580   0.420     59 yes         yes   Preprocessor1_Mo…\n#&gt;  8 train/test split     0.912   0.0876    62 yes         yes   Preprocessor1_Mo…\n#&gt;  9 train/test split     0.810   0.190     63 yes         yes   Preprocessor1_Mo…\n#&gt; 10 train/test split     0.960   0.0402    69 yes         yes   Preprocessor1_Mo…\n#&gt; # ℹ 1,752 more rows"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#what-is-in-final_fit-2",
+    "href": "slides/intro-04-evaluating-models.html#what-is-in-final_fit-2",
+    "title": "4 - Evaluating models",
+    "section": "What is in final_fit? ",
+    "text": "What is in final_fit? \n\nextract_workflow(final_fit)\n#&gt; ══ Workflow [trained] ════════════════════════════════════════════════\n#&gt; Preprocessor: Formula\n#&gt; Model: rand_forest()\n#&gt; \n#&gt; ── Preprocessor ──────────────────────────────────────────────────────\n#&gt; tip ~ .\n#&gt; \n#&gt; ── Model ─────────────────────────────────────────────────────────────\n#&gt; Ranger result\n#&gt; \n#&gt; Call:\n#&gt;  ranger::ranger(x = maybe_data_frame(x), y = y, num.trees = ~1000,      num.threads = 1, verbose = FALSE, seed = sample.int(10^5,          1), probability = TRUE) \n#&gt; \n#&gt; Type:                             Probability estimation \n#&gt; Number of trees:                  1000 \n#&gt; Sample size:                      7045 \n#&gt; Number of independent variables:  6 \n#&gt; Mtry:                             2 \n#&gt; Target node size:                 10 \n#&gt; Variable importance mode:         none \n#&gt; Splitrule:                        gini \n#&gt; OOB prediction error (Brier s.):  0.1373147\n\n\nUse this for prediction on new data, like for deploying"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#the-whole-game",
+    "href": "slides/intro-04-evaluating-models.html#the-whole-game",
+    "title": "4 - Evaluating models",
+    "section": "The whole game",
+    "text": "The whole game"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#your-turn-6",
+    "href": "slides/intro-04-evaluating-models.html#your-turn-6",
+    "title": "4 - Evaluating models",
+    "section": "Your turn",
+    "text": "Your turn\n\nEnd of the day discussion!\nWhich model do you think you would decide to use?\nWhat surprised you the most?\nIf you’re taking Advanced tidymodels tomorrow, what is one thing you are looking forward to learning?\n\n\n\n−+\n05:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   }
 ]
