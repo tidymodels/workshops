@@ -58,7 +58,7 @@ taxi_train
 
 ## Working with other models
 
-Some models can't handle non-numeric data (missing data)
+Some models can't handle non-numeric data
 
 -   Linear Regression
 -   K Nearest Neighbors
@@ -66,7 +66,7 @@ Some models can't handle non-numeric data (missing data)
 <br>
 
 ::: fragment
-Some models struggle if numeric variables aren't scaled
+Some models struggle if numeric predictors aren't scaled
 
 -   K Nearest Neighbors
 -   Anything using gradient descent
@@ -107,9 +107,7 @@ Some models struggle if numeric variables aren't scaled
 
 ## Working with dates
 
-This data set originally contained a datetime variable. If given as a raw predictor, it is converted to an integer.
-
-It can be re-encoded as:
+Datetime variables are automatically converted to an integer if given as a raw predictor. To avoid this, it can be re-encoded as:
 
 * Days since a reference date
 * Day of the week
@@ -120,42 +118,40 @@ It can be re-encoded as:
 
 ## Your turn {transition="slide-in"}
 
-![](images/parsnip-flagger.jpg){.absolute bottom="0" left="0" width="150" height="150"}
-
-*What other transformations could be do with the raw time variable?*
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
 <br>
 
-<br>
+*What other transformations could we do with the raw time variable?*
 
-Remember that the transformations are tied to the specific modeling problem
+*Remember that the transformations are tied to the specific modeling problem.*
 
 ```{r}
 #| echo: false
 countdown(minutes = 3, id = "datetime-split")
 ```
 
-## two types of transformations
+## Two types of transformations
 
 ::: columns
 ::: {.column width="50%"}
 
-### static
+### Static
 
-- sqrt, log, inverse
-- dummies with known levels
-- date time extractions
+- Square root, log, inverse
+- Dummies for known levels
+- Date time extractions
 
 :::
 
 ::: {.column width="50%"}
 
-### trained
+### Trained
 
-- centering & scaling
+- Centering & scaling
 - Imputation
 - PCA
-- anything for unknown levels
+- Anything for unknown factor levels
 
 :::
 
@@ -165,13 +161,13 @@ countdown(minutes = 3, id = "datetime-split")
 Trained methods needs to calculate **sufficient information** to be applied again
 :::
 
-## recipes package
+## The recipes package
 
 extensible framework for pipeable sequences of feature engineering steps provides preprocessing tools to be applied to data
 
 ::: {.incremental .highlight-last}
 - Modular + extensible
-- pipeable
+- Works well with pipes ,`|>` and `%>%`
 - Deferred evaluation
 - Isolates test data from training data
 - Can do things formulas can't
@@ -217,7 +213,7 @@ recipe(tip ~ ., data = taxi_train) %>%
 
 <br>
 
-specifying what actions to take by adding `step_*()`s
+Specify what actions to take by adding `step_*()`s.
 
 ## What is a recipe?
 
@@ -231,7 +227,7 @@ recipe(tip ~ ., data = taxi_train) %>%
 :::
 <br>
 
-using {tidyselect} and recipes specific selectors to denote affected variables
+Use {tidyselect} and recipes-specific selectors to denote affected variables.
 
 ## Using a recipe
 
@@ -256,7 +252,7 @@ wf_spec <- workflow() %>%
 \ \ add_model(linear_reg())
 :::
 
-## recipes are estimated
+## Recipes are estimated
 
 <br>
 
@@ -288,13 +284,13 @@ Once a a recipe is added to a workflow, this occurs when `fit()` is called.
 
 ## Your turn {transition="slide-in"}
 
-![](images/parsnip-flagger.jpg){.absolute bottom="0" left="0" width="150" height="150"}
-
-*Take the recipe, and `prep()`, then `bake()` it to see what the resulting data set looks like*
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
 <br>
 
-*Try removing steps to see how the results changes*
+*Take the recipe and `prep()` then `bake()` it to see what the resulting data set looks like.*
+
+*Try removing steps to see how the result changes.*
 
 <br>
 
@@ -303,7 +299,7 @@ Once a a recipe is added to a workflow, this occurs when `fit()` is called.
 countdown(minutes = 5, id = "recipes-prep")
 ```
 
-## printing a recipe
+## Printing a recipe
 
 ```{r}
 rec_spec <- recipe(tip ~ ., data = taxi_train) %>%  
@@ -319,14 +315,14 @@ rec_spec <- recipe(tip ~ ., data = taxi_train) %>%
 rec_spec
 ```
 
-## prepping a recipe
+## Prepping a recipe
 
 ```{r}
 #| message: true
 prep(rec_spec)
 ```
 
-## baking a recipe
+## Baking a recipe
 
 ```{r}
 prep(rec_spec) %>%
@@ -335,13 +331,11 @@ prep(rec_spec) %>%
 
 ## Your turn {transition="slide-in"}
 
-![](images/parsnip-flagger.jpg){.absolute bottom="0" left="0" width="150" height="150"}
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
 *Take a prepped recipe and use the `tidy()` function on it.*
 
-<br>
-
-*use the `number` argument to inspect different steps*
+*Use the `number` argument to inspect different steps.*
 
 <br>
 
@@ -366,5 +360,5 @@ prep(rec_spec) %>%
 
 ## More information
 
-- https://recipes.tidymodels.org/
-- https://www.tmwr.org/recipes.html
+- <https://recipes.tidymodels.org/>
+- <https://www.tmwr.org/recipes.html>
