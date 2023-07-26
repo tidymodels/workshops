@@ -31,10 +31,7 @@ knitr:
 library(countdown)
 library(tidymodels)
 library(modeldatatoo)
-taxi <- data_taxi() %>%
-  mutate(month = factor(month, levels = c("Jan", "Feb", "Mar", "Apr"))) %>% 
-  select(-c(id, duration, fare, tolls, extras, total_cost, payment_type)) %>%
-  drop_na()
+taxi <- data_taxi()
 
 set.seed(123)
 taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
@@ -61,3 +58,313 @@ taxi_train
 
 ## Working with other models
 
+Some models can't handle non-numeric data (missing data)
+
+-   Linear Regression
+-   K Nearest Neighbors
+
+<br>
+
+::: fragment
+Some models struggle if numeric variables aren't scaled
+
+-   K Nearest Neighbors
+-   Anything using gradient descent
+:::
+
+## Types of needed preprocessing
+
+-   **dummy**: Do qualitative predictors require a numeric encoding?
+
+-   **zv**: Should columns with a single unique value be removed?
+
+-   **impute**: Does the model struggle with missing data?
+
+-   **decorrelate**: Does the model struggle with correlated predictors?
+
+-   **normalize**: Should predictors be centered and scaled?
+
+-   **transform**: Is it helpful to transform predictors to be more symmetric?
+
+::: footer
+<https://www.tmwr.org/pre-proc-table.html>
+:::
+
+## Two types of preprocessing
+
+![](images/fe_venn.svg){fig-align="center"}
+
+## Two types of preprocessing
+
+![](images/fe_venn_info.svg){fig-align="center"}
+
+## General definitions
+
+<br>
+
+* _Data preprocessing_ are the steps that you take to make your model **successful**
+* _Feature engineering_ are what you do to the original predictors to make the model do the **least work** to perform great 
+
+## Working with dates
+
+This data set originally contained a datetime variable. If given as a raw predictor, it is converted to an integer.
+
+It can be re-encoded as:
+
+* Days since a reference date
+* Day of the week
+* Month
+* Year
+* Leap year
+* Indicators for holidays
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute bottom="0" left="0" width="150" height="150"}
+
+*What other transformations could be do with the raw time variable?*
+
+<br>
+
+<br>
+
+Remember that the transformations are tied to the specific modeling problem
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "datetime-split")
+```
+
+## two types of transformations
+
+::: columns
+::: {.column width="50%"}
+
+### static
+
+- sqrt, log, inverse
+- dummies with known levels
+- date time extractions
+
+:::
+
+::: {.column width="50%"}
+
+### trained
+
+- centering & scaling
+- Imputation
+- PCA
+- anything for unknown levels
+
+:::
+
+:::
+
+::: fragment
+Trained methods needs to calculate **sufficient information** to be applied again
+:::
+
+## recipes package
+
+extensible framework for pipeable sequences of feature engineering steps provides preprocessing tools to be applied to data
+
+::: {.incremental .highlight-last}
+- Modular + extensible
+- pipeable
+- Deferred evaluation
+- Isolates test data from training data
+- Can do things formulas can't
+:::
+
+
+## What is a recipe?
+
+:::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
+recipe(tip ~ ., data = taxi_train) %>%  
+\ \ step_unknown(all_nominal_predictors()) %>%  
+\ \ step_dummy(all_nominal_predictors()) %>%  
+\ \ step_zv(all_predictors()) %>%  
+\ \ step_log(distance) %>%  
+\ \ step_normalize(all_numeric_predictors())
+:::
+
+## What is a recipe?
+
+:::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
+[recipe(tip ~ ., data = taxi_train)]{style="color: #CA225E;"} %>%  
+\ \ step_unknown(all_nominal_predictors()) %>%  
+\ \ step_dummy(all_nominal_predictors()) %>%  
+\ \ step_zv(all_predictors()) %>%  
+\ \ step_log(distance) %>%  
+\ \ step_normalize(all_numeric_predictors())
+:::
+
+<br>
+
+Start by calling `recipe()` to denote the data source and variables used
+
+## What is a recipe?
+
+:::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
+recipe(tip ~ ., data = taxi_train) %>%  
+\ \ [step_unknown]{style="color: #CA225E;"}(all_nominal_predictors()) %>%  
+\ \ [step_dummy]{style="color: #CA225E;"}(all_nominal_predictors()) %>%  
+\ \ [step_zv]{style="color: #CA225E;"}(all_predictors()) %>%  
+\ \ [step_log]{style="color: #CA225E;"}(distance) %>%  
+\ \ [step_normalize]{style="color: #CA225E;"}(all_numeric_predictors())
+:::
+
+<br>
+
+specifying what actions to take by adding `step_*()`s
+
+## What is a recipe?
+
+:::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
+recipe(tip ~ ., data = taxi_train) %>%  
+\ \ step_unknown([all_nominal_predictors()]{style="color: #CA225E;"}) %>%  
+\ \ step_dummy([all_nominal_predictors()]{style="color: #CA225E;"}) %>%  
+\ \ step_zv([all_predictors()]{style="color: #CA225E;"}) %>%  
+\ \ step_log([distance]{style="color: #CA225E;"}) %>% 
+\ \ step_normalize([all_numeric_predictors()]{style="color: #CA225E;"})
+:::
+<br>
+
+using {tidyselect} and recipes specific selectors to denote affected variables
+
+## Using a recipe
+
+:::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
+rec_spec <- recipe(tip ~ ., data = taxi_train) %>%  
+\ \ step_unknown(all_nominal_predictors()) %>%  
+\ \ step_dummy(all_nominal_predictors()) %>%  
+\ \ step_zv(all_predictors()) %>%  
+\ \ step_log(distance) %>% 
+\ \ step_normalize(all_numeric_predictors())
+:::
+
+<br>
+
+recipes are can be used with {workflows} to "combine" it with a model
+
+<br>
+
+:::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
+wf_spec <- workflow() %>%  
+\ \ [add_recipe(rec_spec)]{style="color: #CA225E;"} %>%  
+\ \ add_model(linear_reg())
+:::
+
+## recipes are estimated
+
+<br>
+
+Every preprocessing step in a recipe that involved calculations uses the *training* set. For example:
+
+- Levels of a factor
+- Determination of zero-variance
+- Normalization
+- Feature extraction
+
+Once a a recipe is added to a workflow, this occurs when `fit()` is called.
+
+
+## Debugging a recipe
+
+- Typically, you will want to use a workflow to estimate and apply a recipe.
+
+. . .
+
+- If you have an error and need to debug your recipe, the original recipe object (e.g. `rec_spec`) can be estimated manually with a function called `prep()`. It is analogous to `fit()`. See [TMwR section 16.4](https://www.tmwr.org/dimensionality.html#recipe-functions)
+
+. . .
+
+- Another function (`bake()`) is analogous to `predict()`, and gives you the processed data back.
+
+. . .
+
+- The `tidy()` function can be used to get specific results from the recipe.
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute bottom="0" left="0" width="150" height="150"}
+
+*Take the recipe, and `prep()`, then `bake()` it to see what the resulting data set looks like*
+
+<br>
+
+*Try removing steps to see how the results changes*
+
+<br>
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "recipes-prep")
+```
+
+## printing a recipe
+
+```{r}
+rec_spec <- recipe(tip ~ ., data = taxi_train) %>%  
+  step_unknown(all_nominal_predictors()) %>%  
+  step_dummy(all_nominal_predictors()) %>%  
+  step_zv(all_predictors()) %>%  
+  step_log(distance) %>% 
+  step_normalize(all_numeric_predictors())
+```
+
+```{r}
+#| message: true
+rec_spec
+```
+
+## prepping a recipe
+
+```{r}
+#| message: true
+prep(rec_spec)
+```
+
+## baking a recipe
+
+```{r}
+prep(rec_spec) %>%
+  bake(new_data = taxi_train)
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute bottom="0" left="0" width="150" height="150"}
+
+*Take a prepped recipe and use the `tidy()` function on it.*
+
+<br>
+
+*use the `number` argument to inspect different steps*
+
+<br>
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "recipes-tidy")
+```
+
+## Tidying a recipe
+
+```{r}
+prep(rec_spec) %>%
+  tidy()
+```
+
+## Tidying a recipe
+
+```{r}
+prep(rec_spec) %>%
+  tidy(number = 2)
+```
+
+## More information
+
+- https://recipes.tidymodels.org/
+- https://www.tmwr.org/recipes.html
