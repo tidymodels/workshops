@@ -103,8 +103,6 @@ Some models struggle if numeric predictors aren't scaled
 
 ## General definitions
 
-<br>
-
 * _Data preprocessing_ are the steps that you take to make your model **successful**
 * _Feature engineering_ are what you do to the original predictors to make the model do the **least work** to perform great 
 
@@ -136,6 +134,8 @@ countdown(minutes = 3, id = "datetime-split")
 ```
 
 ## Two types of transformations
+
+<br>
 
 ::: columns
 ::: {.column width="50%"}
@@ -176,7 +176,7 @@ Trained methods needs to calculate **sufficient information** to be applied agai
 :::
 
 
-## What is a recipe?
+## How to write a recipe
 
 :::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
 rec_spec <- recipe(tip ~ ., data = taxi_train) %>%  
@@ -200,7 +200,7 @@ rec_spec <- [recipe(tip ~ ., data = taxi_train)]{style="color: #CA225E;"} %>%
 
 <br>
 
-Start by calling `recipe()` to denote the data source and variables used
+Start by calling `recipe()` to denote the data source and variables used.
 
 ## What is a recipe?
 
@@ -250,19 +250,17 @@ Save the recipe we like
 
 ## Using a recipe with workflows
 
-recipes are can be used with {workflows} to "combine" it with a model
+Recipes are typically combined with a model in a `workflow()` object:
 
 <br>
 
 :::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
-wf_spec <- workflow() %>%  
-\ \ [add_recipe(rec_spec)]{style="color: #CA225E;"} %>%  
+taxi_wflow <- workflow() %>%  
+\ \ [add_recipe(taxi_rec)]{style="color: #CA225E;"} %>%  
 \ \ add_model(linear_reg())
 :::
 
 ## Recipes are estimated
-
-<br>
 
 Every preprocessing step in a recipe that involved calculations uses the *training* set. For example:
 
@@ -284,7 +282,7 @@ Once a recipe is added to a workflow, this occurs when `fit()` is called.
 
 . . .
 
-- Another function,`bake()`, is analogous to `predict()`, and gives you the processed data back.
+- Another function, `bake()`, is analogous to `predict()`, and gives you the processed data back.
 
 ## Your turn {transition="slide-in"}
 
@@ -341,7 +339,7 @@ prep(rec_spec) %>%
 
 ## Tidying a recipe
 
-Once a recipes as been estimated, there are various bits of information saved in it
+Once a recipes as been estimated, there are various bits of information saved in it.
 
 - The `tidy()` function can be used to get specific results from the recipe.
 
@@ -380,12 +378,15 @@ prep(rec_spec) %>%
 
 ## Using a recipe in tidymodels
 
-The recommended way to use a recipe in tidymodels is to use it as part of a `workflow()`
+The recommended way to use a recipe in tidymodels is to use it as part of a `workflow()`.
+
+<br>
+
 
 ```{r}
 #| label: recipes-and-workflows
-wf_spec <- workflow() %>%  
-  add_recipe(rec_spec) %>%  
+taxi_wflow <- workflow() %>%  
+  add_recipe(taxi_rec) %>%  
   add_model(linear_reg())
 ```
 
