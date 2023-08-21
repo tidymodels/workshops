@@ -1,0 +1,235 @@
+---
+title: "1 - Introduction"
+subtitle: "Advanced tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+::: r-fit-text
+Welcome!
+:::
+
+## Who are you?
+
+-   You can use the magrittr `%>%` or base R `|>` pipe
+
+-   You are familiar with functions from dplyr, tidyr, ggplot2
+
+-   You have exposure to basic statistical concepts
+
+-   You do **not** need intermediate or expert familiarity with modeling or ML
+
+## Who are tidymodels?
+
+-   Simon Couch
+-   Hannah Frick
+-   Emil Hvitfeldt
+-   Max Kuhn
+
+. . .
+
+Ijeamaka Anyene (Day 1) and Edgar Ruiz (Day 2) are TAing!
+
+. . .
+
+Many thanks to Davis Vaughan, Julia Silge, David Robinson, Julie Jung, Alison Hill, and Desirée De Leon for their role in creating these materials!
+
+## Asking for help
+
+. . .
+
+🟪 "I'm stuck and need help!"
+
+. . .
+
+🟩 "I finished the exercise"
+
+
+## `r emo::ji("eyes")` {.annotation}
+
+![](images/pointing.svg){.absolute top="0" right="0"}
+
+## Tentative plan for this workshop
+
+- Feature engineering with recipes
+- Model optimization by tuning
+  - Grid search
+  - Racing
+  - Iterative methods
+- Extras (time permitting)
+  - Effect encodings
+  - A case study
+
+##  {.center}
+
+### Introduce yourself to your neighbors 👋
+
+<br></br>
+
+Check Slack (`#ml-ws-2023`) for an RStudio Cloud link.
+
+## Let's install some packages
+
+If you are using your own laptop instead of RStudio Cloud:
+
+```{r load-pkgs}
+#| eval: false
+
+# Install the packages for the workshop
+pkgs <- 
+  c("bonsai", "doParallel", "embed", "finetune", "lightgbm", "lme4",
+    "plumber", "probably", "ranger", "rpart", "rpart.plot", "rules",
+    "stacks", "textrecipes", "tidymodels", "vetiver", "remotes")
+
+install.packages(pkgs)
+```
+
+. . .
+
+Check Slack (`#ml-ws-2023`) for an RStudio Cloud link.
+
+
+## Hotel Data `r hexes("tidymodels", "dplyr")`
+
+We'll use [data on hotels](https://www.sciencedirect.com/science/article/pii/S2352340918315191) to predict the cost of a room. 
+
+The [data](https://modeldata.tidymodels.org/reference/hotel_rates.html) are in the modeldata package. We'll sample down the data and refactor some columns: 
+
+:::: {.columns}
+
+::: {.column width="40%"}
+
+```{r}
+#| label: tune-startup
+library(tidymodels)
+
+# Max's usual settings: 
+tidymodels_prefer()
+theme_set(theme_bw())
+options(
+  pillar.advice = FALSE, 
+  pillar.min_title_chars = Inf
+)
+```
+
+:::
+
+::: {.column width="60%"}
+
+```{r}
+#| label: data-import
+set.seed(295)
+hotel_rates <- 
+  hotel_rates %>% 
+  sample_n(5000) %>% 
+  arrange(arrival_date) %>% 
+  select(-arrival_date) %>% 
+  mutate(
+    company = factor(as.character(company)),
+    country = factor(as.character(country)),
+    agent = factor(as.character(agent))
+  )
+```
+
+
+:::
+
+::::
+
+## Hotel date columns
+
+```{r}
+#| labels: hotel-names
+
+names(hotel_rates)
+```
+
+
+## Data splitting strategy
+
+```{r}
+#| label: spending-diagram
+#| fig-align: "center"
+#| out-width: "20%"
+#| echo: false
+
+knitr::include_graphics("images/initial-split.svg")
+```
+
+
+## Data Spending `r hexes("rsample")`
+
+Let's split the data into a training set (75%) and testing set (25%):
+
+```{r}
+#| label: hotel-split
+set.seed(4028)
+hotel_split <- initial_split(hotel_rates, strata = avg_price_per_room)
+
+hotel_train <- training(hotel_split)
+hotel_test <- testing(hotel_split)
+```
+
+
+
+## Your turn {transition="slide-in"}
+
+Let's take some time and investigate the _training data_. The outcome is `avg_price_per_room`. 
+
+Are there any interesting characteristics of the data?
+
+```{r}
+#| label: hotel-investigation-exercise
+#| echo: false
+countdown(minutes = 10, id = "hotel-investigation")
+```
+
+## Our versions
+
+```{r pkg-list, echo = FALSE}
+deps <- 
+  c("bonsai", "doParallel", "embed", "finetune", "lightgbm", "lme4",
+    "plumber", "probably", "ranger", "rpart", "rpart.plot", "rules",
+    "stacks", "textrecipes", "tidymodels", "vetiver", "remotes")
+
+loaded <- purrr::map(deps, ~ library(.x, character.only = TRUE))
+excl <- c("iterators", "emo", "countdown", "stats", "graphics", 
+          "grDevices", "utils", "datasets", "methods", "base", "forcats", 
+          "infer", "foreach", "Matrix", "R6", "parallel", "devtools", "usethis")
+loaded <- loaded[[length(loaded)]]
+loaded <- loaded[!(loaded %in% excl)]
+pkgs <- 
+  sessioninfo::package_info(loaded, dependencies = FALSE) %>% 
+  select(-date)
+df <- tibble::tibble(
+  package = pkgs$package,
+  version = pkgs$ondiskversion,
+  source = ifelse(grepl("CRAN", pkgs$source), "CRAN", pkgs$source)
+) %>% 
+  mutate(
+    source = gsub(" (R 4.2.0)", "", source, fixed = TRUE),
+    source = substr(source, 1, 31),
+    info = paste0(package, " (", version, ", ", source, ")")
+  )
+quarto_info <- paste0("Quarto (", system("quarto --version", intern = TRUE), ")")
+version_info <- knitr::combine_words(c(df$info, quarto_info))
+```
+
+`r version_info`
