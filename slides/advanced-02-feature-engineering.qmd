@@ -475,8 +475,8 @@ countdown(minutes = 5, id = "resample-recipe")
 ```{r}
 #| label: goldout-pred
 # Since we used `save_pred = TRUE`
-lm_val_pred <- collect_predictions(hotel_lm_res)
-lm_val_pred %>% slice(1:7)
+lm_cv_pred <- collect_predictions(hotel_lm_res)
+lm_cv_pred %>% slice(1:7)
 ```
 
 
@@ -583,7 +583,8 @@ hotel_other_rec <-
   step_YeoJohnson(lead_time) %>%
   step_other(agent, threshold = 0.001) %>%
   step_dummy(all_nominal_predictors()) %>%
-  step_zv(all_predictors())
+  step_zv(all_predictors()) %>% 
+  step_spline_natural(arrival_date_num, deg_free = 10)
 ```
 
 ```{r}
@@ -596,6 +597,7 @@ retained_agents <-
   step_other(agent, threshold = 0.001) %>%
   step_dummy(all_nominal_predictors()) %>%
   step_zv(all_predictors()) %>% 
+  step_spline_natural(arrival_date_num, deg_free = 10) %>% 
   prep() %>% 
   tidy(number = 2)
 
@@ -694,7 +696,8 @@ hash_rec <-
   step_dummy_hash(company) %>%
   # Regular indicators for the others
   step_dummy(all_nominal_predictors()) %>% 
-  step_zv(all_predictors())
+  step_zv(all_predictors()) %>% 
+  step_spline_natural(arrival_date_num, deg_free = 10)
 
 hotel_hash_wflow <-
   hotel_lm_wflow %>%
