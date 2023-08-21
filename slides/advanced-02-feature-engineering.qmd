@@ -25,101 +25,6 @@ knitr:
 ```
 
 
-<<<<<<< Updated upstream:slides/advanced-01-feature-engineering.qmd
-::: r-fit-text
-Welcome!
-:::
-
-## Who are you?
-
-- You have used tidymodels packages like recipes, rsample, and parsnip
-
-- You are comfortable with tidyverse syntax (e.g. piping, mutates, pivoting)
-
-- You have some experience with resampling and modeling (e.g., linear regression, random forests, etc.), but we don’t expect you to be an expert in these
-
-## Who are tidymodels?
-
--   Simon Couch
--   Hannah Frick
--   Emil Hvitfeldt
--   Max Kuhn
-
-. . .
-
-Ijeamaka Anyene (Day 1), Edgar Ruiz (Days 1 & 2), Hannah Frick, and Silvia Canelón (Day 2) are TAing this workshop!
-
-## Asking for help
-
-. . .
-
-🟪 "I'm stuck and need help!"
-
-. . .
-
-🟩 "I finished the exercise"
-
-
-## `r emo::ji("eyes")` {.annotation}
-
-![](images/pointing.svg){.absolute top="0" right="0"}
-
-## Tentative plan for this workshop
-
-- Feature engineering
-- Tuning hyperparameters
-- Racing methods
-- Iterative search methods
-
-##  {.center}
-
-### Introduce yourself to your neighbors 👋
-
-<br></br>
-
-Check Slack (`#ml-ws-2023`) for an RStudio Cloud link.
-
-## Let's install some packages
-
-If you are using your own laptop instead of RStudio Cloud:
-
-```{r load-pkgs}
-#| eval: false
-
-# Install the packages for the workshop
-pkgs <- 
-  c("bonsai", "doParallel", "embed", "finetune", "lightgbm", "lme4",
-    "plumber", "probably", "ranger", "rpart", "rpart.plot", "rules",
-    "stacks", "textrecipes", "tidymodels", "vetiver", "remotes")
-
-install.packages(pkgs)
-
-remotes::install_github("tidymodels/modeldatatoo")
-```
-
-```{r}
-#| label: more-setup 
-#| include: false
-
-# remotes::install_github("gadenbuie/countdown")
-# remotes::install_github("hadley/emo")
-library(modeldatatoo)
-library(probably)
-library(countdown)
-library(emo)
-
-library(doParallel)
-
-cores <- parallelly::availableCores(logical = FALSE)
-cl <- makePSOCKcluster(cores)
-registerDoParallel(cl)
-
-ggplot2::theme_set(ggplot2::theme_bw())
-```
-
-
-=======
->>>>>>> Stashed changes:slides/advanced-02-feature-engineering.qmd
 ## Working with our predictors
 
 We might want to modify our predictors columns for a few reasons: 
@@ -196,15 +101,7 @@ These terms are often used interchangeably in the ML community but we want to di
 :::
 
 
-<<<<<<< Updated upstream:slides/advanced-01-feature-engineering.qmd
-## Hotel Data `r hexes("tidymodels", "dplyr")`
-
-We'll use [data on hotels](https://www.sciencedirect.com/science/article/pii/S2352340918315191) to predict the cost of a room. 
-
-The [data](https://modeldatatoo.tidymodels.org/dev/reference/data_hotel_rates.html) are in the modeldatatoo package. We'll sample down the data and refactor some columns: 
-=======
 ## Previously - Setup  `r hexes("tidymodels")`
->>>>>>> Stashed changes:slides/advanced-02-feature-engineering.qmd
 
 :::: {.columns}
 
@@ -496,6 +393,7 @@ Nonlinear transforms like natural splines, and so on!
 -   *use a Yeo-Johnson (YJ) transformation on `lead_time`*
 -   *convert factors to indicator variables*
 -   *remove zero-variance variables*
+-   *add the spline technique shown above*
 
 ```{r}
 #| label: your-turn-make-recipe
@@ -512,7 +410,8 @@ hotel_indicators <-
   recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
   step_YeoJohnson(lead_time) %>%
   step_dummy(all_nominal_predictors()) %>%
-  step_zv(all_predictors())
+  step_zv(all_predictors()) %>% 
+  step_spline_natural(arrival_date_num, deg_free = 10)
 ```
 
 
