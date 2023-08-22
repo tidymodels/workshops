@@ -1,0 +1,75 @@
+---
+title: "Extras - Tuning - Classwork"
+subtitle: "Machine learning with tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Setup
+
+Setup from deck 3
+
+```{r}
+library(tidymodels)
+
+set.seed(123)
+taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
+taxi_train <- training(taxi_split)
+taxi_test <- testing(taxi_split)
+
+set.seed(123)
+taxi_folds <- vfold_cv(taxi_train, v = 10, strata = tip)
+```
+
+## Tag parameters for tuning
+
+```{r}
+rf_spec <- rand_forest(min_n = tune()) %>% 
+  set_mode("classification")
+
+rf_wflow <- workflow(tip ~ ., rf_spec)
+rf_wflow
+```
+
+## Grid search
+
+```{r}
+set.seed(22)
+rf_res <- tune_grid(
+  rf_wflow,
+  taxi_folds,
+  grid = 5
+)
+```
+
+## Compare results
+
+```{r}
+show_best(rf_res)
+
+best_parameter <- select_best(rf_res)
+best_parameter
+```
+
+## The final fit
+
+```{r}
+rf_wflow <- finalize_workflow(rf_wflow, best_parameter)
+
+final_fit <- last_fit(rf_wflow, taxi_split) 
+
+collect_metrics(final_fit)
+```
+
+## Your turn
+
+Modify your model workflow to tune one or more parameters.
+
+Use grid search to find the best parameter(s).
+
+```{r}
+# Your code here!
+
+```
