@@ -25,96 +25,6 @@ knitr:
 ```
 
 
-::: r-fit-text
-Welcome!
-:::
-
-## Who are you?
-
-- You have used tidymodels packages like recipes, rsample, and parsnip
-
-- You are comfortable with tidyverse syntax (e.g. piping, mutates, pivoting)
-
-- You have some experience with resampling and modeling (e.g., linear regression, random forests, etc.), but we don’t expect you to be an expert in these
-
-## Who are tidymodels?
-
--   Simon Couch
--   Hannah Frick
--   Emil Hvitfeldt
--   Max Kuhn
-
-. . .
-
-Ijeamaka Anyene (Day 1), Edgar Ruiz (Days 1 & 2), Hannah Frick, and Silvia Canelón (Day 2) are TAing this workshop!
-
-## Asking for help
-
-. . .
-
-🟪 "I'm stuck and need help!"
-
-. . .
-
-🟩 "I finished the exercise"
-
-
-## `r emo::ji("eyes")` {.annotation}
-
-![](images/pointing.svg){.absolute top="0" right="0"}
-
-## Tentative plan for this workshop
-
-- Feature engineering
-- Tuning hyperparameters
-- Racing methods
-- Iterative search methods
-
-##  {.center}
-
-### Introduce yourself to your neighbors 👋
-
-<br></br>
-
-Check Slack (`#ml-ws-2023`) for an RStudio Cloud link.
-
-## Let's install some packages
-
-If you are using your own laptop instead of RStudio Cloud:
-
-```{r load-pkgs}
-#| eval: false
-
-# Install the packages for the workshop
-pkgs <- 
-  c("bonsai", "doParallel", "embed", "finetune", "lightgbm", "lme4",
-    "plumber", "probably", "ranger", "rpart", "rpart.plot", "rules",
-    "stacks", "textrecipes", "tidymodels", "vetiver", "remotes")
-
-install.packages(pkgs)
-```
-
-```{r}
-#| label: more-setup 
-#| include: false
-
-# remotes::install_github("gadenbuie/countdown")
-# remotes::install_github("hadley/emo")
-library(modeldata)
-library(probably)
-library(countdown)
-library(emo)
-
-library(doParallel)
-
-cores <- parallelly::availableCores(logical = FALSE)
-cl <- makePSOCKcluster(cores)
-registerDoParallel(cl)
-
-ggplot2::theme_set(ggplot2::theme_bw())
-```
-
-
 ## Working with our predictors
 
 We might want to modify our predictors columns for a few reasons: 
@@ -191,19 +101,19 @@ These terms are often used interchangeably in the ML community but we want to di
 :::
 
 
-## Hotel Data `r hexes("tidymodels", "dplyr")`
-
-We'll use [data on hotels](https://www.sciencedirect.com/science/article/pii/S2352340918315191) to predict the cost of a room. 
-
-The [data](https://modeldata.tidymodels.org/reference/hotel_rates.html are in the modeldata package. We'll sample down the data and refactor some columns: 
+## Previously - Setup  `r hexes("tidymodels")`
 
 :::: {.columns}
 
-::: {.column width="40%"}
+::: {.column width="40"}
 
 ```{r}
-#| label: tune-startup
+#| label: recipes-startup
 library(tidymodels)
+library(modeldatatoo)
+
+# Add another package:
+library(textrecipes)
 
 # Max's usual settings: 
 tidymodels_prefer()
@@ -216,16 +126,19 @@ options(
 
 :::
 
-::: {.column width="60%"}
+::: {.column width="60"}
 
 ```{r}
 #| label: data-import
+
+data(hotel_rates)
+
 set.seed(295)
 hotel_rates <- 
   hotel_rates %>% 
   sample_n(5000) %>% 
   arrange(arrival_date) %>% 
-  select(-arrival_date_num, -arrival_date) %>% 
+  select(-arrival_date) %>% 
   mutate(
     company = factor(as.character(company)),
     country = factor(as.character(country)),
@@ -239,45 +152,21 @@ hotel_rates <-
 ::::
 
 
-## Data splitting strategy
-
-```{r}
-#| label: spending-diagram
-#| fig-align: "center"
-#| out-width: "20%"
-#| echo: false
-
-knitr::include_graphics("images/initial-split.svg")
-```
-
-
-## Data Spending `r hexes("rsample")`
-
-Let's split the data into a training set (75%) and testing set (25%):
+## Previously - Data Usage  `r hexes("rsample")`
 
 ```{r}
 #| label: hotel-split
 set.seed(4028)
-hotel_split <-
-  initial_split(hotel_rates, strata = avg_price_per_room)
+hotel_split <- initial_split(hotel_rates, strata = avg_price_per_room)
 
 hotel_train <- training(hotel_split)
 hotel_test <- testing(hotel_split)
 ```
 
+<br>
 
+We'll go from here and create a set of resamples to use for model assessments. 
 
-## Your turn {transition="slide-in"}
-
-Let's take some time and investigate the _training data_. The outcome is `avg_price_per_room`. 
-
-Are there any interesting characteristics of the data?
-
-```{r}
-#| label: hotel-investigation-exercise
-#| echo: false
-countdown(minutes = 10, id = "hotel-investigation")
-```
 
 ## Resampling Strategy
 
@@ -481,7 +370,7 @@ hotel_rec <-
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors()) %>% 
-  step_spline_natural(year_day, deg_free = 10)
+  step_spline_natural(arrival_date_num, deg_free = 10)
 ```
 
 . . . 
@@ -503,6 +392,7 @@ Nonlinear transforms like natural splines, and so on!
 -   *use a Yeo-Johnson (YJ) transformation on `lead_time`*
 -   *convert factors to indicator variables*
 -   *remove zero-variance variables*
+-   *add the spline technique shown above*
 
 ```{r}
 #| label: your-turn-make-recipe
@@ -519,7 +409,8 @@ hotel_indicators <-
   recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
   step_YeoJohnson(lead_time) %>%
   step_dummy(all_nominal_predictors()) %>%
-  step_zv(all_predictors())
+  step_zv(all_predictors()) %>% 
+  step_spline_natural(arrival_date_num, deg_free = 10)
 ```
 
 
@@ -583,8 +474,8 @@ countdown(minutes = 5, id = "resample-recipe")
 ```{r}
 #| label: goldout-pred
 # Since we used `save_pred = TRUE`
-lm_val_pred <- collect_predictions(hotel_lm_res)
-lm_val_pred %>% slice(1:7)
+lm_cv_pred <- collect_predictions(hotel_lm_res)
+lm_cv_pred %>% print(n = 7)
 ```
 
 
@@ -691,7 +582,8 @@ hotel_other_rec <-
   step_YeoJohnson(lead_time) %>%
   step_other(agent, threshold = 0.001) %>%
   step_dummy(all_nominal_predictors()) %>%
-  step_zv(all_predictors())
+  step_zv(all_predictors()) %>% 
+  step_spline_natural(arrival_date_num, deg_free = 10)
 ```
 
 ```{r}
@@ -704,6 +596,7 @@ retained_agents <-
   step_other(agent, threshold = 0.001) %>%
   step_dummy(all_nominal_predictors()) %>%
   step_zv(all_predictors()) %>% 
+  step_spline_natural(arrival_date_num, deg_free = 10) %>% 
   prep() %>% 
   tidy(number = 2)
 
@@ -802,7 +695,8 @@ hash_rec <-
   step_dummy_hash(company) %>%
   # Regular indicators for the others
   step_dummy(all_nominal_predictors()) %>% 
-  step_zv(all_predictors())
+  step_zv(all_predictors()) %>% 
+  step_spline_natural(arrival_date_num, deg_free = 10)
 
 hotel_hash_wflow <-
   hotel_lm_wflow %>%
@@ -871,11 +765,3 @@ bake(hash_rec_fit, hotel_train %>% slice(1:3), contains("_agent_"))
 . . .
 
 -   The [order](https://recipes.tidymodels.org/articles/Ordering.html) of the steps matters.
-
-```{r}
-#| label: teardown
-#| include: false
-
-parallel::stopCluster(cl)
-
-```
