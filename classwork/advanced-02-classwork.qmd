@@ -1,5 +1,5 @@
 ---
-title: "2 - Tuning Hyperparameters - Classwork"
+title: "1 - Feature Engineering - Classwork"
 subtitle: "Advanced tidymodels"
 editor_options: 
   chunk_output_type: console
@@ -30,7 +30,7 @@ hotel_rates <-
   hotel_rates %>% 
   sample_n(5000) %>% 
   arrange(arrival_date) %>% 
-  select(-arrival_date_num, -arrival_date) %>% 
+  select(-arrival_date) %>% 
   mutate(
     company = factor(as.character(company)),
     country = factor(as.character(country)),
@@ -43,9 +43,189 @@ hotel_split <-
 
 hotel_train <- training(hotel_split)
 hotel_test <- testing(hotel_split)
+```
 
+## Resampling Strategy
+
+```{r}
 set.seed(472)
 hotel_rs <- vfold_cv(hotel_train, strata = avg_price_per_room)
+hotel_rs
+```
+
+## A first recipe
+
+```{r}
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_train)
+
+summary(hotel_rec)
+```
+
+## Your turn
+
+What do you think are in the `type` vectors for the `lead_time` and `country` columns?
+
+```{r}
+# Your code here!
+
+```
+
+## A base recipe
+
+```{r}
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
+  # create indicator variables
+  step_dummy(all_nominal_predictors()) %>% 
+  # filter out constant columns
+  step_zv(all_predictors()) %>% 
+  # normalize
+  step_normalize(all_numeric_predictors())
+```
+
+## Different options to reduce correlation
+
+```{r}
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_corr(all_numeric_predictors(), threshold = 0.9)
+
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_pca(all_numeric_predictors())
+
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  embed::step_umap(all_numeric_predictors(), outcome = vars(avg_price_per_room))
+```
+
+## Other possible steps
+
+For example, natural splines:
+
+```{r}
+hotel_rec <- 
+  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_numeric_predictors()) %>% 
+  step_spline_natural(arrival_date_num, deg_free = 10)
+```
+
+## Your turn 
+
+Create a `recipe()` for the hotel data to:
+
+- use a Yeo-Johnson (YJ) transformation on `lead_time`
+- convert factors to indicator variables
+- remove zero-variance variables
+
+```{r}
+# Your code here!
+
+```
+
+## Minimal recipe for the hotel data
+
+```{r}
+hotel_indicators <-
+  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
+  step_YeoJohnson(lead_time) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors()) %>% 
+  step_spline_natural(arrival_date_num, deg_free = 10)
+```
+
+
+## Measuring Performance
+
+We'll compute two measures, mean absolute error (MAE) and the coefficient of determination (a.k.a $R^2$), and focus on the MAE for parameter optimization. 
+
+```{r}
+reg_metrics <- metric_set(mae, rsq)
+```
+
+```{r}
+set.seed(9)
+
+hotel_lm_wflow <-
+  workflow() %>%
+  add_recipe(hotel_indicators) %>%
+  add_model(linear_reg())
+ 
+ctrl <- control_resamples(save_pred = TRUE)
+hotel_lm_res <-
+  hotel_lm_wflow %>%
+  fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
+
+collect_metrics(hotel_lm_res)
+```
+
+## Your turn
+
+Use `fit_resamples()` to fit your workflow with a recipe.
+
+Collect the predictions from the results.
+
+```{r}
+# Your code here!
+
+```
+
+## Holdout predictions
+
+```{r}
+# Since we used `save_pred = TRUE`
+lm_cv_pred <- collect_predictions(hotel_lm_res)
+lm_cv_pred %>% slice(1:7)
+```
+
+## Calibration Plot 
+
+```{r}
+library(probably)
+
+cal_plot_regression(hotel_lm_res, alpha = 1 / 5)
+```
+
+## What do we do with the agent and company data? 
+
+Collapsing factor levels: 
+
+```{r}
+hotel_other_rec <-
+  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
+  step_YeoJohnson(lead_time) %>%
+  step_other(agent, threshold = 0.001) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors()) %>% 
+  step_spline_natural(arrival_date_num, deg_free = 10)
+
+hotel_other_wflow <-
+  hotel_lm_wflow %>%
+  update_recipe(hotel_other_rec)
+
+hotel_other_res <-
+  hotel_other_wflow %>%
+  fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
+
+collect_metrics(hotel_other_res)
+```
+
+Feature Hashing:
+
+```{r}
+library(textrecipes)
 
 hash_rec <-
   recipe(avg_price_per_room ~ ., data = hotel_train) %>%
@@ -55,181 +235,29 @@ hash_rec <-
   step_dummy_hash(company) %>%
   # Regular indicators for the others
   step_dummy(all_nominal_predictors()) %>% 
-  step_zv(all_predictors())
+  step_zv(all_predictors()) %>% 
+  step_spline_natural(arrival_date_num, deg_free = 10)
+
+hotel_hash_wflow <-
+  hotel_lm_wflow %>%
+  update_recipe(hash_rec)
+
+hotel_hash_res <-
+  hotel_hash_wflow %>%
+  fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
+
+collect_metrics(hotel_hash_res)
 ```
 
-## Tagging parameters for tuning
+## Debugging a recipe
 
 ```{r}
-hash_rec <-
-  recipe(avg_price_per_room ~ ., data = hotel_train) %>%
-  step_YeoJohnson(lead_time) %>%
-  step_dummy_hash(agent,   num_terms = tune("agent hash")) %>%
-  step_dummy_hash(company, num_terms = tune("company hash")) %>%
-  step_zv(all_predictors())
-```
+# Estimate the transformation coefficients
+hash_rec_fit <- prep(hash_rec)
 
-```{r}
-library(bonsai)
+# Get the transformation coefficient
+tidy(hash_rec_fit, number = 1)
 
-lgbm_spec <- 
-  boost_tree(trees = tune(), learn_rate = tune()) %>% 
-  set_mode("regression") %>% 
-  set_engine("lightgbm")
-
-lgbm_wflow <- workflow(hash_rec, lgbm_spec)
-```
-
-## Create a grid 
-
-```{r}
-set.seed(12)
-grid <- 
-  lgbm_wflow %>% 
-  extract_parameter_set_dials() %>% 
-  grid_latin_hypercube(size = 25)
-
-grid
-```
-
-## Your turn 
-
-Create a grid for our tunable workflow.
-
-Try creating a regular grid.
-
-```{r}
-# Your code here!
-
-```
-
-## Your turn 
-
-What advantage would a regular grid have? 
-
-Discuss with your neighbor!
-
-## Update parameter ranges 
-
-```{r} 
-lgbm_param <- 
-  lgbm_wflow %>% 
-  extract_parameter_set_dials() %>% 
-  update(trees = trees(c(1L, 100L)),
-         learn_rate = learn_rate(c(-5, -1)))
-
-set.seed(712)
-grid <- 
-  lgbm_param %>% 
-  grid_latin_hypercube(size = 25)
-
-grid
-```
-
-```{r}
-grid %>% 
-  ggplot(aes(trees, learn_rate)) +
-  geom_point(size = 4) +
-  scale_y_log10()
-```
-
-## Grid Search
-
-Let's take our previous model and tune more parameters:
-
-```{r} 
-lgbm_spec <- 
-  boost_tree(trees = tune(), learn_rate = tune(),  min_n = tune()) %>% 
-  set_mode("regression") %>% 
-  set_engine("lightgbm")
-
-lgbm_wflow <- workflow(hash_rec, lgbm_spec)
-
-# Update the feature hash ranges (log-2 units)
-lgbm_param <-
-  lgbm_wflow %>%
-  extract_parameter_set_dials() %>%
-  update(`agent hash`   = num_hash(c(3, 8)),
-         `company hash` = num_hash(c(3, 8)))
-```
-
-Run the grid search:
-
-```{r} 
-set.seed(9)
-ctrl <- control_grid(save_pred = TRUE)
-
-lgbm_res <-
-  lgbm_wflow %>%
-  tune_grid(
-    resamples = hotel_rs,
-    grid = 25,
-    # The options below are not required by default
-    param_info = lgbm_param, 
-    control = ctrl,
-    metrics = reg_metrics
-  )
-
-lgbm_res 
-```
-
-Inspect results:
-
-```{r}
-autoplot(lgbm_res)
-
-collect_metrics(lgbm_res)
-collect_metrics(lgbm_res, summarize = FALSE)
-```
-
-## Choose a parameter combination
-
-```{r}
-show_best(lgbm_res, metric = "rsq")
-
-lgbm_best <- select_best(lgbm_res, metric = "mae")
-lgbm_best
-```
-
-## Checking Calibration
-
-```{r}
-library(probably)
-
-lgbm_res %>%
-  collect_predictions(
-    parameters = lgbm_best
-  ) %>%
-  cal_plot_regression(
-    truth = avg_price_per_room,
-    estimate = .pred,
-    alpha = 1 / 3
-  )
-```
-
-## Running in parallel
-
-```{r}
-#| eval: false
-
-cores <- parallelly::availableCores(logical = FALSE)
-cl <- parallel::makePSOCKcluster(cores)
-doParallel::registerDoParallel(cl)
-
-# Now call `tune_grid()`!
-
-# Shut it down with:
-foreach::registerDoSEQ()
-parallel::stopCluster(cl)
-```
-
-## Your turn
-
-Try early stopping: Set `trees = 2000` and tune the `stop_iter` parameter!
-
-Note that you will need to regenerate `lgbm_param` with your new workflow!
-
-```{r}
-# Your code here!
-
+# Get the processed data
+bake(hash_rec_fit, hotel_train %>% slice(1:3), contains("_agent_"))
 ```

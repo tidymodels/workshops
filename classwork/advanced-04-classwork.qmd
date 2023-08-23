@@ -1,5 +1,5 @@
 ---
-title: "4 - Iterative Search - Classwork"
+title: "3 - Grid Search via Racing - Classwork"
 subtitle: "Advanced tidymodels"
 editor_options: 
   chunk_output_type: console
@@ -15,7 +15,6 @@ Setup from deck 3
 library(tidymodels)
 library(textrecipes)
 library(bonsai)
-library(probably)
 
 # Max's usual settings: 
 tidymodels_prefer()
@@ -25,12 +24,14 @@ options(
   pillar.min_title_chars = Inf
 )
 
+reg_metrics <- metric_set(mae, rsq)
+
 set.seed(295)
 hotel_rates <- 
   hotel_rates %>% 
   sample_n(5000) %>% 
   arrange(arrival_date) %>% 
-  select(-arrival_date_num, -arrival_date) %>% 
+  select(-arrival_date) %>% 
   mutate(
     company = factor(as.character(company)),
     country = factor(as.character(country)),
@@ -68,116 +69,44 @@ lgbm_param <-
          `company hash` = num_hash(c(3, 8)))
 ```
 
-## Your turn
+## Racing 
 
-Your GP makes predictions on two new candidate tuning parameters. We want to minimize MAE.
+```{r } 
+# Let's use a larger grid
+set.seed(8945)
+lgbm_grid <- 
+  lgbm_param %>% 
+  grid_latin_hypercube(size = 50)
 
-Which should we choose?
+library(finetune)
 
-```{r}
-set.seed(28383)
-num_points <- 5000
-exerc_data <- 
-  tibble(MAE = c(rnorm(num_points, 10, 2), rnorm(num_points, 13, 1 / 2)),
-         `Choose:` = rep(paste("candidate", 1:2), each = num_points))
-
-exerc_data %>% 
-  ggplot(aes(MAE, col = `Choose:`)) + 
-  geom_line(stat = "density", adjust = 1.25, trim = TRUE, linewidth = 1) +
-  theme(legend.position = "top")
-```
-
-## An Initial Grid
-
-```{r} 
-reg_metrics <- metric_set(mae, rsq)
-
-set.seed(12)
-init_res <-
+set.seed(9)
+lgbm_race_res <-
   lgbm_wflow %>%
-  tune_grid(
+  tune_race_anova(
     resamples = hotel_rs,
-    grid = nrow(lgbm_param) + 2,
-    param_info = lgbm_param,
+    grid = lgbm_grid, 
     metrics = reg_metrics
   )
-
-show_best(init_res, metric = "mae")
 ```
-
-## Bayesian Optimization 
-
-```{r} 
-set.seed(15)
-lgbm_bayes_res <-
-  lgbm_wflow %>%
-  tune_bayes(
-    resamples = hotel_rs,
-    initial = init_res,     # <- initial results
-    iter = 20,
-    param_info = lgbm_param,
-    metrics = reg_metrics
-  )
-
-show_best(lgbm_bayes_res, metric = "mae")
-```
-
-Plotting results
 
 ```{r}
-autoplot(lgbm_bayes_res, metric = "mae")
-autoplot(lgbm_bayes_res, metric = "mae", type = "parameters")
-autoplot(lgbm_bayes_res, metric = "mae", type = "performance")
+show_best(lgbm_race_res, metric = "mae")
 ```
+
+```{r}
+plot_race(lgbm_race_res) + 
+  scale_x_continuous(breaks = pretty_breaks())
+```
+
 
 ## Your turn
 
-Let's try a different acquisition function: `conf_bound(kappa)`.
+Run `tune_race_anova()` with a different seed.
 
-We'll use the `objective` argument to set it.
-
-Choose your own `kappa` value:
-
-- Larger values will explore the space more.
-- "Large" values are usually less than one.
+Did you get the same or similar results?
 
 ```{r}
 # Your code here!
 
-```
-
-## Finalize the workflow
-
-```{r}
-best_param <- select_best(lgbm_bayes_res, metric = "mae")
-
-final_wflow <- 
-  lgbm_wflow %>% 
-  finalize_workflow(best_param)
-
-final_wflow
-```
-
-## The Final Fit
-
-```{r}
-set.seed(3893)
-final_res <- final_wflow %>% last_fit(hotel_split, metrics = reg_metrics)
-
-final_res
-```
-
-## Test Set Results
-
-```{r}
-final_res %>% 
-  collect_predictions() %>% 
-  cal_plot_regression(
-    truth = avg_price_per_room, 
-    estimate = .pred, 
-    alpha = 1 / 4)
-```
-
-```{r}
-final_res %>% collect_metrics()
 ```
