@@ -202,19 +202,45 @@ countdown(minutes = 5, id = "explore-tree-spec")
 * Logistic regression
 * Decision trees
 
+```{r sim-model-viz}
+#| echo: false
+
+set.seed(1)
+dat <- sim_logistic(500, ~ .1 + 2 * A)
+dat$bin <- cut(dat$A, breaks = c(seq(-3, 3, by = 1/2)), include.lowest = TRUE)
+bin_midpoints <- data.frame(A = seq(-3, 3, by = 1/2) + 0.25)
+
+rates <- 
+  dat %>% 
+  nest(.by = bin) %>% 
+  mutate(
+    probs = map(data, ~ binom.test(sum(.x$class == "one"), nrow(.x))),
+    probs = map(probs, ~ tidy(.x))
+  ) %>% 
+  select(-data) %>% 
+  unnest(cols = probs) %>% 
+  arrange(bin) %>% 
+  mutate(A = seq(-3, 3, by = 1/2) + 0.25) 
+
+plot_rates <- left_join(rates, bin_midpoints, by = join_by(A)) %>% 
+  filter(-2.5 < A, A < 3) %>% 
+  ggplot() + 
+  geom_point(aes(A, estimate)) +
+  geom_errorbar(aes(A, estimate, ymin = conf.low, ymax = conf.high), width = .25)  +
+  xlim(c(-3, 3.5)) +
+  theme_bw(base_size = 18)
+```
+
 ## Logistic regression
 
 ::: columns
 ::: {.column width="60%"}
-```{r plot-taxi}
+```{r plot-rates}
 #| echo: false
 #| fig.width: 8
 #| fig.height: 7
-taxi_test %>% 
-  ggplot() +
-  geom_histogram(aes(distance, fill = tip), position = "fill") +
-  labs(y = "") +
-  theme_bw(base_size = 18)
+
+plot_rates
 ```
 :::
 
@@ -230,17 +256,13 @@ taxi_test %>%
 #| echo: false
 #| fig.width: 8
 #| fig.height: 7
-logistic_preds <- 
-  logistic_reg() %>%
-  fit(tip ~ distance, data = taxi_train) %>%
-  augment(new_data = taxi_test) 
 
-logistic_preds %>% 
-  ggplot() +
-  geom_histogram(aes(distance, fill = tip), position = "fill") +
-  geom_line(aes(x = distance, y = .pred_yes), linewidth = 2, alpha = 0.8, color = data_color) +
-  labs(y = "") +
-  theme_bw(base_size = 18)
+logistic_preds <- logistic_reg() %>% 
+  fit(class ~ A, data = dat) %>% 
+  augment(new_data = bin_midpoints) 
+
+plot_rates +
+  geom_line(aes(A, .pred_one, color = I(test_color)), linewidth = 2, alpha = 0.8, data = logistic_preds)
 ```
 :::
 
@@ -256,12 +278,9 @@ logistic_preds %>%
 #| echo: false
 #| fig.width: 8
 #| fig.height: 7
-logistic_preds %>% 
-  ggplot() +
-  geom_histogram(aes(distance, fill = tip), position = "fill") +
-  geom_line(aes(x = distance, y = .pred_yes), linewidth = 2, alpha = 0.8, color = data_color) +
-  labs(y = "") +
-  theme_bw(base_size = 18)
+
+plot_rates +
+  geom_line(aes(A, .pred_one, col = I(test_color)), linewidth = 2, alpha = 0.8, data = logistic_preds)
 ```
 :::
 
@@ -269,7 +288,7 @@ logistic_preds %>%
 
 -   Logit of outcome probability modeled as linear combination of predictors:
 
-$log(\frac{p}{1 - p}) = \beta_0 + \beta_1\cdot \text{distance}$
+$log(\frac{p}{1 - p}) = \beta_0 + \beta_1\cdot \text{A}$
 
 -   Find a sigmoid line that separates the two classes
 
@@ -285,13 +304,11 @@ $log(\frac{p}{1 - p}) = \beta_0 + \beta_1\cdot \text{distance}$
 #| fig.width: 8
 #| fig.height: 7
 
-tree_fit <- 
-  decision_tree(cost_complexity = 0.1, mode = "classification") %>%
-  fit(tip ~ distance, data = taxi_train)
+tree_fit <- decision_tree(mode = "classification") %>% 
+  #decision_tree(cost_complexity = 0.003, min_n = 50, mode = "classification") %>% 
+  fit(class ~ A, data = mutate(dat, class = forcats::fct_rev(class)))
 
-tree_preds <- 
-  tree_fit %>%
-  augment(new_data = taxi_test) 
+tree_preds <- augment(tree_fit, new_data = bin_midpoints)
 ```
 
 ```{r plot-tree-fit}
@@ -358,12 +375,8 @@ tree_fit %>%
 #| fig.width: 8
 #| fig.height: 7
 
-tree_preds %>% 
-  ggplot() +
-  geom_histogram(aes(distance, fill = tip), position = "fill") +
-  geom_line(aes(x = distance, y = .pred_yes), linewidth = 2, alpha = 0.8, color = data_color) +
-  labs(y = "") +
-  theme_bw(base_size = 18)
+plot_rates +
+  geom_step(aes(A, .pred_one, col = I(test_color)), linewidth = 2, alpha = 0.8, data = tree_preds)
 ```
 :::
 :::
@@ -378,12 +391,8 @@ tree_preds %>%
 #| fig.width: 8
 #| fig.height: 7
 
-logistic_preds %>% 
-  ggplot() +
-  geom_histogram(aes(distance, fill = tip), position = "fill") +
-  geom_line(aes(x = distance, y = .pred_yes), linewidth = 2, alpha = 0.8, color = data_color) +
-  labs(y = "") +
-  theme_bw(base_size = 18)
+plot_rates +
+  geom_line(aes(A, .pred_one, col = I(test_color)), linewidth = 2, alpha = 0.8, data = logistic_preds)
 ```
 :::
 
@@ -394,12 +403,8 @@ logistic_preds %>%
 #| fig.width: 8
 #| fig.height: 7
 
-tree_preds %>% 
-  ggplot() +
-  geom_histogram(aes(distance, fill = tip), position = "fill") +
-  geom_line(aes(x = distance, y = .pred_yes), linewidth = 2, alpha = 0.8, color = data_color) +
-  labs(y = "") +
-  theme_bw(base_size = 18)
+plot_rates +
+  geom_step(aes(A, .pred_one, col = I(test_color)), linewidth = 2, alpha = 0.8, data = tree_preds)
 ```
 :::
 :::
