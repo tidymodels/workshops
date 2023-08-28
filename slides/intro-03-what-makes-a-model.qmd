@@ -181,40 +181,66 @@ All available models are listed at <https://www.tidymodels.org/find/parsnip/>
 
 *Run the `tree_spec` chunk in your `.qmd`.*
 
-*Edit this code to use a logistic regression model.*
+*Edit this code to use a logistic regression model.*<br></br>
+
+::: r-fit-text
+All available models are listed at <https://www.tidymodels.org/find/parsnip/>
+:::
+
+<br></br>
 
 *Extension/Challenge: Edit this code to use a different model. For example, try using a conditional inference tree as implemented in the partykit package by changing the engine - or try an entirely different model type!*
-
 
 ```{r ex-explore-tree-spec}
 #| echo: false
 countdown(minutes = 5, id = "explore-tree-spec")
 ```
 
-<br></br>
-
-::: r-fit-text
-All available models are listed at <https://www.tidymodels.org/find/parsnip/>
-:::
 
 ## Models we'll be using today
 
 * Logistic regression
 * Decision trees
 
+```{r sim-model-viz}
+#| echo: false
+
+set.seed(1)
+dat <- sim_logistic(500, ~ .1 + 2 * A)
+dat$bin <- cut(dat$A, breaks = c(seq(-3, 3, by = 1/2)), include.lowest = TRUE)
+bin_midpoints <- data.frame(A = seq(-3, 3, by = 1/2) + 0.25)
+
+rates <- 
+  dat %>% 
+  nest(.by = bin) %>% 
+  mutate(
+    probs = map(data, ~ binom.test(sum(.x$class == "one"), nrow(.x))),
+    probs = map(probs, ~ tidy(.x))
+  ) %>% 
+  select(-data) %>% 
+  unnest(cols = probs) %>% 
+  arrange(bin) %>% 
+  mutate(A = seq(-3, 3, by = 1/2) + 0.25) 
+
+plot_rates <- left_join(rates, bin_midpoints, by = join_by(A)) %>% 
+  filter(-2.5 < A, A < 3) %>% 
+  ggplot() + 
+  geom_point(aes(A, estimate)) +
+  geom_errorbar(aes(A, estimate, ymin = conf.low, ymax = conf.high), width = .25)  +
+  xlim(c(-3, 3.5)) +
+  theme_bw(base_size = 18)
+```
+
 ## Logistic regression
 
 ::: columns
 ::: {.column width="60%"}
-```{r plot-taxi}
+```{r plot-rates}
 #| echo: false
 #| fig.width: 8
 #| fig.height: 7
-taxi_test %>% 
-  ggplot() +
-  geom_histogram(aes(distance, fill = tip), position = "fill") +
-  labs(y = "") +
-  theme_bw(base_size = 18)
+
+plot_rates
 ```
 :::
 
@@ -230,17 +256,13 @@ taxi_test %>%
 #| echo: false
 #| fig.width: 8
 #| fig.height: 7
-logistic_preds <- 
-  logistic_reg() %>%
-  fit(tip ~ distance, data = taxi_train) %>%
-  augment(new_data = taxi_test) 
 
-logistic_preds %>% 
-  ggplot() +
-  geom_histogram(aes(distance, fill = tip), position = "fill") +
-  geom_line(aes(x = distance, y = .pred_yes), linewidth = 2, alpha = 0.8, color = data_color) +
-  labs(y = "") +
-  theme_bw(base_size = 18)
+logistic_preds <- logistic_reg() %>% 
+  fit(class ~ A, data = dat) %>% 
+  augment(new_data = bin_midpoints) 
+
+plot_rates +
+  geom_line(aes(A, .pred_one, color = I(test_color)), linewidth = 2, alpha = 0.8, data = logistic_preds)
 ```
 :::
 
@@ -256,12 +278,9 @@ logistic_preds %>%
 #| echo: false
 #| fig.width: 8
 #| fig.height: 7
-logistic_preds %>% 
-  ggplot() +
-  geom_histogram(aes(distance, fill = tip), position = "fill") +
-  geom_line(aes(x = distance, y = .pred_yes), linewidth = 2, alpha = 0.8, color = data_color) +
-  labs(y = "") +
-  theme_bw(base_size = 18)
+
+plot_rates +
+  geom_line(aes(A, .pred_one, col = I(test_color)), linewidth = 2, alpha = 0.8, data = logistic_preds)
 ```
 :::
 
@@ -269,7 +288,7 @@ logistic_preds %>%
 
 -   Logit of outcome probability modeled as linear combination of predictors:
 
-$log(\frac{p}{1 - p}) = \beta_0 + \beta_1\cdot \text{distance}$
+$log(\frac{p}{1 - p}) = \beta_0 + \beta_1\cdot \text{A}$
 
 -   Find a sigmoid line that separates the two classes
 
@@ -285,20 +304,18 @@ $log(\frac{p}{1 - p}) = \beta_0 + \beta_1\cdot \text{distance}$
 #| fig.width: 8
 #| fig.height: 7
 
-tree_fit <- 
-  decision_tree(cost_complexity = 0.1, mode = "classification") %>%
-  fit(tip ~ distance, data = taxi_train)
+tree_fit <- decision_tree(mode = "classification") %>% 
+  fit(class ~ A, data = mutate(dat, class = forcats::fct_rev(class)))
 
-tree_preds <- 
-  tree_fit %>%
-  augment(new_data = taxi_test) 
+tree_preds <- augment(tree_fit, new_data = bin_midpoints)
 ```
 
 ```{r plot-tree-fit}
 #| echo: false
-#| fig.width: 8
-#| fig.height: 7
+#| fig.width: 4
+#| fig.height: 3.5
 #| fig-align: center
+
 library(rpart.plot)
 tree_fit %>%
   extract_fit_engine() %>%
@@ -317,9 +334,10 @@ tree_fit %>%
 ::: {.column width="50%"}
 ```{r plot-tree-fit-2}
 #| echo: false
-#| fig.width: 8
-#| fig.height: 7
+#| fig.width: 4
+#| fig.height: 3.5
 #| fig-align: center
+
 library(rpart.plot)
 tree_fit %>%
   extract_fit_engine() %>%
@@ -342,9 +360,10 @@ tree_fit %>%
 ::: {.column width="50%"}
 ```{r plot-tree-fit-3}
 #| echo: false
-#| fig.width: 8
-#| fig.height: 7
+#| fig.width: 4
+#| fig.height: 3.5
 #| fig-align: center
+
 library(rpart.plot)
 tree_fit %>%
   extract_fit_engine() %>%
@@ -358,12 +377,8 @@ tree_fit %>%
 #| fig.width: 8
 #| fig.height: 7
 
-tree_preds %>% 
-  ggplot() +
-  geom_histogram(aes(distance, fill = tip), position = "fill") +
-  geom_line(aes(x = distance, y = .pred_yes), linewidth = 2, alpha = 0.8, color = data_color) +
-  labs(y = "") +
-  theme_bw(base_size = 18)
+plot_rates +
+  geom_step(aes(A, .pred_one, col = I(test_color)), linewidth = 2, alpha = 0.8, data = tree_preds)
 ```
 :::
 :::
@@ -375,15 +390,11 @@ tree_preds %>%
 ### Logistic regression
 ```{r plot-logistic-reg-3}
 #| echo: false
-#| fig.width: 8
-#| fig.height: 7
+#| fig.width: 7
+#| fig.height: 6
 
-logistic_preds %>% 
-  ggplot() +
-  geom_histogram(aes(distance, fill = tip), position = "fill") +
-  geom_line(aes(x = distance, y = .pred_yes), linewidth = 2, alpha = 0.8, color = data_color) +
-  labs(y = "") +
-  theme_bw(base_size = 18)
+plot_rates +
+  geom_line(aes(A, .pred_one, col = I(test_color)), linewidth = 2, alpha = 0.8, data = logistic_preds)
 ```
 :::
 
@@ -391,15 +402,11 @@ logistic_preds %>%
 ### Decision trees
 ```{r plot-tree-preds-2}
 #| echo: false
-#| fig.width: 8
-#| fig.height: 7
+#| fig.width: 7
+#| fig.height: 6
 
-tree_preds %>% 
-  ggplot() +
-  geom_histogram(aes(distance, fill = tip), position = "fill") +
-  geom_line(aes(x = distance, y = .pred_yes), linewidth = 2, alpha = 0.8, color = data_color) +
-  labs(y = "") +
-  theme_bw(base_size = 18)
+plot_rates +
+  geom_step(aes(A, .pred_one, col = I(test_color)), linewidth = 2, alpha = 0.8, data = tree_preds)
 ```
 :::
 :::
@@ -459,7 +466,7 @@ Two ways workflows handle levels better than base R:
 
 ```{r tree-spec}
 tree_spec <-
-  decision_tree() %>% 
+  decision_tree(cost_complexity = 0.002) %>% 
   set_mode("classification")
 
 tree_spec %>% 
@@ -470,7 +477,7 @@ tree_spec %>%
 
 ```{r tree-wflow}
 tree_spec <-
-  decision_tree() %>% 
+  decision_tree(cost_complexity = 0.002) %>% 
   set_mode("classification")
 
 workflow() %>%
@@ -483,7 +490,7 @@ workflow() %>%
 
 ```{r tree-wflow-fit}
 tree_spec <-
-  decision_tree() %>% 
+  decision_tree(cost_complexity = 0.002) %>% 
   set_mode("classification")
 
 workflow(tip ~ ., tree_spec) %>% 
@@ -509,7 +516,7 @@ How do you use your new `tree_fit` model?
 
 ```{r tree-wflow-fit-2}
 tree_spec <-
-  decision_tree() %>% 
+  decision_tree(cost_complexity = 0.002) %>% 
   set_mode("classification")
 
 tree_fit <-
@@ -619,6 +626,8 @@ Learn more at <https://www.tmwr.org/explain.html>
 ## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+<br>
 
 *Extract the model engine object from your fitted workflow and check it out.*
 
