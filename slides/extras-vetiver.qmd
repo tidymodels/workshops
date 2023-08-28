@@ -1,0 +1,83 @@
+---
+title: "Extras - Model deployment"
+subtitle: "Advanced tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+# Deploy your model `r hexes("vetiver")`
+
+## {background-image="https://vetiver.rstudio.com/images/ml_ops_cycle.png" background-size="contain"}
+
+```{r setup-previous}
+#| echo: false
+library(countdown)
+library(tidymodels)
+
+set.seed(123)
+taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
+taxi_train <- training(taxi_split)
+taxi_test <- testing(taxi_split)
+
+tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
+tree_fit <- workflow(tip ~ ., tree_spec) %>% fit(taxi_train)
+```
+
+## Deploying a model `r hexes("vetiver")`
+
+How do you use your model in **production**?
+
+```{r tree-vetiver}
+library(vetiver)
+v <- vetiver_model(tree_fit, "taxi")
+v
+```
+
+Learn more at <https://vetiver.rstudio.com>
+
+## Deploy your model `r hexes("vetiver")`
+
+How do you use your model in **production**?
+
+```{r tree-api}
+library(plumber)
+pr() %>%
+  vetiver_api(v)
+```
+
+Learn more at <https://vetiver.rstudio.com>
+
+:::notes
+Live-code making a prediction
+:::
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Run the `vetiver` chunk in your `.qmd`.*
+
+*Check out the automated visual documentation.*
+
+```{r ex-vetiver}
+#| echo: false
+countdown(minutes = 5, id = "vetiver")
+```
