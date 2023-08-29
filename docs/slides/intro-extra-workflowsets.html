@@ -11,7 +11,7 @@
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
   <meta name="generator" content="quarto-1.4.104">
 
-  <title>Machine learning with tidymodels - 3 - Grid Search via Racing</title>
+  <title>Machine learning with tidymodels - Extras - workflowsets</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -386,11 +386,11 @@
   </style>
   <link href="../site_libs/countdown-0.4.0/countdown.css" rel="stylesheet">
   <script src="../site_libs/countdown-0.4.0/countdown.js"></script>
-<meta property="og:title" content="Machine learning with tidymodels - 3 - Grid Search via Racing">
-<meta property="og:description" content="Advanced tidymodels">
+<meta property="og:title" content="Machine learning with tidymodels - Extras - workflowsets">
+<meta property="og:description" content="Introduction to tidymodels">
 <meta property="og:site-name" content="Machine learning with tidymodels">
-<meta name="twitter:title" content="Machine learning with tidymodels - 3 - Grid Search via Racing">
-<meta name="twitter:description" content="Advanced tidymodels">
+<meta name="twitter:title" content="Machine learning with tidymodels - Extras - workflowsets">
+<meta name="twitter:description" content="Introduction to tidymodels">
 <meta name="twitter:card" content="summary">
 </head>
 <body class="quarto-light">
@@ -399,227 +399,68 @@
     <div class="slides">
 
 <section id="title-slide" class="quarto-title-block center">
-  <h1 class="title">3 - Grid Search via Racing</h1>
-  <p class="subtitle">Advanced tidymodels</p>
+  <h1 class="title">Extras - workflowsets</h1>
+  <p class="subtitle">Introduction to tidymodels</p>
 
 <div class="quarto-title-authors">
 </div>
 
 </section>
-<section id="previously---setup" class="slide level2">
-<h2>Previously - Setup <img data-src="hexes/tidymodels.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
-<div class="columns">
-<div class="column" style="width:40%;">
-<div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">library</span>(tidymodels)</span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="fu">library</span>(modeldatatoo)</span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="fu">library</span>(textrecipes)</span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="fu">library</span>(bonsai)</span>
-<span id="cb1-5"><a href="#cb1-5"></a></span>
-<span id="cb1-6"><a href="#cb1-6"></a><span class="co"># Max's usual settings: </span></span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="fu">tidymodels_prefer</span>()</span>
-<span id="cb1-8"><a href="#cb1-8"></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
-<span id="cb1-9"><a href="#cb1-9"></a><span class="fu">options</span>(</span>
-<span id="cb1-10"><a href="#cb1-10"></a>  <span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, </span>
-<span id="cb1-11"><a href="#cb1-11"></a>  <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span></span>
-<span id="cb1-12"><a href="#cb1-12"></a>)</span>
-<span id="cb1-13"><a href="#cb1-13"></a></span>
-<span id="cb1-14"><a href="#cb1-14"></a>reg_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mae, rsq)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</div><div class="column" style="width:60%;">
-<div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">set.seed</span>(<span class="dv">295</span>)</span>
-<span id="cb2-2"><a href="#cb2-2"></a>hotel_rates <span class="ot">&lt;-</span> </span>
-<span id="cb2-3"><a href="#cb2-3"></a>  <span class="fu">data_hotel_rates</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb2-4"><a href="#cb2-4"></a>  <span class="fu">sample_n</span>(<span class="dv">5000</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-5"><a href="#cb2-5"></a>  <span class="fu">arrange</span>(arrival_date) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-6"><a href="#cb2-6"></a>  <span class="fu">select</span>(<span class="sc">-</span>arrival_date_num, <span class="sc">-</span>arrival_date) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-7"><a href="#cb2-7"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb2-8"><a href="#cb2-8"></a>    <span class="at">company =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(company)),</span>
-<span id="cb2-9"><a href="#cb2-9"></a>    <span class="at">country =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(country)),</span>
-<span id="cb2-10"><a href="#cb2-10"></a>    <span class="at">agent =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(agent))</span>
-<span id="cb2-11"><a href="#cb2-11"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</div>
-</div>
-</section>
-<section id="previously---data-usage" class="slide level2">
-<h2>Previously - Data Usage <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">set.seed</span>(<span class="dv">4028</span>)</span>
-<span id="cb3-2"><a href="#cb3-2"></a>hotel_split <span class="ot">&lt;-</span></span>
-<span id="cb3-3"><a href="#cb3-3"></a>  <span class="fu">initial_split</span>(hotel_rates, <span class="at">strata =</span> avg_price_per_room)</span>
-<span id="cb3-4"><a href="#cb3-4"></a></span>
-<span id="cb3-5"><a href="#cb3-5"></a>hotel_train <span class="ot">&lt;-</span> <span class="fu">training</span>(hotel_split)</span>
-<span id="cb3-6"><a href="#cb3-6"></a>hotel_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(hotel_split)</span>
-<span id="cb3-7"><a href="#cb3-7"></a></span>
-<span id="cb3-8"><a href="#cb3-8"></a><span class="fu">set.seed</span>(<span class="dv">472</span>)</span>
-<span id="cb3-9"><a href="#cb3-9"></a>hotel_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(hotel_train, <span class="at">strata =</span> avg_price_per_room)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="previously---boosting-model" class="slide level2">
-<h2>Previously - Boosting Model <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/textrecipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/bonsai.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "></h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>hotel_rec <span class="ot">&lt;-</span></span>
-<span id="cb4-2"><a href="#cb4-2"></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">%&gt;%</span></span>
-<span id="cb4-3"><a href="#cb4-3"></a>  <span class="fu">step_YeoJohnson</span>(lead_time) <span class="sc">%&gt;%</span></span>
-<span id="cb4-4"><a href="#cb4-4"></a>  <span class="fu">step_dummy_hash</span>(agent,   <span class="at">num_terms =</span> <span class="fu">tune</span>(<span class="st">"agent hash"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb4-5"><a href="#cb4-5"></a>  <span class="fu">step_dummy_hash</span>(company, <span class="at">num_terms =</span> <span class="fu">tune</span>(<span class="st">"company hash"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb4-6"><a href="#cb4-6"></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span>
-<span id="cb4-7"><a href="#cb4-7"></a></span>
-<span id="cb4-8"><a href="#cb4-8"></a>lgbm_spec <span class="ot">&lt;-</span> </span>
-<span id="cb4-9"><a href="#cb4-9"></a>  <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>(), <span class="at">min_n =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
-<span id="cb4-10"><a href="#cb4-10"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb4-11"><a href="#cb4-11"></a>  <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>)</span>
-<span id="cb4-12"><a href="#cb4-12"></a></span>
-<span id="cb4-13"><a href="#cb4-13"></a>lgbm_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(hotel_rec, lgbm_spec)</span>
-<span id="cb4-14"><a href="#cb4-14"></a></span>
-<span id="cb4-15"><a href="#cb4-15"></a>lgbm_param <span class="ot">&lt;-</span></span>
-<span id="cb4-16"><a href="#cb4-16"></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb4-17"><a href="#cb4-17"></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb4-18"><a href="#cb4-18"></a>  <span class="fu">update</span>(<span class="st">`</span><span class="at">agent hash</span><span class="st">`</span>   <span class="ot">=</span> <span class="fu">num_hash</span>(<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">8</span>)),</span>
-<span id="cb4-19"><a href="#cb4-19"></a>         <span class="st">`</span><span class="at">company hash</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">num_hash</span>(<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">8</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="making-grid-search-more-efficient" class="slide level2">
-<h2>Making Grid Search More Efficient</h2>
-<p>In the last section, we evaluated 250 models (25 candidates times 10 resamples).</p>
-<p>We can make this go faster using parallel processing.</p>
-<p>Also, for some models, we can <em>fit</em> far fewer models than the number that are being evaluated.</p>
-<ul>
-<li>For boosting, a model with <code>X</code> trees can often predict on candidates with less than <code>X</code> trees.</li>
-</ul>
-<p>Both of these methods can lead to enormous speed-ups.</p>
-</section>
-<section id="model-racing" class="slide level2">
-<h2>Model Racing</h2>
-<p><a href="https://scholar.google.com/scholar?hl=en&amp;as_sdt=0%2C7&amp;q=+Hoeffding+racing"><em>Racing</em></a> is an old tool that we can use to go even faster.</p>
-<ol type="1">
-<li>Evaluate all of the candidate models but only for a few resamples.</li>
-<li>Determine which candidates have a low probability of being selected.</li>
-<li>Eliminate poor candidates.</li>
-<li>Repeat with next resample (until no more resamples remain)</li>
-</ol>
-<p>This can result in fitting a small number of models.</p>
-</section>
-<section id="discarding-candidates" class="slide level2">
-<h2>Discarding Candidates</h2>
-<p>How do we eliminate tuning parameter combinations?</p>
-<p>There are a few methods to do so. We’ll use one based on analysis of variance (ANOVA).</p>
-<p><em>However</em>… there is typically a large difference between resamples in the results.</p>
-</section>
-<section id="resampling-results-non-racing" class="slide level2">
-<h2>Resampling Results (Non-Racing)</h2>
-<div class="columns">
-<div class="column" style="width:50%;">
-<p>Here are some realistic (but simulated) examples of two candidate models.</p>
-<p>An error estimate is measured for each of 10 resamples.</p>
-<ul>
-<li>The lines connect resamples.</li>
-</ul>
-<p>There is usually a significant resample-to-resample effect (rank corr: 0.83).</p>
-</div><div class="column" style="width:50%;">
-<div class="cell" data-layout-align="center">
-<div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="figures/race-data-1.svg" style="width:100.0%"></p>
-</figure>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section id="are-candidates-different" class="slide level2">
-<h2>Are Candidates Different?</h2>
-<p>One way to evaluate these models is to do a paired t-test</p>
-<ul>
-<li>or a t-test on their differences matched by resamples</li>
-</ul>
-<p>With <span class="math inline">\(n = 10\)</span> resamples, the confidence interval is (0.99, 2.8), indicating that candidate number 2 has smaller error.</p>
-<p>What if we were to compare each model candidate to the current best at each resample?</p>
-<p>One shows superiority when 4 resamples have been evaluated.</p>
-</section>
-<section id="evaluating-differences-in-candidates" class="slide level2">
-<h2>Evaluating Differences in Candidates</h2>
+<section id="how-can-we-compare-multiple-model-workflows-at-once" class="slide level2">
+<h2>How can we compare multiple model workflows at once?</h2>
 
-<img data-src="figures/race-ci-1.svg" style="width:70.0%" class="r-stretch quarto-figure-center"></section>
-<section id="interim-analysis-of-results" class="slide level2">
-<h2>Interim Analysis of Results</h2>
-<p>One version of racing uses a <em>mixed model ANOVA</em> to construct one-sided confidence intervals for each candidate versus the current best.</p>
-<p>Any candidates whose bound does not include zero are discarded. <a href="https://www.tmwr.org/race_results.mp4">Here</a> is an animation.</p>
-<p>The resamples are analyzed in a random order.</p>
-<p><br></p>
-<p><a href="https://arxiv.org/abs/1405.6974">Kuhn (2014)</a> has examples and simulations to show that the method works.</p>
-<p>The <a href="https://finetune.tidymodels.org/">finetune</a> package has functions <code>tune_race_anova()</code> and <code>tune_race_win_loss()</code>.</p>
-</section>
-<section id="racing" class="slide level2">
-<h2>Racing <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/textrecipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/finetune.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "> <img data-src="hexes/bonsai.png" class="absolute" style="top: -20px; right: 256px; width: 64px; height: 74.24px; "></h2>
+<img data-src="images/taxi_spinning.svg" class="r-stretch quarto-figure-center"></section>
+<section id="evaluate-a-workflow-set" class="slide level2">
+<h2>Evaluate a workflow set</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5" data-code-line-numbers="12|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co"># Let's use a larger grid</span></span>
-<span id="cb5-2"><a href="#cb5-2"></a><span class="fu">set.seed</span>(<span class="dv">8945</span>)</span>
-<span id="cb5-3"><a href="#cb5-3"></a>lgbm_grid <span class="ot">&lt;-</span> </span>
-<span id="cb5-4"><a href="#cb5-4"></a>  lgbm_param <span class="sc">%&gt;%</span> </span>
-<span id="cb5-5"><a href="#cb5-5"></a>  <span class="fu">grid_latin_hypercube</span>(<span class="at">size =</span> <span class="dv">50</span>)</span>
-<span id="cb5-6"><a href="#cb5-6"></a></span>
-<span id="cb5-7"><a href="#cb5-7"></a><span class="fu">library</span>(finetune)</span>
-<span id="cb5-8"><a href="#cb5-8"></a></span>
-<span id="cb5-9"><a href="#cb5-9"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
-<span id="cb5-10"><a href="#cb5-10"></a>lgbm_race_res <span class="ot">&lt;-</span></span>
-<span id="cb5-11"><a href="#cb5-11"></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb5-12"><a href="#cb5-12"></a>  <span class="fu">tune_race_anova</span>(</span>
-<span id="cb5-13"><a href="#cb5-13"></a>    <span class="at">resamples =</span> hotel_rs,</span>
-<span id="cb5-14"><a href="#cb5-14"></a>    <span class="at">grid =</span> lgbm_grid, </span>
-<span id="cb5-15"><a href="#cb5-15"></a>    <span class="at">metrics =</span> reg_metrics</span>
-<span id="cb5-16"><a href="#cb5-16"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">workflow_set</span>(<span class="fu">list</span>(tip <span class="sc">~</span> .), <span class="fu">list</span>(tree_spec, rf_spec))</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="co">#&gt; # A workflow set/tibble: 2 × 4</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="co">#&gt;   wflow_id              info             option    result    </span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="co">#&gt;   &lt;chr&gt;                 &lt;list&gt;           &lt;list&gt;    &lt;list&gt;    </span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="co">#&gt; 1 formula_decision_tree &lt;tibble [1 × 4]&gt; &lt;opts[0]&gt; &lt;list [0]&gt;</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="co">#&gt; 2 formula_rand_forest   &lt;tibble [1 × 4]&gt; &lt;opts[0]&gt; &lt;list [0]&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The syntax and helper functions are extremely similar to those shown for <code>tune_grid()</code>.</p>
 </section>
-<section id="racing-results" class="slide level2">
-<h2>Racing Results <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<section id="evaluate-a-workflow-set-1" class="slide level2">
+<h2>Evaluate a workflow set</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="fu">show_best</span>(lgbm_race_res, <span class="at">metric =</span> <span class="st">"mae"</span>)</span>
-<span id="cb6-2"><a href="#cb6-2"></a><span class="co">#&gt; # A tibble: 2 × 11</span></span>
-<span id="cb6-3"><a href="#cb6-3"></a><span class="co">#&gt;   trees min_n learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config              </span></span>
-<span id="cb6-4"><a href="#cb6-4"></a><span class="co">#&gt;   &lt;int&gt; &lt;int&gt;      &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
-<span id="cb6-5"><a href="#cb6-5"></a><span class="co">#&gt; 1  1014     5     0.0791           35            181 mae     standard    10.3    10   0.202 Preprocessor06_Model1</span></span>
-<span id="cb6-6"><a href="#cb6-6"></a><span class="co">#&gt; 2  1516     7     0.0421          176             12 mae     standard    10.4    10   0.200 Preprocessor42_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">workflow_set</span>(<span class="fu">list</span>(tip <span class="sc">~</span> .), <span class="fu">list</span>(tree_spec, rf_spec)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a>  <span class="fu">workflow_map</span>(<span class="st">"fit_resamples"</span>, <span class="at">resamples =</span> taxi_folds)</span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="co">#&gt; # A workflow set/tibble: 2 × 4</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="co">#&gt;   wflow_id              info             option    result   </span></span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="co">#&gt;   &lt;chr&gt;                 &lt;list&gt;           &lt;list&gt;    &lt;list&gt;   </span></span>
+<span id="cb2-6"><a href="#cb2-6"></a><span class="co">#&gt; 1 formula_decision_tree &lt;tibble [1 × 4]&gt; &lt;opts[1]&gt; &lt;rsmp[+]&gt;</span></span>
+<span id="cb2-7"><a href="#cb2-7"></a><span class="co">#&gt; 2 formula_rand_forest   &lt;tibble [1 × 4]&gt; &lt;opts[1]&gt; &lt;rsmp[+]&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="racing-results-1" class="slide level2">
-<h2>Racing Results <img data-src="hexes/finetune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
-<div class="columns">
-<div class="column" style="width:50%;">
-<p>Only 170 models were fit (out of 500).</p>
-<p><code>select_best()</code> never considers candidate models that did not get to the end of the race.</p>
-<p>There is a helper function to see how candidate models were removed from consideration.</p>
-</div><div class="column" style="width:50%;">
-<div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="fu">plot_race</span>(lgbm_race_res) <span class="sc">+</span> </span>
-<span id="cb7-2"><a href="#cb7-2"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">pretty_breaks</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure>
-<p><img data-src="figures/plot-race-1.svg" style="width:100.0%"></p>
-</figure>
+<section id="evaluate-a-workflow-set-2" class="slide level2">
+<h2>Evaluate a workflow set</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">workflow_set</span>(<span class="fu">list</span>(tip <span class="sc">~</span> .), <span class="fu">list</span>(tree_spec, rf_spec)) <span class="sc">%&gt;%</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a>  <span class="fu">workflow_map</span>(<span class="st">"fit_resamples"</span>, <span class="at">resamples =</span> taxi_folds) <span class="sc">%&gt;%</span></span>
+<span id="cb3-3"><a href="#cb3-3"></a>  <span class="fu">rank_results</span>()</span>
+<span id="cb3-4"><a href="#cb3-4"></a><span class="co">#&gt; # A tibble: 4 × 9</span></span>
+<span id="cb3-5"><a href="#cb3-5"></a><span class="co">#&gt;   wflow_id          .config .metric  mean std_err     n preprocessor model  rank</span></span>
+<span id="cb3-6"><a href="#cb3-6"></a><span class="co">#&gt;   &lt;chr&gt;             &lt;chr&gt;   &lt;chr&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;        &lt;chr&gt; &lt;int&gt;</span></span>
+<span id="cb3-7"><a href="#cb3-7"></a><span class="co">#&gt; 1 formula_decision… Prepro… accura… 0.915 0.00309    10 formula      deci…     1</span></span>
+<span id="cb3-8"><a href="#cb3-8"></a><span class="co">#&gt; 2 formula_decision… Prepro… roc_auc 0.624 0.0105     10 formula      deci…     1</span></span>
+<span id="cb3-9"><a href="#cb3-9"></a><span class="co">#&gt; 3 formula_rand_for… Prepro… accura… 0.924 0.00326    10 formula      rand…     2</span></span>
+<span id="cb3-10"><a href="#cb3-10"></a><span class="co">#&gt; 4 formula_rand_for… Prepro… roc_auc 0.615 0.0151     10 formula      rand…     2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
-</div>
-</div>
+<p>The first metric of the metric set is used for ranking. Use <code>rank_metric</code> to change that.</p>
+<div class="fragment">
+<p>Lots more available with workflow sets, like <code>collect_metrics()</code>, <code>autoplot()</code> methods, and more!</p>
 </div>
 </section>
 <section id="your-turn" class="slide level2" data-transition="slide-in">
 <h2>Your turn</h2>
-<ul>
-<li><em>Run <code>tune_race_anova()</code> with a different seed.</em></li>
-<li><em>Did you get the same or similar results?</em></li>
-</ul>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
+<p><em>When do you think a workflow set would be useful?</em></p>
 <div class="cell">
 <div class="cell-output-display">
-<div class="countdown" id="racing-repeat" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown" id="discuss-workflow-sets" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
 <div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
-<code class="countdown-time"><span class="countdown-digits minutes">10</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+<code class="countdown-time"><span class="countdown-digits minutes">03</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
 </div>
 </div>
 </div>
