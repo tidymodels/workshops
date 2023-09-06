@@ -224,16 +224,47 @@ pkgs <-
   select(-date)
 df <- tibble::tibble(
   package = pkgs$package,
-  version = pkgs$ondiskversion,
-  source = ifelse(grepl("CRAN", pkgs$source), "CRAN", pkgs$source)
-) %>% 
-  mutate(
-    source = gsub(" (R 4.2.0)", "", source, fixed = TRUE),
-    source = substr(source, 1, 31),
-    info = paste0(package, " (", version, ", ", source, ")")
-  )
+  version = pkgs$ondiskversion
+)
+
+ids <- split(
+  seq_len(nrow(df)), 
+  ceiling(seq_len(nrow(df)) / ceiling(nrow(df) / 3))
+)
+
+column1 <- df %>%
+  dplyr::slice(ids[[1]])
+
+column2 <- df %>%
+  dplyr::slice(ids[[2]])
+
+column3 <- df %>%
+  dplyr::slice(ids[[3]])
+
 quarto_info <- paste0("Quarto (", system("quarto --version", intern = TRUE), ")")
-version_info <- knitr::combine_words(c(df$info, quarto_info))
 ```
 
-`r version_info`
+`r R.version.string`, `r quarto_info`
+
+::: {.columns style="font-size:0.7em;"}
+::: {.column width="33%"}
+```{r}
+#| echo: false
+knitr::kable(column1)
+```
+:::
+
+::: {.column width="33%"}
+```{r}
+#| echo: false
+knitr::kable(column2)
+```
+:::
+
+::: {.column width="33%"}
+```{r}
+#| echo: false
+knitr::kable(column3)
+```
+:::
+:::
