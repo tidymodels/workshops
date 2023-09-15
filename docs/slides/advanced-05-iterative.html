@@ -425,17 +425,18 @@
 </div>
 </div><div class="column" style="width:60%;">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">set.seed</span>(<span class="dv">295</span>)</span>
-<span id="cb2-2"><a href="#cb2-2"></a>hotel_rates <span class="ot">&lt;-</span> </span>
-<span id="cb2-3"><a href="#cb2-3"></a>  hotel_rates <span class="sc">%&gt;%</span> </span>
-<span id="cb2-4"><a href="#cb2-4"></a>  <span class="fu">sample_n</span>(<span class="dv">5000</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-5"><a href="#cb2-5"></a>  <span class="fu">arrange</span>(arrival_date) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-6"><a href="#cb2-6"></a>  <span class="fu">select</span>(<span class="sc">-</span>arrival_date) <span class="sc">%&gt;%</span>  </span>
-<span id="cb2-7"><a href="#cb2-7"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb2-8"><a href="#cb2-8"></a>    <span class="at">company =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(company)),</span>
-<span id="cb2-9"><a href="#cb2-9"></a>    <span class="at">country =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(country)),</span>
-<span id="cb2-10"><a href="#cb2-10"></a>    <span class="at">agent =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(agent))</span>
-<span id="cb2-11"><a href="#cb2-11"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">data</span>(hotel_rates)</span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="fu">set.seed</span>(<span class="dv">295</span>)</span>
+<span id="cb2-3"><a href="#cb2-3"></a>hotel_rates <span class="ot">&lt;-</span> </span>
+<span id="cb2-4"><a href="#cb2-4"></a>  hotel_rates <span class="sc">%&gt;%</span> </span>
+<span id="cb2-5"><a href="#cb2-5"></a>  <span class="fu">sample_n</span>(<span class="dv">5000</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-6"><a href="#cb2-6"></a>  <span class="fu">arrange</span>(arrival_date) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-7"><a href="#cb2-7"></a>  <span class="fu">select</span>(<span class="sc">-</span>arrival_date) <span class="sc">%&gt;%</span>  </span>
+<span id="cb2-8"><a href="#cb2-8"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb2-9"><a href="#cb2-9"></a>    <span class="at">company =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(company)),</span>
+<span id="cb2-10"><a href="#cb2-10"></a>    <span class="at">country =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(country)),</span>
+<span id="cb2-11"><a href="#cb2-11"></a>    <span class="at">agent =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(agent))</span>
+<span id="cb2-12"><a href="#cb2-12"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
@@ -466,7 +467,7 @@
 <span id="cb4-8"><a href="#cb4-8"></a>lgbm_spec <span class="ot">&lt;-</span> </span>
 <span id="cb4-9"><a href="#cb4-9"></a>  <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>(), <span class="at">min_n =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
 <span id="cb4-10"><a href="#cb4-10"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb4-11"><a href="#cb4-11"></a>  <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>)</span>
+<span id="cb4-11"><a href="#cb4-11"></a>  <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>, <span class="at">num_threads =</span> <span class="dv">1</span>)</span>
 <span id="cb4-12"><a href="#cb4-12"></a></span>
 <span id="cb4-13"><a href="#cb4-13"></a>lgbm_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(hotel_rec, lgbm_spec)</span>
 <span id="cb4-14"><a href="#cb4-14"></a></span>
@@ -710,7 +711,7 @@
 <h2>ENHANCE</h2>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="fu">autoplot</span>(lgbm_bayes_res, <span class="at">metric =</span> <span class="st">"mae"</span>, <span class="at">type =</span> <span class="st">"performance"</span>) <span class="sc">+</span></span>
-<span id="cb11-2"><a href="#cb11-2"></a>  <span class="fu">ylim</span>(<span class="fu">c</span>(<span class="fl">9.5</span>, <span class="dv">14</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb11-2"><a href="#cb11-2"></a>  <span class="fu">ylim</span>(<span class="fu">c</span>(<span class="dv">9</span>, <span class="dv">14</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
 <img data-src="figures/autoplot-perf-zoomed-1.svg" style="width:50.0%" class="r-stretch quarto-figure-center"></section>
@@ -781,7 +782,10 @@
 <span id="cb12-23"><a href="#cb12-23"></a><span class="co">#&gt;   min_n = 2</span></span>
 <span id="cb12-24"><a href="#cb12-24"></a><span class="co">#&gt;   learn_rate = 0.0299391312149257</span></span>
 <span id="cb12-25"><a href="#cb12-25"></a><span class="co">#&gt; </span></span>
-<span id="cb12-26"><a href="#cb12-26"></a><span class="co">#&gt; Computational engine: lightgbm</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb12-26"><a href="#cb12-26"></a><span class="co">#&gt; Engine-Specific Arguments:</span></span>
+<span id="cb12-27"><a href="#cb12-27"></a><span class="co">#&gt;   num_threads = 1</span></span>
+<span id="cb12-28"><a href="#cb12-28"></a><span class="co">#&gt; </span></span>
+<span id="cb12-29"><a href="#cb12-29"></a><span class="co">#&gt; Computational engine: lightgbm</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="the-final-fit" class="slide level2">
