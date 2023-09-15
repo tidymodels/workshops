@@ -3388,88 +3388,256 @@
     "text": "Your turn\n\nWhen do you think a workflow set would be useful?\n\n\n\n−+\n03:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
-    "objectID": "slides/intro-extra-time-splits.html#the-raw-taxi-data-set",
-    "href": "slides/intro-extra-time-splits.html#the-raw-taxi-data-set",
-    "title": "Extras - Time-based data splitting",
-    "section": "The raw taxi data set",
-    "text": "The raw taxi data set\nWe prepared the data set specifically for this introductory workshop.\nIt looked similar to this:\n\nglimpse(taxi_raw)\n#&gt; Rows: 10,000\n#&gt; Columns: 24\n#&gt; $ trip_id                    &lt;chr&gt; \"3ac8d4412642a35e9b9a493285814d7983d5a159\",…\n#&gt; $ taxi_id                    &lt;chr&gt; \"391317d70c5d06deec744062c4595dc1958b200fda…\n#&gt; $ trip_start_timestamp       &lt;dttm&gt; 2023-06-10 18:45:00, 2023-05-21 21:30:00, …\n#&gt; $ trip_end_timestamp         &lt;dttm&gt; 2023-06-10 19:30:00, 2023-05-21 21:45:00, …\n#&gt; $ trip_seconds               &lt;dbl&gt; 3258, 839, 476, 2220, 1588, 2270, 1575, 267…\n#&gt; $ trip_miles                 &lt;dbl&gt; 17.02, 2.16, 1.05, 17.40, 17.62, 16.36, 18.…\n#&gt; $ pickup_census_tract        &lt;dbl&gt; 17031980000, 17031839100, 17031320100, 1703…\n#&gt; $ dropoff_census_tract       &lt;dbl&gt; 17031081403, 17031081300, 17031081403, 1703…\n#&gt; $ pickup_community_area      &lt;dbl&gt; 76, 32, 32, 76, 32, 76, 76, 32, 32, 33, 8, …\n#&gt; $ dropoff_community_area     &lt;dbl&gt; 8, 8, 8, 32, 76, 8, 32, 76, 28, 32, 7, 33, …\n#&gt; $ fare                       &lt;dbl&gt; 44.50, 10.00, 6.75, 45.00, 44.25, 41.25, 44…\n#&gt; $ tips                       &lt;dbl&gt; 12.25, 4.00, 2.00, 9.90, 8.00, 9.15, 12.31,…\n#&gt; $ tolls                      &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…\n#&gt; $ extras                     &lt;dbl&gt; 4.0, 1.0, 0.0, 4.0, 2.0, 4.0, 4.0, 0.0, 0.0…\n#&gt; $ trip_total                 &lt;dbl&gt; 61.25, 15.50, 9.25, 58.90, 54.75, 54.90, 61…\n#&gt; $ payment_type               &lt;chr&gt; \"Credit Card\", \"Credit Card\", \"Credit Card\"…\n#&gt; $ company                    &lt;chr&gt; \"Taxicab Insurance Agency Llc\", \"Chicago In…\n#&gt; $ pickup_centroid_latitude   &lt;dbl&gt; 41.97907, 41.88099, 41.88499, 41.97907, 41.…\n#&gt; $ pickup_centroid_longitude  &lt;dbl&gt; -87.90304, -87.63275, -87.62099, -87.90304,…\n#&gt; $ pickup_centroid_location   &lt;chr&gt; \"POINT (-87.9030396611 41.9790708201)\", \"PO…\n#&gt; $ dropoff_centroid_latitude  &lt;dbl&gt; 41.89092, 41.89833, 41.89092, 41.87102, 41.…\n#&gt; $ dropoff_centroid_longitude &lt;dbl&gt; -87.61887, -87.62076, -87.61887, -87.63141,…\n#&gt; $ dropoff_centroid_location  &lt;chr&gt; \"POINT (-87.6188683546 41.8909220259)\", \"PO…\n#&gt; $ tip                        &lt;fct&gt; yes, yes, yes, yes, yes, yes, yes, yes, yes…\n\n\ntrip_start_time has date and time rounded to “quarters of the hour”."
+    "objectID": "slides/intro-extra-recipes.html#looking-at-the-predictors",
+    "href": "slides/intro-extra-recipes.html#looking-at-the-predictors",
+    "title": "Extras - Recipes",
+    "section": "Looking at the predictors",
+    "text": "Looking at the predictors\n\ntaxi_train\n#&gt; # A tibble: 8,000 × 7\n#&gt;    tip   distance company                      local dow   month  hour\n#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;                        &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;\n#&gt;  1 yes      17.2  Chicago Independents         no    Thu   Feb      16\n#&gt;  2 yes       0.88 City Service                 yes   Thu   Mar       8\n#&gt;  3 yes      18.1  other                        no    Mon   Feb      18\n#&gt;  4 yes      12.2  Chicago Independents         no    Sun   Mar      21\n#&gt;  5 yes       0.94 Sun Taxi                     yes   Sat   Apr      23\n#&gt;  6 yes      17.5  Flash Cab                    no    Fri   Mar      12\n#&gt;  7 yes      17.7  other                        no    Sun   Jan       6\n#&gt;  8 yes       1.85 Taxicab Insurance Agency Llc no    Fri   Apr      12\n#&gt;  9 yes       0.53 Sun Taxi                     no    Tue   Mar      18\n#&gt; 10 yes       6.65 Taxicab Insurance Agency Llc no    Sun   Apr      11\n#&gt; # ℹ 7,990 more rows"
   },
   {
-    "objectID": "slides/intro-extra-time-splits.html#time-nature-of-the-data",
-    "href": "slides/intro-extra-time-splits.html#time-nature-of-the-data",
-    "title": "Extras - Time-based data splitting",
-    "section": "Time nature of the data",
-    "text": "Time nature of the data\nWe assumed only the month, day of the week, and hour mattered and treated each observation as independent.\n\nIf the data have a strong time component, all your data splitting strategies should support the model in estimating temporal trends.\n\n\nThus, don’t sample randomly because this breaks up the time component!"
+    "objectID": "slides/intro-extra-recipes.html#working-with-other-models",
+    "href": "slides/intro-extra-recipes.html#working-with-other-models",
+    "title": "Extras - Recipes",
+    "section": "Working with other models",
+    "text": "Working with other models\nSome models can’t handle non-numeric data\n\nLinear Regression\nK Nearest Neighbors\n\n\n\nSome models struggle if numeric predictors aren’t scaled\n\nK Nearest Neighbors\nAnything using gradient descent"
   },
   {
-    "objectID": "slides/intro-extra-time-splits.html#splitting-with-time-component",
-    "href": "slides/intro-extra-time-splits.html#splitting-with-time-component",
-    "title": "Extras - Time-based data splitting",
-    "section": "Splitting with time component ",
-    "text": "Splitting with time component \nThe more recent observations are assumed to be more similar to new data, so initial_time_split() puts them into the test set.\nThe function assumes that the data are already ordered.\n\ntaxi_raw &lt;- taxi_raw %&gt;%\n  arrange(trip_start_timestamp)\n\ntaxi_split &lt;- initial_time_split(taxi_raw, prop = 3 / 4)\ntaxi_split\n#&gt; &lt;Training/Testing/Total&gt;\n#&gt; &lt;7500/2500/10000&gt;\n\ntaxi_train &lt;- training(taxi_split)\ntaxi_test  &lt;- testing(taxi_split)\n\nnrow(taxi_train)\n#&gt; [1] 7500\n \nnrow(taxi_test)\n#&gt; [1] 2500"
+    "objectID": "slides/intro-extra-recipes.html#types-of-needed-preprocessing",
+    "href": "slides/intro-extra-recipes.html#types-of-needed-preprocessing",
+    "title": "Extras - Recipes",
+    "section": "Types of needed preprocessing",
+    "text": "Types of needed preprocessing\n\nDo qualitative predictors require a numeric encoding?\nShould columns with a single unique value be removed?\nDoes the model struggle with missing data?\nDoes the model struggle with correlated predictors?\nShould predictors be centered and scaled?\nIs it helpful to transform predictors to be more symmetric?\n\n\nhttps://www.tmwr.org/pre-proc-table.html"
   },
   {
-    "objectID": "slides/intro-extra-time-splits.html#time-series-resampling",
-    "href": "slides/intro-extra-time-splits.html#time-series-resampling",
-    "title": "Extras - Time-based data splitting",
-    "section": "Time series resampling",
-    "text": "Time series resampling\nThe same idea also applies to resampling: the newer observations go into the assessment set.\nFor example:\n\nFold 1: Take the first X weeks of data as the analysis set, and the next 3 weeks as the assessment set.\nFold 2: Take weeks 2 to X + 1 as the analysis set, and the next 3 weeks as the assessment set.\nand so on"
+    "objectID": "slides/intro-extra-recipes.html#two-types-of-preprocessing",
+    "href": "slides/intro-extra-recipes.html#two-types-of-preprocessing",
+    "title": "Extras - Recipes",
+    "section": "Two types of preprocessing",
+    "text": "Two types of preprocessing"
   },
   {
-    "objectID": "slides/intro-extra-time-splits.html#rolling-origin-forecast-resampling",
-    "href": "slides/intro-extra-time-splits.html#rolling-origin-forecast-resampling",
-    "title": "Extras - Time-based data splitting",
-    "section": "Rolling origin forecast resampling",
-    "text": "Rolling origin forecast resampling\n\n\nThis image shows overlapping assessment sets. We will use non-overlapping data but it could be done either way."
+    "objectID": "slides/intro-extra-recipes.html#two-types-of-preprocessing-1",
+    "href": "slides/intro-extra-recipes.html#two-types-of-preprocessing-1",
+    "title": "Extras - Recipes",
+    "section": "Two types of preprocessing",
+    "text": "Two types of preprocessing"
   },
   {
-    "objectID": "slides/intro-extra-time-splits.html#times-series-resampling",
-    "href": "slides/intro-extra-time-splits.html#times-series-resampling",
-    "title": "Extras - Time-based data splitting",
-    "section": "Times series resampling ",
-    "text": "Times series resampling \n\ntaxi_rs &lt;-\n  taxi_train %&gt;%\n  sliding_period(\n    index = \"trip_start_timestamp\",  \n\n\n\n\n  )\n\nUse the trip_start_timestamp column to find the date data."
+    "objectID": "slides/intro-extra-recipes.html#general-definitions",
+    "href": "slides/intro-extra-recipes.html#general-definitions",
+    "title": "Extras - Recipes",
+    "section": "General definitions",
+    "text": "General definitions\n\nData preprocessing are the steps that you take to make your model successful.\nFeature engineering are what you do to the original predictors to make the model do the least work to perform great."
   },
   {
-    "objectID": "slides/intro-extra-time-splits.html#times-series-resampling-1",
-    "href": "slides/intro-extra-time-splits.html#times-series-resampling-1",
-    "title": "Extras - Time-based data splitting",
-    "section": "Times series resampling ",
-    "text": "Times series resampling \n\ntaxi_rs &lt;-\n  taxi_train %&gt;%\n  sliding_period(\n    index = \"trip_start_timestamp\",  \n    period = \"week\",\n\n\n\n  )\n\nOur units will be in weeks."
+    "objectID": "slides/intro-extra-recipes.html#working-with-dates",
+    "href": "slides/intro-extra-recipes.html#working-with-dates",
+    "title": "Extras - Recipes",
+    "section": "Working with dates",
+    "text": "Working with dates\nDatetime variables are automatically converted to an integer if given as a raw predictor. To avoid this, it can be re-encoded as:\n\nDays since a reference date\nDay of the week\nMonth\nYear\nLeap year\nIndicators for holidays"
   },
   {
-    "objectID": "slides/intro-extra-time-splits.html#times-series-resampling-2",
-    "href": "slides/intro-extra-time-splits.html#times-series-resampling-2",
-    "title": "Extras - Time-based data splitting",
-    "section": "Times series resampling ",
-    "text": "Times series resampling \n\ntaxi_rs &lt;-\n  taxi_train %&gt;%\n  sliding_period(\n    index = \"trip_start_timestamp\",  \n    period = \"week\",\n    lookback = 8\n    \n    \n  )\n\nEvery analysis set has 8 weeks of data."
-  },
-  {
-    "objectID": "slides/intro-extra-time-splits.html#times-series-resampling-3",
-    "href": "slides/intro-extra-time-splits.html#times-series-resampling-3",
-    "title": "Extras - Time-based data splitting",
-    "section": "Times series resampling ",
-    "text": "Times series resampling \n\ntaxi_rs &lt;-\n  taxi_train %&gt;%\n  sliding_period(\n    index = \"trip_start_timestamp\",  \n    period = \"week\",\n    lookback = 8,\n    assess_stop = 3,\n\n  )\n\nEvery assessment set has 3 weeks of data."
-  },
-  {
-    "objectID": "slides/intro-extra-time-splits.html#times-series-resampling-4",
-    "href": "slides/intro-extra-time-splits.html#times-series-resampling-4",
-    "title": "Extras - Time-based data splitting",
-    "section": "Times series resampling ",
-    "text": "Times series resampling \n\ntaxi_rs &lt;-\n  taxi_train %&gt;%\n  sliding_period(\n    index = \"trip_start_timestamp\",  \n    period = \"week\",\n    lookback = 8,\n    assess_stop = 3,\n    step = 1\n  )\n\nIncrement by 1 week\n\n\ntaxi_rs$splits[[1]] %&gt;% assessment() %&gt;% pluck(\"trip_start_timestamp\") %&gt;% range()\n#&gt; [1] \"2023-03-02 05:15:00 UTC\" \"2023-03-22 22:00:00 UTC\"\n\ntaxi_rs$splits[[2]] %&gt;% assessment() %&gt;% pluck(\"trip_start_timestamp\") %&gt;% range()\n#&gt; [1] \"2023-03-09 07:00:00 UTC\" \"2023-03-29 21:15:00 UTC\"\n\ntaxi_rs$splits[[3]] %&gt;% assessment() %&gt;% pluck(\"trip_start_timestamp\") %&gt;% range()\n#&gt; [1] \"2023-03-16 06:30:00 UTC\" \"2023-04-05 23:45:00 UTC\"\n\n\n\nhttps://workshops.tidymodels.org"
-  },
-  {
-    "objectID": "slides/intro-05-wrapping-up.html#your-turn",
-    "href": "slides/intro-05-wrapping-up.html#your-turn",
-    "title": "5 - Wrapping up",
+    "objectID": "slides/intro-extra-recipes.html#your-turn",
+    "href": "slides/intro-extra-recipes.html#your-turn",
+    "title": "Extras - Recipes",
     "section": "Your turn",
-    "text": "Your turn\n\nWhat is one thing you learned that surprised you?\nWhat is one thing you learned that you plan to use?\n\n\n\n−+\n05:00"
+    "text": "Your turn\n\n\nWhat other transformations could we do with the raw time variable?\nRemember that the transformations are tied to the specific modeling problem.\n\n\n\n−+\n03:00"
   },
   {
-    "objectID": "slides/intro-05-wrapping-up.html#resources-to-keep-learning",
-    "href": "slides/intro-05-wrapping-up.html#resources-to-keep-learning",
-    "title": "5 - Wrapping up",
-    "section": "Resources to keep learning",
-    "text": "Resources to keep learning\n\n\nhttps://www.tidymodels.org/\n\n\n\n\nhttps://www.tmwr.org/\n\n\n\n\nhttp://www.feat.engineering/\n\n\n\n\nhttps://smltar.com/\n\n\n\nFollow us on Mastodon and at the tidyverse blog for updates!\n\n\nhttps://workshops.tidymodels.org"
+    "objectID": "slides/intro-extra-recipes.html#two-types-of-transformations",
+    "href": "slides/intro-extra-recipes.html#two-types-of-transformations",
+    "title": "Extras - Recipes",
+    "section": "Two types of transformations",
+    "text": "Two types of transformations\n\n\n\nStatic\n\nSquare root, log, inverse\nDummies for known levels\nDate time extractions\n\n\nTrained\n\nCentering & scaling\nImputation\nPCA\nAnything for unknown factor levels\n\n\n\n\nTrained methods need to calculate sufficient information to be applied again."
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#the-recipes-package",
+    "href": "slides/intro-extra-recipes.html#the-recipes-package",
+    "title": "Extras - Recipes",
+    "section": "The recipes package",
+    "text": "The recipes package\n\n\nModular + extensible\nWorks well with pipes ,|&gt; and %&gt;%\nDeferred evaluation\nIsolates test data from training data\nCan do things formulas can’t"
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#how-to-write-a-recipe",
+    "href": "slides/intro-extra-recipes.html#how-to-write-a-recipe",
+    "title": "Extras - Recipes",
+    "section": "How to write a recipe",
+    "text": "How to write a recipe\n\ntaxi_rec &lt;- recipe(tip ~ ., data = taxi_train) %&gt;%\n  step_unknown(all_nominal_predictors()) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(distance, offset = 0.5) %&gt;%\n  step_normalize(all_numeric_predictors())"
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#how-to-write-a-recipe-1",
+    "href": "slides/intro-extra-recipes.html#how-to-write-a-recipe-1",
+    "title": "Extras - Recipes",
+    "section": "How to write a recipe",
+    "text": "How to write a recipe\n\ntaxi_rec &lt;- recipe(tip ~ ., data = taxi_train) %&gt;%\n  step_unknown(all_nominal_predictors()) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(distance, offset = 0.5) %&gt;%\n  step_normalize(all_numeric_predictors())\n\n\nStart by calling recipe() to denote the data source and variables used."
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#how-to-write-a-recipe-2",
+    "href": "slides/intro-extra-recipes.html#how-to-write-a-recipe-2",
+    "title": "Extras - Recipes",
+    "section": "How to write a recipe",
+    "text": "How to write a recipe\n\ntaxi_rec &lt;- recipe(tip ~ ., data = taxi_train) %&gt;%\n  step_unknown(all_nominal_predictors()) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(distance, offset = 0.5) %&gt;%\n  step_normalize(all_numeric_predictors())\n\n\nSpecify what actions to take by adding step_*()s."
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#how-to-write-a-recipe-3",
+    "href": "slides/intro-extra-recipes.html#how-to-write-a-recipe-3",
+    "title": "Extras - Recipes",
+    "section": "How to write a recipe",
+    "text": "How to write a recipe\n\ntaxi_rec &lt;- recipe(tip ~ ., data = taxi_train) %&gt;%\n  step_unknown(all_nominal_predictors()) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(distance, offset = 0.5) %&gt;%   step_normalize(all_numeric_predictors())\n\n\nUse {tidyselect} and recipes-specific selectors to denote affected variables."
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#using-a-recipe",
+    "href": "slides/intro-extra-recipes.html#using-a-recipe",
+    "title": "Extras - Recipes",
+    "section": "Using a recipe",
+    "text": "Using a recipe\n\ntaxi_rec &lt;- recipe(tip ~ ., data = taxi_train) %&gt;%\n  step_unknown(all_nominal_predictors()) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(distance, offset = 0.5) %&gt;%   step_normalize(all_numeric_predictors())\n\n\nSave the recipe we like so that we can use it in various places, e.g., with different models."
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#using-a-recipe-with-workflows",
+    "href": "slides/intro-extra-recipes.html#using-a-recipe-with-workflows",
+    "title": "Extras - Recipes",
+    "section": "Using a recipe with workflows",
+    "text": "Using a recipe with workflows\nRecipes are typically combined with a model in a workflow() object:\n\n\ntaxi_wflow &lt;- workflow() %&gt;%\n  add_recipe(taxi_rec) %&gt;%\n  add_model(linear_reg())"
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#recipes-are-estimated",
+    "href": "slides/intro-extra-recipes.html#recipes-are-estimated",
+    "title": "Extras - Recipes",
+    "section": "Recipes are estimated",
+    "text": "Recipes are estimated\nEvery preprocessing step in a recipe that involved calculations uses the training set. For example:\n\nLevels of a factor\nDetermination of zero-variance\nNormalization\nFeature extraction\n\nOnce a recipe is added to a workflow, this occurs when fit() is called."
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#debugging-a-recipe",
+    "href": "slides/intro-extra-recipes.html#debugging-a-recipe",
+    "title": "Extras - Recipes",
+    "section": "Debugging a recipe",
+    "text": "Debugging a recipe\n\nTypically, you will want to use a workflow to estimate and apply a recipe.\n\n\n\nIf you have an error and need to debug your recipe, the original recipe object (e.g. taxi_rec) can be estimated manually with a function called prep(). It is analogous to fit(). See TMwR section 16.4.\n\n\n\n\nAnother function, bake(), is analogous to predict(), and gives you the processed data back."
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#your-turn-1",
+    "href": "slides/intro-extra-recipes.html#your-turn-1",
+    "title": "Extras - Recipes",
+    "section": "Your turn",
+    "text": "Your turn\n\n\nTake the recipe and prep() then bake() it to see what the resulting data set looks like.\nTry removing steps to see how the result changes.\n\n\n\n\n−+\n05:00"
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#printing-a-recipe",
+    "href": "slides/intro-extra-recipes.html#printing-a-recipe",
+    "title": "Extras - Recipes",
+    "section": "Printing a recipe",
+    "text": "Printing a recipe\n\ntaxi_rec\n#&gt; \n#&gt; ── Recipe ────────────────────────────────────────────────────────────\n#&gt; \n#&gt; ── Inputs\n#&gt; Number of variables by role\n#&gt; outcome:   1\n#&gt; predictor: 6\n#&gt; \n#&gt; ── Operations\n#&gt; • Unknown factor level assignment for: all_nominal_predictors()\n#&gt; • Dummy variables from: all_nominal_predictors()\n#&gt; • Zero variance filter on: all_predictors()\n#&gt; • Log transformation on: distance\n#&gt; • Centering and scaling for: all_numeric_predictors()"
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#prepping-a-recipe",
+    "href": "slides/intro-extra-recipes.html#prepping-a-recipe",
+    "title": "Extras - Recipes",
+    "section": "Prepping a recipe",
+    "text": "Prepping a recipe\n\nprep(taxi_rec)\n#&gt; \n#&gt; ── Recipe ────────────────────────────────────────────────────────────\n#&gt; \n#&gt; ── Inputs\n#&gt; Number of variables by role\n#&gt; outcome:   1\n#&gt; predictor: 6\n#&gt; \n#&gt; ── Training information\n#&gt; Training data contained 8000 data points and no incomplete rows.\n#&gt; \n#&gt; ── Operations\n#&gt; • Unknown factor level assignment for: company and local, ... |\n#&gt;   Trained\n#&gt; • Dummy variables from: company, local, dow, month | Trained\n#&gt; • Zero variance filter removed: company_unknown, ... | Trained\n#&gt; • Log transformation on: distance | Trained\n#&gt; • Centering and scaling for: distance and hour, ... | Trained"
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#baking-a-recipe",
+    "href": "slides/intro-extra-recipes.html#baking-a-recipe",
+    "title": "Extras - Recipes",
+    "section": "Baking a recipe",
+    "text": "Baking a recipe\n\nprep(taxi_rec) %&gt;%\n  bake(new_data = taxi_train)\n#&gt; # A tibble: 8,000 × 19\n#&gt;    distance   hour tip   company_City.Service company_Flash.Cab company_Sun.Taxi company_Taxi.Affiliatio…¹ company_Taxicab.Insu…² company_other local_no dow_Mon dow_Tue dow_Wed dow_Thu dow_Fri dow_Sat\n#&gt;       &lt;dbl&gt;  &lt;dbl&gt; &lt;fct&gt;                &lt;dbl&gt;             &lt;dbl&gt;            &lt;dbl&gt;                     &lt;dbl&gt;                  &lt;dbl&gt;         &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;\n#&gt;  1    1.38   0.418 yes                 -0.366            -0.333           -0.403                    -0.450                 -0.379        -0.609    0.484  -0.396  -0.441  -0.461   2.01   -0.428  -0.317\n#&gt;  2   -0.729 -1.42  yes                  2.73             -0.333           -0.403                    -0.450                 -0.379        -0.609   -2.07   -0.396  -0.441  -0.461   2.01   -0.428  -0.317\n#&gt;  3    1.42   0.877 yes                 -0.366            -0.333           -0.403                    -0.450                 -0.379         1.64     0.484   2.53   -0.441  -0.461  -0.497  -0.428  -0.317\n#&gt;  4    1.11   1.57  yes                 -0.366            -0.333           -0.403                    -0.450                 -0.379        -0.609    0.484  -0.396  -0.441  -0.461  -0.497  -0.428  -0.317\n#&gt;  5   -0.694  2.03  yes                 -0.366            -0.333            2.48                     -0.450                 -0.379        -0.609   -2.07   -0.396  -0.441  -0.461  -0.497  -0.428   3.15 \n#&gt;  6    1.39  -0.502 yes                 -0.366             3.01            -0.403                    -0.450                 -0.379        -0.609    0.484  -0.396  -0.441  -0.461  -0.497   2.34   -0.317\n#&gt;  7    1.40  -1.88  yes                 -0.366            -0.333           -0.403                    -0.450                 -0.379         1.64     0.484  -0.396  -0.441  -0.461  -0.497  -0.428  -0.317\n#&gt;  8   -0.289 -0.502 yes                 -0.366            -0.333           -0.403                    -0.450                  2.64         -0.609    0.484  -0.396  -0.441  -0.461  -0.497   2.34   -0.317\n#&gt;  9   -0.971  0.877 yes                 -0.366            -0.333            2.48                     -0.450                 -0.379        -0.609    0.484  -0.396   2.27   -0.461  -0.497  -0.428  -0.317\n#&gt; 10    0.631 -0.732 yes                 -0.366            -0.333           -0.403                    -0.450                  2.64         -0.609    0.484  -0.396  -0.441  -0.461  -0.497  -0.428  -0.317\n#&gt; # ℹ 7,990 more rows\n#&gt; # ℹ abbreviated names: ¹​company_Taxi.Affiliation.Services, ²​company_Taxicab.Insurance.Agency.Llc\n#&gt; # ℹ 3 more variables: month_Feb &lt;dbl&gt;, month_Mar &lt;dbl&gt;, month_Apr &lt;dbl&gt;"
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#tidying-a-recipe",
+    "href": "slides/intro-extra-recipes.html#tidying-a-recipe",
+    "title": "Extras - Recipes",
+    "section": "Tidying a recipe",
+    "text": "Tidying a recipe\nOnce a recipe as been estimated, there are various bits of information saved in it.\n\nThe tidy() function can be used to get specific results from the recipe."
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#your-turn-2",
+    "href": "slides/intro-extra-recipes.html#your-turn-2",
+    "title": "Extras - Recipes",
+    "section": "Your turn",
+    "text": "Your turn\n\nTake a prepped recipe and use the tidy() function on it.\nUse the number argument to inspect different steps.\n\n\n\n\n−+\n05:00"
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#tidying-a-recipe-1",
+    "href": "slides/intro-extra-recipes.html#tidying-a-recipe-1",
+    "title": "Extras - Recipes",
+    "section": "Tidying a recipe",
+    "text": "Tidying a recipe\n\nprep(taxi_rec) %&gt;%\n  tidy()\n#&gt; # A tibble: 5 × 6\n#&gt;   number operation type      trained skip  id             \n#&gt;    &lt;int&gt; &lt;chr&gt;     &lt;chr&gt;     &lt;lgl&gt;   &lt;lgl&gt; &lt;chr&gt;          \n#&gt; 1      1 step      unknown   TRUE    FALSE unknown_NTmu5  \n#&gt; 2      2 step      dummy     TRUE    FALSE dummy_cT3Uy    \n#&gt; 3      3 step      zv        TRUE    FALSE zv_z22dk       \n#&gt; 4      4 step      log       TRUE    FALSE log_QQ1iw      \n#&gt; 5      5 step      normalize TRUE    FALSE normalize_3cTJb"
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#tidying-a-recipe-2",
+    "href": "slides/intro-extra-recipes.html#tidying-a-recipe-2",
+    "title": "Extras - Recipes",
+    "section": "Tidying a recipe",
+    "text": "Tidying a recipe\n\nprep(taxi_rec) %&gt;%\n  tidy(number = 2)\n#&gt; # A tibble: 20 × 3\n#&gt;    terms   columns                      id         \n#&gt;    &lt;chr&gt;   &lt;chr&gt;                        &lt;chr&gt;      \n#&gt;  1 company City Service                 dummy_cT3Uy\n#&gt;  2 company Flash Cab                    dummy_cT3Uy\n#&gt;  3 company Sun Taxi                     dummy_cT3Uy\n#&gt;  4 company Taxi Affiliation Services    dummy_cT3Uy\n#&gt;  5 company Taxicab Insurance Agency Llc dummy_cT3Uy\n#&gt;  6 company other                        dummy_cT3Uy\n#&gt;  7 company unknown                      dummy_cT3Uy\n#&gt;  8 local   no                           dummy_cT3Uy\n#&gt;  9 local   unknown                      dummy_cT3Uy\n#&gt; 10 dow     Mon                          dummy_cT3Uy\n#&gt; 11 dow     Tue                          dummy_cT3Uy\n#&gt; 12 dow     Wed                          dummy_cT3Uy\n#&gt; 13 dow     Thu                          dummy_cT3Uy\n#&gt; 14 dow     Fri                          dummy_cT3Uy\n#&gt; 15 dow     Sat                          dummy_cT3Uy\n#&gt; 16 dow     unknown                      dummy_cT3Uy\n#&gt; 17 month   Feb                          dummy_cT3Uy\n#&gt; 18 month   Mar                          dummy_cT3Uy\n#&gt; 19 month   Apr                          dummy_cT3Uy\n#&gt; 20 month   unknown                      dummy_cT3Uy"
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#using-a-recipe-in-tidymodels",
+    "href": "slides/intro-extra-recipes.html#using-a-recipe-in-tidymodels",
+    "title": "Extras - Recipes",
+    "section": "Using a recipe in tidymodels",
+    "text": "Using a recipe in tidymodels\nThe recommended way to use a recipe in tidymodels is to use it as part of a workflow().\n\ntaxi_wflow &lt;- workflow() %&gt;%  \n  add_recipe(taxi_rec) %&gt;%  \n  add_model(linear_reg())\n\nWhen used in this way, you don’t need to worry about prep() and bake() as it is handled for you."
+  },
+  {
+    "objectID": "slides/intro-extra-recipes.html#more-information",
+    "href": "slides/intro-extra-recipes.html#more-information",
+    "title": "Extras - Recipes",
+    "section": "More information",
+    "text": "More information\n\nhttps://recipes.tidymodels.org/\nhttps://www.tmwr.org/recipes.html\n\n\n\nhttps://workshops.tidymodels.org"
+  },
+  {
+    "objectID": "slides/intro-05-tuning-models.html#tuning-parameters",
+    "href": "slides/intro-05-tuning-models.html#tuning-parameters",
+    "title": "5 - Tuning models",
+    "section": "Tuning parameters",
+    "text": "Tuning parameters\nSome model or preprocessing parameters cannot be estimated directly from the data.\n\nSome examples:\n\nTree depth in decision trees\nNumber of neighbors in a K-nearest neighbor model"
+  },
+  {
+    "objectID": "slides/intro-05-tuning-models.html#optimize-tuning-parameters",
+    "href": "slides/intro-05-tuning-models.html#optimize-tuning-parameters",
+    "title": "5 - Tuning models",
+    "section": "Optimize tuning parameters",
+    "text": "Optimize tuning parameters\n\nTry different values and measure their performance.\n\n\n\nFind good values for these parameters.\n\n\n\n\nOnce the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set."
+  },
+  {
+    "objectID": "slides/intro-05-tuning-models.html#optimize-tuning-parameters-1",
+    "href": "slides/intro-05-tuning-models.html#optimize-tuning-parameters-1",
+    "title": "5 - Tuning models",
+    "section": "Optimize tuning parameters",
+    "text": "Optimize tuning parameters\nThe main two strategies for optimization are:\n\n\nGrid search 💠 which tests a pre-defined set of candidate values\nIterative search 🌀 which suggests/estimates new values of candidate parameters to evaluate"
+  },
+  {
+    "objectID": "slides/intro-05-tuning-models.html#specifying-tuning-parameters",
+    "href": "slides/intro-05-tuning-models.html#specifying-tuning-parameters",
+    "title": "5 - Tuning models",
+    "section": "Specifying tuning parameters",
+    "text": "Specifying tuning parameters\nLet’s take our previous random forest workflow and tag for tuning the minimum number of data points in each node:\n\nrf_spec &lt;- rand_forest(min_n = tune()) %&gt;% \n  set_mode(\"classification\")\n\nrf_wflow &lt;- workflow(tip ~ ., rf_spec)\nrf_wflow\n#&gt; ══ Workflow ══════════════════════════════════════════════════════════\n#&gt; Preprocessor: Formula\n#&gt; Model: rand_forest()\n#&gt; \n#&gt; ── Preprocessor ──────────────────────────────────────────────────────\n#&gt; tip ~ .\n#&gt; \n#&gt; ── Model ─────────────────────────────────────────────────────────────\n#&gt; Random Forest Model Specification (classification)\n#&gt; \n#&gt; Main Arguments:\n#&gt;   min_n = tune()\n#&gt; \n#&gt; Computational engine: ranger"
+  },
+  {
+    "objectID": "slides/intro-05-tuning-models.html#try-out-multiple-values",
+    "href": "slides/intro-05-tuning-models.html#try-out-multiple-values",
+    "title": "5 - Tuning models",
+    "section": "Try out multiple values",
+    "text": "Try out multiple values\ntune_grid() works similar to fit_resamples() but covers multiple parameter values:\n\nset.seed(22)\nrf_res &lt;- tune_grid(\n  rf_wflow,\n  taxi_folds,\n  grid = 5\n)"
+  },
+  {
+    "objectID": "slides/intro-05-tuning-models.html#compare-results",
+    "href": "slides/intro-05-tuning-models.html#compare-results",
+    "title": "5 - Tuning models",
+    "section": "Compare results",
+    "text": "Compare results\nInspecting results and selecting the best-performing hyperparameter(s):\n\nshow_best(rf_res)\n#&gt; # A tibble: 5 × 7\n#&gt;   min_n .metric .estimator  mean     n std_err .config             \n#&gt;   &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1    33 roc_auc binary     0.623    10  0.0149 Preprocessor1_Model1\n#&gt; 2    31 roc_auc binary     0.622    10  0.0154 Preprocessor1_Model3\n#&gt; 3    21 roc_auc binary     0.620    10  0.0149 Preprocessor1_Model4\n#&gt; 4    13 roc_auc binary     0.617    10  0.0137 Preprocessor1_Model5\n#&gt; 5     6 roc_auc binary     0.611    10  0.0156 Preprocessor1_Model2\n\nbest_parameter &lt;- select_best(rf_res)\nbest_parameter\n#&gt; # A tibble: 1 × 2\n#&gt;   min_n .config             \n#&gt;   &lt;int&gt; &lt;chr&gt;               \n#&gt; 1    33 Preprocessor1_Model1\n\ncollect_metrics() and autoplot() are also available."
+  },
+  {
+    "objectID": "slides/intro-05-tuning-models.html#the-final-fit",
+    "href": "slides/intro-05-tuning-models.html#the-final-fit",
+    "title": "5 - Tuning models",
+    "section": "The final fit",
+    "text": "The final fit\n\nrf_wflow &lt;- finalize_workflow(rf_wflow, best_parameter)\n\nfinal_fit &lt;- last_fit(rf_wflow, taxi_split) \n\ncollect_metrics(final_fit)\n#&gt; # A tibble: 2 × 4\n#&gt;   .metric  .estimator .estimate .config             \n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 accuracy binary         0.913 Preprocessor1_Model1\n#&gt; 2 roc_auc  binary         0.648 Preprocessor1_Model1"
+  },
+  {
+    "objectID": "slides/intro-05-tuning-models.html#your-turn",
+    "href": "slides/intro-05-tuning-models.html#your-turn",
+    "title": "5 - Tuning models",
+    "section": "Your turn",
+    "text": "Your turn\n\nModify your model workflow to tune one or more parameters.\nUse grid search to find the best parameter(s).\n\n\n\n−+\n05:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
     "objectID": "slides/intro-03-what-makes-a-model.html#your-turn",
@@ -3651,7 +3819,7 @@
     "href": "slides/intro-03-what-makes-a-model.html#your-turn-2",
     "title": "3 - What makes a model?",
     "section": "Your turn",
-    "text": "Your turn\n\nRun the tree_wflow chunk in your .qmd.\nEdit this code to make a workflow with your own model of choice.\n\n\n\n−+\n05:00"
+    "text": "Your turn\n\nRun the tree_wflow chunk in your .qmd.\nEdit this code to make a workflow with your own model of choice.\n\nExtension/Challenge: Other than formulas, what kinds of preprocessors are supported?\n\n\n\n−+\n05:00"
   },
   {
     "objectID": "slides/intro-03-what-makes-a-model.html#predict-with-your-model",
@@ -3710,6 +3878,20 @@
     "text": "The whole game - status update\n\n\nStress that fitting a model on the entire training set was only for illustrating how to fit a model\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
+    "objectID": "slides/intro-01-introduction.html#workshop-policies",
+    "href": "slides/intro-01-introduction.html#workshop-policies",
+    "title": "1 - Introduction",
+    "section": "Workshop policies",
+    "text": "Workshop policies\n\nPlease do not photograph people wearing red lanyards\nThere are gender-neutral bathrooms located are among the Grand Suite Bathrooms\nThere are two meditation/prayer rooms: Grand Suite 2A and 2B\nA lactation room is located in Grand Suite 1\nThe meditation/prayer and lactation rooms are open\nSun - Tue 7:30am - 7:00pm, Wed 8:00am - 6:00pm"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#workshop-policies-1",
+    "href": "slides/intro-01-introduction.html#workshop-policies-1",
+    "title": "1 - Introduction",
+    "section": "Workshop policies",
+    "text": "Workshop policies\n\nPlease review the code of conduct and COVID policies, which apply to all workshops: https://posit.co/code-of-conduct/.\nCoC site has info on how to report a problem (in person, email, phone)"
+  },
+  {
     "objectID": "slides/intro-01-introduction.html#who-are-you",
     "href": "slides/intro-01-introduction.html#who-are-you",
     "title": "1 - Introduction",
@@ -3731,8 +3913,8 @@
     "text": "Asking for help\n\n🟪 “I’m stuck and need help!”\n\n\n🟩 “I finished the exercise”"
   },
   {
-    "objectID": "slides/intro-01-introduction.html#section",
-    "href": "slides/intro-01-introduction.html#section",
+    "objectID": "slides/intro-01-introduction.html#section-2",
+    "href": "slides/intro-01-introduction.html#section-2",
     "title": "1 - Introduction",
     "section": "👀",
     "text": "👀"
@@ -3742,11 +3924,11 @@
     "href": "slides/intro-01-introduction.html#plan-for-this-workshop",
     "title": "1 - Introduction",
     "section": "Plan for this workshop",
-    "text": "Plan for this workshop\n\nYour data budget\nWhat makes a model\nEvaluating models\n\n\nThis workshop will well-prepare folks going on to the Advanced tidymodels workshop, which will cover feature engineering and hyperparameter tuning."
+    "text": "Plan for this workshop\n\nYour data budget\nWhat makes a model\nEvaluating models\nTuning models\n\n\nThis workshop will well-prepare folks going on to the Advanced tidymodels workshop, which will cover feature engineering and much more on hyperparameter tuning."
   },
   {
-    "objectID": "slides/intro-01-introduction.html#section-1",
-    "href": "slides/intro-01-introduction.html#section-1",
+    "objectID": "slides/intro-01-introduction.html#section-3",
+    "href": "slides/intro-01-introduction.html#section-3",
     "title": "1 - Introduction",
     "section": "",
     "text": "Introduce yourself to your neighbors 👋\n\n Log in to Posit Cloud (free):\nCheck the workshop channel on Discord for the link!"
@@ -3784,14 +3966,14 @@
     "href": "slides/intro-01-introduction.html#what-is-tidymodels",
     "title": "1 - Introduction",
     "section": "What is tidymodels? ",
-    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n#&gt; ── Attaching packages ──────────────────────────── tidymodels 1.1.1 ──\n#&gt; ✔ broom        1.0.5          ✔ rsample      1.2.0     \n#&gt; ✔ dials        1.2.0          ✔ tibble       3.2.1     \n#&gt; ✔ dplyr        1.1.2          ✔ tidyr        1.3.0     \n#&gt; ✔ infer        1.0.4          ✔ tune         1.1.2     \n#&gt; ✔ modeldata    1.2.0          ✔ workflows    1.1.3     \n#&gt; ✔ parsnip      1.1.1          ✔ workflowsets 1.0.1     \n#&gt; ✔ purrr        1.0.2          ✔ yardstick    1.2.0     \n#&gt; ✔ recipes      1.0.7.9000\n#&gt; ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#&gt; ✖ purrr::discard() masks scales::discard()\n#&gt; ✖ dplyr::filter()  masks stats::filter()\n#&gt; ✖ dplyr::lag()     masks stats::lag()\n#&gt; ✖ recipes::step()  masks stats::step()\n#&gt; • Search for functions across packages at https://www.tidymodels.org/find/"
+    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n#&gt; ── Attaching packages ──────────────────────────── tidymodels 1.1.1 ──\n#&gt; ✔ broom        1.0.5.9000     ✔ rsample      1.2.0.9000\n#&gt; ✔ dials        1.2.0          ✔ tibble       3.2.1     \n#&gt; ✔ dplyr        1.1.3          ✔ tidyr        1.3.0     \n#&gt; ✔ infer        1.0.4.9000     ✔ tune         1.1.2.9000\n#&gt; ✔ modeldata    1.2.0          ✔ workflows    1.1.3     \n#&gt; ✔ parsnip      1.1.1.9000     ✔ workflowsets 1.0.1     \n#&gt; ✔ purrr        1.0.2          ✔ yardstick    1.2.0.9001\n#&gt; ✔ recipes      1.0.8\n#&gt; ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#&gt; ✖ purrr::discard() masks scales::discard()\n#&gt; ✖ dplyr::filter()  masks stats::filter()\n#&gt; ✖ dplyr::lag()     masks stats::lag()\n#&gt; ✖ recipes::step()  masks stats::step()\n#&gt; • Use suppressPackageStartupMessages() to eliminate package startup messages"
   },
   {
     "objectID": "slides/intro-01-introduction.html#the-whole-game",
     "href": "slides/intro-01-introduction.html#the-whole-game",
     "title": "1 - Introduction",
     "section": "The whole game",
-    "text": "The whole game\nPart of any predictive modelling process is\n\nSplitting your data into training and test set\nUsing a resampling scheme\nFitting models\nAssessing performance\nChoosing a model\nFitting and assessing the final model"
+    "text": "The whole game\n\nRoadmap for today\nMinimal version of predictive modeling process\nFeature engineering and tuning as iterative extensions"
   },
   {
     "objectID": "slides/intro-01-introduction.html#the-whole-game-1",
@@ -3847,14 +4029,14 @@
     "href": "slides/intro-01-introduction.html#lets-install-some-packages",
     "title": "1 - Introduction",
     "section": "Let’s install some packages",
-    "text": "Let’s install some packages\nIf you are using your own laptop instead of Posit Cloud:\n\n# Install the packages for the workshop\npkgs &lt;- \n  c(\"bonsai\", \"doParallel\", \"embed\", \"finetune\", \"lightgbm\", \"lme4\",\n    \"plumber\", \"probably\", \"ranger\", \"rpart\", \"rpart.plot\", \"rules\",\n    \"splines2\", \"stacks\", \"textrecipes\", \"tidymodels\", \"vetiver\", \"remotes\")\n\ninstall.packages(pkgs)\n\n\n\n Or log in to Posit Cloud\nLink in our Discord channel!"
+    "text": "Let’s install some packages\nIf you are using your own laptop instead of Posit Cloud:\n\n# Install the packages for the workshop\npkgs &lt;- \n  c(\"bonsai\", \"doParallel\", \"embed\", \"finetune\", \"lightgbm\", \"lme4\",\n    \"plumber\", \"probably\", \"ranger\", \"rpart\", \"rpart.plot\", \"rules\",\n    \"splines2\", \"stacks\", \"text2vec\", \"textrecipes\", \"tidymodels\", \n    \"vetiver\", \"remotes\")\n\ninstall.packages(pkgs)\n\n\n\n Or log in to Posit Cloud\nLink in our Discord channel!"
   },
   {
     "objectID": "slides/intro-01-introduction.html#our-versions",
     "href": "slides/intro-01-introduction.html#our-versions",
     "title": "1 - Introduction",
     "section": "Our versions",
-    "text": "Our versions\nbonsai (0.2.1, CRAN), broom (1.0.5, CRAN), dials (1.2.0, CRAN), doParallel (1.0.17, CRAN), dplyr (1.1.2, CRAN), embed (1.1.2, CRAN), finetune (1.1.0, CRAN), ggplot2 (3.4.3, CRAN), lightgbm (3.3.5, CRAN), lme4 (1.1-34, CRAN), modeldata (1.2.0, CRAN), parsnip (1.1.1, CRAN), plumber (1.2.1, CRAN), probably (1.0.2, CRAN), purrr (1.0.2, CRAN), ranger (0.15.1, CRAN), recipes (1.0.7.9000, local), remotes (2.4.2.1, CRAN), rpart (4.1.19, CRAN), rpart.plot (3.1.1, CRAN), rsample (1.2.0, CRAN), rules (1.0.2, CRAN), scales (1.2.1, CRAN), stacks (1.0.2, CRAN), textrecipes (1.0.4, CRAN), tibble (3.2.1, CRAN), tidymodels (1.1.1, CRAN), tidyr (1.3.0, CRAN), tune (1.1.2, CRAN), vetiver (0.2.3, CRAN), workflows (1.1.3, CRAN), workflowsets (1.0.1, CRAN), yardstick (1.2.0, CRAN), and Quarto (1.4.104)\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Our versions\nR version 4.2.2 (2022-10-31), Quarto (1.4.104)\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nbonsai\n0.2.1.9000\n\n\nbroom\n1.0.5.9000\n\n\ndials\n1.2.0\n\n\ndoParallel\n1.0.17\n\n\ndplyr\n1.1.3\n\n\nembed\n1.1.1\n\n\nfinetune\n1.1.0.9000\n\n\nggplot2\n3.4.3\n\n\nlightgbm\n3.3.5\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nlme4\n1.1-33\n\n\nmodeldata\n1.2.0\n\n\nparsnip\n1.1.1.9000\n\n\nplumber\n1.2.1\n\n\nprobably\n1.0.2\n\n\npurrr\n1.0.2\n\n\nranger\n0.15.1\n\n\nrecipes\n1.0.8\n\n\nremotes\n2.4.2.9000\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nrpart\n4.1.19\n\n\nrpart.plot\n3.1.1\n\n\nrsample\n1.2.0.9000\n\n\nrules\n1.0.1\n\n\nscales\n1.2.1\n\n\nsplines2\n0.4.7\n\n\nstacks\n1.0.2.9000\n\n\ntext2vec\n0.6.3\n\n\ntextrecipes\n1.0.2\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\ntibble\n3.2.1\n\n\ntidymodels\n1.1.1\n\n\ntidyr\n1.3.0\n\n\ntune\n1.1.2.9000\n\n\nvetiver\n0.2.0\n\n\nworkflows\n1.1.3\n\n\nworkflowsets\n1.0.1\n\n\nyardstick\n1.2.0.9001\n\n\n\n\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
     "objectID": "slides/extras-transit-case-study.html#chicago-l-train-data",
@@ -4015,7 +4197,7 @@
     "href": "slides/extras-transit-case-study.html#how-do-the-results-look",
     "title": "Case Study on Transportation",
     "section": "How do the results look?",
-    "text": "How do the results look?\n\nrank_results(chi_res)\n#&gt; # A tibble: 31 × 9\n#&gt;    wflow_id     .config              .metric  mean std_err     n preprocessor model   rank\n#&gt;    &lt;chr&gt;        &lt;chr&gt;                &lt;chr&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;        &lt;chr&gt;  &lt;int&gt;\n#&gt;  1 pca_cubist   Preprocessor1_Model1 mae     0.806   0.104    16 recipe       cubis…     1\n#&gt;  2 pca_cubist   Preprocessor3_Model3 mae     0.990   0.114    16 recipe       cubis…     2\n#&gt;  3 pca_cubist   Preprocessor4_Model2 mae     0.990   0.121    16 recipe       cubis…     3\n#&gt;  4 pca_cubist   Preprocessor4_Model1 mae     1.00    0.127    16 recipe       cubis…     4\n#&gt;  5 pca_cubist   Preprocessor3_Model2 mae     1.00    0.119    16 recipe       cubis…     5\n#&gt;  6 pca_cubist   Preprocessor2_Model2 mae     1.02    0.118    16 recipe       cubis…     6\n#&gt;  7 pca_cubist   Preprocessor1_Model3 mae     1.05    0.131    16 recipe       cubis…     7\n#&gt;  8 basic_cubist Preprocessor1_Model8 mae     1.07    0.115    16 recipe       cubis…     8\n#&gt;  9 basic_cubist Preprocessor1_Model7 mae     1.07    0.112    16 recipe       cubis…     9\n#&gt; 10 basic_cubist Preprocessor1_Model6 mae     1.07    0.114    16 recipe       cubis…    10\n#&gt; # ℹ 21 more rows"
+    "text": "How do the results look?\n\nrank_results(chi_res)\n#&gt; # A tibble: 31 × 9\n#&gt;    wflow_id     .config              .metric  mean std_err     n preprocessor model   rank\n#&gt;    &lt;chr&gt;        &lt;chr&gt;                &lt;chr&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;        &lt;chr&gt;  &lt;int&gt;\n#&gt;  1 pca_cubist   Preprocessor1_Model1 mae     0.798   0.104    16 recipe       cubis…     1\n#&gt;  2 pca_cubist   Preprocessor3_Model3 mae     0.978   0.110    16 recipe       cubis…     2\n#&gt;  3 pca_cubist   Preprocessor4_Model2 mae     0.983   0.122    16 recipe       cubis…     3\n#&gt;  4 pca_cubist   Preprocessor4_Model1 mae     0.991   0.127    16 recipe       cubis…     4\n#&gt;  5 pca_cubist   Preprocessor3_Model2 mae     0.991   0.113    16 recipe       cubis…     5\n#&gt;  6 pca_cubist   Preprocessor2_Model2 mae     1.02    0.118    16 recipe       cubis…     6\n#&gt;  7 pca_cubist   Preprocessor1_Model3 mae     1.05    0.134    16 recipe       cubis…     7\n#&gt;  8 basic_cubist Preprocessor1_Model8 mae     1.07    0.115    16 recipe       cubis…     8\n#&gt;  9 basic_cubist Preprocessor1_Model7 mae     1.07    0.112    16 recipe       cubis…     9\n#&gt; 10 basic_cubist Preprocessor1_Model6 mae     1.07    0.114    16 recipe       cubis…    10\n#&gt; # ℹ 21 more rows"
   },
   {
     "objectID": "slides/extras-transit-case-study.html#plot-the-results",
@@ -4092,7 +4274,7 @@
     "href": "slides/extras-transit-case-study.html#estimate-weights-for-each-candidate",
     "title": "Case Study on Transportation",
     "section": "Estimate weights for each candidate ",
-    "text": "Estimate weights for each candidate \nWhich configurations should be retained? Uses a penalized linear model:\n\nset.seed(122)\nchi_stack_res &lt;- blend_predictions(chi_stack)\n\nchi_stack_res\n#&gt; # A tibble: 4 × 3\n#&gt;   member           type         weight\n#&gt;   &lt;chr&gt;            &lt;chr&gt;         &lt;dbl&gt;\n#&gt; 1 pca_cubist_1_1   cubist_rules  0.410\n#&gt; 2 basic_cubist_1_4 cubist_rules  0.266\n#&gt; 3 pca_cubist_3_2   cubist_rules  0.193\n#&gt; 4 pca_lm_4_1       linear_reg    0.171"
+    "text": "Estimate weights for each candidate \nWhich configurations should be retained? Uses a penalized linear model:\n\nset.seed(122)\nchi_stack_res &lt;- blend_predictions(chi_stack)\n\nchi_stack_res\n#&gt; # A tibble: 5 × 3\n#&gt;   member           type         weight\n#&gt;   &lt;chr&gt;            &lt;chr&gt;         &lt;dbl&gt;\n#&gt; 1 pca_cubist_1_1   cubist_rules  0.343\n#&gt; 2 pca_cubist_3_2   cubist_rules  0.236\n#&gt; 3 basic_cubist_1_4 cubist_rules  0.189\n#&gt; 4 pca_lm_4_1       linear_reg    0.163\n#&gt; 5 pca_cubist_3_3   cubist_rules  0.109"
   },
   {
     "objectID": "slides/extras-transit-case-study.html#how-did-it-do",
@@ -4134,7 +4316,7 @@
     "href": "slides/extras-transit-case-study.html#compare-the-results",
     "title": "Case Study on Transportation",
     "section": "Compare the results  ",
-    "text": "Compare the results  \nSingle best versus the stack:\n\ncollect_metrics(cubist_res)\n#&gt; # A tibble: 1 × 4\n#&gt;   .metric .estimator .estimate .config             \n#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 mae     standard       0.670 Preprocessor1_Model1\n\nstack_pred %&gt;% mae(ridership, .pred)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric .estimator .estimate\n#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 mae     standard       0.687"
+    "text": "Compare the results  \nSingle best versus the stack:\n\ncollect_metrics(cubist_res)\n#&gt; # A tibble: 1 × 4\n#&gt;   .metric .estimator .estimate .config             \n#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 mae     standard       0.670 Preprocessor1_Model1\n\nstack_pred %&gt;% mae(ridership, .pred)\n#&gt; # A tibble: 1 × 3\n#&gt;   .metric .estimator .estimate\n#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;\n#&gt; 1 mae     standard       0.689"
   },
   {
     "objectID": "slides/extras-transit-case-study.html#plot-the-test-set",
@@ -4204,7 +4386,7 @@
     "href": "slides/advanced-05-iterative.html#previously---setup",
     "title": "4 - Iterative Search",
     "section": "Previously - Setup",
-    "text": "Previously - Setup\n\n\n\nlibrary(tidymodels)\nlibrary(textrecipes)\nlibrary(bonsai)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\n\n\nset.seed(295)\nhotel_rates &lt;- \n  hotel_rates %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date) %&gt;%  \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
+    "text": "Previously - Setup\n\n\n\nlibrary(tidymodels)\nlibrary(textrecipes)\nlibrary(bonsai)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\n\n\ndata(hotel_rates)\nset.seed(295)\nhotel_rates &lt;- \n  hotel_rates %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date) %&gt;%  \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
   },
   {
     "objectID": "slides/advanced-05-iterative.html#previously---data-usage",
@@ -4218,7 +4400,7 @@
     "href": "slides/advanced-05-iterative.html#previously---boosting-model",
     "title": "4 - Iterative Search",
     "section": "Previously - Boosting Model",
-    "text": "Previously - Boosting Model\n\nhotel_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;%\n  step_YeoJohnson(lead_time) %&gt;%\n  step_dummy_hash(agent,   num_terms = tune(\"agent hash\")) %&gt;%\n  step_dummy_hash(company, num_terms = tune(\"company hash\")) %&gt;%\n  step_zv(all_predictors())\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(), min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)\n\nlgbm_param &lt;-\n  lgbm_wflow %&gt;%\n  extract_parameter_set_dials() %&gt;%\n  update(`agent hash`   = num_hash(c(3, 8)),\n         `company hash` = num_hash(c(3, 8)))"
+    "text": "Previously - Boosting Model\n\nhotel_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;%\n  step_YeoJohnson(lead_time) %&gt;%\n  step_dummy_hash(agent,   num_terms = tune(\"agent hash\")) %&gt;%\n  step_dummy_hash(company, num_terms = tune(\"company hash\")) %&gt;%\n  step_zv(all_predictors())\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(), min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\", num_threads = 1)\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)\n\nlgbm_param &lt;-\n  lgbm_wflow %&gt;%\n  extract_parameter_set_dials() %&gt;%\n  update(`agent hash`   = num_hash(c(3, 8)),\n         `company hash` = num_hash(c(3, 8)))"
   },
   {
     "objectID": "slides/advanced-05-iterative.html#iterative-search",
@@ -4358,7 +4540,7 @@
     "href": "slides/advanced-05-iterative.html#bo-using-tidymodels",
     "title": "4 - Iterative Search",
     "section": "BO using tidymodels",
-    "text": "BO using tidymodels\n\nset.seed(15)\nlgbm_bayes_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_bayes(\n    resamples = hotel_rs,\n    initial = init_res,     # &lt;- initial results\n    iter = 20,\n    param_info = lgbm_param,\n    metrics = reg_metrics\n  )\n\nshow_best(lgbm_bayes_res, metric = \"mae\")\n#&gt; # A tibble: 5 × 12\n#&gt;   trees min_n learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config .iter\n#&gt;   &lt;int&gt; &lt;int&gt;      &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;int&gt;\n#&gt; 1  1769     2     0.0299          114            245 mae     standard    9.41    10   0.160 Iter13     13\n#&gt; 2  1969     3     0.0270          240             99 mae     standard    9.49    10   0.189 Iter11     11\n#&gt; 3  1780     5     0.0403           27             78 mae     standard    9.54    10   0.164 Iter17     17\n#&gt; 4  1454     3     0.0414          114             10 mae     standard    9.55    10   0.144 Iter10     10\n#&gt; 5  1253     2     0.0312          131            207 mae     standard    9.56    10   0.145 Iter19     19"
+    "text": "BO using tidymodels\n\nset.seed(15)\nlgbm_bayes_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_bayes(\n    resamples = hotel_rs,\n    initial = init_res,     # &lt;- initial results\n    iter = 20,\n    param_info = lgbm_param,\n    metrics = reg_metrics\n  )\n\nshow_best(lgbm_bayes_res, metric = \"mae\")\n#&gt; # A tibble: 5 × 12\n#&gt;   trees min_n learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config .iter\n#&gt;   &lt;int&gt; &lt;int&gt;      &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;int&gt;\n#&gt; 1  1769     2     0.0299          114            245 mae     standard    9.40    10   0.160 Iter13     13\n#&gt; 2  1969     3     0.0270          240             99 mae     standard    9.49    10   0.188 Iter11     11\n#&gt; 3  1780     5     0.0403           27             78 mae     standard    9.54    10   0.164 Iter17     17\n#&gt; 4  1454     3     0.0414          114             10 mae     standard    9.55    10   0.145 Iter10     10\n#&gt; 5  1253     2     0.0312          131            207 mae     standard    9.56    10   0.146 Iter19     19"
   },
   {
     "objectID": "slides/advanced-05-iterative.html#plotting-bo-results",
@@ -4414,7 +4596,7 @@
     "href": "slides/advanced-05-iterative.html#locking-down-the-tuning-parameters",
     "title": "4 - Iterative Search",
     "section": "Locking Down the Tuning Parameters",
-    "text": "Locking Down the Tuning Parameters\nWe can take the results of the Bayesian optimization and accept the best results:\n\nbest_param &lt;- select_best(lgbm_bayes_res, metric = \"mae\")\nfinal_wflow &lt;- \n  lgbm_wflow %&gt;% \n  finalize_workflow(best_param)\nfinal_wflow\n#&gt; ══ Workflow ══════════════════════════════════════════════════════════\n#&gt; Preprocessor: Recipe\n#&gt; Model: boost_tree()\n#&gt; \n#&gt; ── Preprocessor ──────────────────────────────────────────────────────\n#&gt; 4 Recipe Steps\n#&gt; \n#&gt; • step_YeoJohnson()\n#&gt; • step_dummy_hash()\n#&gt; • step_dummy_hash()\n#&gt; • step_zv()\n#&gt; \n#&gt; ── Model ─────────────────────────────────────────────────────────────\n#&gt; Boosted Tree Model Specification (regression)\n#&gt; \n#&gt; Main Arguments:\n#&gt;   trees = 1769\n#&gt;   min_n = 2\n#&gt;   learn_rate = 0.0299391312149257\n#&gt; \n#&gt; Computational engine: lightgbm"
+    "text": "Locking Down the Tuning Parameters\nWe can take the results of the Bayesian optimization and accept the best results:\n\nbest_param &lt;- select_best(lgbm_bayes_res, metric = \"mae\")\nfinal_wflow &lt;- \n  lgbm_wflow %&gt;% \n  finalize_workflow(best_param)\nfinal_wflow\n#&gt; ══ Workflow ══════════════════════════════════════════════════════════\n#&gt; Preprocessor: Recipe\n#&gt; Model: boost_tree()\n#&gt; \n#&gt; ── Preprocessor ──────────────────────────────────────────────────────\n#&gt; 4 Recipe Steps\n#&gt; \n#&gt; • step_YeoJohnson()\n#&gt; • step_dummy_hash()\n#&gt; • step_dummy_hash()\n#&gt; • step_zv()\n#&gt; \n#&gt; ── Model ─────────────────────────────────────────────────────────────\n#&gt; Boosted Tree Model Specification (regression)\n#&gt; \n#&gt; Main Arguments:\n#&gt;   trees = 1769\n#&gt;   min_n = 2\n#&gt;   learn_rate = 0.0299391312149257\n#&gt; \n#&gt; Engine-Specific Arguments:\n#&gt;   num_threads = 1\n#&gt; \n#&gt; Computational engine: lightgbm"
   },
   {
     "objectID": "slides/advanced-05-iterative.html#the-final-fit",
@@ -4428,14 +4610,14 @@
     "href": "slides/advanced-05-iterative.html#test-set-results",
     "title": "4 - Iterative Search",
     "section": "Test Set Results",
-    "text": "Test Set Results\n\n\n\nfinal_res %&gt;% \n  collect_predictions() %&gt;% \n  cal_plot_regression(\n    truth = avg_price_per_room, \n    estimate = .pred, \n    alpha = 1 / 4)\n\nTest set performance:\n\nfinal_res %&gt;% collect_metrics()\n#&gt; # A tibble: 2 × 4\n#&gt;   .metric .estimator .estimate .config             \n#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 mae     standard       9.63  Preprocessor1_Model1\n#&gt; 2 rsq     standard       0.948 Preprocessor1_Model1\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Test Set Results\n\n\n\nfinal_res %&gt;% \n  collect_predictions() %&gt;% \n  cal_plot_regression(\n    truth = avg_price_per_room, \n    estimate = .pred, \n    alpha = 1 / 4)\n\nTest set performance:\n\nfinal_res %&gt;% collect_metrics()\n#&gt; # A tibble: 2 × 4\n#&gt;   .metric .estimator .estimate .config             \n#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 mae     standard       9.62  Preprocessor1_Model1\n#&gt; 2 rsq     standard       0.948 Preprocessor1_Model1\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
     "objectID": "slides/advanced-03-tuning-hyperparameters.html#previously---setup",
     "href": "slides/advanced-03-tuning-hyperparameters.html#previously---setup",
     "title": "2 - Tuning Hyperparameters",
     "section": "Previously - Setup ",
-    "text": "Previously - Setup \n\n\n\nlibrary(tidymodels)\nlibrary(textrecipes)\nlibrary(bonsai)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\nreg_metrics &lt;- metric_set(mae, rsq)\n\n\n\nset.seed(295)\nhotel_rates &lt;- \n  hotel_rates %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
+    "text": "Previously - Setup \n\n\n\nlibrary(tidymodels)\nlibrary(textrecipes)\nlibrary(bonsai)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\nreg_metrics &lt;- metric_set(mae, rsq)\n\n\n\ndata(hotel_rates)\nset.seed(295)\nhotel_rates &lt;- \n  hotel_rates %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
   },
   {
     "objectID": "slides/advanced-03-tuning-hyperparameters.html#previously---data-usage",
@@ -4505,7 +4687,7 @@
     "href": "slides/advanced-03-tuning-hyperparameters.html#boosted-tree-tuning-parameters-2",
     "title": "2 - Tuning Hyperparameters",
     "section": "Boosted Tree Tuning Parameters   ",
-    "text": "Boosted Tree Tuning Parameters   \nWe’ll need to load the bonsai package. This has the information needed to use lightgbm\n\nlibrary(bonsai)\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hash_rec, lgbm_spec)"
+    "text": "Boosted Tree Tuning Parameters   \nWe’ll need to load the bonsai package. This has the information needed to use lightgbm\n\nlibrary(bonsai)\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\", num_threads = 1)\n\nlgbm_wflow &lt;- workflow(hash_rec, lgbm_spec)"
   },
   {
     "objectID": "slides/advanced-03-tuning-hyperparameters.html#optimize-tuning-parameters-1",
@@ -4596,7 +4778,7 @@
     "href": "slides/advanced-03-tuning-hyperparameters.html#choosing-tuning-parameters",
     "title": "2 - Tuning Hyperparameters",
     "section": "Choosing tuning parameters     ",
-    "text": "Choosing tuning parameters     \nLet’s take our previous model and tune more parameters:\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(),  min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hash_rec, lgbm_spec)\n\n# Update the feature hash ranges (log-2 units)\nlgbm_param &lt;-\n  lgbm_wflow %&gt;%\n  extract_parameter_set_dials() %&gt;%\n  update(`agent hash`   = num_hash(c(3, 8)),\n         `company hash` = num_hash(c(3, 8)))"
+    "text": "Choosing tuning parameters     \nLet’s take our previous model and tune more parameters:\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(),  min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\", num_threads = 1)\n\nlgbm_wflow &lt;- workflow(hash_rec, lgbm_spec)\n\n# Update the feature hash ranges (log-2 units)\nlgbm_param &lt;-\n  lgbm_wflow %&gt;%\n  extract_parameter_set_dials() %&gt;%\n  update(`agent hash`   = num_hash(c(3, 8)),\n         `company hash` = num_hash(c(3, 8)))"
   },
   {
     "objectID": "slides/advanced-03-tuning-hyperparameters.html#grid-search-3",
@@ -4683,6 +4865,20 @@
     "text": "Your turn\n\n\nSet trees = 2000 and tune the stop_iter parameter.\nNote that you will need to regenerate lgbm_param with your new workflow!\n\n\n\n−+\n10:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
+    "objectID": "slides/advanced-01-introduction.html#workshop-policies",
+    "href": "slides/advanced-01-introduction.html#workshop-policies",
+    "title": "1 - Introduction",
+    "section": "Workshop policies",
+    "text": "Workshop policies\n\nPlease do not photograph people wearing red lanyards\nThere are gender-neutral bathrooms located are among the Grand Suite Bathrooms\nThere are two meditation/prayer rooms: Grand Suite 2A and 2B\nA lactation room is located in Grand Suite 1\nThe meditation/prayer and lactation rooms are open\nSun - Tue 7:30am - 7:00pm, Wed 8:00am - 6:00pm"
+  },
+  {
+    "objectID": "slides/advanced-01-introduction.html#workshop-policies-1",
+    "href": "slides/advanced-01-introduction.html#workshop-policies-1",
+    "title": "1 - Introduction",
+    "section": "Workshop policies",
+    "text": "Workshop policies\n\nPlease review the code of conduct and COVID policies, which apply to all workshops: https://posit.co/code-of-conduct/.\nCoC site has info on how to report a problem (in person, email, phone)"
+  },
+  {
     "objectID": "slides/advanced-01-introduction.html#who-are-you",
     "href": "slides/advanced-01-introduction.html#who-are-you",
     "title": "1 - Introduction",
@@ -4704,8 +4900,8 @@
     "text": "Asking for help\n\n🟪 “I’m stuck and need help!”\n\n\n🟩 “I finished the exercise”"
   },
   {
-    "objectID": "slides/advanced-01-introduction.html#section",
-    "href": "slides/advanced-01-introduction.html#section",
+    "objectID": "slides/advanced-01-introduction.html#section-2",
+    "href": "slides/advanced-01-introduction.html#section-2",
     "title": "1 - Introduction",
     "section": "👀",
     "text": "👀"
@@ -4718,25 +4914,25 @@
     "text": "Tentative plan for this workshop\n\nFeature engineering with recipes\nModel optimization by tuning\n\nGrid search\nRacing\nIterative methods\n\nExtras (time permitting)\n\nEffect encodings\nA case study"
   },
   {
-    "objectID": "slides/advanced-01-introduction.html#section-1",
-    "href": "slides/advanced-01-introduction.html#section-1",
+    "objectID": "slides/advanced-01-introduction.html#section-3",
+    "href": "slides/advanced-01-introduction.html#section-3",
     "title": "1 - Introduction",
     "section": "",
-    "text": "Introduce yourself to your neighbors 👋\n\nCheck Slack (#ml-ws-2023) for an RStudio Cloud link."
+    "text": "Introduce yourself to your neighbors 👋\n\n Log in to Posit Cloud (free):\nCheck the workshop channel on Discord for the link!"
   },
   {
     "objectID": "slides/advanced-01-introduction.html#lets-install-some-packages",
     "href": "slides/advanced-01-introduction.html#lets-install-some-packages",
     "title": "1 - Introduction",
     "section": "Let’s install some packages",
-    "text": "Let’s install some packages\nIf you are using your own laptop instead of RStudio Cloud:\n\n# Install the packages for the workshop\npkgs &lt;- \n  c(\"bonsai\", \"doParallel\", \"embed\", \"finetune\", \"lightgbm\", \"lme4\",\n    \"plumber\", \"probably\", \"ranger\", \"rpart\", \"rpart.plot\", \"rules\",\n    \"splines2\", \"stacks\", \"textrecipes\", \"tidymodels\", \"vetiver\", \"remotes\")\n\ninstall.packages(pkgs)\n\n\nCheck Slack (#ml-ws-2023) for an RStudio Cloud link."
+    "text": "Let’s install some packages\nIf you are using your own laptop instead of RStudio Cloud:\n\n# Install the packages for the workshop\npkgs &lt;- \n  c(\"bonsai\", \"doParallel\", \"embed\", \"finetune\", \"lightgbm\", \"lme4\",\n    \"plumber\", \"probably\", \"ranger\", \"rpart\", \"rpart.plot\", \"rules\",\n    \"splines2\", \"stacks\", \"text2vec\", \"textrecipes\", \"tidymodels\", \n    \"vetiver\", \"remotes\")\n\ninstall.packages(pkgs)\n\n\n\n Or log in to Posit Cloud\nLink in our Discord channel!"
   },
   {
     "objectID": "slides/advanced-01-introduction.html#hotel-data",
     "href": "slides/advanced-01-introduction.html#hotel-data",
     "title": "1 - Introduction",
     "section": "Hotel Data  ",
-    "text": "Hotel Data  \nWe’ll use data on hotels to predict the cost of a room.\nThe data are in the modeldata package. We’ll sample down the data and refactor some columns:\n\n\n\nlibrary(tidymodels)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\n\n\nset.seed(295)\nhotel_rates &lt;- \n  hotel_rates %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
+    "text": "Hotel Data  \nWe’ll use data on hotels to predict the cost of a room.\nThe data are in the modeldata package. We’ll sample down the data and refactor some columns:\n\n\n\nlibrary(tidymodels)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\n\n\ndata(hotel_rates)\nset.seed(295)\nhotel_rates &lt;- \n  hotel_rates %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
   },
   {
     "objectID": "slides/advanced-01-introduction.html#hotel-date-columns",
@@ -4771,7 +4967,7 @@
     "href": "slides/advanced-01-introduction.html#our-versions",
     "title": "1 - Introduction",
     "section": "Our versions",
-    "text": "Our versions\nbonsai (0.2.1, CRAN), broom (1.0.5, CRAN), dials (1.2.0, CRAN), doParallel (1.0.17, CRAN), dplyr (1.1.2, CRAN), embed (1.1.2, CRAN), finetune (1.1.0, CRAN), ggplot2 (3.4.3, CRAN), lightgbm (3.3.5, CRAN), lme4 (1.1-34, CRAN), modeldata (1.2.0, CRAN), parsnip (1.1.1, CRAN), plumber (1.2.1, CRAN), probably (1.0.2, CRAN), purrr (1.0.2, CRAN), ranger (0.15.1, CRAN), recipes (1.0.7.9000, local), remotes (2.4.2.1, CRAN), rpart (4.1.19, CRAN), rpart.plot (3.1.1, CRAN), rsample (1.2.0, CRAN), rules (1.0.2, CRAN), scales (1.2.1, CRAN), stacks (1.0.2, CRAN), textrecipes (1.0.4, CRAN), tibble (3.2.1, CRAN), tidymodels (1.1.1, CRAN), tidyr (1.3.0, CRAN), tune (1.1.2, CRAN), vetiver (0.2.3, CRAN), workflows (1.1.3, CRAN), workflowsets (1.0.1, CRAN), yardstick (1.2.0, CRAN), and Quarto (1.4.104)\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Our versions\nR version 4.2.2 (2022-10-31), Quarto (1.4.104)\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nbonsai\n0.2.1.9000\n\n\nbroom\n1.0.5.9000\n\n\ndials\n1.2.0\n\n\ndoParallel\n1.0.17\n\n\ndplyr\n1.1.3\n\n\nembed\n1.1.1\n\n\nfinetune\n1.1.0.9000\n\n\nggplot2\n3.4.3\n\n\nlightgbm\n3.3.5\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nlme4\n1.1-33\n\n\nmodeldata\n1.2.0\n\n\nparsnip\n1.1.1.9000\n\n\nplumber\n1.2.1\n\n\nprobably\n1.0.2\n\n\npurrr\n1.0.2\n\n\nranger\n0.15.1\n\n\nrecipes\n1.0.8\n\n\nremotes\n2.4.2.9000\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nrpart\n4.1.19\n\n\nrpart.plot\n3.1.1\n\n\nrsample\n1.2.0.9000\n\n\nrules\n1.0.1\n\n\nscales\n1.2.1\n\n\nsplines2\n0.4.7\n\n\nstacks\n1.0.2.9000\n\n\ntext2vec\n0.6.3\n\n\ntextrecipes\n1.0.2\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\ntibble\n3.2.1\n\n\ntidymodels\n1.1.1\n\n\ntidyr\n1.3.0\n\n\ntune\n1.1.2.9000\n\n\nvetiver\n0.2.0\n\n\nworkflows\n1.1.3\n\n\nworkflowsets\n1.0.1\n\n\nyardstick\n1.2.0.9001\n\n\n\n\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
     "objectID": "index.html",
@@ -4799,21 +4995,21 @@
     "href": "index.html#preparation",
     "title": "Machine learning with tidymodels",
     "section": "Preparation",
-    "text": "Preparation\nThe process to set up your computer for either workshop will look the same. Please join the workshop with a computer that has the following installed (all available for free):\n\nA recent version of R, available at https://cran.r-project.org/\nA recent version of RStudio Desktop (RStudio Desktop Open Source License, at least v2022.02), available at https://posit.co/download/rstudio-desktop/\nThe following R packages, which you can install from the R console:\n\n\n# Install the packages for the workshop\npkgs &lt;- \n  c(\"bonsai\", \"doParallel\", \"embed\", \"finetune\", \"lightgbm\", \"lme4\",\n    \"plumber\", \"probably\", \"ranger\", \"rpart\", \"rpart.plot\", \"rules\",\n    \"splines2\", \"stacks\", \"textrecipes\", \"tidymodels\", \"vetiver\", \"remotes\")\n\ninstall.packages(pkgs)"
+    "text": "Preparation\nThe process to set up your computer for either workshop will look the same. Please join the workshop with a computer that has the following installed (all available for free):\n\nA recent version of R, available at https://cran.r-project.org/\nA recent version of RStudio Desktop (RStudio Desktop Open Source License, at least v2022.02), available at https://posit.co/download/rstudio-desktop/\nThe following R packages, which you can install from the R console:\n\n\n# Install the packages for the workshop\npkgs &lt;- \n  c(\"bonsai\", \"doParallel\", \"embed\", \"finetune\", \"lightgbm\", \"lme4\",\n    \"plumber\", \"probably\", \"ranger\", \"rpart\", \"rpart.plot\", \"rules\",\n    \"splines2\", \"stacks\", \"text2vec\", \"textrecipes\", \"tidymodels\", \n    \"vetiver\", \"remotes\")\n\ninstall.packages(pkgs)\n\nIf you’re a Windows user and encounter an error message during installation noting a missing Rtools installation, install Rtools using the installer linked here."
   },
   {
     "objectID": "index.html#slides",
     "href": "index.html#slides",
     "title": "Machine learning with tidymodels",
     "section": "Slides",
-    "text": "Slides\nThese slides are designed to use with live teaching and are published for workshop participants’ convenience. There are not meant as standalone learning materials. For that, we recommend tidymodels.org and Tidy Modeling with R.\n\nIntroduction to tidymodels\n\n01: Introduction\n02: Your data budget\n03: What makes a model?\n04: Evaluating models\n05: Wrapping up\n\n\n\nAdvanced tidymodels\n\n01: Introduction\n02: Feature engineering using recipes\n03: Tuning hyperparameters (grid search)\n04: Grid search via racing\n05: Iterative search\n06: Wrapping up\n\n\n\nExtra content (time permitting)\n\nIntro: Time-based splitting\nIntro: Using workflowsets\nIntro: Using recipes\nIntro: Tuning\nAdvanced: Transit case study (includes stacking)\nAdvanced: Effect encoding\n\nThere’s also a page for slide annotations; these are extra notes for selected slides."
+    "text": "Slides\nThese slides are designed to use with live teaching and are published for workshop participants’ convenience. There are not meant as standalone learning materials. For that, we recommend tidymodels.org and Tidy Modeling with R.\n\nIntroduction to tidymodels\n\n01: Introduction\n02: Your data budget\n03: What makes a model?\n04: Evaluating models\n05: Tuning models\n06: Wrapping up\n\n\n\nAdvanced tidymodels\n\n01: Introduction\n02: Feature engineering using recipes\n03: Tuning hyperparameters (grid search)\n04: Grid search via racing\n05: Iterative search\n06: Wrapping up\n\n\n\nExtra content (time permitting)\n\nIntro: Time-based splitting\nIntro: Using workflowsets\nIntro: Using recipes\nAdvanced: Transit case study (includes stacking)\nAdvanced: Effect encoding\nAdvanced: Model deployment\n\nThere’s also a page for slide annotations; these are extra notes for selected slides."
   },
   {
     "objectID": "index.html#code",
     "href": "index.html#code",
     "title": "Machine learning with tidymodels",
     "section": "Code",
-    "text": "Code\nQuarto files (version 1.4.104) for working along are available on GitHub. (Don’t worry if you haven’t used Quarto before; it will feel familiar to R Markdown users.)"
+    "text": "Code\nQuarto files for working along are available on GitHub. (Don’t worry if you haven’t used Quarto before; it will feel familiar to R Markdown users.)"
   },
   {
     "objectID": "index.html#past-workshops",
@@ -4869,7 +5065,7 @@
     "href": "slides/advanced-02-feature-engineering.html#previously---setup",
     "title": "1 - Feature Engineering",
     "section": "Previously - Setup ",
-    "text": "Previously - Setup \n\n\n\nlibrary(tidymodels)\nlibrary(modeldatatoo)\n\n# Add another package:\nlibrary(textrecipes)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\n\n\ndata(hotel_rates)\n\nset.seed(295)\nhotel_rates &lt;- \n  hotel_rates %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
+    "text": "Previously - Setup \n\n\n\nlibrary(tidymodels)\nlibrary(modeldatatoo)\n\n# Add another package:\nlibrary(textrecipes)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\n\n\ndata(hotel_rates)\nset.seed(295)\nhotel_rates &lt;- \n  hotel_rates %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
   },
   {
     "objectID": "slides/advanced-02-feature-engineering.html#previously---data-usage",
@@ -5114,7 +5310,7 @@
     "href": "slides/advanced-04-racing.html#previously---setup",
     "title": "3 - Grid Search via Racing",
     "section": "Previously - Setup ",
-    "text": "Previously - Setup \n\n\n\nlibrary(tidymodels)\nlibrary(textrecipes)\nlibrary(bonsai)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\nreg_metrics &lt;- metric_set(mae, rsq)\n\n\n\nset.seed(295)\nhotel_rates &lt;- \n  hotel_rates %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
+    "text": "Previously - Setup \n\n\n\nlibrary(tidymodels)\nlibrary(textrecipes)\nlibrary(bonsai)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\nreg_metrics &lt;- metric_set(mae, rsq)\n\n\n\ndata(hotel_rates)\nset.seed(295)\nhotel_rates &lt;- \n  hotel_rates %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
   },
   {
     "objectID": "slides/advanced-04-racing.html#previously---data-usage",
@@ -5128,7 +5324,7 @@
     "href": "slides/advanced-04-racing.html#previously---boosting-model",
     "title": "3 - Grid Search via Racing",
     "section": "Previously - Boosting Model    ",
-    "text": "Previously - Boosting Model    \n\nhotel_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;%\n  step_YeoJohnson(lead_time) %&gt;%\n  step_dummy_hash(agent,   num_terms = tune(\"agent hash\")) %&gt;%\n  step_dummy_hash(company, num_terms = tune(\"company hash\")) %&gt;%\n  step_zv(all_predictors())\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(), min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\")\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)\n\nlgbm_param &lt;-\n  lgbm_wflow %&gt;%\n  extract_parameter_set_dials() %&gt;%\n  update(`agent hash`   = num_hash(c(3, 8)),\n         `company hash` = num_hash(c(3, 8)))"
+    "text": "Previously - Boosting Model    \n\nhotel_rec &lt;-\n  recipe(avg_price_per_room ~ ., data = hotel_train) %&gt;%\n  step_YeoJohnson(lead_time) %&gt;%\n  step_dummy_hash(agent,   num_terms = tune(\"agent hash\")) %&gt;%\n  step_dummy_hash(company, num_terms = tune(\"company hash\")) %&gt;%\n  step_zv(all_predictors())\n\nlgbm_spec &lt;- \n  boost_tree(trees = tune(), learn_rate = tune(), min_n = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\", num_threads = 1)\n\nlgbm_wflow &lt;- workflow(hotel_rec, lgbm_spec)\n\nlgbm_param &lt;-\n  lgbm_wflow %&gt;%\n  extract_parameter_set_dials() %&gt;%\n  update(`agent hash`   = num_hash(c(3, 8)),\n         `company hash` = num_hash(c(3, 8)))"
   },
   {
     "objectID": "slides/advanced-04-racing.html#making-grid-search-more-efficient",
@@ -5191,7 +5387,7 @@
     "href": "slides/advanced-04-racing.html#racing-results",
     "title": "3 - Grid Search via Racing",
     "section": "Racing Results ",
-    "text": "Racing Results \n\nshow_best(lgbm_race_res, metric = \"mae\")\n#&gt; # A tibble: 2 × 11\n#&gt;   trees min_n learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config              \n#&gt;   &lt;int&gt; &lt;int&gt;      &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                \n#&gt; 1  1516     7     0.0421          176             12 mae     standard    9.60    10   0.181 Preprocessor42_Model1\n#&gt; 2  1014     5     0.0791           35            181 mae     standard    9.61    10   0.179 Preprocessor06_Model1"
+    "text": "Racing Results \n\nshow_best(lgbm_race_res, metric = \"mae\")\n#&gt; # A tibble: 2 × 11\n#&gt;   trees min_n learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config              \n#&gt;   &lt;int&gt; &lt;int&gt;      &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                \n#&gt; 1  1516     7     0.0421          176             12 mae     standard    9.60    10   0.181 Preprocessor42_Model1\n#&gt; 2  1014     5     0.0791           35            181 mae     standard    9.60    10   0.180 Preprocessor06_Model1"
   },
   {
     "objectID": "slides/advanced-04-racing.html#racing-results-1",
@@ -5219,14 +5415,21 @@
     "href": "slides/advanced-06-wrapping-up.html#resources-to-keep-learning",
     "title": "6 - Wrapping up",
     "section": "Resources to keep learning",
-    "text": "Resources to keep learning\n\n\nhttps://www.tidymodels.org/\n\n\n\n\nhttps://www.tmwr.org/\n\n\n\n\nhttp://www.feat.engineering/\n\n\n\n\nhttps://smltar.com/\n\n\n\nFollow us on Mastodon and at the tidyverse blog for updates!\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Resources to keep learning\n\n\nhttps://www.tidymodels.org/\n\n\n\n\nhttps://www.tmwr.org/\n\n\n\n\nhttp://www.feat.engineering/\n\n\n\n\nhttps://smltar.com/\n\n\n\nFollow us on Mastodon and at the tidyverse blog for updates!"
+  },
+  {
+    "objectID": "slides/advanced-06-wrapping-up.html#feedback",
+    "href": "slides/advanced-06-wrapping-up.html#feedback",
+    "title": "6 - Wrapping up",
+    "section": "Feedback",
+    "text": "Feedback\n\nPlease go to http://pos.it/conf-workshop-survey. Your feedback is crucial!\nData from the survey informs curriculum and format decisions for future conf workshops, and we really appreciate you taking the time to provide it.\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
     "objectID": "slides/extras-effect-encodings.html#previously---setup",
     "href": "slides/extras-effect-encodings.html#previously---setup",
     "title": "Extras - Effect Encodings",
     "section": "Previously - Setup",
-    "text": "Previously - Setup\n\n\n\nlibrary(tidymodels)\nlibrary(textrecipes)\nlibrary(bonsai)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\n\n\nset.seed(295)\nhotel_rates &lt;- \n  hotel_rates %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
+    "text": "Previously - Setup\n\n\n\nlibrary(tidymodels)\nlibrary(textrecipes)\nlibrary(bonsai)\n\n# Max's usual settings: \ntidymodels_prefer()\ntheme_set(theme_bw())\noptions(\n  pillar.advice = FALSE, \n  pillar.min_title_chars = Inf\n)\n\n\n\ndata(hotel_rates)\nset.seed(295)\nhotel_rates &lt;- \n  hotel_rates %&gt;% \n  sample_n(5000) %&gt;% \n  arrange(arrival_date) %&gt;% \n  select(-arrival_date) %&gt;% \n  mutate(\n    company = factor(as.character(company)),\n    country = factor(as.character(country)),\n    agent = factor(as.character(agent))\n  )"
   },
   {
     "objectID": "slides/extras-effect-encodings.html#previously---data-usage",
@@ -5296,7 +5499,7 @@
     "href": "slides/extras-vetiver.html#deploy-your-model-1",
     "title": "Extras - Model deployment",
     "section": "Deploy your model ",
-    "text": "Deploy your model \nHow do we use our model in production?\n\nlibrary(plumber)\npr() %&gt;%\n  vetiver_api(v)\n#&gt; # Plumber router with 4 endpoints, 4 filters, and 1 sub-router.\n#&gt; # Use `pr_run()` on this object to start the API.\n#&gt; ├──[queryString]\n#&gt; ├──[body]\n#&gt; ├──[cookieParser]\n#&gt; ├──[sharedSecret]\n#&gt; ├──/logo\n#&gt; │  │ # Plumber static router serving from directory: /Users/emilhvitfeldt/Library/R/arm64/4.3/library/vetiver\n#&gt; ├──/metadata (GET)\n#&gt; ├──/ping (GET)\n#&gt; ├──/predict (POST)\n#&gt; └──/prototype (GET)\n\nLearn more at https://vetiver.rstudio.com\n\nLive-code making a prediction"
+    "text": "Deploy your model \nHow do we use our model in production?\n\nlibrary(plumber)\npr() %&gt;%\n  vetiver_api(v)\n#&gt; # Plumber router with 2 endpoints, 4 filters, and 1 sub-router.\n#&gt; # Use `pr_run()` on this object to start the API.\n#&gt; ├──[queryString]\n#&gt; ├──[body]\n#&gt; ├──[cookieParser]\n#&gt; ├──[sharedSecret]\n#&gt; ├──/logo\n#&gt; │  │ # Plumber static router serving from directory: /Library/Frameworks/R.framework/Versions/4.2-arm64/Resources/library/vetiver\n#&gt; ├──/ping (GET)\n#&gt; └──/predict (POST)\n\nLearn more at https://vetiver.rstudio.com\n\nLive-code making a prediction"
   },
   {
     "objectID": "slides/extras-vetiver.html#your-turn",
@@ -5313,11 +5516,11 @@
     "text": "Data on Chicago taxi trips\n\n\n\nThe city of Chicago releases anonymized trip-level data on taxi trips in the city.\nWe pulled a sample of 10,000 rides occurring in early 2022.\nType ?taxi to learn more about this dataset, including references.\n\n\n\n\n\n\nCredit: https://www.svgrepo.com/svg/8322/taxi"
   },
   {
-    "objectID": "slides/intro-02-data-budget.html#which-of-these-variables-can-we-use",
-    "href": "slides/intro-02-data-budget.html#which-of-these-variables-can-we-use",
+    "objectID": "slides/intro-02-data-budget.html#data-on-chicago-taxi-trips-1",
+    "href": "slides/intro-02-data-budget.html#data-on-chicago-taxi-trips-1",
     "title": "2 - Your data budget",
-    "section": "Which of these variables can we use?",
-    "text": "Which of these variables can we use?\n\nlibrary(tidymodels)\n\nnames(taxi)\n#&gt; [1] \"tip\"      \"distance\" \"company\"  \"local\"    \"dow\"      \"month\"    \"hour\""
+    "section": "Data on Chicago taxi trips",
+    "text": "Data on Chicago taxi trips\n\n\n\nN = 10,000\nA nominal outcome, tip, with levels \"yes\" and \"no\"\nSeveral nominal variables like pickup & dropoff location, taxi ID, and payment type.\nSeveral numeric variables like trip length and fare subtotals.\n\n\n\n\n\n\nCredit: https://unsplash.com/photos/7_r85l4eht8\n\n\n“Fare subtotals” refers to the fare itself, tax, tolls, tip amount.\nActual variables in our data:\ntip: Whether the rider left a tip. A factor with levels “yes” and “no”.\ndistance: The trip distance, in odometer miles.\ncompany: The taxi company, as a factor. Companies that occurred few times were binned as “other”.\nlocal: Whether the trip started in the same community area as it began. See the source data for community area values.\ndow: The day of the week in which the trip began, as a factor.\nmonth: The month in which the trip began, as a factor.\nhour: The hour of the day in which the trip began, as a numeric."
   },
   {
     "objectID": "slides/intro-02-data-budget.html#checklist-for-predictors",
@@ -5327,18 +5530,11 @@
     "text": "Checklist for predictors\n\nIs it ethical to use this variable? (Or even legal?)\nWill this variable be available at prediction time?\nDoes this variable contribute to explainability?"
   },
   {
-    "objectID": "slides/intro-02-data-budget.html#data-on-chicago-taxi-trips-1",
-    "href": "slides/intro-02-data-budget.html#data-on-chicago-taxi-trips-1",
-    "title": "2 - Your data budget",
-    "section": "Data on Chicago taxi trips",
-    "text": "Data on Chicago taxi trips\n\n\n\nN = 10,000\nA nominal outcome, tip, with levels \"yes\" and \"no\"\n6 other variables\n\ncompany, local, and dow, and month are nominal predictors\ndistance and hours are numeric predictors\n\n\n\n\n\n\n\nCredit: https://unsplash.com/photos/7_r85l4eht8\n\n\ntip: Whether the rider left a tip. A factor with levels “yes” and “no”.\ndistance: The trip distance, in odometer miles.\ncompany: The taxi company, as a factor. Companies that occurred few times were binned as “other”.\nlocal: Whether the trip started in the same community area as it began. See the source data for community area values.\ndow: The day of the week in which the trip began, as a factor.\nmonth: The month in which the trip began, as a factor.\nhour: The hour of the day in which the trip began, as a numeric."
-  },
-  {
     "objectID": "slides/intro-02-data-budget.html#data-on-chicago-taxi-trips-2",
     "href": "slides/intro-02-data-budget.html#data-on-chicago-taxi-trips-2",
     "title": "2 - Your data budget",
     "section": "Data on Chicago taxi trips",
-    "text": "Data on Chicago taxi trips\n\ntaxi\n#&gt; # A tibble: 10,000 × 7\n#&gt;    tip   distance company                      local dow   month  hour\n#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;                        &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;\n#&gt;  1 yes      17.2  Chicago Independents         no    Thu   Feb      16\n#&gt;  2 yes       0.88 City Service                 yes   Thu   Mar       8\n#&gt;  3 yes      18.1  other                        no    Mon   Feb      18\n#&gt;  4 yes      20.7  Chicago Independents         no    Mon   Apr       8\n#&gt;  5 yes      12.2  Chicago Independents         no    Sun   Mar      21\n#&gt;  6 yes       0.94 Sun Taxi                     yes   Sat   Apr      23\n#&gt;  7 yes      17.5  Flash Cab                    no    Fri   Mar      12\n#&gt;  8 yes      17.7  other                        no    Sun   Jan       6\n#&gt;  9 yes       1.85 Taxicab Insurance Agency Llc no    Fri   Apr      12\n#&gt; 10 yes       1.47 City Service                 no    Tue   Mar      14\n#&gt; # ℹ 9,990 more rows"
+    "text": "Data on Chicago taxi trips\n\nlibrary(tidymodels)\n\ntaxi\n#&gt; # A tibble: 10,000 × 7\n#&gt;    tip   distance company                      local dow   month  hour\n#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;                        &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;\n#&gt;  1 yes      17.2  Chicago Independents         no    Thu   Feb      16\n#&gt;  2 yes       0.88 City Service                 yes   Thu   Mar       8\n#&gt;  3 yes      18.1  other                        no    Mon   Feb      18\n#&gt;  4 yes      20.7  Chicago Independents         no    Mon   Apr       8\n#&gt;  5 yes      12.2  Chicago Independents         no    Sun   Mar      21\n#&gt;  6 yes       0.94 Sun Taxi                     yes   Sat   Apr      23\n#&gt;  7 yes      17.5  Flash Cab                    no    Fri   Mar      12\n#&gt;  8 yes      17.7  other                        no    Sun   Jan       6\n#&gt;  9 yes       1.85 Taxicab Insurance Agency Llc no    Fri   Apr      12\n#&gt; 10 yes       1.47 City Service                 no    Tue   Mar      14\n#&gt; # ℹ 9,990 more rows"
   },
   {
     "objectID": "slides/intro-02-data-budget.html#data-splitting-and-spending",
@@ -5653,7 +5849,7 @@
     "href": "slides/intro-04-evaluating-models.html#your-turn-1",
     "title": "4 - Evaluating models",
     "section": "Your turn",
-    "text": "Your turn\n\nUse augment() and and a metric function to compute a classification metric like brier_class().\nCompute the metrics for both training and testing data to demonstrate overfitting!\nNotice the evidence of overfitting! ⚠️\n\n\n\n−+\n05:00"
+    "text": "Your turn\n\nUse augment() and a metric function to compute a classification metric like brier_class().\nCompute the metrics for both training and testing data to demonstrate overfitting!\nNotice the evidence of overfitting! ⚠️\n\n\n\n−+\n05:00"
   },
   {
     "objectID": "slides/intro-04-evaluating-models.html#dangers-of-overfitting-7",
@@ -5744,11 +5940,18 @@
     "href": "slides/intro-04-evaluating-models.html#evaluating-model-performance-1",
     "title": "4 - Evaluating models",
     "section": "Evaluating model performance ",
-    "text": "Evaluating model performance \n\n# Save the assessment set results\nctrl_taxi &lt;- control_resamples(save_pred = TRUE)\ntaxi_res &lt;- fit_resamples(taxi_wflow, taxi_folds, control = ctrl_taxi)\n\ntaxi_preds &lt;- collect_predictions(taxi_res)\ntaxi_preds\n#&gt; # A tibble: 8,000 × 7\n#&gt;    id     .pred_yes .pred_no  .row .pred_class tip   .config             \n#&gt;    &lt;chr&gt;      &lt;dbl&gt;    &lt;dbl&gt; &lt;int&gt; &lt;fct&gt;       &lt;fct&gt; &lt;chr&gt;               \n#&gt;  1 Fold01     0.938   0.0615    14 yes         yes   Preprocessor1_Model1\n#&gt;  2 Fold01     0.946   0.0544    19 yes         yes   Preprocessor1_Model1\n#&gt;  3 Fold01     0.973   0.0269    33 yes         yes   Preprocessor1_Model1\n#&gt;  4 Fold01     0.903   0.0971    43 yes         yes   Preprocessor1_Model1\n#&gt;  5 Fold01     0.973   0.0269    74 yes         yes   Preprocessor1_Model1\n#&gt;  6 Fold01     0.903   0.0971   103 yes         yes   Preprocessor1_Model1\n#&gt;  7 Fold01     0.915   0.0851   104 yes         no    Preprocessor1_Model1\n#&gt;  8 Fold01     0.903   0.0971   124 yes         yes   Preprocessor1_Model1\n#&gt;  9 Fold01     0.667   0.333    126 yes         yes   Preprocessor1_Model1\n#&gt; 10 Fold01     0.949   0.0510   128 yes         yes   Preprocessor1_Model1\n#&gt; # ℹ 7,990 more rows"
+    "text": "Evaluating model performance \n\n# Save the assessment set results\nctrl_taxi &lt;- control_resamples(save_pred = TRUE)\ntaxi_res &lt;- fit_resamples(taxi_wflow, taxi_folds, control = ctrl_taxi)\n\ntaxi_res\n#&gt; # Resampling results\n#&gt; # 10-fold cross-validation using stratification \n#&gt; # A tibble: 10 × 5\n#&gt;    splits             id     .metrics         .notes           .predictions\n#&gt;    &lt;list&gt;             &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;           &lt;list&gt;      \n#&gt;  1 &lt;split [7200/800]&gt; Fold01 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt;  2 &lt;split [7200/800]&gt; Fold02 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt;  3 &lt;split [7200/800]&gt; Fold03 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt;  4 &lt;split [7200/800]&gt; Fold04 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt;  5 &lt;split [7200/800]&gt; Fold05 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt;  6 &lt;split [7200/800]&gt; Fold06 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt;  7 &lt;split [7200/800]&gt; Fold07 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt;  8 &lt;split [7200/800]&gt; Fold08 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt;  9 &lt;split [7200/800]&gt; Fold09 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    \n#&gt; 10 &lt;split [7200/800]&gt; Fold10 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;"
   },
   {
     "objectID": "slides/intro-04-evaluating-models.html#evaluating-model-performance-2",
     "href": "slides/intro-04-evaluating-models.html#evaluating-model-performance-2",
+    "title": "4 - Evaluating models",
+    "section": "Evaluating model performance ",
+    "text": "Evaluating model performance \n\n# Save the assessment set results\ntaxi_preds &lt;- collect_predictions(taxi_res)\ntaxi_preds\n#&gt; # A tibble: 8,000 × 7\n#&gt;    id     .pred_yes .pred_no  .row .pred_class tip   .config             \n#&gt;    &lt;chr&gt;      &lt;dbl&gt;    &lt;dbl&gt; &lt;int&gt; &lt;fct&gt;       &lt;fct&gt; &lt;chr&gt;               \n#&gt;  1 Fold01     0.938   0.0615    14 yes         yes   Preprocessor1_Model1\n#&gt;  2 Fold01     0.946   0.0544    19 yes         yes   Preprocessor1_Model1\n#&gt;  3 Fold01     0.973   0.0269    33 yes         yes   Preprocessor1_Model1\n#&gt;  4 Fold01     0.903   0.0971    43 yes         yes   Preprocessor1_Model1\n#&gt;  5 Fold01     0.973   0.0269    74 yes         yes   Preprocessor1_Model1\n#&gt;  6 Fold01     0.903   0.0971   103 yes         yes   Preprocessor1_Model1\n#&gt;  7 Fold01     0.915   0.0851   104 yes         no    Preprocessor1_Model1\n#&gt;  8 Fold01     0.903   0.0971   124 yes         yes   Preprocessor1_Model1\n#&gt;  9 Fold01     0.667   0.333    126 yes         yes   Preprocessor1_Model1\n#&gt; 10 Fold01     0.949   0.0510   128 yes         yes   Preprocessor1_Model1\n#&gt; # ℹ 7,990 more rows"
+  },
+  {
+    "objectID": "slides/intro-04-evaluating-models.html#evaluating-model-performance-3",
+    "href": "slides/intro-04-evaluating-models.html#evaluating-model-performance-3",
     "title": "4 - Evaluating models",
     "section": "Evaluating model performance ",
     "text": "Evaluating model performance \n\ntaxi_preds %&gt;% \n  group_by(id) %&gt;%\n  taxi_metrics(truth = tip, estimate = .pred_class)\n#&gt; # A tibble: 30 × 4\n#&gt;    id     .metric  .estimator .estimate\n#&gt;    &lt;chr&gt;  &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;\n#&gt;  1 Fold01 accuracy binary         0.905\n#&gt;  2 Fold02 accuracy binary         0.925\n#&gt;  3 Fold03 accuracy binary         0.926\n#&gt;  4 Fold04 accuracy binary         0.915\n#&gt;  5 Fold05 accuracy binary         0.902\n#&gt;  6 Fold06 accuracy binary         0.912\n#&gt;  7 Fold07 accuracy binary         0.906\n#&gt;  8 Fold08 accuracy binary         0.91 \n#&gt;  9 Fold09 accuracy binary         0.918\n#&gt; 10 Fold10 accuracy binary         0.931\n#&gt; # ℹ 20 more rows"
@@ -5831,8 +6034,8 @@
     "text": "Your turn\n\nUse fit_resamples() and rf_wflow to:\n\nkeep predictions\ncompute metrics\n\n\n\n\n−+\n08:00"
   },
   {
-    "objectID": "slides/intro-04-evaluating-models.html#evaluating-model-performance-3",
-    "href": "slides/intro-04-evaluating-models.html#evaluating-model-performance-3",
+    "objectID": "slides/intro-04-evaluating-models.html#evaluating-model-performance-4",
+    "href": "slides/intro-04-evaluating-models.html#evaluating-model-performance-4",
     "title": "4 - Evaluating models",
     "section": "Evaluating model performance ",
     "text": "Evaluating model performance \n\nctrl_taxi &lt;- control_resamples(save_pred = TRUE)\n\n# Random forest uses random numbers so set the seed first\n\nset.seed(2)\nrf_res &lt;- fit_resamples(rf_wflow, taxi_folds, control = ctrl_taxi)\ncollect_metrics(rf_res)\n#&gt; # A tibble: 2 × 6\n#&gt;   .metric  .estimator  mean     n std_err .config             \n#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 accuracy binary     0.923    10 0.00317 Preprocessor1_Model1\n#&gt; 2 roc_auc  binary     0.616    10 0.0147  Preprocessor1_Model1"
@@ -5887,256 +6090,95 @@
     "text": "Your turn\n\nEnd of the day discussion!\nWhich model do you think you would decide to use?\nWhat surprised you the most?\nIf you’re taking Advanced tidymodels tomorrow, what is one thing you are looking forward to learning?\n\n\n\n−+\n05:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
-    "objectID": "slides/intro-extra-recipes.html#looking-at-the-predictors",
-    "href": "slides/intro-extra-recipes.html#looking-at-the-predictors",
-    "title": "Extras - Recipes",
-    "section": "Looking at the predictors",
-    "text": "Looking at the predictors\n\ntaxi_train\n#&gt; # A tibble: 8,000 × 7\n#&gt;    tip   distance company                      local dow   month  hour\n#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;                        &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;\n#&gt;  1 yes      17.2  Chicago Independents         no    Thu   Feb      16\n#&gt;  2 yes       0.88 City Service                 yes   Thu   Mar       8\n#&gt;  3 yes      18.1  other                        no    Mon   Feb      18\n#&gt;  4 yes      12.2  Chicago Independents         no    Sun   Mar      21\n#&gt;  5 yes       0.94 Sun Taxi                     yes   Sat   Apr      23\n#&gt;  6 yes      17.5  Flash Cab                    no    Fri   Mar      12\n#&gt;  7 yes      17.7  other                        no    Sun   Jan       6\n#&gt;  8 yes       1.85 Taxicab Insurance Agency Llc no    Fri   Apr      12\n#&gt;  9 yes       0.53 Sun Taxi                     no    Tue   Mar      18\n#&gt; 10 yes       6.65 Taxicab Insurance Agency Llc no    Sun   Apr      11\n#&gt; # ℹ 7,990 more rows"
-  },
-  {
-    "objectID": "slides/intro-extra-recipes.html#working-with-other-models",
-    "href": "slides/intro-extra-recipes.html#working-with-other-models",
-    "title": "Extras - Recipes",
-    "section": "Working with other models",
-    "text": "Working with other models\nSome models can’t handle non-numeric data\n\nLinear Regression\nK Nearest Neighbors\n\n\n\nSome models struggle if numeric predictors aren’t scaled\n\nK Nearest Neighbors\nAnything using gradient descent"
-  },
-  {
-    "objectID": "slides/intro-extra-recipes.html#types-of-needed-preprocessing",
-    "href": "slides/intro-extra-recipes.html#types-of-needed-preprocessing",
-    "title": "Extras - Recipes",
-    "section": "Types of needed preprocessing",
-    "text": "Types of needed preprocessing\n\nDo qualitative predictors require a numeric encoding?\nShould columns with a single unique value be removed?\nDoes the model struggle with missing data?\nDoes the model struggle with correlated predictors?\nShould predictors be centered and scaled?\nIs it helpful to transform predictors to be more symmetric?\n\n\nhttps://www.tmwr.org/pre-proc-table.html"
-  },
-  {
-    "objectID": "slides/intro-extra-recipes.html#two-types-of-preprocessing",
-    "href": "slides/intro-extra-recipes.html#two-types-of-preprocessing",
-    "title": "Extras - Recipes",
-    "section": "Two types of preprocessing",
-    "text": "Two types of preprocessing"
-  },
-  {
-    "objectID": "slides/intro-extra-recipes.html#two-types-of-preprocessing-1",
-    "href": "slides/intro-extra-recipes.html#two-types-of-preprocessing-1",
-    "title": "Extras - Recipes",
-    "section": "Two types of preprocessing",
-    "text": "Two types of preprocessing"
-  },
-  {
-    "objectID": "slides/intro-extra-recipes.html#general-definitions",
-    "href": "slides/intro-extra-recipes.html#general-definitions",
-    "title": "Extras - Recipes",
-    "section": "General definitions",
-    "text": "General definitions\n\nData preprocessing are the steps that you take to make your model successful.\nFeature engineering are what you do to the original predictors to make the model do the least work to perform great."
-  },
-  {
-    "objectID": "slides/intro-extra-recipes.html#working-with-dates",
-    "href": "slides/intro-extra-recipes.html#working-with-dates",
-    "title": "Extras - Recipes",
-    "section": "Working with dates",
-    "text": "Working with dates\nDatetime variables are automatically converted to an integer if given as a raw predictor. To avoid this, it can be re-encoded as:\n\nDays since a reference date\nDay of the week\nMonth\nYear\nLeap year\nIndicators for holidays"
-  },
-  {
-    "objectID": "slides/intro-extra-recipes.html#your-turn",
-    "href": "slides/intro-extra-recipes.html#your-turn",
-    "title": "Extras - Recipes",
+    "objectID": "slides/intro-06-wrapping-up.html#your-turn",
+    "href": "slides/intro-06-wrapping-up.html#your-turn",
+    "title": "6 - Wrapping up",
     "section": "Your turn",
-    "text": "Your turn\n\n\nWhat other transformations could we do with the raw time variable?\nRemember that the transformations are tied to the specific modeling problem.\n\n\n\n−+\n03:00"
+    "text": "Your turn\n\nWhat is one thing you learned that surprised you?\nWhat is one thing you learned that you plan to use?\n\n\n\n−+\n05:00"
   },
   {
-    "objectID": "slides/intro-extra-recipes.html#two-types-of-transformations",
-    "href": "slides/intro-extra-recipes.html#two-types-of-transformations",
-    "title": "Extras - Recipes",
-    "section": "Two types of transformations",
-    "text": "Two types of transformations\n\n\n\nStatic\n\nSquare root, log, inverse\nDummies for known levels\nDate time extractions\n\n\nTrained\n\nCentering & scaling\nImputation\nPCA\nAnything for unknown factor levels\n\n\n\n\nTrained methods need to calculate sufficient information to be applied again."
+    "objectID": "slides/intro-06-wrapping-up.html#resources-to-keep-learning",
+    "href": "slides/intro-06-wrapping-up.html#resources-to-keep-learning",
+    "title": "6 - Wrapping up",
+    "section": "Resources to keep learning",
+    "text": "Resources to keep learning\n\n\nhttps://www.tidymodels.org/\n\n\n\n\nhttps://www.tmwr.org/\n\n\n\n\nhttp://www.feat.engineering/\n\n\n\n\nhttps://smltar.com/\n\n\n\nFollow us on Mastodon and at the tidyverse blog for updates!"
   },
   {
-    "objectID": "slides/intro-extra-recipes.html#the-recipes-package",
-    "href": "slides/intro-extra-recipes.html#the-recipes-package",
-    "title": "Extras - Recipes",
-    "section": "The recipes package",
-    "text": "The recipes package\n\n\nModular + extensible\nWorks well with pipes ,|&gt; and %&gt;%\nDeferred evaluation\nIsolates test data from training data\nCan do things formulas can’t"
+    "objectID": "slides/intro-06-wrapping-up.html#feedback",
+    "href": "slides/intro-06-wrapping-up.html#feedback",
+    "title": "6 - Wrapping up",
+    "section": "Feedback",
+    "text": "Feedback\n\nPlease go to http://pos.it/conf-workshop-survey. Your feedback is crucial!\nData from the survey informs curriculum and format decisions for future conf workshops, and we really appreciate you taking the time to provide it.\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
-    "objectID": "slides/intro-extra-recipes.html#how-to-write-a-recipe",
-    "href": "slides/intro-extra-recipes.html#how-to-write-a-recipe",
-    "title": "Extras - Recipes",
-    "section": "How to write a recipe",
-    "text": "How to write a recipe\n\ntaxi_rec &lt;- recipe(tip ~ ., data = taxi_train) %&gt;%\n  step_unknown(all_nominal_predictors()) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(distance, offset = 0.5) %&gt;%\n  step_normalize(all_numeric_predictors())"
+    "objectID": "slides/intro-extra-time-splits.html#the-raw-taxi-data-set",
+    "href": "slides/intro-extra-time-splits.html#the-raw-taxi-data-set",
+    "title": "Extras - Time-based data splitting",
+    "section": "The raw taxi data set",
+    "text": "The raw taxi data set\nWe prepared the data set specifically for this introductory workshop.\nIt looked similar to this:\n\nglimpse(taxi_raw)\n#&gt; Rows: 10,000\n#&gt; Columns: 24\n#&gt; $ trip_id                    &lt;chr&gt; \"3ac8d4412642a35e9b9a493285814d7983d5a159\",…\n#&gt; $ taxi_id                    &lt;chr&gt; \"391317d70c5d06deec744062c4595dc1958b200fda…\n#&gt; $ trip_start_timestamp       &lt;dttm&gt; 2023-06-10 18:45:00, 2023-05-21 21:30:00, …\n#&gt; $ trip_end_timestamp         &lt;dttm&gt; 2023-06-10 19:30:00, 2023-05-21 21:45:00, …\n#&gt; $ trip_seconds               &lt;dbl&gt; 3258, 839, 476, 2220, 1588, 2270, 1575, 267…\n#&gt; $ trip_miles                 &lt;dbl&gt; 17.02, 2.16, 1.05, 17.40, 17.62, 16.36, 18.…\n#&gt; $ pickup_census_tract        &lt;dbl&gt; 17031980000, 17031839100, 17031320100, 1703…\n#&gt; $ dropoff_census_tract       &lt;dbl&gt; 17031081403, 17031081300, 17031081403, 1703…\n#&gt; $ pickup_community_area      &lt;dbl&gt; 76, 32, 32, 76, 32, 76, 76, 32, 32, 33, 8, …\n#&gt; $ dropoff_community_area     &lt;dbl&gt; 8, 8, 8, 32, 76, 8, 32, 76, 28, 32, 7, 33, …\n#&gt; $ fare                       &lt;dbl&gt; 44.50, 10.00, 6.75, 45.00, 44.25, 41.25, 44…\n#&gt; $ tips                       &lt;dbl&gt; 12.25, 4.00, 2.00, 9.90, 8.00, 9.15, 12.31,…\n#&gt; $ tolls                      &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…\n#&gt; $ extras                     &lt;dbl&gt; 4.0, 1.0, 0.0, 4.0, 2.0, 4.0, 4.0, 0.0, 0.0…\n#&gt; $ trip_total                 &lt;dbl&gt; 61.25, 15.50, 9.25, 58.90, 54.75, 54.90, 61…\n#&gt; $ payment_type               &lt;chr&gt; \"Credit Card\", \"Credit Card\", \"Credit Card\"…\n#&gt; $ company                    &lt;chr&gt; \"Taxicab Insurance Agency Llc\", \"Chicago In…\n#&gt; $ pickup_centroid_latitude   &lt;dbl&gt; 41.97907, 41.88099, 41.88499, 41.97907, 41.…\n#&gt; $ pickup_centroid_longitude  &lt;dbl&gt; -87.90304, -87.63275, -87.62099, -87.90304,…\n#&gt; $ pickup_centroid_location   &lt;chr&gt; \"POINT (-87.9030396611 41.9790708201)\", \"PO…\n#&gt; $ dropoff_centroid_latitude  &lt;dbl&gt; 41.89092, 41.89833, 41.89092, 41.87102, 41.…\n#&gt; $ dropoff_centroid_longitude &lt;dbl&gt; -87.61887, -87.62076, -87.61887, -87.63141,…\n#&gt; $ dropoff_centroid_location  &lt;chr&gt; \"POINT (-87.6188683546 41.8909220259)\", \"PO…\n#&gt; $ tip                        &lt;fct&gt; yes, yes, yes, yes, yes, yes, yes, yes, yes…\n\n\ntrip_start_time has date and time rounded to “quarters of the hour”."
   },
   {
-    "objectID": "slides/intro-extra-recipes.html#how-to-write-a-recipe-1",
-    "href": "slides/intro-extra-recipes.html#how-to-write-a-recipe-1",
-    "title": "Extras - Recipes",
-    "section": "How to write a recipe",
-    "text": "How to write a recipe\n\ntaxi_rec &lt;- recipe(tip ~ ., data = taxi_train) %&gt;%\n  step_unknown(all_nominal_predictors()) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(distance, offset = 0.5) %&gt;%\n  step_normalize(all_numeric_predictors())\n\n\nStart by calling recipe() to denote the data source and variables used."
+    "objectID": "slides/intro-extra-time-splits.html#time-nature-of-the-data",
+    "href": "slides/intro-extra-time-splits.html#time-nature-of-the-data",
+    "title": "Extras - Time-based data splitting",
+    "section": "Time nature of the data",
+    "text": "Time nature of the data\nWe assumed only the month, day of the week, and hour mattered and treated each observation as independent.\n\nIf the data have a strong time component, all your data splitting strategies should support the model in estimating temporal trends.\n\n\nThus, don’t sample randomly because this breaks up the time component!"
   },
   {
-    "objectID": "slides/intro-extra-recipes.html#how-to-write-a-recipe-2",
-    "href": "slides/intro-extra-recipes.html#how-to-write-a-recipe-2",
-    "title": "Extras - Recipes",
-    "section": "How to write a recipe",
-    "text": "How to write a recipe\n\ntaxi_rec &lt;- recipe(tip ~ ., data = taxi_train) %&gt;%\n  step_unknown(all_nominal_predictors()) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(distance, offset = 0.5) %&gt;%\n  step_normalize(all_numeric_predictors())\n\n\nSpecify what actions to take by adding step_*()s."
+    "objectID": "slides/intro-extra-time-splits.html#splitting-with-time-component",
+    "href": "slides/intro-extra-time-splits.html#splitting-with-time-component",
+    "title": "Extras - Time-based data splitting",
+    "section": "Splitting with time component ",
+    "text": "Splitting with time component \nThe more recent observations are assumed to be more similar to new data, so initial_time_split() puts them into the test set.\nThe function assumes that the data are already ordered.\n\ntaxi_raw &lt;- taxi_raw %&gt;%\n  arrange(trip_start_timestamp)\n\ntaxi_split &lt;- initial_time_split(taxi_raw, prop = 3 / 4)\ntaxi_split\n#&gt; &lt;Training/Testing/Total&gt;\n#&gt; &lt;7500/2500/10000&gt;\n\ntaxi_train &lt;- training(taxi_split)\ntaxi_test  &lt;- testing(taxi_split)\n\nnrow(taxi_train)\n#&gt; [1] 7500\n \nnrow(taxi_test)\n#&gt; [1] 2500"
   },
   {
-    "objectID": "slides/intro-extra-recipes.html#how-to-write-a-recipe-3",
-    "href": "slides/intro-extra-recipes.html#how-to-write-a-recipe-3",
-    "title": "Extras - Recipes",
-    "section": "How to write a recipe",
-    "text": "How to write a recipe\n\ntaxi_rec &lt;- recipe(tip ~ ., data = taxi_train) %&gt;%\n  step_unknown(all_nominal_predictors()) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(distance, offset = 0.5) %&gt;%   step_normalize(all_numeric_predictors())\n\n\nUse {tidyselect} and recipes-specific selectors to denote affected variables."
+    "objectID": "slides/intro-extra-time-splits.html#time-series-resampling",
+    "href": "slides/intro-extra-time-splits.html#time-series-resampling",
+    "title": "Extras - Time-based data splitting",
+    "section": "Time series resampling",
+    "text": "Time series resampling\nThe same idea also applies to resampling: the newer observations go into the assessment set.\nFor example:\n\nFold 1: Take the first X weeks of data as the analysis set, and the next 3 weeks as the assessment set.\nFold 2: Take weeks 2 to X + 1 as the analysis set, and the next 3 weeks as the assessment set.\nand so on"
   },
   {
-    "objectID": "slides/intro-extra-recipes.html#using-a-recipe",
-    "href": "slides/intro-extra-recipes.html#using-a-recipe",
-    "title": "Extras - Recipes",
-    "section": "Using a recipe",
-    "text": "Using a recipe\n\ntaxi_rec &lt;- recipe(tip ~ ., data = taxi_train) %&gt;%\n  step_unknown(all_nominal_predictors()) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(distance, offset = 0.5) %&gt;%   step_normalize(all_numeric_predictors())\n\n\nSave the recipe we like so that we can use it in various places, e.g., with different models."
+    "objectID": "slides/intro-extra-time-splits.html#rolling-origin-forecast-resampling",
+    "href": "slides/intro-extra-time-splits.html#rolling-origin-forecast-resampling",
+    "title": "Extras - Time-based data splitting",
+    "section": "Rolling origin forecast resampling",
+    "text": "Rolling origin forecast resampling\n\n\nThis image shows overlapping assessment sets. We will use non-overlapping data but it could be done either way."
   },
   {
-    "objectID": "slides/intro-extra-recipes.html#using-a-recipe-with-workflows",
-    "href": "slides/intro-extra-recipes.html#using-a-recipe-with-workflows",
-    "title": "Extras - Recipes",
-    "section": "Using a recipe with workflows",
-    "text": "Using a recipe with workflows\nRecipes are typically combined with a model in a workflow() object:\n\n\ntaxi_wflow &lt;- workflow() %&gt;%\n  add_recipe(taxi_rec) %&gt;%\n  add_model(linear_reg())"
+    "objectID": "slides/intro-extra-time-splits.html#times-series-resampling",
+    "href": "slides/intro-extra-time-splits.html#times-series-resampling",
+    "title": "Extras - Time-based data splitting",
+    "section": "Times series resampling ",
+    "text": "Times series resampling \n\ntaxi_rs &lt;-\n  taxi_train %&gt;%\n  sliding_period(\n    index = \"trip_start_timestamp\",  \n\n\n\n\n  )\n\nUse the trip_start_timestamp column to find the date data."
   },
   {
-    "objectID": "slides/intro-extra-recipes.html#recipes-are-estimated",
-    "href": "slides/intro-extra-recipes.html#recipes-are-estimated",
-    "title": "Extras - Recipes",
-    "section": "Recipes are estimated",
-    "text": "Recipes are estimated\nEvery preprocessing step in a recipe that involved calculations uses the training set. For example:\n\nLevels of a factor\nDetermination of zero-variance\nNormalization\nFeature extraction\n\nOnce a recipe is added to a workflow, this occurs when fit() is called."
+    "objectID": "slides/intro-extra-time-splits.html#times-series-resampling-1",
+    "href": "slides/intro-extra-time-splits.html#times-series-resampling-1",
+    "title": "Extras - Time-based data splitting",
+    "section": "Times series resampling ",
+    "text": "Times series resampling \n\ntaxi_rs &lt;-\n  taxi_train %&gt;%\n  sliding_period(\n    index = \"trip_start_timestamp\",  \n    period = \"week\",\n\n\n\n  )\n\nOur units will be in weeks."
   },
   {
-    "objectID": "slides/intro-extra-recipes.html#debugging-a-recipe",
-    "href": "slides/intro-extra-recipes.html#debugging-a-recipe",
-    "title": "Extras - Recipes",
-    "section": "Debugging a recipe",
-    "text": "Debugging a recipe\n\nTypically, you will want to use a workflow to estimate and apply a recipe.\n\n\n\nIf you have an error and need to debug your recipe, the original recipe object (e.g. taxi_rec) can be estimated manually with a function called prep(). It is analogous to fit(). See TMwR section 16.4.\n\n\n\n\nAnother function, bake(), is analogous to predict(), and gives you the processed data back."
+    "objectID": "slides/intro-extra-time-splits.html#times-series-resampling-2",
+    "href": "slides/intro-extra-time-splits.html#times-series-resampling-2",
+    "title": "Extras - Time-based data splitting",
+    "section": "Times series resampling ",
+    "text": "Times series resampling \n\ntaxi_rs &lt;-\n  taxi_train %&gt;%\n  sliding_period(\n    index = \"trip_start_timestamp\",  \n    period = \"week\",\n    lookback = 8\n    \n    \n  )\n\nEvery analysis set has 8 weeks of data."
   },
   {
-    "objectID": "slides/intro-extra-recipes.html#your-turn-1",
-    "href": "slides/intro-extra-recipes.html#your-turn-1",
-    "title": "Extras - Recipes",
-    "section": "Your turn",
-    "text": "Your turn\n\n\nTake the recipe and prep() then bake() it to see what the resulting data set looks like.\nTry removing steps to see how the result changes.\n\n\n\n\n−+\n05:00"
+    "objectID": "slides/intro-extra-time-splits.html#times-series-resampling-3",
+    "href": "slides/intro-extra-time-splits.html#times-series-resampling-3",
+    "title": "Extras - Time-based data splitting",
+    "section": "Times series resampling ",
+    "text": "Times series resampling \n\ntaxi_rs &lt;-\n  taxi_train %&gt;%\n  sliding_period(\n    index = \"trip_start_timestamp\",  \n    period = \"week\",\n    lookback = 8,\n    assess_stop = 3,\n\n  )\n\nEvery assessment set has 3 weeks of data."
   },
   {
-    "objectID": "slides/intro-extra-recipes.html#printing-a-recipe",
-    "href": "slides/intro-extra-recipes.html#printing-a-recipe",
-    "title": "Extras - Recipes",
-    "section": "Printing a recipe",
-    "text": "Printing a recipe\n\ntaxi_rec\n#&gt; \n#&gt; ── Recipe ────────────────────────────────────────────────────────────\n#&gt; \n#&gt; ── Inputs\n#&gt; Number of variables by role\n#&gt; outcome:   1\n#&gt; predictor: 6\n#&gt; \n#&gt; ── Operations\n#&gt; • Unknown factor level assignment for: all_nominal_predictors()\n#&gt; • Dummy variables from: all_nominal_predictors()\n#&gt; • Zero variance filter on: all_predictors()\n#&gt; • Log transformation on: distance\n#&gt; • Centering and scaling for: all_numeric_predictors()"
-  },
-  {
-    "objectID": "slides/intro-extra-recipes.html#prepping-a-recipe",
-    "href": "slides/intro-extra-recipes.html#prepping-a-recipe",
-    "title": "Extras - Recipes",
-    "section": "Prepping a recipe",
-    "text": "Prepping a recipe\n\nprep(taxi_rec)\n#&gt; \n#&gt; ── Recipe ────────────────────────────────────────────────────────────\n#&gt; \n#&gt; ── Inputs\n#&gt; Number of variables by role\n#&gt; outcome:   1\n#&gt; predictor: 6\n#&gt; \n#&gt; ── Training information\n#&gt; Training data contained 8000 data points and no incomplete rows.\n#&gt; \n#&gt; ── Operations\n#&gt; • Unknown factor level assignment for: company, local, ... | Trained\n#&gt; • Dummy variables from: company, local, dow, month | Trained\n#&gt; • Zero variance filter removed: company_unknown, ... | Trained\n#&gt; • Log transformation on: distance | Trained\n#&gt; • Centering and scaling for: distance, hour, ... | Trained"
-  },
-  {
-    "objectID": "slides/intro-extra-recipes.html#baking-a-recipe",
-    "href": "slides/intro-extra-recipes.html#baking-a-recipe",
-    "title": "Extras - Recipes",
-    "section": "Baking a recipe",
-    "text": "Baking a recipe\n\nprep(taxi_rec) %&gt;%\n  bake(new_data = taxi_train)\n#&gt; # A tibble: 8,000 × 19\n#&gt;    distance   hour tip   company_City.Service company_Flash.Cab company_Sun.Taxi company_Taxi.Affiliatio…¹ company_Taxicab.Insu…² company_other local_no dow_Mon dow_Tue dow_Wed dow_Thu dow_Fri dow_Sat\n#&gt;       &lt;dbl&gt;  &lt;dbl&gt; &lt;fct&gt;                &lt;dbl&gt;             &lt;dbl&gt;            &lt;dbl&gt;                     &lt;dbl&gt;                  &lt;dbl&gt;         &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;\n#&gt;  1    1.38   0.418 yes                 -0.366            -0.333           -0.403                    -0.450                 -0.379        -0.609    0.484  -0.396  -0.441  -0.461   2.01   -0.428  -0.317\n#&gt;  2   -0.729 -1.42  yes                  2.73             -0.333           -0.403                    -0.450                 -0.379        -0.609   -2.07   -0.396  -0.441  -0.461   2.01   -0.428  -0.317\n#&gt;  3    1.42   0.877 yes                 -0.366            -0.333           -0.403                    -0.450                 -0.379         1.64     0.484   2.53   -0.441  -0.461  -0.497  -0.428  -0.317\n#&gt;  4    1.11   1.57  yes                 -0.366            -0.333           -0.403                    -0.450                 -0.379        -0.609    0.484  -0.396  -0.441  -0.461  -0.497  -0.428  -0.317\n#&gt;  5   -0.694  2.03  yes                 -0.366            -0.333            2.48                     -0.450                 -0.379        -0.609   -2.07   -0.396  -0.441  -0.461  -0.497  -0.428   3.15 \n#&gt;  6    1.39  -0.502 yes                 -0.366             3.01            -0.403                    -0.450                 -0.379        -0.609    0.484  -0.396  -0.441  -0.461  -0.497   2.34   -0.317\n#&gt;  7    1.40  -1.88  yes                 -0.366            -0.333           -0.403                    -0.450                 -0.379         1.64     0.484  -0.396  -0.441  -0.461  -0.497  -0.428  -0.317\n#&gt;  8   -0.289 -0.502 yes                 -0.366            -0.333           -0.403                    -0.450                  2.64         -0.609    0.484  -0.396  -0.441  -0.461  -0.497   2.34   -0.317\n#&gt;  9   -0.971  0.877 yes                 -0.366            -0.333            2.48                     -0.450                 -0.379        -0.609    0.484  -0.396   2.27   -0.461  -0.497  -0.428  -0.317\n#&gt; 10    0.631 -0.732 yes                 -0.366            -0.333           -0.403                    -0.450                  2.64         -0.609    0.484  -0.396  -0.441  -0.461  -0.497  -0.428  -0.317\n#&gt; # ℹ 7,990 more rows\n#&gt; # ℹ abbreviated names: ¹​company_Taxi.Affiliation.Services, ²​company_Taxicab.Insurance.Agency.Llc\n#&gt; # ℹ 3 more variables: month_Feb &lt;dbl&gt;, month_Mar &lt;dbl&gt;, month_Apr &lt;dbl&gt;"
-  },
-  {
-    "objectID": "slides/intro-extra-recipes.html#tidying-a-recipe",
-    "href": "slides/intro-extra-recipes.html#tidying-a-recipe",
-    "title": "Extras - Recipes",
-    "section": "Tidying a recipe",
-    "text": "Tidying a recipe\nOnce a recipe as been estimated, there are various bits of information saved in it.\n\nThe tidy() function can be used to get specific results from the recipe."
-  },
-  {
-    "objectID": "slides/intro-extra-recipes.html#your-turn-2",
-    "href": "slides/intro-extra-recipes.html#your-turn-2",
-    "title": "Extras - Recipes",
-    "section": "Your turn",
-    "text": "Your turn\n\nTake a prepped recipe and use the tidy() function on it.\nUse the number argument to inspect different steps.\n\n\n\n\n−+\n05:00"
-  },
-  {
-    "objectID": "slides/intro-extra-recipes.html#tidying-a-recipe-1",
-    "href": "slides/intro-extra-recipes.html#tidying-a-recipe-1",
-    "title": "Extras - Recipes",
-    "section": "Tidying a recipe",
-    "text": "Tidying a recipe\n\nprep(taxi_rec) %&gt;%\n  tidy()\n#&gt; # A tibble: 5 × 6\n#&gt;   number operation type      trained skip  id             \n#&gt;    &lt;int&gt; &lt;chr&gt;     &lt;chr&gt;     &lt;lgl&gt;   &lt;lgl&gt; &lt;chr&gt;          \n#&gt; 1      1 step      unknown   TRUE    FALSE unknown_NTmu5  \n#&gt; 2      2 step      dummy     TRUE    FALSE dummy_cT3Uy    \n#&gt; 3      3 step      zv        TRUE    FALSE zv_z22dk       \n#&gt; 4      4 step      log       TRUE    FALSE log_QQ1iw      \n#&gt; 5      5 step      normalize TRUE    FALSE normalize_3cTJb"
-  },
-  {
-    "objectID": "slides/intro-extra-recipes.html#tidying-a-recipe-2",
-    "href": "slides/intro-extra-recipes.html#tidying-a-recipe-2",
-    "title": "Extras - Recipes",
-    "section": "Tidying a recipe",
-    "text": "Tidying a recipe\n\nprep(taxi_rec) %&gt;%\n  tidy(number = 2)\n#&gt; # A tibble: 20 × 3\n#&gt;    terms   columns                      id         \n#&gt;    &lt;chr&gt;   &lt;chr&gt;                        &lt;chr&gt;      \n#&gt;  1 company City Service                 dummy_cT3Uy\n#&gt;  2 company Flash Cab                    dummy_cT3Uy\n#&gt;  3 company Sun Taxi                     dummy_cT3Uy\n#&gt;  4 company Taxi Affiliation Services    dummy_cT3Uy\n#&gt;  5 company Taxicab Insurance Agency Llc dummy_cT3Uy\n#&gt;  6 company other                        dummy_cT3Uy\n#&gt;  7 company unknown                      dummy_cT3Uy\n#&gt;  8 local   no                           dummy_cT3Uy\n#&gt;  9 local   unknown                      dummy_cT3Uy\n#&gt; 10 dow     Mon                          dummy_cT3Uy\n#&gt; 11 dow     Tue                          dummy_cT3Uy\n#&gt; 12 dow     Wed                          dummy_cT3Uy\n#&gt; 13 dow     Thu                          dummy_cT3Uy\n#&gt; 14 dow     Fri                          dummy_cT3Uy\n#&gt; 15 dow     Sat                          dummy_cT3Uy\n#&gt; 16 dow     unknown                      dummy_cT3Uy\n#&gt; 17 month   Feb                          dummy_cT3Uy\n#&gt; 18 month   Mar                          dummy_cT3Uy\n#&gt; 19 month   Apr                          dummy_cT3Uy\n#&gt; 20 month   unknown                      dummy_cT3Uy"
-  },
-  {
-    "objectID": "slides/intro-extra-recipes.html#using-a-recipe-in-tidymodels",
-    "href": "slides/intro-extra-recipes.html#using-a-recipe-in-tidymodels",
-    "title": "Extras - Recipes",
-    "section": "Using a recipe in tidymodels",
-    "text": "Using a recipe in tidymodels\nThe recommended way to use a recipe in tidymodels is to use it as part of a workflow().\n\ntaxi_wflow &lt;- workflow() %&gt;%  \n  add_recipe(taxi_rec) %&gt;%  \n  add_model(linear_reg())\n\nWhen used in this way, you don’t need to worry about prep() and bake() as it is handled for you."
-  },
-  {
-    "objectID": "slides/intro-extra-recipes.html#more-information",
-    "href": "slides/intro-extra-recipes.html#more-information",
-    "title": "Extras - Recipes",
-    "section": "More information",
-    "text": "More information\n\nhttps://recipes.tidymodels.org/\nhttps://www.tmwr.org/recipes.html\n\n\n\nhttps://workshops.tidymodels.org"
-  },
-  {
-    "objectID": "slides/intro-extra-tune.html#tuning-parameters",
-    "href": "slides/intro-extra-tune.html#tuning-parameters",
-    "title": "Extras - Tuning",
-    "section": "Tuning parameters",
-    "text": "Tuning parameters\nSome model or preprocessing parameters cannot be estimated directly from the data.\n\nSome examples:\n\nTree depth in decision trees\nNumber of neighbors in a K-nearest neighbor model"
-  },
-  {
-    "objectID": "slides/intro-extra-tune.html#optimize-tuning-parameters",
-    "href": "slides/intro-extra-tune.html#optimize-tuning-parameters",
-    "title": "Extras - Tuning",
-    "section": "Optimize tuning parameters",
-    "text": "Optimize tuning parameters\n\nTry different values and measure their performance.\n\n\n\nFind good values for these parameters.\n\n\n\n\nOnce the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set."
-  },
-  {
-    "objectID": "slides/intro-extra-tune.html#optimize-tuning-parameters-1",
-    "href": "slides/intro-extra-tune.html#optimize-tuning-parameters-1",
-    "title": "Extras - Tuning",
-    "section": "Optimize tuning parameters",
-    "text": "Optimize tuning parameters\nThe main two strategies for optimization are:\n\n\nGrid search 💠 which tests a pre-defined set of candidate values\nIterative search 🌀 which suggests/estimates new values of candidate parameters to evaluate"
-  },
-  {
-    "objectID": "slides/intro-extra-tune.html#specifying-tuning-parameters",
-    "href": "slides/intro-extra-tune.html#specifying-tuning-parameters",
-    "title": "Extras - Tuning",
-    "section": "Specifying tuning parameters",
-    "text": "Specifying tuning parameters\nLet’s take our previous random forest workflow and tag for tuning the minimum number of data points in each node:\n\nrf_spec &lt;- rand_forest(min_n = tune()) %&gt;% \n  set_mode(\"classification\")\n\nrf_wflow &lt;- workflow(tip ~ ., rf_spec)\nrf_wflow\n#&gt; ══ Workflow ══════════════════════════════════════════════════════════\n#&gt; Preprocessor: Formula\n#&gt; Model: rand_forest()\n#&gt; \n#&gt; ── Preprocessor ──────────────────────────────────────────────────────\n#&gt; tip ~ .\n#&gt; \n#&gt; ── Model ─────────────────────────────────────────────────────────────\n#&gt; Random Forest Model Specification (classification)\n#&gt; \n#&gt; Main Arguments:\n#&gt;   min_n = tune()\n#&gt; \n#&gt; Computational engine: ranger"
-  },
-  {
-    "objectID": "slides/intro-extra-tune.html#try-out-multiple-values",
-    "href": "slides/intro-extra-tune.html#try-out-multiple-values",
-    "title": "Extras - Tuning",
-    "section": "Try out multiple values",
-    "text": "Try out multiple values\ntune_grid() works similar to fit_resamples() but covers multiple parameter values:\n\nset.seed(22)\nrf_res &lt;- tune_grid(\n  rf_wflow,\n  taxi_folds,\n  grid = 5\n)"
-  },
-  {
-    "objectID": "slides/intro-extra-tune.html#compare-results",
-    "href": "slides/intro-extra-tune.html#compare-results",
-    "title": "Extras - Tuning",
-    "section": "Compare results",
-    "text": "Compare results\nInspecting results and selecting the best-performing hyperparameter(s):\n\nshow_best(rf_res)\n#&gt; # A tibble: 5 × 7\n#&gt;   min_n .metric .estimator  mean     n std_err .config             \n#&gt;   &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1    33 roc_auc binary     0.623    10  0.0149 Preprocessor1_Model1\n#&gt; 2    31 roc_auc binary     0.622    10  0.0154 Preprocessor1_Model3\n#&gt; 3    21 roc_auc binary     0.620    10  0.0149 Preprocessor1_Model4\n#&gt; 4    13 roc_auc binary     0.617    10  0.0137 Preprocessor1_Model5\n#&gt; 5     6 roc_auc binary     0.611    10  0.0156 Preprocessor1_Model2\n\nbest_parameter &lt;- select_best(rf_res)\nbest_parameter\n#&gt; # A tibble: 1 × 2\n#&gt;   min_n .config             \n#&gt;   &lt;int&gt; &lt;chr&gt;               \n#&gt; 1    33 Preprocessor1_Model1\n\ncollect_metrics() and autoplot() are also available."
-  },
-  {
-    "objectID": "slides/intro-extra-tune.html#the-final-fit",
-    "href": "slides/intro-extra-tune.html#the-final-fit",
-    "title": "Extras - Tuning",
-    "section": "The final fit",
-    "text": "The final fit\n\nrf_wflow &lt;- finalize_workflow(rf_wflow, best_parameter)\n\nfinal_fit &lt;- last_fit(rf_wflow, taxi_split) \n\ncollect_metrics(final_fit)\n#&gt; # A tibble: 2 × 4\n#&gt;   .metric  .estimator .estimate .config             \n#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 accuracy binary         0.913 Preprocessor1_Model1\n#&gt; 2 roc_auc  binary         0.648 Preprocessor1_Model1"
-  },
-  {
-    "objectID": "slides/intro-extra-tune.html#your-turn",
-    "href": "slides/intro-extra-tune.html#your-turn",
-    "title": "Extras - Tuning",
-    "section": "Your turn",
-    "text": "Your turn\n\nModify your model workflow to tune one or more parameters.\nUse grid search to find the best parameter(s).\n\n\n\n−+\n05:00\n\n\n\n\n\nhttps://workshops.tidymodels.org"
+    "objectID": "slides/intro-extra-time-splits.html#times-series-resampling-4",
+    "href": "slides/intro-extra-time-splits.html#times-series-resampling-4",
+    "title": "Extras - Time-based data splitting",
+    "section": "Times series resampling ",
+    "text": "Times series resampling \n\ntaxi_rs &lt;-\n  taxi_train %&gt;%\n  sliding_period(\n    index = \"trip_start_timestamp\",  \n    period = \"week\",\n    lookback = 8,\n    assess_stop = 3,\n    step = 1\n  )\n\nIncrement by 1 week\n\n\ntaxi_rs$splits[[1]] %&gt;% assessment() %&gt;% pluck(\"trip_start_timestamp\") %&gt;% range()\n#&gt; [1] \"2023-03-02 05:15:00 UTC\" \"2023-03-22 22:00:00 UTC\"\n\ntaxi_rs$splits[[2]] %&gt;% assessment() %&gt;% pluck(\"trip_start_timestamp\") %&gt;% range()\n#&gt; [1] \"2023-03-09 07:00:00 UTC\" \"2023-03-29 21:15:00 UTC\"\n\ntaxi_rs$splits[[3]] %&gt;% assessment() %&gt;% pluck(\"trip_start_timestamp\") %&gt;% range()\n#&gt; [1] \"2023-03-16 06:30:00 UTC\" \"2023-04-05 23:45:00 UTC\"\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
     "objectID": "archive/2022-07-RStudio-conf/01-introduction.html#workshop-policies",

@@ -427,17 +427,18 @@
 </div>
 </div><div class="column" style="width:60%;">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">set.seed</span>(<span class="dv">295</span>)</span>
-<span id="cb2-2"><a href="#cb2-2"></a>hotel_rates <span class="ot">&lt;-</span> </span>
-<span id="cb2-3"><a href="#cb2-3"></a>  hotel_rates <span class="sc">%&gt;%</span> </span>
-<span id="cb2-4"><a href="#cb2-4"></a>  <span class="fu">sample_n</span>(<span class="dv">5000</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-5"><a href="#cb2-5"></a>  <span class="fu">arrange</span>(arrival_date) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-6"><a href="#cb2-6"></a>  <span class="fu">select</span>(<span class="sc">-</span>arrival_date) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-7"><a href="#cb2-7"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb2-8"><a href="#cb2-8"></a>    <span class="at">company =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(company)),</span>
-<span id="cb2-9"><a href="#cb2-9"></a>    <span class="at">country =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(country)),</span>
-<span id="cb2-10"><a href="#cb2-10"></a>    <span class="at">agent =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(agent))</span>
-<span id="cb2-11"><a href="#cb2-11"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">data</span>(hotel_rates)</span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="fu">set.seed</span>(<span class="dv">295</span>)</span>
+<span id="cb2-3"><a href="#cb2-3"></a>hotel_rates <span class="ot">&lt;-</span> </span>
+<span id="cb2-4"><a href="#cb2-4"></a>  hotel_rates <span class="sc">%&gt;%</span> </span>
+<span id="cb2-5"><a href="#cb2-5"></a>  <span class="fu">sample_n</span>(<span class="dv">5000</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-6"><a href="#cb2-6"></a>  <span class="fu">arrange</span>(arrival_date) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-7"><a href="#cb2-7"></a>  <span class="fu">select</span>(<span class="sc">-</span>arrival_date) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-8"><a href="#cb2-8"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb2-9"><a href="#cb2-9"></a>    <span class="at">company =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(company)),</span>
+<span id="cb2-10"><a href="#cb2-10"></a>    <span class="at">country =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(country)),</span>
+<span id="cb2-11"><a href="#cb2-11"></a>    <span class="at">agent =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(agent))</span>
+<span id="cb2-12"><a href="#cb2-12"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
@@ -469,7 +470,7 @@
 <span id="cb4-8"><a href="#cb4-8"></a>lgbm_spec <span class="ot">&lt;-</span> </span>
 <span id="cb4-9"><a href="#cb4-9"></a>  <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>(), <span class="at">min_n =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
 <span id="cb4-10"><a href="#cb4-10"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb4-11"><a href="#cb4-11"></a>  <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>)</span>
+<span id="cb4-11"><a href="#cb4-11"></a>  <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>, <span class="at">num_threads =</span> <span class="dv">1</span>)</span>
 <span id="cb4-12"><a href="#cb4-12"></a></span>
 <span id="cb4-13"><a href="#cb4-13"></a>lgbm_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(hotel_rec, lgbm_spec)</span>
 <span id="cb4-14"><a href="#cb4-14"></a></span>
@@ -583,7 +584,7 @@
 <span id="cb6-3"><a href="#cb6-3"></a><span class="co">#&gt;   trees min_n learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config              </span></span>
 <span id="cb6-4"><a href="#cb6-4"></a><span class="co">#&gt;   &lt;int&gt; &lt;int&gt;      &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
 <span id="cb6-5"><a href="#cb6-5"></a><span class="co">#&gt; 1  1516     7     0.0421          176             12 mae     standard    9.60    10   0.181 Preprocessor42_Model1</span></span>
-<span id="cb6-6"><a href="#cb6-6"></a><span class="co">#&gt; 2  1014     5     0.0791           35            181 mae     standard    9.61    10   0.179 Preprocessor06_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-6"><a href="#cb6-6"></a><span class="co">#&gt; 2  1014     5     0.0791           35            181 mae     standard    9.60    10   0.180 Preprocessor06_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="racing-results-1" class="slide level2">
