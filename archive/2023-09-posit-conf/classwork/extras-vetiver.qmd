@@ -1,0 +1,57 @@
+---
+title: "Extras - Tuning - Classwork"
+subtitle: "Introduction to tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Setup
+
+```{r}
+library(tidymodels)
+
+set.seed(123)
+taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
+taxi_train <- training(taxi_split)
+taxi_test <- testing(taxi_split)
+
+set.seed(123)
+taxi_folds <- vfold_cv(taxi_train, v = 10, strata = tip)
+
+tree_spec <-
+  decision_tree() %>% 
+  set_mode("classification")
+
+tree_fit <-
+  workflow(tip ~ ., tree_spec) %>% 
+  fit(data = taxi_train) 
+```
+
+## Your turn
+
+Explore how you might deploy your `tree_fit` model using vetiver.
+
+```{r vetiver}
+library(vetiver)
+library(plumber)
+
+# Create a vetiver model object
+v <- vetiver_model(tree_fit, "taxi_tips")
+v
+```
+
+```{r}
+# Create a predictable Plumber API
+pr <- pr() %>%
+  vetiver_api(v)
+
+pr
+```
+
+```{r}
+#| eval: false
+# Run the API server in a new window
+pr_run(pr)
+```

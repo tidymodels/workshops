@@ -1,0 +1,216 @@
+---
+title: "Extras - Time-based data splitting"
+subtitle: "Introduction to tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+---
+
+```{r}
+#| label: setup
+#| include: false
+#| file: setup.R
+```
+
+```{r}
+#| label: setup-previous
+#| echo: false
+library(tidymodels)
+
+taxi_raw <- readr::read_rds("taxi_raw.rds")
+```
+
+## The raw taxi data set
+
+We prepared the data set specifically for this introductory workshop. 
+
+It looked similar to this:
+
+```{r}
+glimpse(taxi_raw)
+```
+
+:::notes
+`trip_start_time` has date and time rounded to "quarters of the hour".
+::::
+
+
+## Time nature of the data
+
+We assumed only the month, day of the week, and hour mattered and treated each observation as independent.
+
+. . . 
+
+If the data have a strong time component, all your data splitting strategies should support the model in estimating temporal trends.
+
+. . .
+
+Thus, don't sample randomly because this breaks up the time component!
+
+
+## Splitting with time component `r hexes(c("rsample"))`
+
+The more recent observations are assumed to be more similar to new data, so `initial_time_split()` puts them into the test set. 
+
+The function assumes that the data are already ordered.
+
+```{r}
+#| label: split
+
+taxi_raw <- taxi_raw %>%
+  arrange(trip_start_timestamp)
+
+taxi_split <- initial_time_split(taxi_raw, prop = 3 / 4)
+taxi_split
+
+taxi_train <- training(taxi_split)
+taxi_test  <- testing(taxi_split)
+
+nrow(taxi_train)
+ 
+nrow(taxi_test)
+```
+
+## Time series resampling 
+
+The same idea also applies to resampling: the newer observations go into the assessment set.
+
+For example:
+
+* Fold 1: Take the first X weeks of data as the analysis set, and the next 3 weeks as the assessment set.
+
+* Fold 2: Take weeks 2 to X + 1 as the analysis set, and the next 3 weeks as the assessment set.
+
+* and so on
+
+## Rolling origin forecast resampling 
+
+```{r}
+#| label: rolling
+#| echo: false
+#| out.width: 65%
+#| fig.align: center
+#| out-width: "70%"
+
+knitr::include_graphics("images/rolling.svg")
+```
+
+:::notes
+This image shows overlapping assessment sets. We will use non-overlapping data but it could be done either way.
+:::
+
+## Times series resampling  `r hexes(c("rsample"))`
+
+```{r}
+#| eval: false
+#| code-line-numbers: "4"
+
+taxi_rs <-
+  taxi_train %>%
+  sliding_period(
+    index = "trip_start_timestamp",  
+
+
+
+
+  )
+```
+
+Use the `trip_start_timestamp` column to find the date data. 
+
+## Times series resampling  `r hexes(c("rsample"))`
+
+```{r}
+#| eval: false
+#| code-line-numbers: "5"
+
+taxi_rs <-
+  taxi_train %>%
+  sliding_period(
+    index = "trip_start_timestamp",  
+    period = "week",
+
+
+
+  )
+```
+
+Our units will be in weeks. 
+
+## Times series resampling  `r hexes(c("rsample"))`
+
+```{r}
+#| eval: false
+#| code-line-numbers: "6"
+
+taxi_rs <-
+  taxi_train %>%
+  sliding_period(
+    index = "trip_start_timestamp",  
+    period = "week",
+    lookback = 8
+    
+    
+  )
+```
+
+Every analysis set has 8 weeks of data.
+
+## Times series resampling  `r hexes(c("rsample"))`
+
+```{r}
+#| eval: false
+#| code-line-numbers: "7"
+
+taxi_rs <-
+  taxi_train %>%
+  sliding_period(
+    index = "trip_start_timestamp",  
+    period = "week",
+    lookback = 8,
+    assess_stop = 3,
+
+  )
+```
+
+Every assessment set has 3 weeks of data.
+
+## Times series resampling  `r hexes(c("rsample"))`
+
+```{r}
+#| code-line-numbers: "8"
+
+taxi_rs <-
+  taxi_train %>%
+  sliding_period(
+    index = "trip_start_timestamp",  
+    period = "week",
+    lookback = 8,
+    assess_stop = 3,
+    step = 1
+  )
+```
+
+Increment by 1 week
+
+. . .
+
+```{r}
+taxi_rs$splits[[1]] %>% assessment() %>% pluck("trip_start_timestamp") %>% range()
+
+taxi_rs$splits[[2]] %>% assessment() %>% pluck("trip_start_timestamp") %>% range()
+
+taxi_rs$splits[[3]] %>% assessment() %>% pluck("trip_start_timestamp") %>% range()
+```

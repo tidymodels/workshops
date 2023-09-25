@@ -1,0 +1,383 @@
+---
+title: "3 - Grid Search via Racing"
+subtitle: "Advanced tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+```{r more-setup}
+#| include: false
+library(probably)
+library(finetune)
+
+cores <- parallelly::availableCores(logical = FALSE)
+cl <- parallel::makePSOCKcluster(cores)
+doParallel::registerDoParallel(cl)
+
+options(width = 200)
+
+ggplot2::theme_set(ggplot2::theme_bw())
+```
+
+## Previously - Setup `r hexes("tidymodels")`
+
+:::: {.columns}
+
+::: {.column width="40%"}
+
+```{r}
+#| label: tune-startup
+library(tidymodels)
+library(textrecipes)
+library(bonsai)
+
+# Max's usual settings: 
+tidymodels_prefer()
+theme_set(theme_bw())
+options(
+  pillar.advice = FALSE, 
+  pillar.min_title_chars = Inf
+)
+
+reg_metrics <- metric_set(mae, rsq)
+```
+
+:::
+
+::: {.column width="60%"}
+
+```{r}
+#| label: data-import
+data(hotel_rates)
+set.seed(295)
+hotel_rates <- 
+  hotel_rates %>% 
+  sample_n(5000) %>% 
+  arrange(arrival_date) %>% 
+  select(-arrival_date) %>% 
+  mutate(
+    company = factor(as.character(company)),
+    country = factor(as.character(country)),
+    agent = factor(as.character(agent))
+  )
+```
+
+
+:::
+
+::::
+
+
+## Previously - Data Usage `r hexes("rsample")`
+
+```{r}
+#| label: hotel-split
+set.seed(4028)
+hotel_split <-
+  initial_split(hotel_rates, strata = avg_price_per_room)
+
+hotel_train <- training(hotel_split)
+hotel_test <- testing(hotel_split)
+
+set.seed(472)
+hotel_rs <- vfold_cv(hotel_train, strata = avg_price_per_room)
+
+```
+
+## Previously - Boosting Model `r hexes("recipes", "textrecipes", "tune", "bonsai")`
+
+```{r}
+#| label: setup-lgbm
+hotel_rec <-
+  recipe(avg_price_per_room ~ ., data = hotel_train) %>%
+  step_YeoJohnson(lead_time) %>%
+  step_dummy_hash(agent,   num_terms = tune("agent hash")) %>%
+  step_dummy_hash(company, num_terms = tune("company hash")) %>%
+  step_zv(all_predictors())
+
+lgbm_spec <- 
+  boost_tree(trees = tune(), learn_rate = tune(), min_n = tune()) %>% 
+  set_mode("regression") %>% 
+  set_engine("lightgbm", num_threads = 1)
+
+lgbm_wflow <- workflow(hotel_rec, lgbm_spec)
+
+lgbm_param <-
+  lgbm_wflow %>%
+  extract_parameter_set_dials() %>%
+  update(`agent hash`   = num_hash(c(3, 8)),
+         `company hash` = num_hash(c(3, 8)))
+```
+
+
+## Making Grid Search More Efficient
+
+In the last section, we evaluated 250 models (25 candidates times 10 resamples).
+
+We can make this go faster using parallel processing. 
+
+Also, for some models, we can _fit_ far fewer models than the number that are being evaluated. 
+ 
+ * For boosting, a model with `X` trees can often predict on candidates with less than `X` trees. 
+ 
+Both of these methods can lead to enormous speed-ups. 
+
+
+## Model Racing 
+
+[_Racing_](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C7&q=+Hoeffding+racing) is an old tool that we can use to go even faster. 
+
+1. Evaluate all of the candidate models but only for a few resamples. 
+1. Determine which candidates have a low probability of being selected.
+1. Eliminate poor candidates.
+1. Repeat with next resample (until no more resamples remain) 
+
+This can result in fitting a small number of models. 
+
+
+## Discarding Candidates
+
+How do we eliminate tuning parameter combinations? 
+
+There are a few methods to do so. We'll use one based on analysis of variance (ANOVA). 
+
+_However_... there is typically a large difference between resamples in the results. 
+
+## Resampling Results (Non-Racing)
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+
+```{r}
+#| label: race-data-comp
+#| echo: false
+#| out-width: 60%
+#| fig-align: center
+#| fig-width: 5
+#| fig-height: 5
+
+# Simulate some resamples for candidate models
+num_resamples <- 10
+race_example <- crossing(model = paste("candidate", 1:2), resample = 1:num_resamples)
+candidates <- tibble(model = paste("candidate", 1:2), mean = c(4, 2))
+set.seed(937)
+resamples <- tibble(resample = 1:num_resamples, effect = rnorm(num_resamples, sd = 2))
+race_example <-
+  race_example %>%
+  full_join(candidates, by = "model") %>%
+  full_join(resamples, by = "resample") %>%
+  mutate(
+    error = mean + effect + rnorm(n(), sd = 1),
+    resample = format(resample)
+  ) %>%
+  select(-mean, -effect)
+
+
+race_table <- 
+  race_example %>%
+  mutate(model = gsub(" ", "_", model)) %>%
+  pivot_wider(id_cols = c(resample), names_from = model, values_from = error)
+
+race_cor <- cor(race_table[, -1], method = "spearman")[1,2]
+
+get_ci <- function(ind) {
+  dat <- race_table[1:ind,]
+  t_test <- t.test(dat$candidate_1, dat$candidate_2, paired = TRUE)
+  t_test <- tidy(t_test, conf)
+  t_test %>% 
+    select(difference = estimate, lower = conf.low, upper = conf.high) %>% 
+    mutate(`number of resamples` = ind)
+}
+
+race_ci <- map_dfr(2:10, get_ci) 
+
+```
+
+Here are some realistic (but simulated) examples of two candidate models. 
+
+An error estimate is measured for each of 10 resamples. 
+
+ - The lines connect resamples. 
+
+There is usually a significant resample-to-resample effect (rank corr: `r round(race_cor, 2)`). 
+
+:::
+
+::: {.column width="50%"}
+
+
+```{r}
+#| label: race-data
+#| echo: false
+#| out-width: 100%
+#| fig-align: center
+#| fig-width: 5
+#| fig-height: 5
+
+
+race_example %>%
+  ggplot(aes(x = model, y = error, group = resample, col = factor(resample))) +
+  geom_point(show.legend = FALSE) +
+  geom_line(alpha = 1 / 2, show.legend = FALSE) +
+  labs(x = NULL, y = "model error")
+```
+
+:::
+
+::::
+
+
+## Are Candidates Different?
+
+One way to evaluate these models is to do a paired t-test
+ 
+ - or a t-test on their differences matched by resamples
+
+With $n = 10$ resamples, the confidence interval is (`r signif(race_ci$lower[9], 2)`, `r signif(race_ci$upper[9], 2)`), indicating that candidate number 2 has smaller error. 
+
+What if we were to compare each model candidate to the current best at each resample? 
+
+One shows superiority when `r which.max(race_ci$lower > 0)` resamples have been evaluated.
+
+
+## Evaluating Differences in Candidates
+
+```{r}
+#| label: race-ci
+#| echo: false
+#| out-width: 70%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+
+race_ci %>% 
+  ggplot(aes(`number of resamples`, difference)) + 
+  geom_point() +
+  geom_hline(yintercept = 0, col = "red", lty = 2) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 1 / 10, alpha = 0.5) +
+  labs(y = "error difference from best") + 
+  scale_x_continuous(breaks = pretty_breaks())
+```
+
+## Interim Analysis of Results
+
+One version of racing uses a _mixed model ANOVA_ to construct one-sided confidence intervals for each candidate versus the current best. 
+
+Any candidates whose bound does not include zero are discarded.  [Here](https://www.tmwr.org/race_results.mp4) is an animation.
+
+The resamples are analyzed in a random order.
+
+<br>
+
+[Kuhn (2014)](https://arxiv.org/abs/1405.6974) has examples and simulations to show that the method works. 
+
+The [finetune](https://finetune.tidymodels.org/) package has functions `tune_race_anova()` and `tune_race_win_loss()`. 
+
+
+## Racing `r hexes("recipes", "textrecipes", "tune", "bonsai", "finetune")`
+
+
+```{r } 
+#| label: lgb-grid-race
+#| cache: false
+#| code-line-numbers: "12|"
+# Let's use a larger grid
+set.seed(8945)
+lgbm_grid <- 
+  lgbm_param %>% 
+  grid_latin_hypercube(size = 50)
+
+library(finetune)
+
+set.seed(9)
+lgbm_race_res <-
+  lgbm_wflow %>%
+  tune_race_anova(
+    resamples = hotel_rs,
+    grid = lgbm_grid, 
+    metrics = reg_metrics
+  )
+```
+
+The syntax and helper functions are extremely similar to those shown for `tune_grid()`. 
+
+
+## Racing Results `r hexes("tune")`
+
+```{r}
+#| label: best-race
+
+show_best(lgbm_race_res, metric = "mae")
+```
+
+## Racing Results `r hexes("finetune")`
+
+:::: {.columns}
+
+::: {.column width="50%"}
+Only `r sum(map_int(lgbm_race_res$.metrics, ~ nrow(.x) / 2))` models were fit (out of `r nrow(lgbm_race_res) * nrow(lgbm_grid)`). 
+
+`select_best()` never considers candidate models that did not get to the end of the race. 
+
+There is a helper function to see how candidate models were removed from consideration. 
+
+:::
+
+::: {.column width="50%"}
+
+
+```{r}
+#| label: plot-race
+#| out-width: 100%
+#| fig-align: center
+#| fig-width: 5
+#| fig-height: 3.8
+
+plot_race(lgbm_race_res) + 
+  scale_x_continuous(breaks = pretty_breaks())
+```
+
+:::
+
+::::
+
+
+## Your turn {transition="slide-in"}
+
+- *Run `tune_race_anova()` with a different seed.*
+- *Did you get the same or similar results?*
+
+
+```{r}
+#| label: racing-repeat
+#| echo: false
+countdown::countdown(minutes = 10, id = "racing-repeat")
+```
+
+```{r}
+#| label: teardown
+#| echo: false
+
+parallel::stopCluster(cl)
+```

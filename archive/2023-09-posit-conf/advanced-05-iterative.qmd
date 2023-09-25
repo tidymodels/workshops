@@ -1,0 +1,677 @@
+---
+title: "4 - Iterative Search"
+subtitle: "Advanced tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+```{r more-setup}
+#| include: false
+library(probably)
+library(textrecipes)
+library(finetune)
+
+cores <- parallelly::availableCores(logical = FALSE)
+cl <- parallel::makePSOCKcluster(cores)
+doParallel::registerDoParallel(cl)
+
+options(width = 200)
+
+ggplot2::theme_set(ggplot2::theme_bw())
+
+load("bayes_opt_calcs.RData")
+```
+
+## Previously - Setup
+
+:::: {.columns}
+
+::: {.column width="40%"}
+
+```{r}
+#| label: tune-startup
+library(tidymodels)
+library(textrecipes)
+library(bonsai)
+
+# Max's usual settings: 
+tidymodels_prefer()
+theme_set(theme_bw())
+options(
+  pillar.advice = FALSE, 
+  pillar.min_title_chars = Inf
+)
+```
+
+:::
+
+::: {.column width="60%"}
+
+```{r}
+#| label: data-import
+data(hotel_rates)
+set.seed(295)
+hotel_rates <- 
+  hotel_rates %>% 
+  sample_n(5000) %>% 
+  arrange(arrival_date) %>% 
+  select(-arrival_date) %>%  
+  mutate(
+    company = factor(as.character(company)),
+    country = factor(as.character(country)),
+    agent = factor(as.character(agent))
+  )
+```
+
+
+:::
+
+::::
+
+
+## Previously - Data Usage
+
+```{r}
+#| label: hotel-split
+set.seed(4028)
+hotel_split <- initial_split(hotel_rates, strata = avg_price_per_room)
+
+hotel_train <- training(hotel_split)
+hotel_test <- testing(hotel_split)
+
+set.seed(472)
+hotel_rs <- vfold_cv(hotel_train, strata = avg_price_per_room)
+```
+
+## Previously - Boosting Model
+
+```{r}
+#| label: setup-lgbm
+hotel_rec <-
+  recipe(avg_price_per_room ~ ., data = hotel_train) %>%
+  step_YeoJohnson(lead_time) %>%
+  step_dummy_hash(agent,   num_terms = tune("agent hash")) %>%
+  step_dummy_hash(company, num_terms = tune("company hash")) %>%
+  step_zv(all_predictors())
+
+lgbm_spec <- 
+  boost_tree(trees = tune(), learn_rate = tune(), min_n = tune()) %>% 
+  set_mode("regression") %>% 
+  set_engine("lightgbm", num_threads = 1)
+
+lgbm_wflow <- workflow(hotel_rec, lgbm_spec)
+
+lgbm_param <-
+  lgbm_wflow %>%
+  extract_parameter_set_dials() %>%
+  update(`agent hash`   = num_hash(c(3, 8)),
+         `company hash` = num_hash(c(3, 8)))
+```
+
+## Iterative Search
+
+Instead of pre-defining a grid of candidate points, we can model our current results to predict what the next candidate point should be. 
+
+<br>
+
+Suppose that we are only tuning the learning rate in our boosted tree. 
+
+<br>
+
+We could do something like: 
+
+```r
+mae_pred <- lm(mae ~ learn_rate, data = resample_results)
+```
+
+and use this to predict and rank new learning rate candidates. 
+
+
+## Iterative Search
+
+A linear model probably isn't the best choice though (more in a minute). 
+
+To illustrate the process, we resampled a large grid of learning rate values for our data to show what the relationship is between MAE and learning rate. 
+
+Now suppose that we used a grid of three points in the parameter range for learning rate...
+
+
+## A Large Grid
+
+
+```{r}
+#| label: grid-large
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+grid_points %>%
+  ggplot(aes(learn_rate, mean)) +
+  geom_line(alpha = 1 / 2, col = "#0b84a5", linewidth = 1.5) +
+  scale_x_log10() +
+  labs(y = "MAE (resampled)", x = "Learning Rate")
+```
+
+
+## A Three Point Grid
+
+```{r}
+#| label: grid-large-sampled
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+grid_points %>%
+  ggplot(aes(learn_rate, mean)) +
+  geom_line(alpha = 1 / 10, col = "#0b84a5", linewidth = 1.5) +
+  geom_point(data = init_points) +
+  scale_x_log10() +
+  labs(y = "MAE (resampled)", x = "Learning Rate")
+```
+
+## Gaussian Processes and Optimization
+
+We can make a "meta-model" with a small set of historical performance results. 
+
+[Gaussian Processes](https://gaussianprocess.org/gpml/) (GP) models are a good choice to model performance. 
+
+- It is a Bayesian model so we are using **Bayesian Optimization (BO)**.
+- For regression, we can assume that our data are multivariate normal. 
+- We also define a _covariance_ function for the variance relationship between data points. A common one is:
+
+$$\operatorname{cov}(\boldsymbol{x}_i, \boldsymbol{x}_j) = \exp\left(-\frac{1}{2}|\boldsymbol{x}_i - \boldsymbol{x}_j|^2\right) + \sigma^2_{ij}$$
+
+
+:::notes
+GPs are good because 
+
+- they are flexible regression models (in the sense that splines are flexible). 
+- we need to get mean and variance predictions (and they are Bayesian)
+- their variability is based on spatial distances.
+
+Some people use random forests (with conformal variance estimates) or other methods but GPs are most popular.
+:::
+
+
+## Predicting Candidates
+
+The GP model can take candidate tuning parameter combinations as inputs and make predictions for performance (e.g. MAE)
+
+ - The _mean_ performance
+ - The _variance_ of performance 
+ 
+The variance is mostly driven by spatial variability (the previous equation). 
+
+The predicted variance is zero at locations of actual data points and becomes very high when far away from any observed data. 
+
+
+## Your turn {transition="slide-in"}
+
+:::: {.columns}
+
+::: {.column width="50%"}
+
+*Your GP makes predictions on two new candidate tuning parameters.*  
+
+*We want to minimize MAE.* 
+
+*Which should we choose?*
+
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: two-candidates
+#| echo: false
+#| out-width: 100%
+#| fig-width: 5
+#| fig-height: 5
+
+set.seed(28383)
+num_points <- 5000
+exerc_data <- 
+  tibble(MAE = c(rnorm(num_points, 10, 2), rnorm(num_points, 13, 1 / 2)),
+         `Choose:` = rep(paste("candidate", 1:2), each = num_points))
+
+exerc_data %>% 
+  ggplot(aes(MAE, col = `Choose:`)) + 
+  geom_line(stat = "density", adjust = 1.25, trim = TRUE, linewidth = 1) +
+  geom_vline(mapping = aes(xintercept = 14)) +
+  theme(legend.position = "top") +
+  annotate("text", x = 15, y = .65, label = "Current\nbest")
+```
+:::
+
+::::
+
+
+```{r}
+#| echo: false
+countdown::countdown(minutes = 3, id = "mean-var-trade", left = "0")
+```
+
+
+
+## GP Fit (ribbon is mean +/- 1SD)
+
+```{r}
+#| label: gp-iter-0
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+scaled_obj %>%
+  filter(.iter == 0) %>% 
+  ggplot(aes(learn_rate, .mean)) +
+  geom_line(data = grid_points, aes(y = mean), alpha = 1 / 10, 
+            col = "#0b84a5", linewidth = 1.5) +
+  geom_line() +
+  geom_point(data = bayes_points %>% filter(.iter == 0), aes(y = mean)) +
+  geom_ribbon(aes(ymin = .mean - .sd, ymax = .mean + .sd),
+              alpha = 1 / 7) +
+  scale_x_log10() +
+  labs(y = "MAE", x = "Learning Rate")
+```
+
+
+## Choosing New Candidates
+
+This isn't a very good fit but we can still use it.
+
+How can we use the outputs to choose the next point to measure?
+
+<br> 
+
+[_Acquisition functions_](https://ekamperi.github.io/machine%20learning/2021/06/11/acquisition-functions.html) take the predicted mean and variance and use them to balance: 
+
+ - _exploration_:  new candidates should explore new areas.
+ - _exploitation_: new candidates must stay near existing values. 
+
+Exploration focuses on the variance, exploitation is about the mean. 
+
+## Acquisition Functions
+
+We'll use an acquisition function to select a new candidate.
+
+The most popular method appears to be _expected improvement_ ([EI](https://arxiv.org/pdf/1911.12809.pdf)) above the current best results. 
+ 
+  - Zero at existing data points. 
+  - The _expected_ improvement is integrated over all possible improvement ("expected" in the probability sense). 
+
+We would probably pick the point with the largest EI as the next point. 
+
+(There are other functions beyond EI.)
+
+## Expected Improvement
+
+```{r}
+#| label: gp-iter-0-ei
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+scaled_obj %>%
+  filter(.iter == 0) %>% 
+  ggplot(aes(learn_rate, scaled)) +
+  geom_point(data = bayes_points %>% filter(.iter == 0), aes(y = zero)) +
+  geom_line(alpha = 1 / 2, col = "#D95F02", linewidth = 1) +
+  scale_x_log10()  +
+  labs(y = "Expected Improvement", x = "Learning Rate")
+```
+
+## Iteration
+
+Once we pick the candidate point, we measure performance for it (e.g. resampling). 
+
+<br> 
+
+Another GP is fit, EI is recomputed, and so on. 
+
+<br> 
+
+We stop when we have completed the allowed number of iterations _or_ if we don't see any improvement after a pre-set number of attempts. 
+
+
+## GP Fit with four points
+
+```{r}
+#| label: gp-iter-1
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+scaled_obj %>%
+  filter(.iter == 1) %>% 
+  ggplot(aes(learn_rate, .mean)) +
+  geom_line(data = grid_points, aes(y = mean), alpha = 1 / 4, 
+            col = "#0b84a5", linewidth = 1.5) +
+  geom_line() +
+  geom_point(data = bayes_points %>% filter(.iter == 1), aes(y = mean)) +
+  geom_ribbon(aes(ymin = .mean - .sd, ymax = .mean + .sd),
+              alpha = 1 / 7) +
+  scale_x_log10() +
+  labs(y = "MAE", x = "Learning Rate")
+```
+
+
+## Expected Improvement
+
+```{r}
+#| label: gp-iter-1-ei
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+scaled_obj %>%
+  filter(.iter == 1) %>% 
+  ggplot(aes(learn_rate, scaled)) +
+  geom_point(data = bayes_points %>% filter(.iter == 1), aes(y = zero)) +
+  geom_line(alpha = 1 / 2, col = "#D95F02", linewidth = 1) +
+  scale_x_log10()  +
+  labs(y = "Expected Improvement", x = "Learning Rate")
+```
+
+
+## GP Evolution
+
+
+```{r}
+#| label: gp-anime
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+knitr::include_graphics("animations/anime_gp.gif")
+```
+
+
+## Expected Improvement Evolution
+
+
+```{r}
+#| label: ei-anime
+#| echo: false
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+knitr::include_graphics("animations/anime_improvement.gif")
+```
+
+## BO in tidymodels
+
+We'll use a function called `tune_bayes()` that has very similar syntax to `tune_grid()`. 
+
+<br> 
+
+It has an additional `initial` argument for the initial set of performance estimates and parameter combinations for the GP model. 
+
+## Initial grid points
+
+`initial` can be the results of another `tune_*()` function or an integer (in which case `tune_grid()` is used under to hood to make such an initial set of results).
+ 
+ - We'll run the optimization more than once, so let's make an initial grid of results to serve as the substrate for the BO. 
+
+ - I suggest at least the number of tuning parameters plus two as the initial grid for BO. 
+
+## An Initial Grid
+
+```{r tuning} 
+#| label: lgb-bo-initial
+#| cache: false
+reg_metrics <- metric_set(mae, rsq)
+
+set.seed(12)
+init_res <-
+  lgbm_wflow %>%
+  tune_grid(
+    resamples = hotel_rs,
+    grid = nrow(lgbm_param) + 2,
+    param_info = lgbm_param,
+    metrics = reg_metrics
+  )
+
+show_best(init_res, metric = "mae")
+```
+
+## BO using tidymodels
+
+```{r tuning} 
+#| label: lgb-bo
+#| cache: false
+#| code-line-numbers: "4,6-8|"
+
+set.seed(15)
+lgbm_bayes_res <-
+  lgbm_wflow %>%
+  tune_bayes(
+    resamples = hotel_rs,
+    initial = init_res,     # <- initial results
+    iter = 20,
+    param_info = lgbm_param,
+    metrics = reg_metrics
+  )
+
+show_best(lgbm_bayes_res, metric = "mae")
+```
+
+
+## Plotting BO Results
+
+```{r}
+#| label: autoplot-marginals
+#| echo: true
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 10
+#| fig-height: 4.25
+
+autoplot(lgbm_bayes_res, metric = "mae")
+```
+
+
+## Plotting BO Results
+
+```{r}
+#| label: autoplot-param
+#| echo: true
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 10
+#| fig-height: 4.25
+
+autoplot(lgbm_bayes_res, metric = "mae", type = "parameters")
+```
+
+
+## Plotting BO Results
+
+```{r}
+#| label: autoplot-perf
+#| echo: true
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+autoplot(lgbm_bayes_res, metric = "mae", type = "performance")
+```
+
+
+## ENHANCE
+
+```{r}
+#| label: autoplot-perf-zoomed
+#| echo: true
+#| out-width: 50%
+#| fig-align: center
+#| fig-width: 6
+#| fig-height: 4.25
+
+autoplot(lgbm_bayes_res, metric = "mae", type = "performance") +
+  ylim(c(9, 14))
+```
+
+
+## Your turn {transition="slide-in"}
+
+*Let's try a different acquisition function: `conf_bound(kappa)`.*
+
+*We'll use the `objective` argument to set it.*
+
+*Choose your own `kappa` value:*
+
+ - *Larger values will explore the space more.* 
+ - *"Large" values are usually less than one.*
+
+
+```{r}
+#| echo: false
+countdown::countdown(minutes = 10, id = "conf-bound")
+```
+
+## Notes
+
+- Stopping `tune_bayes()` will return the current results. 
+
+- Parallel processing can still be used to more efficiently measure each candidate point. 
+
+- There are [a lot of other iterative methods](https://github.com/topepo/Optimization-Methods-for-Tuning-Predictive-Models) that you can use. 
+
+- The finetune package also has functions for [simulated annealing](https://www.tmwr.org/iterative-search.html#simulated-annealing) search. 
+
+## Finalizing the Model
+
+Let's say that we've tried a lot of different models and we like our lightgbm model the most. 
+
+What do we do now? 
+
+  * Finalize the workflow by choosing the values for the tuning parameters. 
+  * Fit the model on the entire training set. 
+  * Verify performance using the test set. 
+  * Document and publish the model(?)
+  
+## Locking Down the Tuning Parameters
+
+We can take the results of the Bayesian optimization and accept the best results: 
+
+```{r}
+#| label: finalize
+
+best_param <- select_best(lgbm_bayes_res, metric = "mae")
+final_wflow <- 
+  lgbm_wflow %>% 
+  finalize_workflow(best_param)
+final_wflow
+```
+
+## The Final Fit
+
+We can use individual functions: 
+
+```r
+final_fit <- final_wflow %>% fit(data = hotel_train)
+
+# then predict() or augment() 
+# then compute metrics
+```
+
+<br> 
+
+Remember that there is also a convenience function to do all of this: 
+
+```{r}
+#| label: last-fit
+
+set.seed(3893)
+final_res <- final_wflow %>% last_fit(hotel_split, metrics = reg_metrics)
+final_res
+```
+
+## Test Set Results
+
+:::: {.columns}
+
+::: {.column width="65%"}
+```{r}
+#| label: test-cal-code
+#| eval: false
+final_res %>% 
+  collect_predictions() %>% 
+  cal_plot_regression(
+    truth = avg_price_per_room, 
+    estimate = .pred, 
+    alpha = 1 / 4)
+```
+
+Test set performance: 
+
+```{r}
+#| label: test-metrics
+final_res %>% collect_metrics()
+```
+:::
+
+::: {.column width="35%"}
+
+
+```{r}
+#| label: test-cal
+#| echo: false
+#| out-width: 100%
+#| fig-width: 5
+#| fig-height: 5
+#| fig-align:  center
+
+final_res %>% 
+  collect_predictions() %>% 
+  cal_plot_regression(
+    truth = avg_price_per_room, 
+    estimate = .pred, 
+    alpha = 1 / 4)
+```
+
+:::
+
+::::
+
+```{r}
+#| label: teardown
+#| echo: false
+
+parallel::stopCluster(cl)
+```
+
