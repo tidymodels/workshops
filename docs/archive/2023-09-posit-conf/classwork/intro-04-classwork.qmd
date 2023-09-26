@@ -1,0 +1,299 @@
+---
+title: "4 - Evaluating models - Classwork"
+subtitle: "Introduction to tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Setup
+
+Setup from deck 3
+
+```{r}
+library(tidymodels)
+
+set.seed(123)
+taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
+taxi_train <- training(taxi_split)
+taxi_test <- testing(taxi_split)
+
+tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
+taxi_wflow <- workflow(tip ~ ., tree_spec)
+taxi_fit <- fit(taxi_wflow, taxi_train)
+```
+
+## Metrics for model performance
+
+`conf_mat()` can be used to see how well the model is doing at prediction
+
+```{r}
+augment(taxi_fit, new_data = taxi_train) %>%
+  conf_mat(truth = tip, estimate = .pred_class)
+```
+
+and it has nice plotting features
+
+```{r}
+augment(taxi_fit, new_data = taxi_train) %>%
+  conf_mat(truth = tip, estimate = .pred_class) %>%
+  autoplot(type = "heatmap")
+```
+
+using the same interface we can calculate metrics
+
+```{r}
+augment(taxi_fit, new_data = taxi_train) %>%
+  accuracy(truth = tip, estimate = .pred_class)
+```
+
+All yardstick metric functions work with grouped data frames!
+
+```{r}
+augment(taxi_fit, new_data = taxi_train) %>%
+  group_by(local) %>%
+  accuracy(truth = tip, estimate = .pred_class)
+```
+
+Metric sets are a way to combine multiple similar metric functions together into a new function.
+
+```{r}
+taxi_metrics <- metric_set(accuracy, specificity, sensitivity)
+
+augment(taxi_fit, new_data = taxi_train) %>%
+  taxi_metrics(truth = tip, estimate = .pred_class)
+```
+
+## Your turn
+
+Compute and plot an ROC curve for your current model.
+
+What data are being used for this ROC curve plot?
+
+```{r}
+# Your code here!
+
+```
+
+## Dangers of overfitting
+
+Repredicting the training set, bad!
+
+```{r}
+taxi_fit %>%
+  augment(taxi_train)
+```
+
+"Resubstitution estimate" - This should be the best possible performance that you could ever achieve, but it can be very misleading!
+
+```{r}
+taxi_fit %>%
+  augment(taxi_train) %>%
+  accuracy(tip, .pred_class)
+```
+
+Now on the test set, see that it performs worse? This is closer to "real" performance.
+
+```{r}
+taxi_fit %>%
+  augment(taxi_test) %>%
+  accuracy(tip, .pred_class)
+```
+
+## Your turn
+
+Use `augment()` and and a metric function to compute a classification metric like `brier_class()`.
+
+Compute the metrics for both training and testing data to demonstrate overfitting!
+
+Notice the evidence of overfitting!
+
+```{r}
+# Your code here!
+
+# Use `augment()` and `brier_class()` with `taxi_fit`
+taxi_fit
+```
+
+## Your turn
+
+If we use 10 folds, what percent of the training data:
+
+- ends up in analysis?
+- ends up in assessment?
+
+for each fold
+
+## Resampling
+
+```{r}
+# v = 10 is the default
+vfold_cv(taxi_train)
+```
+
+What is in a resampling result?
+
+```{r}
+taxi_folds <- vfold_cv(taxi_train, v = 10)
+
+# Individual splits of analysis/assessment data
+taxi_folds$splits[1:3]
+```
+
+Stratification often helps, with very little downside
+
+```{r}
+vfold_cv(taxi_train, strata = tip)
+```
+
+We'll use this setup:
+
+```{r}
+set.seed(123)
+taxi_folds <- vfold_cv(taxi_train, v = 10, strata = tip)
+taxi_folds
+```
+
+## Evaluating model performance
+
+```{r}
+# Fit the workflow on each analysis set,
+# then compute performance on each assessment set
+taxi_res <- fit_resamples(taxi_wflow, taxi_folds)
+taxi_res
+```
+
+Aggregate metrics
+
+```{r}
+taxi_res %>%
+  collect_metrics()
+```
+
+If you want to analyze the assessment set (i.e. holdout) predictions, then you need to adjust the control object and tell it to save them:
+
+```{r}
+# Save the assessment set results
+ctrl_taxi <- control_resamples(save_pred = TRUE)
+
+taxi_res <- fit_resamples(taxi_wflow, taxi_folds, control = ctrl_taxi)
+
+taxi_preds <- collect_predictions(taxi_res)
+taxi_preds
+```
+
+## Bootstrapping
+
+```{r}
+set.seed(3214)
+bootstraps(taxi_train)
+```
+
+## Your turn
+
+Create:
+
+- Monte Carlo Cross-Validation sets
+- validation set
+
+(use the reference guide to find the functions)
+
+https://rsample.tidymodels.org/reference/index.html
+
+Don't forget to set a seed when you resample!
+
+```{r}
+# Your code here!
+
+```
+
+## Create a random forest model
+
+```{r}
+rf_spec <- rand_forest(trees = 1000, mode = "classification")
+rf_spec
+```
+
+```{r}
+rf_wflow <- workflow(tip ~ ., rf_spec)
+rf_wflow
+```
+
+## Your turn
+
+Use `fit_resamples()` and `rf_wflow` to:
+
+- Keep predictions
+- Compute metrics
+
+```{r}
+# Your code here!
+
+```
+
+## Evaluate a workflow set
+
+```{r}
+wf_set <- workflow_set(list(tip ~ .), list(tree_spec, rf_spec))
+wf_set
+```
+
+```{r}
+wf_set_fit <- wf_set %>%
+  workflow_map("fit_resamples", resamples = taxi_folds)
+
+wf_set_fit
+```
+
+Rank the sets of models by their aggregate metric performance
+
+```{r}
+wf_set_fit %>%
+  rank_results()
+```
+
+## Your turn
+
+When do you think a workflow set would be useful?
+
+Discuss with your neighbors!
+
+## The final fit
+
+```{r}
+# `taxi_split` has train + test info
+final_fit <- last_fit(rf_wflow, taxi_split) 
+
+final_fit
+```
+
+Test set metrics:
+
+```{r}
+collect_metrics(final_fit)
+```
+
+Test set predictions:
+
+```{r}
+collect_predictions(final_fit)
+```
+
+```{r}
+collect_predictions(final_fit) %>%
+  ggplot(aes(.pred_class, fill = tip)) + 
+  geom_bar() 
+```
+
+```{r}
+extract_workflow(final_fit)
+```
+
+## Your turn
+
+Which model do you think you would decide to use?
+
+What surprised you the most?
+
+If you're taking Advanced tidymodels tomorrow, what is one thing you are looking forward to learning?
