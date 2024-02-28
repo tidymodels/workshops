@@ -108,6 +108,16 @@ Actual variables in our data:
 taxi <- readRDS(here::here("archive/2024-03-conectaR-spanish/taxi.rds"))
 ```
 
+Baja los datos, y cargarlos en tu sesión de R
+
+```{r}
+#| eval: false
+
+download.file("https://github.com/edgararuiz/tidymodels-workshops/blob/main/archive/2024-03-conectaR-spanish/taxi.rds",
+              "taxi.rds")
+
+taxi <- readRDS(taxi.rds)
+```
 
 ```{r taxi-print}
 taxi
@@ -124,7 +134,7 @@ y los otros para la "prueba final":
 
 -   Los **datos de entrenamiento** se utilizan para estimar los parametros del modelo
 
--   Los **datos de prueba ** se ponen aparte para medir la eficacia del modelo
+-   Los **datos de prueba ** se ponen aparte para medir la calidad del modelo
 
 . . .
 
@@ -169,7 +179,7 @@ all_split
 ## Separando y "gastando" datos
 
 -   Gastando mucho datos en el **entrenamiento** previene que tengamos una 
-buena manera de medir la **eficacia** del modelo
+buena manera de medir la **calidad** del modelo
 
 . . .
 
@@ -203,13 +213,19 @@ This function uses a good default, but this depends on your specific goal/data
 We will talk about more powerful ways of splitting, like stratification, later
 :::
 
-## ¿Que es `set.seed()`?
+## ¿Para que es `set.seed()`?
+
+. . . 
 
 Para el propósito de separar datos, R puede generar números "seudo-aleatorios", 
 que aunque parezcan comportarse como números aleatorios, en realidad se generan
 de una manera específica basada en una "semilla" (seed)
 
+. . .
+
 Si utilizamos la misma semilla nos permite reproducir los mismos resultados.
+
+. . .
 
 El número en sí que elijes realmente no importa. Lo que si importa, es que no
 experimentes con diferentes números de la semilla con el proposito de mejorar
@@ -237,20 +253,20 @@ taxi_entrenar
 
 En el set de prueba, hay `r nrow(taxi_test)` entradas, con `r ncol(taxi_test)` columnas
 
-## Your turn {transition="slide-in"}
+## Tu turno {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Split your data so 20% is held out for the test set.*
+*Separa tus datos, el 20% tiene que ser para prueba*
 
-*Try out different values in `set.seed()` to see how the results change.*
+*Trata diferentes valores para `set.seed()` para ver como cambian los resultados*
 
 ```{r ex-try-splitting}
 #| echo: false
 countdown::countdown(minutes = 5, id = "try-splitting")
 ```
 
-## Data splitting and spending `r hexes("rsample")`
+## Separando y "gastando" datos `r hexes("rsample")`
 
 ```{r taxi-split-prop}
 set.seed(123)
@@ -262,28 +278,46 @@ nrow(taxi_entrenar)
 nrow(taxi_test)
 ```
 
-# What about a validation set?
+# ¿Y que pasó con los datos para validar?
 
-##  {background-color="white" background-image="https://www.tmwr.org/premade/validation.svg" background-size="50%"}
+##  
 
-## Validation set
+```{mermaid}
+%%| eval: true
+%%| fig-width: 20
+flowchart TD
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000  
+  vl[Validación]
+  style vl fill:#E5E7FD,stroke:#666,color:#000    
+  ad --> tr
+  ad --> ts
+  ad --> vl
+```
+
+
+## Datos de validación
 
 ```{r}
 set.seed(123)
 initial_validation_split(taxi, prop = c(0.6, 0.2))
 ```
 
-# Exploratory data analysis for ML 🧐
+# Análisis exploratorio para Aprendizaje Automático 🧐
 
-## Your turn {transition="slide-in"}
+## Tu turno {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Explore the `taxi_entrenar` data on your own!*
+*Explora los datos en `taxi_entrenar` por tí mismo*
 
-* *What's the distribution of the outcome, `tip`?*
-* *What's the distribution of numeric variables like `distance`?*
-* *How does `tip` differ across the categorical variables?*
+* *¿Cual es la distribución de los resultados de `propina`?*
+* *¿Cual es la distribución de las variables numéricas, por ejemplo `distancia`?*
+* *¿Como cambian los resultados de `propina` a través de las variables categóricas?*
 
 ```{r ex-explore-taxi}
 #| echo: false
@@ -341,7 +375,7 @@ taxi_entrenar %>%
   facet_grid(vars(propina))
 ```
 
-# Split smarter
+# Separa inteligentemente
 
 ##
 
@@ -352,15 +386,15 @@ taxi %>%
   labs(x = "")
 ```
 
-Stratified sampling would split within response values
+Estratificar la muestra separará los datos dentro los valores de respuesta
 
 :::notes
 Based on our EDA, we know that the source data contains fewer `"no"` tip values than `"yes"`. We want to make sure we allot equal proportions of those responses so that both the training and testing data have enough of each to give accurate estimates.
 :::
 
-## Stratification
+## Estratificar
 
-Use `strata = tip`
+Use `strata = propina`
 
 ```{r taxi-split-prop-strata}
 set.seed(123)
@@ -368,9 +402,9 @@ taxi_separar <- initial_split(taxi, prop = 0.8, strata = propina)
 taxi_separar
 ```
 
-## Stratification
+## Estratificar
 
-Stratification often helps, with very little downside
+Estratificar la muestra usualmente ayuda, y con pocas consecuencias 
 
 ```{r taxi-tip-pct-by-split, echo = FALSE}
 bind_rows(
@@ -381,10 +415,44 @@ bind_rows(
   geom_bar(position = "fill")
 ```
 
-## The whole game - status update
+## Expectativas del taller - Donde estamos
 
-```{r diagram-split, echo = FALSE}
-#| fig-align: "center"
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart LR
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+  rs[Muestras]
+  style rs fill:#fff,stroke:#eee,color:#ddd
+  tr --> rs
+  lg[Regresión\nlogística]
+  style lg fill:#fff,stroke:#eee,color:#ddd
+  rs --> lg
+  dt[Arbol de\nDecisión]
+  style dt fill:#fff,stroke:#eee,color:#ddd
+  rs --> dt
+  rf[Bosque\nAleatorio]
+  style rf fill:#fff,stroke:#eee,color:#ddd
+  rs --> rf
+  sm[Seleccionar\nmodelo]
+  style sm fill:#fff,stroke:#eee,color:#ddd
+  lg --> sm
+  dt --> sm
+  rf --> sm
+  fm[Entrenar modelo\nselecionado]
+  style fm fill:#fff,stroke:#eee,color:#ddd
+  sm --> fm
+  tr --> fm
+  vm[Verificar la\ncalidad]
+  style vm fill:#fff,stroke:#eee,color:#ddd
+  fm --> vm
+  ts --> vm
 
-knitr::include_graphics("images/whole-game-transparent-split.jpg")
 ```
