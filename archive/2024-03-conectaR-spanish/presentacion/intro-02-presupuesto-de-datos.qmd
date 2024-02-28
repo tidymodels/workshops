@@ -193,8 +193,8 @@ countdown::countdown(minutes = 3, id = "when-to-split")
 
 ```{r taxi-split}
 set.seed(123)
-taxi_split <- initial_split(taxi)
-taxi_split
+taxi_separar <- initial_split(taxi)
+taxi_separar
 ```
 
 :::notes
@@ -216,26 +216,26 @@ experimentes con diferentes números de la semilla con el proposito de mejorar
 la calidad del modelo.
 
 
-## Accessing the data `r hexes("rsample")`
+## Accediendo los datos `r hexes("rsample")`
 
 ```{r taxi-train-test}
-taxi_train <- training(taxi_split)
-taxi_test <- testing(taxi_split)
+taxi_entrenar <- training(taxi_separar)
+taxi_test <- testing(taxi_separar)
 ```
 
-## The training set`r hexes("rsample")`
+## El set the entrenamiento `r hexes("rsample")`
 
 ```{r taxi-train}
-taxi_train
+taxi_entrenar
 ```
 
-## The test set `r hexes("rsample")`
+## El set de prueba `r hexes("rsample")`
 
 🙈
 
 . . .
 
-There are `r nrow(taxi_test)` rows and `r ncol(taxi_test)` columns in the test set.
+En el set de prueba, hay `r nrow(taxi_test)` entradas, con `r ncol(taxi_test)` columnas
 
 ## Your turn {transition="slide-in"}
 
@@ -254,11 +254,11 @@ countdown::countdown(minutes = 5, id = "try-splitting")
 
 ```{r taxi-split-prop}
 set.seed(123)
-taxi_split <- initial_split(taxi, prop = 0.8)
-taxi_train <- training(taxi_split)
-taxi_test <- testing(taxi_split)
+taxi_separar <- initial_split(taxi, prop = 0.8)
+taxi_entrenar <- training(taxi_separar)
+taxi_test <- testing(taxi_separar)
 
-nrow(taxi_train)
+nrow(taxi_entrenar)
 nrow(taxi_test)
 ```
 
@@ -279,7 +279,7 @@ initial_validation_split(taxi, prop = c(0.6, 0.2))
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Explore the `taxi_train` data on your own!*
+*Explore the `taxi_entrenar` data on your own!*
 
 * *What's the distribution of the outcome, `tip`?*
 * *What's the distribution of numeric variables like `distance`?*
@@ -298,7 +298,7 @@ Make a plot or summary and then share with neighbor
 
 ```{r taxi-tip-counts}
 #| fig-align: 'center'
-taxi_train %>% 
+taxi_entrenar %>% 
   ggplot(aes(x = propina)) +
   geom_bar()
 ```
@@ -307,7 +307,7 @@ taxi_train %>%
 
 ```{r taxi-tip-by-local}
 #| fig-align: 'center'
-taxi_train %>% 
+taxi_entrenar %>% 
   ggplot(aes(x = propina, fill = local)) +
   geom_bar() +
   scale_fill_viridis_d(end = .5)
@@ -317,7 +317,7 @@ taxi_train %>%
 
 ```{r taxi-tip-by-hour}
 #| fig-align: 'center'
-taxi_train %>% 
+taxi_entrenar %>% 
   ggplot(aes(x = hora, fill = propina)) +
   geom_bar()
 ```
@@ -326,7 +326,7 @@ taxi_train %>%
 
 ```{r taxi-tip-by-hour-fill}
 #| fig-align: 'center'
-taxi_train %>% 
+taxi_entrenar %>% 
   ggplot(aes(x = hora, fill = propina)) +
   geom_bar(position = "fill")
 ```
@@ -335,7 +335,7 @@ taxi_train %>%
 
 ```{r taxi-tip-by-distance}
 #| fig-align: 'center'
-taxi_train %>% 
+taxi_entrenar %>% 
   ggplot(aes(x = distancia)) +
   geom_histogram(bins = 100) +
   facet_grid(vars(propina))
@@ -364,8 +364,8 @@ Use `strata = tip`
 
 ```{r taxi-split-prop-strata}
 set.seed(123)
-taxi_split <- initial_split(taxi, prop = 0.8, strata = propina)
-taxi_split
+taxi_separar <- initial_split(taxi, prop = 0.8, strata = propina)
+taxi_separar
 ```
 
 ## Stratification
@@ -374,7 +374,7 @@ Stratification often helps, with very little downside
 
 ```{r taxi-tip-pct-by-split, echo = FALSE}
 bind_rows(
-  taxi_train %>% mutate(split = "train"),
+  taxi_entrenar %>% mutate(split = "train"),
   taxi_test %>% mutate(split = "test")
 ) %>%
   ggplot(aes(x = split, fill = propina)) +
