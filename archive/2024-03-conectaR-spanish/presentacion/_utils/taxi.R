@@ -39,7 +39,8 @@ taxi <- taxi %>%
       dia == "Sun" ~ "Dom",
       TRUE ~ dia
     )
-  )
+  ) %>%
+  mutate_if(is.character, as.factor)
 
 saveRDS(taxi, here::here("archive/2024-03-conectaR-spanish/taxi.rds"))
 
