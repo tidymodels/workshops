@@ -74,8 +74,10 @@ library(tidymodels)
 
 set.seed(123)
 
-taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
-taxi_train <- training(taxi_split)
+taxi <- readRDS(here::here("archive/2024-03-conectaR-spanish/taxi.rds"))
+
+taxi_split <- initial_split(taxi, prop = 0.8, strata = propina)
+taxi_entrenar <- training(taxi_split)
 taxi_test <- testing(taxi_split)
 ```
 
@@ -177,7 +179,7 @@ El listado de modelos se encuentra aquí: <https://www.tidymodels.org/find/parsn
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Corre el "chunk" `tree_spec` en tu archivo `.qmd`.*
+*Corre el "chunk" `arbol_espec` en tu archivo `.qmd`.*
 
 *Cambia el código para que utilize una regresión linear*<br></br>
 
@@ -304,10 +306,10 @@ $log(\frac{p}{1 - p}) = \beta_0 + \beta_1\cdot \text{A}$
 #| fig.width: 8
 #| fig.height: 7
 
-tree_fit <- decision_tree(mode = "classification") %>% 
+arbol_flujo <- decision_tree(mode = "classification") %>% 
   fit(class ~ A, data = mutate(dat, class = forcats::fct_rev(class)))
 
-tree_preds <- augment(tree_fit, new_data = bin_midpoints)
+tree_preds <- augment(arbol_flujo, new_data = bin_midpoints)
 ```
 
 ```{r plot-tree-fit}
@@ -317,7 +319,7 @@ tree_preds <- augment(tree_fit, new_data = bin_midpoints)
 #| fig-align: center
 
 library(rpart.plot)
-tree_fit %>%
+arbol_flujo %>%
   extract_fit_engine() %>%
   rpart.plot(roundint = FALSE)
 ```
@@ -339,7 +341,7 @@ tree_fit %>%
 #| fig-align: center
 
 library(rpart.plot)
-tree_fit %>%
+arbol_flujo %>%
   extract_fit_engine() %>%
   rpart.plot(roundint = FALSE)
 ```
@@ -367,7 +369,7 @@ variables predictivas
 #| fig-align: center
 
 library(rpart.plot)
-tree_fit %>%
+arbol_flujo %>%
   extract_fit_engine() %>%
   rpart.plot(roundint = FALSE)
 ```
@@ -413,9 +415,9 @@ plot_rates +
 :::
 :::
 
-# A model workflow
+# El flujo de trabajo de un modelo
 
-## Workflows bind preprocessors and models
+## Los flujos de trabajo combinan el "preprocesamiento" y el modelo
 
 ```{r good-workflow}
 #| echo: false
@@ -429,7 +431,7 @@ Explain that PCA that is a preprocessor / dimensionality reduction, used to deco
 :::
 
 
-## What is wrong with this? {.annotation}
+## ¿Que no está bien en este flujo? {.annotation}
 
 ```{r bad-workflow}
 #| echo: false
@@ -438,23 +440,30 @@ Explain that PCA that is a preprocessor / dimensionality reduction, used to deco
 knitr::include_graphics("images/bad_workflow.png")
 ```
 
-## Why a `workflow()`? `r hexes("workflows")`
+## ¿Por que utilizar `workflow()`? `r hexes("workflows")`
 
 . . .
 
--   Workflows handle new data better than base R tools in terms of new factor levels
+
+-  `workflow` maneja nuevos niveles factoriales mejor que las herramientas regulares
+de R
 
 . . .
 
--   You can use other preprocessors besides formulas (more on feature engineering in Advanced tidymodels!)
+
+-   Puedes utilizar "preprocesadores" que no son formulas 
 
 . . .
 
--   They can help organize your work when working with multiple models
+
+-   Ayudan a organizar un proyecto que utiliza varios modelos
 
 . . .
 
--   [Most importantly]{.underline}, a workflow captures the entire modeling process: `fit()` and `predict()` apply to the preprocessing steps in addition to the actual model fit
+
+-   [Aún más importante,]{.underline} un flujo de `workflow` encaja todo el
+processo de modelamiento, desde la creación (`fit()`) del modelo, hasta el uso del modelo 
+(`predict()`)
 
 ::: notes
 Two ways workflows handle levels better than base R:
@@ -464,178 +473,183 @@ Two ways workflows handle levels better than base R:
 -   Restores missing levels that were present at fit time, but happen to be missing at prediction time (like, if your "new" data just doesn't have an instance of that level)
 :::
 
-## A model workflow `r hexes("parsnip", "workflows")`
+## El flujo de trabajo de un modelo `r hexes("parsnip", "workflows")`
 
 ```{r tree-spec}
-tree_spec <-
+arbol_espec <-
   decision_tree(cost_complexity = 0.002) %>% 
   set_mode("classification")
 
-tree_spec %>% 
-  fit(tip ~ ., data = taxi_train) 
+arbol_espec %>% 
+  fit(propina ~ ., data = taxi_entrenar) 
 ```
 
-## A model workflow `r hexes("parsnip", "workflows")`
+## El flujo de trabajo de un modelo `r hexes("parsnip", "workflows")`
 
 ```{r tree-wflow}
-tree_spec <-
+arbol_espec <-
   decision_tree(cost_complexity = 0.002) %>% 
   set_mode("classification")
 
 workflow() %>%
-  add_formula(tip ~ .) %>%
-  add_model(tree_spec) %>%
-  fit(data = taxi_train) 
+  add_formula(propina ~ .) %>%
+  add_model(arbol_espec) %>%
+  fit(data = taxi_entrenar) 
 ```
 
-## A model workflow `r hexes("parsnip", "workflows")`
+## El flujo de trabajo de un modelo `r hexes("parsnip", "workflows")`
 
 ```{r tree-wflow-fit}
-tree_spec <-
+arbol_espec <-
   decision_tree(cost_complexity = 0.002) %>% 
   set_mode("classification")
 
-workflow(tip ~ ., tree_spec) %>% 
-  fit(data = taxi_train) 
+workflow(propina ~ ., arbol_espec) %>% 
+  fit(data = taxi_entrenar) 
 ```
 
-## Your turn {transition="slide-in"}
+## Tu turno {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Run the `tree_wflow` chunk in your `.qmd`.*
+*Corre el "chunk" `arbol_flujo` en tu archivo `.qmd`.*
 
-*Edit this code to make a workflow with your own model of choice.*
+*Edita el codigo para crear un flujo con un modelo que tú elijas*
 
 <br></br>
 
-*Extension/Challenge: Other than formulas, what kinds of preprocessors are supported?*
+*Reto: ¿Que otros "preprocesadores", aparte de formulas, podemos usar en `workflow`?*
 
 ```{r ex-explore-tree-workflow}
 #| echo: false
 countdown::countdown(minutes = 5, id = "explore-tree-workflow")
 ```
 
-## Predict with your model `r hexes("parsnip", "workflows")`
+## Predecir usando tu modelo `r hexes("parsnip", "workflows")`
 
-How do you use your new `tree_fit` model?
+¿Como usar su nuevo modelo `arbol_flujo`?
 
 ```{r tree-wflow-fit-2}
-tree_spec <-
+arbol_espec <-
   decision_tree(cost_complexity = 0.002) %>% 
   set_mode("classification")
 
-tree_fit <-
-  workflow(tip ~ ., tree_spec) %>% 
-  fit(data = taxi_train) 
+arbol_flujo <-
+  workflow(propina ~ ., arbol_espec) %>% 
+  fit(data = taxi_entrenar) 
 ```
 
-## Your turn {transition="slide-in"}
+## Tu turno {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Run:*
+*Corre:*
 
-`predict(tree_fit, new_data = taxi_test)`
+`predict(arbol_flujo, new_data = taxi_test)`
 
-*What do you get?*
+*¿Que resultado te dio?*
 
 ```{r ex-predict-tree-fit}
 #| echo: false
 countdown::countdown(minutes = 3, id = "predict-tree-fit")
 ```
 
-## Your turn
+## Tu turno
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Run:*
+*Corre:*
 
-`augment(tree_fit, new_data = taxi_test)`
+`augment(arbol_flujo, new_data = taxi_test)`
 
-*What do you get?*
+*¿Que resultado te dio?*
 
 ```{r ex-augment-tree-fit}
 #| echo: false
 countdown::countdown(minutes = 3, id = "augment-tree-fit")
 ```
 
-# The tidymodels prediction guarantee!
+# La garantía de predicciones en Tidymodels! 
 
 . . .
 
--   The predictions will always be inside a **tibble**
--   The column names and types are **unsurprising** and **predictable**
--   The number of rows in `new_data` and the output **are the same**
+-   Las predicciones siempre estarán dentro de una tabla tipo **tibble**
+-   Los nombres de las columnas van a ser **predecibles** y **sin sorpresas**
+-   El número de filas en los nuevos datos (`new_data`) y los resultados siempre
+var a ser el mismo 
 
-## Understand your model `r hexes("parsnip", "workflows")`
+## Entiendedo tú modelo `r hexes("parsnip", "workflows")`
 
-How do you **understand** your new `tree_fit` model?
+¿Como podemos **entender** nuestro nuevo modelo `arbol_flujo`?
 
 ```{r plot-tree-fit-4}
 #| echo: false
 #| fig-align: center
 library(rpart.plot)
-tree_fit %>%
+arbol_flujo %>%
   extract_fit_engine() %>%
   rpart.plot(roundint = FALSE)
 ```
 
-## Understand your model `r hexes("parsnip", "workflows")`
+## Entiendedo tú modelo `r hexes("parsnip", "workflows")`
 
-How do you **understand** your new `tree_fit` model?
+¿Como podemos **entender** nuestro nuevo modelo `arbol_flujo`?
 
 ```{r plot-tree-fit-5}
 #| eval: false
 library(rpart.plot)
-tree_fit %>%
+arbol_flujo %>%
   extract_fit_engine() %>%
   rpart.plot(roundint = FALSE)
 ```
 
-You can `extract_*()` several components of your fitted workflow.
+Puedes extraer varios componentes de tu flujo usando las funciones
+que empiezan con `extract_*()`
 
 . . .
 
-⚠️ *Never `predict()` with any extracted components!*
+⚠️ *¡Nunca trate de predecir usando los componentes extraídos!*
 
 ::: notes
 `roundint = FALSE` is only to quiet a warning
 :::
 
+## Entiendedo tú modelo `r hexes("parsnip", "workflows")`
 
-## Understand your model `r hexes("parsnip", "workflows")`
-
-How do you **understand** your new `tree_fit` model?
-
-. . .
-
-You can use your fitted workflow for model and/or prediction explanations:
+¿Como podemos **entender** nuestro nuevo modelo `arbol_flujo`?
 
 . . .
 
--   overall variable importance, such as with the [vip](https://koalaverse.github.io/vip/) package
+
+Puedes usar tu flujo ajustado para obtener explicaciones del modelo o de las
+predicciones:
 
 . . .
 
--   flexible model explainers, such as with the [DALEXtra](https://dalex.drwhy.ai/) package
+
+-   El paquete [vip](https://koalaverse.github.io/vip/) puede dar la importancia
+de cada variable
 
 . . .
 
-Learn more at <https://www.tmwr.org/explain.html>
+-   Para obtener explicaciones del modelo, puede usar el paquete [DALEXtra](https://dalex.drwhy.ai/)
 
-##  {background-iframe="https://hardhat.tidymodels.org/reference/hardhat-extract.html"}
+. . .
+
+Para aprender más: <https://www.tmwr.org/explain.html>
+
+## https://hardhat.tidymodels.org/reference/hardhat-extract.html
 
 ::: footer
 :::
 
-## Your turn {transition="slide-in"}
+## Tu turno {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
 <br>
 
-*Extract the model engine object from your fitted workflow and check it out.*
+*Extrae el "motor" del modelo de tu flujo y examínalo*
 
 ```{r ex-extract-methods}
 #| echo: false
@@ -646,13 +660,48 @@ countdown::countdown(minutes = 5, id = "extract-methods")
 Afterward, ask what kind of object people got from the extraction, and what they did with it (e.g. give it to `summary()`, `plot()`, `broom::tidy()` ). Live code along
 :::
 
-## The whole game - status update
+## Expectativas del taller - Donde estamos
 
-```{r diagram-model-1, echo = FALSE}
-#| fig-align: "center"
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart LR
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+  rs[Muestras]
+  style rs fill:#fff,stroke:#eee,color:#ddd
+  tr --> dt
+  lg[Regresión\nlogística]
+  style lg fill:#fff,stroke:#eee,color:#ddd
+  rs --> lg
+  dt[Arbol de\nDecisión]
+  style dt fill:#FDF4E3,stroke:#666,color:#000
+  rs --> dt
+  rf[Bosque\nAleatorio]
+  style rf fill:#fff,stroke:#eee,color:#ddd
+  rs --> rf
+  sm[Seleccionar\nmodelo]
+  style sm fill:#fff,stroke:#eee,color:#ddd
+  lg --> sm
+  dt --> sm
+  rf --> sm
+  fm[Entrenar modelo\nselecionado]
+  style fm fill:#fff,stroke:#eee,color:#ddd
+  sm --> fm
+  tr --> fm
+  vm[Verificar la\ncalidad]
+  style vm fill:#fff,stroke:#eee,color:#ddd
+  fm --> vm
+  ts --> vm
 
-knitr::include_graphics("images/whole-game-transparent-model-1.jpg")
 ```
+
 
 :::notes
 Stress that fitting a model on the entire training set was only for illustrating how to fit a model
