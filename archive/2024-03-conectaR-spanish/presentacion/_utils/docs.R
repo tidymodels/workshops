@@ -1,4 +1,5 @@
 library(fs)
+library(purrr)
 
 source_dir <- here::here("archive/2024-03-conectaR-spanish/presentacion/")
 
@@ -8,4 +9,10 @@ docs <- path(source_dir, "docs")
 
 dir_create(docs)
 
-system2("quarto", args = c("render", "input" = qmds[[1]], paste0("--output-dir=",  docs)))
+map(qmds,~{
+  system2("quarto", args = c("render", "input" = .x, paste0("--output-dir=",  docs)))
+})
+
+deploy_site <- function() {
+  rsconnect::deploySite(siteDir = docs, siteName = "Aprendiendo Tidymodels")
+}
