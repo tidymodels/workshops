@@ -156,23 +156,24 @@ augment(taxi_ajustado, new_data = taxi_entrenar) %>%
   taxi_metrics(truth = propina, estimate = .pred_class)
 ```
 
-## Two class data
+## Resultados de dos clases
 
 Estas métricas asumen que sabemos cual es límite para convertir probabilidades de
 predicción "suaves" a prediciones de clase "duras"
 . . .
 
-Is a 50% threshold good? 
+¿Es bueno un límite de 50%?
 
-What happens if we say that we need to be 80% sure to declare an event?
+¿Que pasaría si lo cambiamos a 80%?
 
--   sensitivity ⬇️, specificity ⬆️
+-   sensibilidad ⬇️, especificidad ⬆️
 
 . . .
 
-What happens for a 20% threshold?
+¿Y si lo cambiamos a 20%?
 
--   sensitivity ⬆️, specificity ⬇️
+
+-   sensibilidad ⬆️, especificidad ⬇️
 
 ## Varying the threshold
 
@@ -209,7 +210,7 @@ proporción de los falsos positivos.
 
 . . .
 
-Podemos usar el area debajo de la curva (AUC = area under de curve) 
+Podemos usar el **area debajo de la curva** (AUC = area under de curve) 
 ROC como una métrica de clasificación:
 
 - ROC AUC = 1 💯 
@@ -395,19 +396,18 @@ Y tambien queremos saber si las diferencias son importantes
 
 ##  {background-color="white" background-image="https://www.tmwr.org/premade/resampling.svg" background-size="80%"}
 
-## Cross-validation
+## Validación cruzada
 
 ![](https://www.tmwr.org/premade/three-CV.svg)
 
-## Cross-validation
+## Validación cruzada
 
 ![](https://www.tmwr.org/premade/three-CV-iter.svg)
 
-## Your turn {transition="slide-in"}
+## Tu turno {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*If we use 10 folds, what percent of the training data*
 *Si usamos 10 plieges (folds), cual es el porcentaje de datos de entrenamiento*
 
 -   *cuantos terminan en análisis*
@@ -422,13 +422,13 @@ Y tambien queremos saber si las diferencias son importantes
 countdown::countdown(minutes = 3, id = "percent-in-folds")
 ```
 
-## Cross-validation `r hexes("rsample")`
+## Validación cruzada `r hexes("rsample")`
 
 ```{r vfold-cv}
 vfold_cv(taxi_entrenar) # v = 10 is default
 ```
 
-## Cross-validation `r hexes("rsample")`
+## Validación cruzada `r hexes("rsample")`
 
 ¿Que hay en este?
 
@@ -441,13 +441,13 @@ taxi_folds$splits[1:3]
 Talk about a list column, storing non-atomic types in dataframe
 :::
 
-## Cross-validation `r hexes("rsample")`
+## Validación cruzada `r hexes("rsample")`
 
 ```{r vfold-cv-v}
 vfold_cv(taxi_entrenar, v = 5)
 ```
 
-## Cross-validation `r hexes("rsample")`
+## Validación cruzada `r hexes("rsample")`
 
 ```{r vfold-cv-strata}
 vfold_cv(taxi_entrenar, strata = propina)
@@ -457,7 +457,7 @@ vfold_cv(taxi_entrenar, strata = propina)
 
 Estratificar usualmente ayuda, y con pocos malas consecuencias 
 
-## Cross-validation `r hexes("rsample")`
+## Validación cruzada `r hexes("rsample")`
 
 Usaremos esto:
 
@@ -472,7 +472,7 @@ taxi_folds
 
 Especifica la semilla (seed) cuando estas creando remuestreos 
 
-# Estmos equipados con métricas y remuestreos
+# Estamos equipados con métricas y remuestreos
 
 
 ## Ajustemos nuestro modelo usando los remuestreos
@@ -547,7 +547,7 @@ Acuerdate que:
 ⚠️ Los datos de prueba son valiosos
 
 
-## Evaluating model performance `r hexes("tune")`
+## Evaluando la calidad del modelo `r hexes("tune")`
 
 ```{r save-predictions}
 # Save the assessment set results
@@ -557,15 +557,15 @@ taxi_res <- fit_resamples(arbol_flujo, taxi_folds, control = ctrl_taxi)
 taxi_res
 ```
 
-## Evaluating model performance `r hexes("tune")`
+## Evaluando la calidad del modelo `r hexes("tune")`
 
 ```{r collect-predictions}
-# Save the assessment set results
+# Guarde los resultados de las evaluaciones
 taxi_preds <- collect_predictions(taxi_res)
 taxi_preds
 ```
 
-## Evaluating model performance `r hexes("tune")`
+## Evaluando la calidad del modelo `r hexes("tune")`
 
 ```{r taxi-metrics-by-id}
 taxi_preds %>% 
@@ -573,7 +573,7 @@ taxi_preds %>%
   taxi_metrics(truth = propina, estimate = .pred_class)
 ```
 
-## Where are the fitted models? `r hexes("tune")`  {.annotation}
+## ¿Donde estan los modelos que ajustamos? `r hexes("tune")`  {.annotation}
 
 ```{r taxi-res}
 taxi_res
@@ -583,9 +583,9 @@ taxi_res
 
 🗑️
 
-# Alternate resampling schemes
+# Otros métodos de remuestreo 
 
-## Bootstrapping
+## Bootstrapping 
 
 ![](https://www.tmwr.org/premade/bootstraps.svg)
 
@@ -601,22 +601,57 @@ bootstraps(taxi_entrenar)
 ::: footer
 :::
 
-## The whole game - status update
+## Expectativas del taller - Donde estamos
 
-```{r diagram-resamples, echo = FALSE}
-#| fig-align: "center"
 
-knitr::include_graphics("images/whole-game-transparent-resamples.jpg")
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart LR
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+  rs[Remuestras]
+  style rs fill:#FDF4E3,stroke:#666,color:#000
+  tr --> rs
+  lg[Regresión\nlogística]
+  style lg fill:#FDF4E3,stroke:#666,color:#000
+  rs --> lg
+  dt[Arbol de\nDecisión]
+  style dt fill:#FDF4E3,stroke:#666,color:#000
+  rs --> dt
+  rf[Bosque\nAleatorio]
+  style rf fill:#FDF4E3,stroke:#666,color:#000
+  rs --> rf
+  sm[Seleccionar\nmodelo]
+  style sm fill:#fff,stroke:#eee,color:#ddd
+  lg --> sm
+  dt --> sm
+  rf --> sm
+  fm[Entrenar modelo\nselecionado]
+  style fm fill:#fff,stroke:#eee,color:#ddd
+  sm --> fm
+  tr --> fm
+  vm[Verificar la\ncalidad]
+  style vm fill:#fff,stroke:#eee,color:#ddd
+  fm --> vm
+  ts --> vm
+
 ```
 
-## Your turn {transition="slide-in"}
+## Tu turno {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Create:*
+*Crea un:*
 
--   *Monte Carlo Cross-Validation sets*
--   *validation set*
+-   *Set de validación cruzada tipo Monte Carlo*
+-   *Set de validación*
 
 (use the reference guide to find the functions)
 
@@ -627,14 +662,14 @@ knitr::include_graphics("images/whole-game-transparent-resamples.jpg")
 countdown::countdown(minutes = 5, id = "try-rsample")
 ```
 
-## Monte Carlo Cross-Validation `r hexes("rsample")`
+## Validación cruzada tipo Monte Carlo `r hexes("rsample")`
 
 ```{r mc-cv}
 set.seed(322)
 mc_cv(taxi_entrenar, times = 10)
 ```
 
-## Validation set `r hexes("rsample")`
+## Set de validación `r hexes("rsample")`
 
 ```{r validation-split}
 set.seed(853)
@@ -644,70 +679,107 @@ validation_set(taxi_val_split)
 
 . . .
 
-A validation set is just another type of resample
+Un set de validación es solamente otro tipo de remuestreo
 
-# Decision tree 🌳
+# Arbol de decisión 🌳
 
-# Random forest 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌵🌴🌲🌳🌴🌵🌳🌴🌳
+# Bosque aleatorio 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌵🌴🌲🌳🌴🌵🌳🌴🌳
 
-## Random forest 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵
+## Bosque aleatorio 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵
 
-- Ensemble many decision tree models
+- Ensambla varios árboles de decisión
 
-- All the trees vote! 🗳️
+- ¡Todos los árboles votan! 🗳️
 
-- Bootstrap aggregating + random predictor sampling
+- Agregación tipo bootstrap + muestreo aleatorio del predictor
 
 . . .
 
-- Often works well without tuning hyperparameters (more on this in Advanced tidymodels!), as long as there are enough trees
 
-## Create a random forest model `r hexes("parsnip")`
+- Usualmente funciona bien sin usar afinamiento, pero solo mientras hayan 
+suficientes árboles
+
+## Crear un modelo de bosque aleatorio `r hexes("parsnip")`
 
 ```{r rf-spec}
 rf_spec <- rand_forest(trees = 1000, mode = "classification")
 rf_spec
 ```
 
-## Create a random forest model `r hexes("workflows")`
+## Crear un modelo de bosque aleatorio `r hexes("workflows")`
 
 ```{r rf-wflow}
 rf_wflow <- workflow(propina ~ ., rf_spec)
 rf_wflow
 ```
 
-## Your turn {transition="slide-in"}
+## Tu turno {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Use `fit_resamples()` and `rf_wflow` to:*
+*Usa `fit_resamples()` y `rf_wflow` para lo siguiente:*
 
--   *keep predictions*
--   *compute metrics*
+-   *Quedarse con las predicciones*
+-   *Calcular las métricas*
 
 ```{r ex-try-fit-resamples}
 #| echo: false
 countdown::countdown(minutes = 8, id = "try-fit-resamples")
 ```
 
-## Evaluating model performance `r hexes("tune")`
+## Evaluando la calidad del modelo `r hexes("tune")`
 
 ```{r collect-metrics-rf}
 ctrl_taxi <- control_resamples(save_pred = TRUE)
 
-# Random forest uses random numbers so set the seed first
+# Bosque aleatorio usan numeros al azar, asi que asegurate de definir la semilla
 
 set.seed(2)
 rf_res <- fit_resamples(rf_wflow, taxi_folds, control = ctrl_taxi)
 collect_metrics(rf_res)
 ```
 
-## The whole game - status update
+## Expectativas del taller - Donde estamos
 
-```{r diagram-select, echo = FALSE}
-#| fig-align: "center"
 
-knitr::include_graphics("images/whole-game-transparent-select.jpg")
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart LR
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+  rs[Remuestras]
+  style rs fill:#FDF4E3,stroke:#666,color:#000
+  tr --> rs
+  lg[Regresión\nlogística]
+  style lg fill:#FDF4E3,stroke:#666,color:#000
+  rs --> lg
+  dt[Arbol de\nDecisión]
+  style dt fill:#FDF4E3,stroke:#666,color:#000
+  rs --> dt
+  rf[Bosque\nAleatorio]
+  style rf fill:#FDF4E3,stroke:#666,color:#000
+  rs --> rf
+  sm[Seleccionar\nmodelo]
+  style sm fill:#FDF4E3,stroke:#666,color:#000
+  lg --> sm
+  dt --> sm
+  rf --> sm
+  fm[Entrenar modelo\nselecionado]
+  style fm fill:#fff,stroke:#eee,color:#ddd
+  sm --> fm
+  tr --> fm
+  vm[Verificar la\ncalidad]
+  style vm fill:#fff,stroke:#eee,color:#ddd
+  fm --> vm
+  ts --> vm
+
 ```
 
 ## The final fit `r hexes("tune")` 
