@@ -80,13 +80,14 @@ augment(taxi_ajustado, new_data = taxi_entrenar) %>%
 :::
 :::
 
-## Dangers of accuracy `r hexes("yardstick")`
+## El riesgo de concentrarse en la exactitud `r hexes("yardstick")`
 
-We need to be careful of using `accuracy()` since it can give "good" performance by only predicting one way with imbalanced data
+Hay que tener cuidado utilizando exactitud (`accuracy()`) ya que nos puede dar
+"buenos" resultado se predecimos con datos que no están balanceados
 
 ```{r acc-2}
 augment(taxi_ajustado, new_data = taxi_entrenar) %>%
-  mutate(.pred_class = factor("si", levels = c("no", "si"))) %>%
+  mutate(.pred_class = factor("si", levels = c("si", "no"))) %>%
   accuracy(truth = propina, estimate = .pred_class)
 ```
 
@@ -131,7 +132,7 @@ augment(taxi_ajustado, new_data = taxi_entrenar) %>%
 
 ## Mediciones de la calidad del modelo `r hexes("yardstick")`
 
-We can use `metric_set()` to combine multiple calculations into one
+Para combinar multiples cálculos en una tabla, usa `metric_set()`
 
 ```{r taxi-metrics}
 taxi_metrics <- metric_set(accuracy, specificity, sensitivity)
@@ -152,8 +153,8 @@ augment(taxi_ajustado, new_data = taxi_entrenar) %>%
 
 ## Two class data
 
-These metrics assume that we know the threshold for converting "soft" probability predictions into "hard" class predictions.
-
+Estas métricas asumen que sabemos cual es límite para convertir probabilidades de
+predicción "suaves" a prediciones de clase "duras"
 . . .
 
 Is a 50% threshold good? 
