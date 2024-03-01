@@ -200,11 +200,11 @@ receptor* hacemos lo siguiente:
 
 - Calcular la sensibilidad y especificidad de todos los límites posibles
 
-- Gráficar los falsos positivos en el axis X, contra los verdaderos positivos
+- Gráficar los falsos positivos en el axis X, contra los positivos verdaderos
 en el axis Y.
 
-Ya que la sensibilidad es la proporción de verdaderos positivos, y la especificidad 
-es la de los verdaderos negativos, entonces `1 - especificidad` es la
+Ya que la sensibilidad es la proporción de positivos verdaderos, y la especificidad 
+es la de los negativos verdaderos, entonces `1 - especificidad` es la
 proporción de los falsos positivos.
 
 . . .
@@ -219,7 +219,7 @@ ROC como una métrica de clasificación:
 ROC curves are insensitive to class imbalance.
 :::
 
-## ROC curves `r hexes("yardstick")`
+## Curvas ROC `r hexes("yardstick")`
 
 ```{r roc-auc}
 # Assumes _first_ factor level is event; there are options to change that
@@ -231,7 +231,7 @@ augment(taxi_ajustado, new_data = taxi_entrenar) %>%
   roc_auc(truth = propina, .pred_si)
 ```
 
-## ROC curve plot `r hexes("yardstick")`
+## Gráfica de curvas ROC `r hexes("yardstick")`
 
 ```{r roc-curve}
 #| fig-width: 6
@@ -243,13 +243,13 @@ augment(taxi_ajustado, new_data = taxi_entrenar) %>%
   autoplot()
 ```
 
-## Your turn {transition="slide-in"}
+## Tu turno {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Compute and plot an ROC curve for your current model.*
+*Calcule y gráfique una curva ROC con su modelo*
 
-*What data are being used for this ROC curve plot?*
+*¿Cuales son los datos que se utilizaron para esta curva ROC?*
 
 ```{r ex-roc-curve}
 #| echo: false
@@ -261,26 +261,27 @@ countdown::countdown(minutes = 5, id = "roc-curve")
 ::: footer
 :::
 
-# ⚠️ DANGERS OF OVERFITTING ⚠️
+# ⚠️ LOS PELIGROS DEL SOBREAJUSTAR ⚠️
 
-## Dangers of overfitting ⚠️
+## Los peligros del sobreajustar ⚠️
 
 ![](https://raw.githubusercontent.com/topepo/2022-nyr-workshop/main/images/tuning-overfitting-train-1.svg)
 
-## Dangers of overfitting ⚠️
+## Los peligros del sobreajustar ⚠️
 
 ![](https://raw.githubusercontent.com/topepo/2022-nyr-workshop/main/images/tuning-overfitting-test-1.svg)
 
-## Dangers of overfitting ⚠️ `r hexes("yardstick")`
+## Los peligros del sobreajustar ⚠️ `r hexes("yardstick")`
 
 ```{r augment-train}
 taxi_ajustado %>%
   augment(taxi_entrenar)
 ```
 
-We call this "resubstitution" or "repredicting the training set"
+A esto le llamamos "resubstitución" ó "repredecir en los datos de entrenamiento"
 
-## Dangers of overfitting ⚠️ `r hexes("yardstick")`
+
+## Los peligros del sobreajustar ⚠️ `r hexes("yardstick")`
 
 ```{r augment-acc}
 taxi_ajustado %>%
@@ -288,9 +289,9 @@ taxi_ajustado %>%
   accuracy(propina, .pred_class)
 ```
 
-We call this a "resubstitution estimate"
+A esto le llamamos "resubstitución de la estimación"
 
-## Dangers of overfitting ⚠️ `r hexes("yardstick")`
+## Los peligros del sobreajustar ⚠️ `r hexes("yardstick")`
 
 ::: columns
 ::: {.column width="50%"}
@@ -305,7 +306,7 @@ taxi_ajustado %>%
 :::
 :::
 
-## Dangers of overfitting ⚠️ `r hexes("yardstick")`
+## Los peligros del sobreajustar ⚠️ `r hexes("yardstick")`
 
 ::: columns
 ::: {.column width="50%"}
@@ -327,31 +328,36 @@ taxi_ajustado %>%
 
 . . .
 
-⚠️ Remember that we're demonstrating overfitting 
+⚠️ Acuerdate que estamos demonstrando el sobreajuste
 
 . . .
 
-⚠️ Don't use the test set until the *end* of your modeling analysis
+
+⚠️ No utilizes el set the prueba sino hasta el *fin* de tu analisis
+
+## "Ja-ja-ja, estoy en peligro" {background-image="https://media.giphy.com/media/55itGuoAJiZEEen9gg/giphy.gif" background-size="70%"}
 
 
-##  {background-image="https://media.giphy.com/media/55itGuoAJiZEEen9gg/giphy.gif" background-size="70%"}
 
-## Your turn {transition="slide-in"}
+## Tu turno {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute bottom="0" left="0" width="150" height="150"}
 
-*Use `augment()` and a metric function to compute a classification metric like `brier_class()`.*
+*Usa `augment()` y una función de métrica para calcular una métrica de classificación,
+por ejemplo `brier_class()`*
 
-*Compute the metrics for both training and testing data to demonstrate overfitting!*
 
-*Notice the evidence of overfitting!* ⚠️
+*Calcula las métricas para los datos de entrenamiento y de prueba para
+demonstrar el sobreajuste*
+
+*Nota la evidencia de sobreajuste* ⚠️
 
 ```{r ex-augment-metrics}
 #| echo: false
 countdown::countdown(minutes = 5, id = "augment-metrics")
 ```
 
-## Dangers of overfitting ⚠️ `r hexes("yardstick")`
+## Los peligros del sobreajustar ⚠️ `r hexes("yardstick")`
 
 ::: columns
 ::: {.column width="50%"}
@@ -373,19 +379,19 @@ taxi_ajustado %>%
 
 . . .
 
-What if we want to compare more models?
+¿Que tal si queremos comparar más modelos?
 
 . . .
 
-And/or more model configurations?
+...y comparar configuraciones para los modelos?
 
 . . .
 
-And we want to understand if these are important differences?
+Y tambien queremos saber si las diferencias son importantes
 
-# The testing data are precious 💎
+# Los datos de prueba son valiosos 💎
 
-# How can we use the *training* data to compare and evaluate different models? 🤔
+# ¿Como podríamos usar los datos de entrenamiento para comparar y evaluar varios modelos?
 
 ##  {background-color="white" background-image="https://www.tmwr.org/premade/resampling.svg" background-size="80%"}
 
@@ -402,11 +408,12 @@ And we want to understand if these are important differences?
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
 *If we use 10 folds, what percent of the training data*
+*Si usamos 10 plieges (folds), cual es el porcentaje de datos de entrenamiento*
 
--   *ends up in analysis*
--   *ends up in assessment*
+-   *cuantos terminan en análisis*
+-   *cuantos terminan en evaluación (assesment)*
 
-*for* **each** *fold?*
+*...para **cada** pliege?*
 
 ![](images/taxi_spinning.svg){width="300"}
 
@@ -423,7 +430,7 @@ vfold_cv(taxi_entrenar) # v = 10 is default
 
 ## Cross-validation `r hexes("rsample")`
 
-What is in this?
+¿Que hay en este?
 
 ```{r taxi-splits}
 taxi_folds <- vfold_cv(taxi_entrenar)
@@ -448,11 +455,11 @@ vfold_cv(taxi_entrenar, strata = propina)
 
 . . .
 
-Stratification often helps, with very little downside
+Estratificar usualmente ayuda, y con pocos malas consecuencias 
 
 ## Cross-validation `r hexes("rsample")`
 
-We'll use this setup:
+Usaremos esto:
 
 ```{r taxi-folds}
 set.seed(123)
@@ -462,18 +469,20 @@ taxi_folds
 
 . . .
 
-Set the seed when creating resamples
 
-# We are equipped with metrics and resamples!
+Especifica la semilla (seed) cuando estas creando remuestreos 
 
-## Fit our model to the resamples
+# Estmos equipados con métricas y remuestreos
+
+
+## Ajustemos nuestro modelo usando los remuestreos
 
 ```{r fit-resamples}
 taxi_res <- fit_resamples(arbol_flujo, taxi_folds)
 taxi_res
 ```
 
-## Evaluating model performance `r hexes("tune")`
+## Evaluando la calidad del modelo `r hexes("tune")`
 
 ```{r collect-metrics}
 taxi_res %>%
@@ -486,11 +495,12 @@ taxi_res %>%
 
 . . .
 
-We can reliably measure performance using only the **training** data 🎉
+Podemos medir correctamente la la calidad del modelo usando solo los datos de entrenamiento 🎉
 
-## Comparing metrics `r hexes("yardstick")`
+## Comparando las métricas `r hexes("yardstick")`
 
-How do the metrics from resampling compare to the metrics from training and testing?
+¿Que diferencia hay entre las métricas usando los datos de remuestreo, y usando
+los datos de entrenamiento y prueba?
 
 ```{r calc-roc-auc}
 #| echo: false
@@ -519,21 +529,23 @@ taxi_res %>%
 :::
 
 ::: {.column width="50%"}
-The ROC AUC previously was
+
+El ROC AUC antes era:
 
 TODO: restore r
-- `taxi_entrenaring_roc_auc` for the training set
-- `taxi_pruebaing_roc_auc` for test set
+- `taxi_entrenaring_roc_auc` para el set the entrenamiento
+- `taxi_pruebaing_roc_auc` para el set the prueba
 :::
 :::
 
 . . .
 
-Remember that:
+Acuerdate que:
 
-⚠️ the training set gives you overly optimistic metrics
+⚠️ Los datos de entrenamiento da métricas demasiado optimísticas
 
-⚠️ the test set is precious
+⚠️ Los datos de prueba son valiosos
+
 
 ## Evaluating model performance `r hexes("tune")`
 
