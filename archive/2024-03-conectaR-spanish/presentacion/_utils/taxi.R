@@ -1,6 +1,8 @@
 library(tidymodels)
 library(tidyverse)
+library(forcats)
 
+taxi2 <- taxi
 
 taxi <- taxi %>%
   rename(
@@ -40,7 +42,13 @@ taxi <- taxi %>%
       TRUE ~ dia
     )
   ) %>%
-  mutate_if(is.character, as.factor)
+  mutate_if(is.character, as.factor) %>%
+  mutate(
+    propina = fct_relevel(propina, c("si", "no")),
+    local = fct_relevel(local, c("si", "no")),
+    dia = fct_relevel(dia, c("Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom")),
+    mes = fct_relevel(mes, c("Ene", "Feb", "Mar", "Abr"))
+  )
 
 saveRDS(taxi, here::here("archive/2024-03-conectaR-spanish/taxi.rds"))
 
