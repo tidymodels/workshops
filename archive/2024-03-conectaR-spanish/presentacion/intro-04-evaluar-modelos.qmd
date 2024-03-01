@@ -17,7 +17,8 @@ knitr:
     comment: "#>"
     fig.path: "figures/"
 execute: 
-  eval: false
+  eval: true
+  freeze: true
 ---
 
 ```{r setup}
@@ -26,7 +27,7 @@ execute:
 #| file: setup.R
 ```
 
-## Looking at predictions
+## Viendo las predicciones
 
 ```{r setup-previous}
 #| echo: false
@@ -782,15 +783,17 @@ flowchart LR
 
 ```
 
-## The final fit `r hexes("tune")` 
+## El ajuste final `r hexes("tune")` 
 
-Suppose that we are happy with our random forest model.
+Digamos que estamos satisfechos con usar nuestro modelo de bosque aleatorio
 
-Let's fit the model on the training set and verify our performance using the test set.
+
+Ajustemos el modelo usando todos los datos en el set the entrenamiento, y despues
+midamos la calidad del modelo con el set the prueba
 
 . . .
 
-We've shown you `fit()` and `predict()` (+ `augment()`) but there is a shortcut:
+Hemos usado `fit()` y `predict()` (+ `augment()`),  pero hay un atajo:
 
 ```{r final-fit}
 # taxi_separar has train + test info
@@ -799,7 +802,7 @@ final_fit <- last_fit(rf_wflow, taxi_separar)
 final_fit
 ```
 
-## What is in `final_fit`? `r hexes("tune")`
+## ¿Que contiene `final_fit`? `r hexes("tune")`
 
 ```{r collect-metrics-final-fit}
 collect_metrics(final_fit)
@@ -807,15 +810,15 @@ collect_metrics(final_fit)
 
 . . .
 
-These are metrics computed with the **test** set
+Las métricas fueron calculadas con el set de **prueba**
 
-## What is in `final_fit`? `r hexes("tune")`
+## ¿Que contiene `final_fit`? `r hexes("tune")`
 
 ```{r collect-predictions-final-fit}
 collect_predictions(final_fit)
 ```
 
-## What is in `final_fit`? `r hexes("tune")`
+## ¿Que contiene `final_fit`? `r hexes("tune")`
 
 ```{r extract-workflow}
 extract_workflow(final_fit)
@@ -825,10 +828,44 @@ extract_workflow(final_fit)
 
 Use this for **prediction** on new data, like for deploying
 
-## The whole game
+## Expectativas del taller - ¡Ya llegamos! 
 
-```{r diagram-final-performance, echo = FALSE}
-#| fig-align: "center"
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart LR
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+  rs[Muestras]
+  style rs fill:#FDF4E3,stroke:#666,color:#000
+  tr --> rs
+  lg[Regresión\nlogística]
+  style lg fill:#FDF4E3,stroke:#666,color:#000
+  rs --> lg
+  dt[Arbol de\nDecisión]
+  style dt fill:#FDF4E3,stroke:#666,color:#000
+  rs --> dt
+  rf[Bosque\nAleatorio]
+  style rf fill:#FDF4E3,stroke:#666,color:#000
+  rs --> rf
+  sm[Seleccionar\nmodelo]
+  style sm fill:#FDF4E3,stroke:#666,color:#000
+  lg --> sm
+  dt --> sm
+  rf --> sm
+  fm[Entrenar modelo\nselecionado]
+  style fm fill:#FBE9BF,stroke:#666,color:#000
+  sm --> fm
+  tr --> fm
+  vm[Verificar la\ncalidad]
+  style vm fill:#E5E7FD,stroke:#666,color:#000
+  fm --> vm
+  ts --> vm
 
-knitr::include_graphics("images/whole-game-final-performance.jpg")
 ```
