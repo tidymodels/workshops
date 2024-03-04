@@ -27,9 +27,9 @@ knitr:
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*¿Como corres un modelo linear en R?*
+*¿Como ajustar un modelo linear en R?*
 
-*¿De cuantas maneras sabes correr este tipo de modelo?*
+*¿De cuantas maneras sabes como ajustar este tipo de modelo?*
 
 ```{r ex-how-to-fit-linear-model}
 #| echo: false
@@ -190,7 +190,7 @@ El listado de modelos se encuentra aquí: <https://www.tidymodels.org/find/parsn
 <br></br>
 
 *Reto: Edita el código para usar otro tipo de modelo. Por ejemplo, trata de usar
-el árbol disponible dentro del paquete partikit, o trata un modelo de tipo 
+el árbol disponible dentro del paquete partykit, o trata un modelo de tipo 
 diferente*
 
 ```{r ex-explore-tree-spec}
@@ -312,6 +312,7 @@ arbol_flujo <- decision_tree(mode = "classification") %>%
 tree_preds <- augment(arbol_flujo, new_data = bin_midpoints)
 ```
 
+
 ```{r plot-tree-fit}
 #| echo: false
 #| fig.width: 4
@@ -419,11 +420,22 @@ plot_rates +
 
 ## Los flujos de trabajo combinan el "preprocesamiento" y el modelo
 
-```{r good-workflow}
-#| echo: false
-#| out-width: '70%'
-#| fig-align: 'center'
-knitr::include_graphics("images/good_workflow.png")
+```{mermaid}
+%%| eval: true
+%%| fig-width: 20
+flowchart LR
+  dt[Datos]
+  pr[Predictores]
+  subgraph fl[Flujo del modelo]
+    pca[PCA]
+    ls[Menos cuadrados]
+    pca-->ls
+  end
+  dt-->fl
+  pr-->fl
+  ft[Modelo ajustado]
+  fl-->ft
+  style fl fill:#fff,stroke:#666,color:#000
 ```
 
 :::notes
@@ -433,11 +445,22 @@ Explain that PCA that is a preprocessor / dimensionality reduction, used to deco
 
 ## ¿Que no está bien en este flujo? {.annotation}
 
-```{r bad-workflow}
-#| echo: false
-#| out-width: '70%'
-#| fig-align: 'center'
-knitr::include_graphics("images/bad_workflow.png")
+```{mermaid}
+%%| eval: true
+%%| fig-width: 20
+flowchart LR
+  dt[Datos]
+  pr[Predictores]
+  pca[PCA]
+  subgraph fl[Flujo del modelo]
+    ls[Menos cuadrados]
+  end
+  pca-->fl
+  dt-->pca
+  pr-->pca
+  ft[Modelo ajustado]
+  fl-->ft
+  style fl fill:#fff,stroke:#666,color:#000
 ```
 
 ## ¿Por que utilizar `workflow()`? `r hexes("workflows")`
@@ -638,7 +661,7 @@ de cada variable
 
 Para aprender más: <https://www.tmwr.org/explain.html>
 
-## https://hardhat.tidymodels.org/reference/hardhat-extract.html
+##  {background-iframe="https://hardhat.tidymodels.org/reference/hardhat-extract.html"}
 
 ::: footer
 :::
