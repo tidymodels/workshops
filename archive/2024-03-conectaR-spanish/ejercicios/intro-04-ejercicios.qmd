@@ -126,43 +126,40 @@ Nota la evidencia de sobreajuste
 taxi_fit
 ```
 
-## Your turn
+## Tu turno
 
-If we use 10 folds, what percent of the training data:
+Si usamos 10 plieges (folds), cual es el porcentaje de datos de entrenamiento
 
-- ends up in analysis?
-- ends up in assessment?
+-   cuantos terminan en análisis
+-   cuantos terminan en evaluación (assesment)
 
-for each fold
+...para **cada** pliege?
 
-## Resampling
-
-```{r}
-# v = 10 is the default
-vfold_cv(taxi_train)
-```
-
-What is in a resampling result?
+## Remuestreo
 
 ```{r}
-taxi_folds <- vfold_cv(taxi_train, v = 10)
-
-# Individual splits of analysis/assessment data
-taxi_folds$splits[1:3]
+vfold_cv(taxi_entrenar) 
 ```
 
-Stratification often helps, with very little downside
+¿Cual es el resultado del remuestreo?
 
 ```{r}
-vfold_cv(taxi_train, strata = tip)
+taxi_plieges <- vfold_cv(taxi_entrenar)
+taxi_plieges$splits[1:3]
 ```
 
-We'll use this setup:
+tratificar usualmente ayuda, y con pocos malas consecuencias 
+
+```{r}
+vfold_cv(taxi_entrenar, strata = propina)
+```
+
+Usaremos esto:
 
 ```{r}
 set.seed(123)
-taxi_folds <- vfold_cv(taxi_train, v = 10, strata = tip)
-taxi_folds
+taxi_plieges <- vfold_cv(taxi_entrenar, v = 10, strata = propina)
+taxi_plieges
 ```
 
 ## Evaluating model performance
@@ -170,7 +167,7 @@ taxi_folds
 ```{r}
 # Fit the workflow on each analysis set,
 # then compute performance on each assessment set
-taxi_res <- fit_resamples(taxi_wflow, taxi_folds)
+taxi_res <- fit_resamples(taxi_wflow, taxi_plieges)
 taxi_res
 ```
 
@@ -187,7 +184,7 @@ If you want to analyze the assessment set (i.e. holdout) predictions, then you n
 # Save the assessment set results
 ctrl_taxi <- control_resamples(save_pred = TRUE)
 
-taxi_res <- fit_resamples(taxi_wflow, taxi_folds, control = ctrl_taxi)
+taxi_res <- fit_resamples(taxi_wflow, taxi_plieges, control = ctrl_taxi)
 
 taxi_preds <- collect_predictions(taxi_res)
 taxi_preds
@@ -251,7 +248,7 @@ wf_set
 
 ```{r}
 wf_set_fit <- wf_set %>%
-  workflow_map("fit_resamples", resamples = taxi_folds)
+  workflow_map("fit_resamples", resamples = taxi_plieges)
 
 wf_set_fit
 ```
