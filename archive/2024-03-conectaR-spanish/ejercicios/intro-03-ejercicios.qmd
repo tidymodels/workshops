@@ -1,55 +1,61 @@
 ---
-title: "3 - What makes a model? - Classwork"
-subtitle: "Introduction to tidymodels"
+title: "3 - Las partes de un modelo - Ejercicios"
+subtitle: "Introducciendo Tidymodels"
 editor_options: 
   chunk_output_type: console
 ---
 
-We recommend restarting R between each slide deck!
+Recomendamos que reinicie R después de cada sección
 
-## Setup
+## Preparación
 
-Setup from deck 2
+Preparación despues de la 2nd sección
 
 ```{r}
 library(tidymodels)
 
 set.seed(123)
-taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
-taxi_train <- training(taxi_split)
-taxi_test <- testing(taxi_split)
+
+taxi <- readRDS(here::here("archive/2024-03-conectaR-spanish/taxi.rds"))
+
+taxi_split <- initial_split(taxi, prop = 0.8, strata = propina)
+taxi_entrenar <- training(taxi_split)
+taxi_prueba <- testing(taxi_split)
 ```
 
-## Your turn
+## Tu turno
 
-How do you fit a linear model in R?
+¿Como ajustar un modelo linear en R?
 
-How many different ways can you think of?
+¿De cuantas maneras sabes como ajustar este tipo de modelo?
 
-Discuss with your neighbor!
+Discutelo con tu vecino
 
 ## To specify a model
 
 ```{r}
-# Model
+# Modelo
 linear_reg()
 
-# Engine
+# Motor
 linear_reg() %>%
   set_engine("glmnet")
 
-# Mode - Some models have a default mode, others don't
+# Modo 
 decision_tree() %>% 
   set_mode("regression")
 ```
 
 ## Your turn
 
-Edit the chunk below to use a logistic regression model.
+Edita el chunk abajo para usar un modelo de regresión logística
 
-Extension/Challenge: Edit this code to use a different model. For example, try using a conditional inference tree as implemented in the partykit package by changing the engine - or try an entirely different model type!
 
-All available models are listed at <https://www.tidymodels.org/find/parsnip/>
+*Reto: Edita el código para usar otro tipo de modelo. Por ejemplo, trata de usar
+el árbol disponible dentro del paquete partykit, o trata un modelo de tipo 
+diferente*
+
+Los modelos disponibles estan listados aca: <https://www.tidymodels.org/find/parsnip/>
 
 ```{r tree_spec}
 tree_spec <- decision_tree() %>% 
@@ -58,10 +64,10 @@ tree_spec <- decision_tree() %>%
 tree_spec
 ```
 
-## A model workflow
+## Un flujo de modelo
 
 ```{r}
-tree_spec <-
+arbol_espec <-
   decision_tree(cost_complexity = 0.002) %>% 
   set_mode("classification")
 ```
@@ -69,91 +75,92 @@ tree_spec <-
 Fit parsnip specification:
 
 ```{r}
-tree_spec %>% 
-  fit(tip ~ ., data = taxi_train) 
+arbol_espec %>% 
+  fit(propina ~ ., data = taxi_entrenar) 
 ```
 
 Fit with a workflow:
 
 ```{r}
 workflow() %>%
-  add_formula(tip ~ .) %>%
-  add_model(tree_spec) %>%
-  fit(data = taxi_train) 
+  add_formula(propina ~ .) %>%
+  add_model(arbol_espec) %>%
+  fit(data = taxi_entrenar) 
 ```
 
-"Shortcut" by specifying the preprocessor and model spec directly in the `workflow()` call:
+Un "atajo" es especificar el preprocesador y el modelo directamente cuando llame
+`workflow()`:
 
 ```{r}
-workflow(tip ~ ., tree_spec) %>% 
-  fit(data = taxi_train) 
+workflow(propina ~ ., arbol_espec) %>% 
+  fit(data = taxi_entrenar) 
 ```
 
-## Your turn
+## Tu turno
 
-Edit the chunk below to make a workflow with your own model of choice!
+Edita el codigo para crear un flujo con un modelo que tú elijas
 
-Extension/Challenge: Other than formulas, what kinds of preprocessors are supported?
+Reto: ¿Que otros "preprocesadores", aparte de formulas, podemos usar en `workflow`?
 
 ```{r tree_wflow}
-tree_spec <-
+arbol_espec <-
   decision_tree(cost_complexity = 0.002) %>% 
   set_mode("classification")
 
-tree_wflow <- workflow() %>%
-  add_formula(tip ~ .) %>%
-  add_model(tree_spec)
+arbol_flujo <-
+  workflow(propina ~ ., arbol_espec) %>% 
+  fit(data = taxi_entrenar) 
 
-tree_wflow
+arbol_flujo
 ```
 
-## Predict with your model
+## Predecir usando tu modelo
 
 ```{r}
-tree_fit <-
-  workflow(tip ~ ., tree_spec) %>% 
-  fit(data = taxi_train) 
+arbol_flujo <-
+  workflow(propina ~ ., arbol_espec) %>% 
+  fit(data = taxi_entrenar) 
 ```
 
-## Your turn
+## Tu turno
 
-What do you get from running the following code? What do you notice about the structure of the result?
+¿Que resultado te da este código? ¿Que notas de la estructura del resultado?
 
 ```{r}
-predict(tree_fit, new_data = taxi_test)
+predict(arbol_flujo, new_data = taxi_entrenar)
 ```
 
-## Your turn
+## Tu turno
 
-What do you get from running the following code? How is `augment()` different from `predict()`?
+¿Que resultado te da este código? ¿Como se diferencia `augment()` de `predict()`?
 
 ```{r}
-augment(tree_fit, new_data = taxi_test)
+augment(arbol_flujo, new_data = taxi_prueba)
 ```
 
-## Understand your model
+## Entendiendo tú modelo
 
 ```{r}
 library(rpart.plot)
 
-tree_fit %>%
+arbol_flujo %>%
   extract_fit_engine() %>%
   rpart.plot(roundint = FALSE)
 ```
 
-## Your turn
+## Tu turno
 
-Try extracting the model engine object from your fitted workflow!
+Extrae el "motor" del modelo de tu flujo y examínalo
 
 ```{r}
 ### Your code here
 
 ```
 
-What kind of object is it? What can you do with it?
+¿Que tipo de objecto es? ¿Que puedes hacer con ese objecto?
 
-⚠️ Never `predict()` with any extracted components!
+⚠️ Nunca uses `predict()` con ningun componente extraído
 
-You can also read the documentation for object extraction:
+Lea mas documentación aca:
 https://workflows.tidymodels.org/reference/extract-workflow.html
 
