@@ -1,54 +1,58 @@
 ---
-title: "4 - Evaluating models - Classwork"
-subtitle: "Introduction to tidymodels"
+title: "4 - Evaluar modelos - Ejercicios"
+subtitle: "Introducciendo Tidymodels"
 editor_options: 
   chunk_output_type: console
 ---
 
-We recommend restarting R between each slide deck!
+Recomendamos que reinicie R después de cada sección
 
-## Setup
+## Preparación
 
-Setup from deck 3
+Preparación despues de la 3ra sección
 
 ```{r}
 library(tidymodels)
 
+library(tidymodels)
+
 set.seed(123)
-taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
-taxi_train <- training(taxi_split)
-taxi_test <- testing(taxi_split)
+taxi <- readRDS("archive/2024-03-conectaR-spanish/taxi.rds")
 
-tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
-taxi_wflow <- workflow(tip ~ ., tree_spec)
-taxi_fit <- fit(taxi_wflow, taxi_train)
+taxi_separar <- initial_split(taxi, prop = 0.8, strata = propina)
+taxi_entrenar <- training(taxi_separar)
+taxi_prueba <- testing(taxi_separar)
+
+arbol_espec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
+arbol_flujo <- workflow(propina ~ ., arbol_espec)
+taxi_ajustado <- fit(arbol_flujo, taxi_entrenar)
 ```
 
-## Metrics for model performance
+## Métricas de la calidad de modelo
 
-`conf_mat()` can be used to see how well the model is doing at prediction
+Utiliza `conf_mat()` para ver que tan bien predice el modelo
 
 ```{r}
-augment(taxi_fit, new_data = taxi_train) %>%
-  conf_mat(truth = tip, estimate = .pred_class)
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  conf_mat(truth = propina, estimate = .pred_class)
 ```
 
-and it has nice plotting features
+También tiene buenas funciones para gráficar
 
 ```{r}
-augment(taxi_fit, new_data = taxi_train) %>%
-  conf_mat(truth = tip, estimate = .pred_class) %>%
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  conf_mat(truth = propina, estimate = .pred_class) %>%
   autoplot(type = "heatmap")
 ```
 
-using the same interface we can calculate metrics
+También puedes usarlo para calcular las métricas
 
 ```{r}
 augment(taxi_fit, new_data = taxi_train) %>%
   accuracy(truth = tip, estimate = .pred_class)
 ```
 
-All yardstick metric functions work with grouped data frames!
+Todas las funciones de yardstick también funcionan con datos agrupados
 
 ```{r}
 augment(taxi_fit, new_data = taxi_train) %>%
@@ -56,7 +60,7 @@ augment(taxi_fit, new_data = taxi_train) %>%
   accuracy(truth = tip, estimate = .pred_class)
 ```
 
-Metric sets are a way to combine multiple similar metric functions together into a new function.
+Los sets the métricas son una manera de combinar varias métricas 
 
 ```{r}
 taxi_metrics <- metric_set(accuracy, specificity, sensitivity)
@@ -65,49 +69,55 @@ augment(taxi_fit, new_data = taxi_train) %>%
   taxi_metrics(truth = tip, estimate = .pred_class)
 ```
 
-## Your turn
+## Tu turno
 
-Compute and plot an ROC curve for your current model.
+Calcula y gráfica una curva ROC para tu modelo
 
-What data are being used for this ROC curve plot?
+¿Que datos son utilizados en la curva ROC?
 
 ```{r}
 # Your code here!
 
 ```
 
-## Dangers of overfitting
+## Los peligros del sobreajustar
 
-Repredicting the training set, bad!
+¡Es malo re-predecir en el set the entrenamiento!
 
 ```{r}
-taxi_fit %>%
-  augment(taxi_train)
+taxi_ajustado %>%
+  augment(taxi_entrenar)
 ```
 
 "Resubstitution estimate" - This should be the best possible performance that you could ever achieve, but it can be very misleading!
 
-```{r}
-taxi_fit %>%
-  augment(taxi_train) %>%
-  accuracy(tip, .pred_class)
-```
-
-Now on the test set, see that it performs worse? This is closer to "real" performance.
+"Resubstitución en los datos de entrenamiento" - Esta va a ser la mejor calidad
+que vamos a obtener, pero es bastante engañoso
 
 ```{r}
-taxi_fit %>%
-  augment(taxi_test) %>%
-  accuracy(tip, .pred_class)
+taxi_ajustado %>%
+  augment(taxi_entrenar) %>%
+  accuracy(propina, .pred_class)
 ```
 
-## Your turn
+Ahora, ¿ves que contra el set the prueba, la calidad baja? Esto es mas cercano
+a como la calidad sería en la vida "real"
 
-Use `augment()` and and a metric function to compute a classification metric like `brier_class()`.
+```{r}
+taxi_ajustado %>%
+  augment(taxi_prueba) %>%
+  accuracy(propina, .pred_class)
+```
 
-Compute the metrics for both training and testing data to demonstrate overfitting!
+## Tu turno
 
-Notice the evidence of overfitting!
+Usa `augment()` y una función de métrica para calcular una métrica de classificación,
+por ejemplo `brier_class()`
+
+Calcula las métricas para los datos de entrenamiento y de prueba para
+demonstrar el sobreajuste
+
+Nota la evidencia de sobreajuste
 
 ```{r}
 # Your code here!
