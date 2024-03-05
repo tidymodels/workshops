@@ -1,0 +1,76 @@
+---
+title: "5 - Afinando modelos - Ejercicios"
+subtitle: "Introducciendo Tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+Recomendamos que reinicie R después de cada sección
+
+## Preparación
+
+Preparación despues de la 4ta sección
+
+```{r}
+library(tidymodels)
+
+set.seed(123)
+taxi <- readRDS("archive/2024-03-conectaR-spanish/taxi.rds")
+
+taxi_separar <- initial_split(taxi, prop = 0.8, strata = propina)
+taxi_entrenar <- training(taxi_separar)
+taxi_prueba <- testing(taxi_separar)
+
+taxi_plieges <- vfold_cv(taxi_prueba, v = 10, strata = propina)
+```
+
+## Tag parameters for tuning
+
+```{r}
+arbol_espec <- rand_forest(min_n = tune()) %>% 
+  set_mode("classification")
+
+arbol_flujo <- workflow(propina ~ ., arbol_espec)
+arbol_flujo
+```
+
+## Grid search
+
+```{r}
+set.seed(22)
+rf_res <- tune_grid(
+  arbol_flujo,
+  taxi_plieges,
+  grid = 5
+)
+```
+
+## Compara los resultados
+
+```{r}
+show_best(rf_res)
+
+parametro_mejor <- select_best(rf_res)
+parametro_mejor
+```
+
+## El ajuste final
+
+```{r}
+arbol_flujo <- finalize_workflow(arbol_flujo, parametro_mejor)
+
+ajuste_final <- last_fit(arbol_flujo, taxi_separar) 
+
+collect_metrics(ajuste_final)
+```
+
+## Tu turno
+
+Modifica tu flujo de modelo para usar por lo menos un parámetro
+
+Usa busqueda de cuadricula para encontrar los mejores parametros
+
+```{r}
+# ¡Tu código va aqui!
+
+```

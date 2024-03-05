@@ -1,0 +1,458 @@
+---
+title: "2 - Tu presupuesto de datos"
+subtitle: "Introducciendo Tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+---
+
+```{r}
+#| label: setup
+#| include: false
+#| file: setup.R
+```
+
+```{r}
+#| include: false
+library(tidyverse)
+library(tidymodels)
+```
+
+##  {background-image="https://media.giphy.com/media/Lr3UeH9tYu3qJtsSUg/giphy.gif" background-size="40%"}
+
+"¡¡Que emoción!!"
+
+## Datos de viajes en taxi de Chicago
+
+::: columns
+::: {.column width="60%"}
+-   La ciudad de Chicago publica datos a nivel de viaje 
+-   Sacamos una muestra de 10,000 viajes que ocurrieron al principio del 2022
+:::
+
+::: {.column width="40%"}
+![](images/taxi_spinning.svg)
+:::
+
+:::
+
+::: footer
+<https://www.svgrepo.com/svg/8322/taxi>
+:::
+
+## Datos de viajes en taxi de Chicago
+
+::: columns
+::: {.column width="60%"}
+-   `N = 10,000`
+-   Un resultado nominale, `propina`, con los niveles `"si"` y `"no"`
+-   Varias variables **nominales**, por ejemplo la identificación del Taxi, y el tipo de pago
+-   Varias variables **numéricas**, por ejemplo la distancia del viaje, y los
+subtotales del cargo por el viaje
+:::
+
+::: {.column width="40%"}
+![](images/taxi.png)
+:::
+:::
+
+::: footer
+Credit: <https://unsplash.com/photos/7_r85l4eht8>
+:::
+
+:::notes
+
+"Fare subtotals" refers to the fare itself, tax, tolls, tip amount. 
+
+Actual variables in our data:
+
+`tip`: Whether the rider left a tip. A factor with levels "yes" and "no".
+
+`distance`: The trip distance, in odometer miles.
+
+`company`: The taxi company, as a factor. Companies that occurred few times were binned as "other".
+
+`local`: Whether the trip started in the same community area as it began. See the source data for community area values.
+
+`dow`: The day of the week in which the trip began, as a factor.
+
+`month`: The month in which the trip began, as a factor.
+
+`hour`: The hour of the day in which the trip began, as a numeric.
+
+:::
+
+## ¿Se pueden usar estas variables?
+
+- ¿Será ético, o hasta legal, utilizar esta variable?
+
+- ¿La variable estará disponible al momento de predecir?
+
+- ¿La variable contribuye a la explicación de los resultados?
+
+## Datos de viajes en taxi de Chicago
+
+```{r}
+#| include: false
+taxi <- readRDS(here::here("archive/2024-03-conectaR-spanish/taxi.rds"))
+```
+
+Baja los datos, y cargarlos en tu sesión de R
+
+```{r}
+#| eval: false
+
+download.file("https://github.com/edgararuiz/tidymodels-workshops/blob/main/archive/2024-03-conectaR-spanish/taxi.rds",
+              "taxi.rds")
+
+taxi <- readRDS(taxi.rds)
+```
+
+```{r taxi-print}
+taxi
+```
+
+
+## Separando y "gastando" datos
+
+Para el aprendizaje automatico, separamos los datos, unos para entranamiento, 
+y los otros para la "prueba final":
+
+. . .
+
+-   Los **datos de entrenamiento** se utilizan para estimar los parametros del modelo
+
+-   Los **datos de prueba ** se ponen aparte para medir la calidad del modelo
+
+. . .
+
+🚫 No utilize los datos de prueba durante el entrenamiento 🚫
+
+## Separando y "gastando" datos
+
+```{r test-train-split}
+#| echo: false
+#| fig.width: 12
+#| fig.height: 3
+#| 
+set.seed(123)
+library(forcats)
+one_split <- slice(taxi, 1:30) %>% 
+  initial_split() %>% 
+  tidy() %>% 
+  add_row(Row = 1:30, Data = "Original") %>% 
+  mutate(Data = case_when(
+    Data == "Analysis" ~ "Entrenamiento",
+    Data == "Assessment" ~ "Prueba",
+    TRUE ~ Data
+  )) %>% 
+  mutate(Data = factor(Data, levels = c("Original", "Entrenamiento", "Prueba")))
+all_split <-
+  ggplot(one_split, aes(x = Row, y = fct_rev(Data), fill = Data)) + 
+  geom_tile(color = "white",
+            linewidth = 1) + 
+  scale_fill_manual(values = splits_pal, guide = "none") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = rel(2)),
+        axis.text.x = element_blank(),
+        legend.position = "top",
+        panel.grid = element_blank()) +
+  coord_equal(ratio = 1) +
+  labs(x = NULL, y = NULL)
+all_split
+```
+
+# Si gastamos más datos 🤑<br> mejoramos las estimaciones del modelo
+
+## Separando y "gastando" datos
+
+-   Gastando mucho datos en el **entrenamiento** previene que tengamos una 
+buena manera de medir la **calidad** del modelo
+
+. . .
+
+-   Gastando mucho datos en **prueba** previente que tegamos una buena estimación 
+de los **parametros**
+
+## Tu turno {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*¿Cuando deberiamos separar nuestros datos?*
+
+```{r ex-when-to-split}
+#| echo: false
+countdown::countdown(minutes = 3, id = "when-to-split")
+```
+
+# Sus datos de prueba son valiosos 💎
+
+## La separación inicial `r hexes("rsample")` {.annotation}
+
+```{r taxi-split}
+set.seed(123)
+taxi_separar <- initial_split(taxi)
+taxi_separar
+```
+
+:::notes
+How much data in training vs testing?
+This function uses a good default, but this depends on your specific goal/data
+We will talk about more powerful ways of splitting, like stratification, later
+:::
+
+## ¿Para que es `set.seed()`?
+
+. . . 
+
+Para el propósito de separar datos, R puede generar números "seudo-aleatorios", 
+que aunque parezcan comportarse como números aleatorios, en realidad se generan
+de una manera específica basada en una "semilla" (seed)
+
+. . .
+
+Si utilizamos la misma semilla nos permite reproducir los mismos resultados.
+
+. . .
+
+El número en sí que elijes realmente no importa. Lo que si importa, es que no
+experimentes con diferentes números de la semilla con el proposito de mejorar
+la calidad del modelo.
+
+
+## Accediendo los datos `r hexes("rsample")`
+
+```{r taxi-train-test}
+taxi_entrenar <- training(taxi_separar)
+taxi_test <- testing(taxi_separar)
+```
+
+## El set the entrenamiento `r hexes("rsample")`
+
+```{r taxi-train}
+taxi_entrenar
+```
+
+## El set de prueba `r hexes("rsample")`
+
+🙈
+
+. . .
+
+En el set de prueba, hay `r nrow(taxi_test)` entradas, con `r ncol(taxi_test)` columnas
+
+## Tu turno {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Separa tus datos, el 20% tiene que ser para prueba*
+
+*Trata diferentes valores para `set.seed()` para ver como cambian los resultados*
+
+```{r ex-try-splitting}
+#| echo: false
+countdown::countdown(minutes = 5, id = "try-splitting")
+```
+
+## Separando y "gastando" datos `r hexes("rsample")`
+
+```{r taxi-split-prop}
+set.seed(123)
+taxi_separar <- initial_split(taxi, prop = 0.8)
+taxi_entrenar <- training(taxi_separar)
+taxi_test <- testing(taxi_separar)
+
+nrow(taxi_entrenar)
+nrow(taxi_test)
+```
+
+# ¿Y que pasó con los datos para validar?
+
+##  
+
+```{mermaid}
+%%| eval: true
+%%| fig-width: 20
+flowchart TD
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000  
+  vl[Validación]
+  style vl fill:#E5E7FD,stroke:#666,color:#000    
+  ad --> tr
+  ad --> ts
+  ad --> vl
+```
+
+
+## Datos de validación
+
+```{r}
+set.seed(123)
+initial_validation_split(taxi, prop = c(0.6, 0.2))
+```
+
+# Análisis exploratorio para Aprendizaje Automático 🧐
+
+## Tu turno {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Explora los datos en `taxi_entrenar` por tí mismo*
+
+* *¿Cual es la distribución de los resultados de `propina`?*
+* *¿Cual es la distribución de las variables numéricas, por ejemplo `distancia`?*
+* *¿Como cambian los resultados de `propina` a través de las variables categóricas?*
+
+```{r ex-explore-taxi}
+#| echo: false
+countdown::countdown(minutes = 8, id = "explore-taxi")
+```
+
+::: notes
+Make a plot or summary and then share with neighbor
+:::
+
+## 
+
+```{r taxi-tip-counts}
+#| fig-align: 'center'
+taxi_entrenar %>% 
+  ggplot(aes(x = propina)) +
+  geom_bar()
+```
+
+## 
+
+```{r taxi-tip-by-local}
+#| fig-align: 'center'
+taxi_entrenar %>% 
+  ggplot(aes(x = propina, fill = local)) +
+  geom_bar() +
+  scale_fill_viridis_d(end = .5)
+```
+
+## 
+
+```{r taxi-tip-by-hour}
+#| fig-align: 'center'
+taxi_entrenar %>% 
+  ggplot(aes(x = hora, fill = propina)) +
+  geom_bar()
+```
+
+## 
+
+```{r taxi-tip-by-hour-fill}
+#| fig-align: 'center'
+taxi_entrenar %>% 
+  ggplot(aes(x = hora, fill = propina)) +
+  geom_bar(position = "fill")
+```
+
+## 
+
+```{r taxi-tip-by-distance}
+#| fig-align: 'center'
+taxi_entrenar %>% 
+  ggplot(aes(x = distancia)) +
+  geom_histogram(bins = 100) +
+  facet_grid(vars(propina))
+```
+
+# Separa inteligentemente
+
+##
+
+```{r taxi-tip-pct, echo = FALSE}
+taxi %>%
+  ggplot(aes(x = "", fill = propina)) +
+  geom_bar(position = "fill") +
+  labs(x = "")
+```
+
+Estratificar la muestra separará los datos dentro los valores de respuesta
+
+:::notes
+Based on our EDA, we know that the source data contains fewer `"no"` tip values than `"yes"`. We want to make sure we allot equal proportions of those responses so that both the training and testing data have enough of each to give accurate estimates.
+:::
+
+## Estratificar
+
+Use `strata = propina`
+
+```{r taxi-split-prop-strata}
+set.seed(123)
+taxi_separar <- initial_split(taxi, prop = 0.8, strata = propina)
+taxi_separar
+```
+
+## Estratificar
+
+Estratificar la muestra usualmente ayuda, y con pocas consecuencias 
+
+```{r taxi-tip-pct-by-split, echo = FALSE}
+bind_rows(
+  taxi_entrenar %>% mutate(split = "train"),
+  taxi_test %>% mutate(split = "test")
+) %>%
+  ggplot(aes(x = split, fill = propina)) +
+  geom_bar(position = "fill")
+```
+
+## Expectativas del taller - Donde estamos
+
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart LR
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+  rs[Remuestreo]
+  style rs fill:#fff,stroke:#eee,color:#ddd
+  tr --> rs
+  lg[Regresión\nlogística]
+  style lg fill:#fff,stroke:#eee,color:#ddd
+  rs --> lg
+  dt[Arbol de\nDecisión]
+  style dt fill:#fff,stroke:#eee,color:#ddd
+  rs --> dt
+  rf[Bosque\nAleatorio]
+  style rf fill:#fff,stroke:#eee,color:#ddd
+  rs --> rf
+  sm[Seleccionar\nmodelo]
+  style sm fill:#fff,stroke:#eee,color:#ddd
+  lg --> sm
+  dt --> sm
+  rf --> sm
+  fm[Entrenar modelo\nselecionado]
+  style fm fill:#fff,stroke:#eee,color:#ddd
+  sm --> fm
+  tr --> fm
+  vm[Verificar la\ncalidad]
+  style vm fill:#fff,stroke:#eee,color:#ddd
+  fm --> vm
+  ts --> vm
+
+```

@@ -1,0 +1,495 @@
+---
+title: "1 - Introducción"
+subtitle: "Introducciendo Tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+::: r-fit-text
+¡Bienvenidos!
+:::
+
+::: columns
+::: {.column width="50%"}
+
+<center>
+
+### <i class="fa fa-wifi"></i>
+
+Nombre de la red Wi-Fi
+
+`TODO-ADD-LATER`
+
+</center>
+
+:::
+
+::: {.column width="50%"}
+
+<center>
+
+### <i class="fa fa-key"></i>
+
+Contraseña de la red Wi-Fi
+
+`TODO-ADD-LATER`
+
+</center>
+
+:::
+:::
+
+## Normas del taller
+
+-   Código de conducta: `TODO-ADD-LATER`
+
+## Quien eres?
+
+-   Sabe utilizar la "pipa" de magritr (`%>%`) o R (`|>`)
+
+-   Conoce las funciones de dplyr, tidyr y ggplot2
+
+-   Entiende conceptos estadísticos básicos
+
+-   **No** necesitará ser experto en modelaje o aprendizaje automático
+
+## El equipo Tidymodels
+
+-   Simon Couch
+-   Hannah Frick
+-   Emil Hvitfeldt
+-   Max Kuhn
+
+. . .
+
+Agradecimientos especiales para:
+Davis Vaughan, Julia Silge, David Robinson, Julie Jung, Alison Hill y Desirée De Leon 
+
+
+## `r emo::ji("eyes")` {.annotation}
+
+
+
+## Que planeamos hacer en este taller
+
+- Tu presupuesto de datos
+- Las partes de un modelo
+- Evaluar modelos
+- Afinar modelos
+
+::: notes
+This workshop will well-prepare folks going on to the Advanced tidymodels workshop, which will cover feature engineering and much more on hyperparameter tuning.
+:::
+
+##  {.center}
+
+### Salude a sus vecinos 👋
+
+<br></br>
+
+
+## ¿Que es aprendizaje automático?
+
+![](https://imgs.xkcd.com/comics/machine_learning.png){fig-align="center"}
+
+## ¿Que es aprendizaje automático?
+
+![](https://imgs.xkcd.com/comics/machine_learning.png){fig-align="center"}
+
+- ¿Este es tu sistema para aprendizaje automático?
+- Sí, le tiramos los datos a este monton de algebra linear, y después tomamos
+las repuestas que salen
+- ¿Y si las respuestas están equivocadas?
+- Lo empezamos a mezclar hasta que algo se ve como correcto
+
+
+::: footer
+<https://xkcd.com/1838/>
+:::
+
+## ¿Que es aprendizaje automático?
+
+![](images/what_is_ml.jpg){fig-align="center"}
+
+::: footer
+<https://vas3k.com/blog/machine_learning/>
+:::
+
+## ¿Que es aprendizaje automático?
+
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart TB
+  au[Aprendizaje\nAutomático\nClásico]
+  sp[Supervisada]
+  au--Datos numéricos o categóricos-->sp
+  us[No supervisada]
+  au--Datos no están clasificados-->us
+  cl[Clasificación]
+  sp--Predice categoría-->cl
+  rs[Regresión]
+  sp--Predice numero-->rs
+  ag[Agrupación]
+  us--Divide por similitudes-->ag
+  rd[Reducción\n de dimensiones]
+  us--Busca dependencias\nescondidas-->rd
+  as[Asociación]
+  us--Identifica secuencias-->as
+  
+```
+
+::: footer
+<https://vas3k.com/blog/machine_learning/>
+:::
+
+## Tu turno {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+. . .
+
+*¿Como se relacionan las estadísticas y el aprendizaje automático?*
+
+*¿Como se parecen? ¿Cuales son sus diferencias?*
+
+
+```{r ex-statistics-vs-ml}
+#| echo: false
+countdown::countdown(minutes = 3, id = "statistics-vs-ml")
+```
+
+::: notes
+the "two cultures"
+
+model first vs. data first
+
+inference vs. prediction
+:::
+
+## ¿Que es Tidymodels? `r hexes("tidymodels")`
+
+```{r load-tm}
+#| message: true
+library(tidymodels)
+```
+
+##  {background-image="images/tm-org.png" background-size="contain"}
+
+## Expectativas del taller
+
+- El "mapa" de hoy
+- Procesos básicos de los modelos predictivos
+- Ver la ingenieria de caraterísticas (feature engineering) y afinamiento como
+extenciones cíclicas 
+
+## Expectativas del taller
+
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart LR
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+```
+
+## Expectativas del taller
+
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart LR
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+  dt[Arbol de\nDecisión]
+  style dt fill:#FDF4E3,stroke:#666,color:#000
+  tr --> dt
+```
+
+## Expectativas del taller
+
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart LR
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+  lg[Regresión\nlogística]
+  style lg fill:#FDF4E3,stroke:#666,color:#000
+  tr --> lg
+  dt[Arbol de\nDecisión]
+  style dt fill:#FDF4E3,stroke:#666,color:#000
+  tr --> dt
+  rf[Bosque\nAleatorio]
+  style rf fill:#FDF4E3,stroke:#666,color:#000
+  tr --> rf
+
+```
+
+## Expectativas del taller
+
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart LR
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+  rs[Remuestreo]
+  style rs fill:#FDF4E3,stroke:#666,color:#000
+  tr --> rs
+  lg[Regresión\nlogística]
+  style lg fill:#FDF4E3,stroke:#666,color:#000
+  rs --> lg
+  dt[Arbol de\nDecisión]
+  style dt fill:#FDF4E3,stroke:#666,color:#000
+  rs --> dt
+  rf[Bosque\nAleatorio]
+  style rf fill:#FDF4E3,stroke:#666,color:#000
+  rs --> rf
+```
+
+## Expectativas del taller
+
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart LR
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+  rs[Remuestreo]
+  style rs fill:#FDF4E3,stroke:#666,color:#000
+  tr --> rs
+  lg[Regresión\nlogística]
+  style lg fill:#FDF4E3,stroke:#666,color:#000
+  rs --> lg
+  dt[Arbol de\nDecisión]
+  style dt fill:#FDF4E3,stroke:#666,color:#000
+  rs --> dt
+  rf[Bosque\nAleatorio]
+  style rf fill:#FDF4E3,stroke:#666,color:#000
+  rs --> rf
+  sm[Seleccionar\nmodelo]
+  style sm fill:#FDF4E3,stroke:#666,color:#000
+  lg --> sm
+  dt --> sm
+  rf --> sm
+```
+
+## Expectativas del taller
+
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart LR
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+  rs[Remuestreo]
+  style rs fill:#FDF4E3,stroke:#666,color:#000
+  tr --> rs
+  lg[Regresión\nlogística]
+  style lg fill:#FDF4E3,stroke:#666,color:#000
+  rs --> lg
+  dt[Arbol de\nDecisión]
+  style dt fill:#FDF4E3,stroke:#666,color:#000
+  rs --> dt
+  rf[Bosque\nAleatorio]
+  style rf fill:#FDF4E3,stroke:#666,color:#000
+  rs --> rf
+  sm[Seleccionar\nmodelo]
+  style sm fill:#FDF4E3,stroke:#666,color:#000
+  lg --> sm
+  dt --> sm
+  rf --> sm
+  fm[Entrenar modelo\nselecionado]
+  style fm fill:#FBE9BF,stroke:#666,color:#000
+  sm --> fm
+  tr --> fm
+```
+
+## Expectativas del taller
+
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart LR
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+  rs[Remuestreo]
+  style rs fill:#FDF4E3,stroke:#666,color:#000
+  tr --> rs
+  lg[Regresión\nlogística]
+  style lg fill:#FDF4E3,stroke:#666,color:#000
+  rs --> lg
+  dt[Arbol de\nDecisión]
+  style dt fill:#FDF4E3,stroke:#666,color:#000
+  rs --> dt
+  rf[Bosque\nAleatorio]
+  style rf fill:#FDF4E3,stroke:#666,color:#000
+  rs --> rf
+  sm[Seleccionar\nmodelo]
+  style sm fill:#FDF4E3,stroke:#666,color:#000
+  lg --> sm
+  dt --> sm
+  rf --> sm
+  fm[Entrenar modelo\nselecionado]
+  style fm fill:#FBE9BF,stroke:#666,color:#000
+  sm --> fm
+  tr --> fm
+  vm[Verificar la\ncalidad]
+  style vm fill:#E5E7FD,stroke:#666,color:#000
+  fm --> vm
+  ts --> vm
+
+```
+
+## Instalemos unos paquetes
+
+```{r load-pkgs}
+#| eval: false
+
+pkgs <- 
+  c("bonsai", "doParallel", "embed", "finetune", "lightgbm", "lme4",
+    "plumber", "probably", "ranger", "rpart", "rpart.plot", "rules",
+    "splines2", "stacks", "text2vec", "textrecipes", "tidymodels", 
+    "vetiver", "remotes")
+
+install.packages(pkgs)
+```
+
+. . .
+
+<br></br>
+
+## Nuestras versiones
+
+```{r pkg-list, echo = FALSE}
+deps <- 
+  c("bonsai", "doParallel", "embed", "finetune", "lightgbm", "lme4",
+    "plumber", "probably", "ranger", "rpart", "rpart.plot", "rules",
+    "splines2", "stacks", "text2vec", "textrecipes", "tidymodels", 
+    "vetiver", "remotes")
+
+loaded <- purrr::map(deps, ~ library(.x, character.only = TRUE))
+excl <- c("iterators", "emo", "countdown", "stats", "graphics", 
+          "grDevices", "utils", "datasets", "methods", "base", "forcats", 
+          "infer", "foreach", "Matrix", "R6", "parallel", "devtools", "usethis")
+loaded <- loaded[[length(loaded)]]
+loaded <- loaded[!(loaded %in% excl)]
+pkgs <- 
+  sessioninfo::package_info(loaded, dependencies = FALSE) %>% 
+  select(-date)
+df <- tibble::tibble(
+  package = pkgs$package,
+  version = pkgs$ondiskversion
+)
+
+ids <- split(
+  seq_len(nrow(df)), 
+  ceiling(seq_len(nrow(df)) / ceiling(nrow(df) / 4))
+)
+
+column1 <- df %>%
+  dplyr::slice(ids[[1]])
+
+column2 <- df %>%
+  dplyr::slice(ids[[2]])
+
+column3 <- df %>%
+  dplyr::slice(ids[[3]])
+
+column4 <- df %>%
+  dplyr::slice(ids[[4]])
+
+quarto_info <- paste0("Quarto (", system("quarto --version", intern = TRUE), ")")
+```
+
+`r R.version.string`, `r quarto_info`
+
+::: {.columns style="font-size:0.7em;"}
+::: {.column width="25%"}
+```{r}
+#| echo: false
+knitr::kable(column1)
+```
+:::
+
+::: {.column width="25%"}
+```{r}
+#| echo: false
+knitr::kable(column2)
+```
+:::
+
+::: {.column width="25%"}
+```{r}
+#| echo: false
+knitr::kable(column3)
+```
+:::
+
+::: {.column width="25%"}
+```{r}
+#| echo: false
+knitr::kable(column4)
+```
+:::
+:::

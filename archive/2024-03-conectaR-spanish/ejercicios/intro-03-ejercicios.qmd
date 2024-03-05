@@ -1,0 +1,166 @@
+---
+title: "3 - Las partes de un modelo - Ejercicios"
+subtitle: "Introducciendo Tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+Recomendamos que reinicie R después de cada sección
+
+## Preparación
+
+Preparación despues de la 2nd sección
+
+```{r}
+library(tidymodels)
+
+set.seed(123)
+
+taxi <- readRDS("archive/2024-03-conectaR-spanish/taxi.rds")
+
+taxi_split <- initial_split(taxi, prop = 0.8, strata = propina)
+taxi_entrenar <- training(taxi_split)
+taxi_prueba <- testing(taxi_split)
+```
+
+## Tu turno
+
+¿Como ajustar un modelo linear en R?
+
+¿De cuantas maneras sabes como ajustar este tipo de modelo?
+
+Discutelo con tu vecino
+
+## To specify a model
+
+```{r}
+# Modelo
+linear_reg()
+
+# Motor
+linear_reg() %>%
+  set_engine("glmnet")
+
+# Modo 
+decision_tree() %>% 
+  set_mode("regression")
+```
+
+## Tu turno
+
+Edita el chunk abajo para usar un modelo de regresión logística
+
+
+*Reto: Edita el código para usar otro tipo de modelo. Por ejemplo, trata de usar
+el árbol disponible dentro del paquete partykit, o trata un modelo de tipo 
+diferente*
+
+Los modelos disponibles estan listados aca: <https://www.tidymodels.org/find/parsnip/>
+
+```{r tree_spec}
+tree_spec <- decision_tree() %>% 
+  set_mode("classification")
+
+tree_spec
+```
+
+## Un flujo de modelo
+
+```{r}
+arbol_espec <-
+  decision_tree(cost_complexity = 0.002) %>% 
+  set_mode("classification")
+```
+
+Fit parsnip specification:
+
+```{r}
+arbol_espec %>% 
+  fit(propina ~ ., data = taxi_entrenar) 
+```
+
+Fit with a workflow:
+
+```{r}
+workflow() %>%
+  add_formula(propina ~ .) %>%
+  add_model(arbol_espec) %>%
+  fit(data = taxi_entrenar) 
+```
+
+Un "atajo" es especificar el preprocesador y el modelo directamente cuando llame
+`workflow()`:
+
+```{r}
+workflow(propina ~ ., arbol_espec) %>% 
+  fit(data = taxi_entrenar) 
+```
+
+## Tu turno
+
+Edita el codigo para crear un flujo con un modelo que tú elijas
+
+Reto: ¿Que otros "preprocesadores", aparte de formulas, podemos usar en `workflow`?
+
+```{r tree_wflow}
+arbol_espec <-
+  decision_tree(cost_complexity = 0.002) %>% 
+  set_mode("classification")
+
+arbol_flujo <-
+  workflow(propina ~ ., arbol_espec) %>% 
+  fit(data = taxi_entrenar) 
+
+arbol_flujo
+```
+
+## Predecir usando tu modelo
+
+```{r}
+arbol_flujo <-
+  workflow(propina ~ ., arbol_espec) %>% 
+  fit(data = taxi_entrenar) 
+```
+
+## Tu turno
+
+¿Que resultado te da este código? ¿Que notas de la estructura del resultado?
+
+```{r}
+predict(arbol_flujo, new_data = taxi_entrenar)
+```
+
+## Tu turno
+
+¿Que resultado te da este código? ¿Como se diferencia `augment()` de `predict()`?
+
+```{r}
+augment(arbol_flujo, new_data = taxi_prueba)
+```
+
+## Entendiendo tú modelo
+
+```{r}
+library(rpart.plot)
+
+arbol_flujo %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+
+## Tu turno
+
+Extrae el "motor" del modelo de tu flujo y examínalo
+
+```{r}
+# Aqui va tu codigo
+
+```
+
+¿Que tipo de objecto es? ¿Que puedes hacer con ese objecto?
+
+⚠️ Nunca uses `predict()` con ningun componente extraído
+
+Lea mas documentación aca:
+https://workflows.tidymodels.org/reference/extract-workflow.html
+

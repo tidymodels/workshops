@@ -1,0 +1,910 @@
+---
+title: "4 - Evaluar modelos"
+subtitle: "Introducciendo Tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+execute: 
+  eval: true
+---
+
+```{r setup}
+#| eval: true
+#| include: false
+#| file: setup.R
+```
+
+## Viendo las predicciones
+
+```{r setup-previous}
+#| echo: false
+library(tidymodels)
+
+set.seed(123)
+taxi <- readRDS(here::here("archive/2024-03-conectaR-spanish/taxi.rds"))
+
+taxi_separar <- initial_split(taxi, prop = 0.8, strata = propina)
+taxi_entrenar <- training(taxi_separar)
+taxi_prueba <- testing(taxi_separar)
+
+arbol_espec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
+arbol_flujo <- workflow(propina ~ ., arbol_espec)
+taxi_ajustado <- fit(arbol_flujo, taxi_entrenar)
+```
+
+```{r taxi-fit-augment}
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  relocate(propina, .pred_class, .pred_si, .pred_no)
+```
+
+## Matriz de confusión `r hexes("yardstick")`
+
+![](images/matriz-confusion.png){width=800}
+
+
+
+
+## Matriz de confusión `r hexes("yardstick")`
+
+```{r conf-mat}
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  conf_mat(truth = propina, estimate = .pred_class)
+```
+
+## Matriz de confusión `r hexes("yardstick")`
+
+```{r conf-mat-plot}
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  conf_mat(truth = propina, estimate = .pred_class) %>%
+  autoplot(type = "heatmap")
+```
+
+## Mediciones de la calidad del modelo `r hexes("yardstick")`
+
+::: columns
+::: {.column width="60%"}
+```{r acc}
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  accuracy(truth = propina, estimate = .pred_class)
+```
+:::
+
+::: {.column width="40%"}
+![](images/matriz-confusion-exactitud.png)
+:::
+:::
+
+## El riesgo de concentrarse en la exactitud `r hexes("yardstick")`
+
+Hay que tener cuidado utilizando exactitud (`accuracy()`) ya que nos puede dar
+"buenos" resultado se predecimos con datos que no están balanceados
+
+```{r acc-2}
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  mutate(.pred_class = factor("si", levels = c("si", "no"))) %>%
+  accuracy(truth = propina, estimate = .pred_class)
+```
+
+## Mediciones de la calidad del modelo `r hexes("yardstick")`
+
+::: columns
+::: {.column width="60%"}
+```{r sens}
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  sensitivity(truth = propina, estimate = .pred_class)
+```
+:::
+
+::: {.column width="40%"}
+![](images/matriz-confusion-sensibilidad.png)
+:::
+:::
+
+
+## Mediciones de la calidad del modelo `r hexes("yardstick")`
+
+::: columns
+::: {.column width="60%"}
+```{r sens-2}
+#| code-line-numbers: "3-6"
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  sensitivity(truth = propina, estimate = .pred_class)
+```
+
+<br>
+
+```{r spec}
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  specificity(truth = propina, estimate = .pred_class)
+```
+:::
+
+::: {.column width="40%"}
+![](images/matriz-confusion-especificidad.png)
+:::
+:::
+
+## Mediciones de la calidad del modelo `r hexes("yardstick")`
+
+Para combinar multiples cálculos en una tabla, usa `metric_set()`
+
+```{r taxi-metrics}
+taxi_metrics <- metric_set(accuracy, specificity, sensitivity)
+
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  taxi_metrics(truth = propina, estimate = .pred_class)
+```
+
+## Mediciones de la calidad del modelo `r hexes("yardstick")`
+
+```{r taxi-metrics-grouped}
+taxi_metrics <- metric_set(accuracy, specificity, sensitivity)
+
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  group_by(local) %>%
+  taxi_metrics(truth = propina, estimate = .pred_class)
+```
+
+## Resultados de dos clases
+
+Estas métricas asumen que sabemos cual es límite para convertir probabilidades de
+predicción "suaves" a prediciones de clase "duras"
+. . .
+
+¿Es bueno un límite de 50%?
+
+¿Que pasaría si lo cambiamos a 80%?
+
+-   sensibilidad ⬇️, especificidad ⬆️
+
+. . .
+
+¿Y si lo cambiamos a 20%?
+
+
+-   sensibilidad ⬆️, especificidad ⬇️
+
+## Varying the threshold
+
+```{r}
+#| label: thresholds
+#| echo: false
+
+augment(taxi_ajustado, new_data = taxi_entrenar) %>% 
+  roc_curve(truth = propina, .pred_si) %>% 
+  filter(is.finite(.threshold)) %>% 
+  pivot_longer(c(specificity, sensitivity), names_to = "statistic", values_to = "value") %>% 
+  rename(`event threshold` = .threshold) %>% 
+  ggplot(aes(x = `event threshold`, y = value, col = statistic, group = statistic)) + 
+  geom_line() +
+  scale_color_brewer(palette = "Dark2") +
+  labs(y = NULL) +
+  coord_equal() +
+  theme(legend.position = "top")
+```
+
+## Curvas ROC
+
+Para crear una "curva ROC", osea una curva de *característica operativa del 
+receptor* hacemos lo siguiente:
+
+- Calcular la sensibilidad y especificidad de todos los límites posibles
+
+- Gráficar los falsos positivos en el axis X, contra los positivos verdaderos
+en el axis Y.
+
+Ya que la sensibilidad es la proporción de positivos verdaderos, y la especificidad 
+es la de los negativos verdaderos, entonces `1 - especificidad` es la
+proporción de los falsos positivos.
+
+. . .
+
+Podemos usar el **area debajo de la curva** (AUC = area under de curve) 
+ROC como una métrica de clasificación:
+
+- ROC AUC = 1 💯 
+- ROC AUC = 1/2 😢
+
+:::notes
+ROC curves are insensitive to class imbalance.
+:::
+
+## Curvas ROC `r hexes("yardstick")`
+
+```{r roc-auc}
+# Assumes _first_ factor level is event; there are options to change that
+augment(taxi_ajustado, new_data = taxi_entrenar) %>% 
+  roc_curve(truth = propina, .pred_si) %>%
+  slice(1, 20, 50)
+
+augment(taxi_ajustado, new_data = taxi_entrenar) %>% 
+  roc_auc(truth = propina, .pred_si)
+```
+
+## Gráfica de curvas ROC `r hexes("yardstick")`
+
+```{r roc-curve}
+#| fig-width: 6
+#| fig-height: 6
+#| output-location: "column"
+
+augment(taxi_ajustado, new_data = taxi_entrenar) %>% 
+  roc_curve(truth = propina, .pred_si) %>%
+  autoplot()
+```
+
+## Tu turno {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Calcule y gráfique una curva ROC con su modelo*
+
+*¿Cuales son los datos que se utilizaron para esta curva ROC?*
+
+```{r ex-roc-curve}
+#| echo: false
+countdown::countdown(minutes = 5, id = "roc-curve")
+```
+
+##  {background-iframe="https://yardstick.tidymodels.org/reference/index.html"}
+
+::: footer
+:::
+
+# ⚠️ LOS PELIGROS DEL SOBREAJUSTAR ⚠️
+
+## Los peligros del sobreajustar ⚠️
+
+![](https://raw.githubusercontent.com/topepo/2022-nyr-workshop/main/images/tuning-overfitting-train-1.svg)
+
+## Los peligros del sobreajustar ⚠️
+
+![](https://raw.githubusercontent.com/topepo/2022-nyr-workshop/main/images/tuning-overfitting-test-1.svg)
+
+## Los peligros del sobreajustar ⚠️ `r hexes("yardstick")`
+
+```{r augment-train}
+taxi_ajustado %>%
+  augment(taxi_entrenar)
+```
+
+A esto le llamamos "resubstitución" ó "repredecir en los datos de entrenamiento"
+
+
+## Los peligros del sobreajustar ⚠️ `r hexes("yardstick")`
+
+```{r augment-acc}
+taxi_ajustado %>%
+  augment(taxi_entrenar) %>%
+  accuracy(propina, .pred_class)
+```
+
+A esto le llamamos "resubstitución de la estimación"
+
+## Los peligros del sobreajustar ⚠️ `r hexes("yardstick")`
+
+::: columns
+::: {.column width="50%"}
+```{r augment-acc-2}
+taxi_ajustado %>%
+  augment(taxi_entrenar) %>%
+  accuracy(propina, .pred_class)
+```
+:::
+
+::: {.column width="50%"}
+:::
+:::
+
+## Los peligros del sobreajustar ⚠️ `r hexes("yardstick")`
+
+::: columns
+::: {.column width="50%"}
+```{r augment-acc-3}
+taxi_ajustado %>%
+  augment(taxi_entrenar) %>%
+  accuracy(propina, .pred_class)
+```
+:::
+
+::: {.column width="50%"}
+```{r augment-acc-test}
+taxi_ajustado %>%
+  augment(taxi_prueba) %>%
+  accuracy(propina, .pred_class)
+```
+:::
+:::
+
+. . .
+
+⚠️ Acuerdate que estamos demonstrando el sobreajuste
+
+. . .
+
+
+⚠️ No utilizes el set the prueba sino hasta el *fin* de tu analisis
+
+## "Ja-ja-ja, estoy en peligro" {background-image="https://media.giphy.com/media/55itGuoAJiZEEen9gg/giphy.gif" background-size="70%"}
+
+
+
+## Tu turno {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute bottom="0" left="0" width="150" height="150"}
+
+*Usa `augment()` y una función de métrica para calcular una métrica de classificación,
+por ejemplo `brier_class()`*
+
+
+*Calcula las métricas para los datos de entrenamiento y de prueba para
+demonstrar el sobreajuste*
+
+*Nota la evidencia de sobreajuste* ⚠️
+
+```{r ex-augment-metrics}
+#| echo: false
+countdown::countdown(minutes = 5, id = "augment-metrics")
+```
+
+## Los peligros del sobreajustar ⚠️ `r hexes("yardstick")`
+
+::: columns
+::: {.column width="50%"}
+```{r brier-class}
+taxi_ajustado %>%
+  augment(taxi_entrenar) %>%
+  brier_class(propina, .pred_si)
+```
+:::
+
+::: {.column width="50%"}
+```{r brier-class-2}
+taxi_ajustado %>%
+  augment(taxi_prueba) %>%
+  brier_class(propina, .pred_si)
+```
+:::
+:::
+
+. . .
+
+¿Que tal si queremos comparar más modelos?
+
+. . .
+
+...y comparar configuraciones para los modelos?
+
+. . .
+
+Y tambien queremos saber si las diferencias son importantes
+
+# Los datos de prueba son valiosos 💎
+
+# ¿Como podríamos usar los datos de entrenamiento para comparar y evaluar varios modelos?
+
+## Remuestreo
+
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart TD
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+  rm1[Remuestreo 1]
+  style rm1 fill:#fff,stroke:#666,color:#000
+  tr --> rm1
+  rm2[Remuestreo 2]
+  style rm2 fill:#fff,stroke:#666,color:#000
+  tr --> rm2
+  rm3[Remuestreo B]
+  style rm3 fill:#fff,stroke:#666,color:#000
+  tr --> rm3
+  an1[Analysis]
+  style an1 fill:#FBE9BF,stroke:#666,color:#000
+  rm1 --> an1
+  vl1[Validación]
+  style vl1 fill:#E5E7FD,stroke:#666,color:#000
+  rm1 --> vl1
+  an2[Analysis]
+  style an2 fill:#FBE9BF,stroke:#666,color:#000
+  rm2 --> an2
+  vl2[Validación]
+  style vl2 fill:#E5E7FD,stroke:#666,color:#000
+  rm2 --> vl2  
+  an3[Analysis]
+  style an3 fill:#FBE9BF,stroke:#666,color:#000
+  rm3 --> an3
+  vl3[Validación]
+  style vl3 fill:#E5E7FD,stroke:#666,color:#000
+  rm3 --> vl3    
+```
+
+## Validación cruzada
+
+![](https://www.tmwr.org/premade/three-CV.svg)
+
+## Validación cruzada
+
+![](images/cv-spanish.png)
+
+## Tu turno {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Si usamos 10 plieges (folds), cual es el porcentaje de datos de entrenamiento*
+
+-   *cuantos terminan en análisis*
+-   *cuantos terminan en evaluación (assesment)*
+
+*...para **cada** pliege?*
+
+![](images/taxi_spinning.svg){width="300"}
+
+```{r ex-percent-in-folds}
+#| echo: false
+countdown::countdown(minutes = 3, id = "percent-in-folds")
+```
+
+## Validación cruzada `r hexes("rsample")`
+
+```{r vfold-cv}
+vfold_cv(taxi_entrenar) 
+```
+
+## Validación cruzada `r hexes("rsample")`
+
+¿Que hay en este?
+
+```{r taxi-splits}
+taxi_plieges <- vfold_cv(taxi_entrenar)
+taxi_plieges$splits[1:3]
+```
+
+::: notes
+Talk about a list column, storing non-atomic types in dataframe
+:::
+
+## Validación cruzada `r hexes("rsample")`
+
+```{r vfold-cv-v}
+vfold_cv(taxi_entrenar, v = 5)
+```
+
+## Validación cruzada `r hexes("rsample")`
+
+```{r vfold-cv-strata}
+vfold_cv(taxi_entrenar, strata = propina)
+```
+
+. . .
+
+Estratificar usualmente ayuda, y con pocos malas consecuencias 
+
+## Validación cruzada `r hexes("rsample")`
+
+Usaremos esto:
+
+```{r taxi-folds}
+set.seed(123)
+taxi_plieges <- vfold_cv(taxi_entrenar, v = 10, strata = propina)
+taxi_plieges
+```
+
+. . .
+
+
+Especifica la semilla (seed) cuando estas creando remuestreos 
+
+# Estamos equipados con métricas y remuestreos
+
+
+## Ajustemos nuestro modelo usando los remuestreos
+
+```{r fit-resamples}
+taxi_res <- fit_resamples(arbol_flujo, taxi_plieges)
+taxi_res
+```
+
+## Evaluando la calidad del modelo `r hexes("tune")`
+
+```{r collect-metrics}
+taxi_res %>%
+  collect_metrics()
+```
+
+::: notes
+`collect_metrics()` is one of a suite of `collect_*()` functions that can be used to work with columns of tuning results. Most columns in a tuning result prefixed with `.` have a corresponding `collect_*()` function with options for common summaries.
+:::
+
+. . .
+
+Podemos medir correctamente la la calidad del modelo usando solo los datos de entrenamiento 🎉
+
+## Comparando las métricas `r hexes("yardstick")`
+
+¿Que diferencia hay entre las métricas usando los datos de remuestreo, y usando
+los datos de entrenamiento y prueba?
+
+```{r calc-roc-auc}
+#| echo: false
+taxi_entrenaring_roc_auc <-
+  taxi_ajustado %>%
+  augment(taxi_entrenar) %>%
+  roc_auc(propina, .pred_si) %>%
+  pull(.estimate) %>%
+  round(digits = 2)
+
+taxi_pruebaing_roc_auc <-
+  taxi_ajustado %>%
+  augment(taxi_prueba) %>%
+  roc_auc(propina, .pred_si) %>%
+  pull(.estimate) %>%
+  round(digits = 2)
+```
+
+::: columns
+::: {.column width="50%"}
+```{r collect-metrics-2}
+taxi_res %>%
+  collect_metrics() %>% 
+  select(.metric, mean, n)
+```
+:::
+
+::: {.column width="50%"}
+
+El ROC AUC antes era:
+
+- `r taxi_entrenaring_roc_auc` para el set the entrenamiento
+- `r taxi_pruebaing_roc_auc` para el set the prueba
+:::
+:::
+
+. . .
+
+Acuerdate que:
+
+⚠️ Los datos de entrenamiento da métricas demasiado optimísticas
+
+⚠️ Los datos de prueba son valiosos
+
+
+## Evaluando la calidad del modelo `r hexes("tune")`
+
+```{r save-predictions}
+
+ctrl_taxi <- control_resamples(save_pred = TRUE)
+taxi_res <- fit_resamples(arbol_flujo, taxi_plieges, control = ctrl_taxi)
+
+taxi_res
+```
+
+## Evaluando la calidad del modelo `r hexes("tune")`
+
+```{r collect-predictions}
+# Guarde los resultados de las evaluaciones
+taxi_preds <- collect_predictions(taxi_res)
+taxi_preds
+```
+
+## Evaluando la calidad del modelo `r hexes("tune")`
+
+```{r taxi-metrics-by-id}
+taxi_preds %>% 
+  group_by(id) %>%
+  taxi_metrics(truth = propina, estimate = .pred_class)
+```
+
+## ¿Donde estan los modelos que ajustamos? `r hexes("tune")`  {.annotation}
+
+```{r taxi-res}
+taxi_res
+```
+
+. . .
+
+🗑️
+
+# Otros métodos de remuestreo 
+
+## Bootstrapping 
+
+![](images/bootstraps-spanish.png)
+
+## Bootstrapping `r hexes("rsample")`
+
+```{r bootstraps}
+set.seed(3214)
+bootstraps(taxi_entrenar)
+```
+
+##  {background-iframe="https://rsample.tidymodels.org/reference/index.html"}
+
+::: footer
+:::
+
+## Expectativas del taller - Donde estamos
+
+
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart LR
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+  rs[Remuestras]
+  style rs fill:#FDF4E3,stroke:#666,color:#000
+  tr --> rs
+  lg[Regresión\nlogística]
+  style lg fill:#FDF4E3,stroke:#666,color:#000
+  rs --> lg
+  dt[Arbol de\nDecisión]
+  style dt fill:#FDF4E3,stroke:#666,color:#000
+  rs --> dt
+  rf[Bosque\nAleatorio]
+  style rf fill:#FDF4E3,stroke:#666,color:#000
+  rs --> rf
+  sm[Seleccionar\nmodelo]
+  style sm fill:#fff,stroke:#eee,color:#ddd
+  lg --> sm
+  dt --> sm
+  rf --> sm
+  fm[Entrenar modelo\nselecionado]
+  style fm fill:#fff,stroke:#eee,color:#ddd
+  sm --> fm
+  tr --> fm
+  vm[Verificar la\ncalidad]
+  style vm fill:#fff,stroke:#eee,color:#ddd
+  fm --> vm
+  ts --> vm
+
+```
+
+## Tu turno {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Crea un:*
+
+-   *Set de validación cruzada tipo Monte Carlo*
+-   *Set de validación*
+
+
+*No te olvides de usar `set.seed()`*
+
+```{r ex-try-rsample}
+#| echo: false
+countdown::countdown(minutes = 5, id = "try-rsample")
+```
+
+## Validación cruzada tipo Monte Carlo `r hexes("rsample")`
+
+```{r mc-cv}
+set.seed(322)
+mc_cv(taxi_entrenar, times = 10)
+```
+
+## Set de validación `r hexes("rsample")`
+
+```{r validation-split}
+set.seed(853)
+taxi_val_split <- initial_validation_split(taxi, strata = propina)
+validation_set(taxi_val_split)
+```
+
+. . .
+
+Un set de validación es solamente otro tipo de remuestreo
+
+# Arbol de decisión 🌳
+
+# Bosque aleatorio 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌵🌴🌲🌳🌴🌵🌳🌴🌳
+
+## Bosque aleatorio 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵
+
+- Ensambla varios árboles de decisión
+
+- ¡Todos los árboles votan! 🗳️
+
+- Agregación tipo bootstrap + muestreo aleatorio del predictor
+
+. . .
+
+
+- Usualmente funciona bien sin usar afinamiento, pero solo mientras hayan 
+suficientes árboles
+
+## Crear un modelo de bosque aleatorio `r hexes("parsnip")`
+
+```{r rf-spec}
+rf_spec <- rand_forest(trees = 1000, mode = "classification")
+rf_spec
+```
+
+## Crear un modelo de bosque aleatorio `r hexes("workflows")`
+
+```{r rf-wflow}
+rf_wflow <- workflow(propina ~ ., rf_spec)
+rf_wflow
+```
+
+## Tu turno {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Usa `fit_resamples()` y `rf_wflow` para lo siguiente:*
+
+-   *Quedarse con las predicciones*
+-   *Calcular las métricas*
+
+```{r ex-try-fit-resamples}
+#| echo: false
+countdown::countdown(minutes = 8, id = "try-fit-resamples")
+```
+
+## Evaluando la calidad del modelo `r hexes("tune")`
+
+```{r collect-metrics-rf}
+ctrl_taxi <- control_resamples(save_pred = TRUE)
+
+# Bosque aleatorio usan numeros al azar, asi que asegurate de definir la semilla
+
+set.seed(2)
+rf_res <- fit_resamples(rf_wflow, taxi_plieges, control = ctrl_taxi)
+collect_metrics(rf_res)
+```
+
+## Expectativas del taller - Donde estamos
+
+
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart LR
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+  rs[Remuestras]
+  style rs fill:#FDF4E3,stroke:#666,color:#000
+  tr --> rs
+  lg[Regresión\nlogística]
+  style lg fill:#FDF4E3,stroke:#666,color:#000
+  rs --> lg
+  dt[Arbol de\nDecisión]
+  style dt fill:#FDF4E3,stroke:#666,color:#000
+  rs --> dt
+  rf[Bosque\nAleatorio]
+  style rf fill:#FDF4E3,stroke:#666,color:#000
+  rs --> rf
+  sm[Seleccionar\nmodelo]
+  style sm fill:#FDF4E3,stroke:#666,color:#000
+  lg --> sm
+  dt --> sm
+  rf --> sm
+  fm[Entrenar modelo\nselecionado]
+  style fm fill:#fff,stroke:#eee,color:#ddd
+  sm --> fm
+  tr --> fm
+  vm[Verificar la\ncalidad]
+  style vm fill:#fff,stroke:#eee,color:#ddd
+  fm --> vm
+  ts --> vm
+
+```
+
+## El ajuste final `r hexes("tune")` 
+
+Digamos que estamos satisfechos con usar nuestro modelo de bosque aleatorio
+
+
+Ajustemos el modelo usando todos los datos en el set the entrenamiento, y despues
+midamos la calidad del modelo con el set the prueba
+
+. . .
+
+Hemos usado `fit()` y `predict()` (+ `augment()`),  pero hay un atajo:
+
+```{r final-fit}
+# taxi_separar has train + test info
+ajuste_final <- last_fit(rf_wflow, taxi_separar) 
+
+ajuste_final
+```
+
+## ¿Que contiene `ajuste_final`? `r hexes("tune")`
+
+```{r collect-metrics-final-fit}
+collect_metrics(ajuste_final)
+```
+
+. . .
+
+Las métricas fueron calculadas con el set de **prueba**
+
+## ¿Que contiene `ajuste_final`? `r hexes("tune")`
+
+```{r collect-predictions-final-fit}
+collect_predictions(ajuste_final)
+```
+
+## ¿Que contiene `ajuste_final`? `r hexes("tune")`
+
+```{r extract-workflow}
+extract_workflow(ajuste_final)
+```
+
+. . .
+
+Use this for **prediction** on new data, like for deploying
+
+## Expectativas del taller - ¡Ya llegamos! 
+
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart LR
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+  rs[Remuestreo]
+  style rs fill:#FDF4E3,stroke:#666,color:#000
+  tr --> rs
+  lg[Regresión\nlogística]
+  style lg fill:#FDF4E3,stroke:#666,color:#000
+  rs --> lg
+  dt[Arbol de\nDecisión]
+  style dt fill:#FDF4E3,stroke:#666,color:#000
+  rs --> dt
+  rf[Bosque\nAleatorio]
+  style rf fill:#FDF4E3,stroke:#666,color:#000
+  rs --> rf
+  sm[Seleccionar\nmodelo]
+  style sm fill:#FDF4E3,stroke:#666,color:#000
+  lg --> sm
+  dt --> sm
+  rf --> sm
+  fm[Entrenar modelo\nselecionado]
+  style fm fill:#FBE9BF,stroke:#666,color:#000
+  sm --> fm
+  tr --> fm
+  vm[Verificar la\ncalidad]
+  style vm fill:#E5E7FD,stroke:#666,color:#000
+  fm --> vm
+  ts --> vm
+
+```

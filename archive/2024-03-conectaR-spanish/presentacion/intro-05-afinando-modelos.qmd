@@ -1,0 +1,152 @@
+---
+title: "5 - Afinando modelos"
+subtitle: "Introducciendo Tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+execute:
+  eval: true
+---
+
+```{r}
+#| label: setup
+#| include: false
+#| file: setup.R
+```
+
+```{r setup-previous}
+#| echo: false
+library(tidymodels)
+
+set.seed(123)
+taxi <- readRDS(here::here("archive/2024-03-conectaR-spanish/taxi.rds"))
+
+taxi_separar <- initial_split(taxi, prop = 0.8, strata = propina)
+taxi_entrenar <- training(taxi_separar)
+taxi_prueba <- testing(taxi_separar)
+
+set.seed(123)
+taxi_plieges <- vfold_cv(taxi_prueba, v = 10, strata = propina)
+```
+
+## Parámetros de afinamiento
+
+Algunos valores de los parametros de los modelos o de los preprocesadores no se
+pueden estimar directamente desde los datos
+
+. . .
+
+Por ejemplo:
+
+- La profundidad de los árboles de decisión
+- La cantidad de vecinos en un modelo de vecinos K-nearest
+
+## Optimiza los parámetros de afinamiento
+
+- Prueba valores diferentes para medir la calidad del modelo
+
+. . .
+
+- Encuentra buenos valores para los parametros
+
+. . .
+
+- Una vez los valores de los parametros han sido determinados, el modelo final
+se puede ajustar usando todos los datos en el set de entrenamiento
+
+## Optimiza los parámetros de afinamiento
+
+Hay dos estrategias principales para optimizar:
+
+. . .
+
+-   **Busqueda de cuadrícula (Grid search)** 💠 que prueba un set de valores pre-elejidos
+
+-   **Busqueda iterativa** 🌀 que sugiere nuevos valores del parametro para probar
+
+
+## Especificando los parametros de afinamiento
+
+Tomemos nueso modelo de bosque aleatorio y tratemos de encontrar el número 
+mínimo de datos `min_n`
+
+```{r}
+#| label: tag-for-tuning
+#| code-line-numbers: "1|"
+
+arbol_espec <- rand_forest(min_n = tune()) %>% 
+  set_mode("classification")
+
+arbol_flujo <- workflow(propina ~ ., arbol_espec)
+arbol_flujo
+```
+
+## Try out multiple values
+## Prueba varios valores
+
+`tune_grid()` funciona parecido a `fit_resamples()` pero puede calcular 
+multiples valores del parámetro:
+
+```{r}
+#| label: rf-tune_grid
+#| code-line-numbers: "2|3-4|5|"
+
+set.seed(22)
+rf_res <- tune_grid(
+  arbol_flujo,
+  taxi_plieges,
+  grid = 5
+)
+```
+
+## Compara los resultados
+
+Inspecciona los resultados, y selecciona los mejores parámetros:
+
+```{r}
+#| label: rf-results
+
+show_best(rf_res)
+
+parametro_mejor <- select_best(rf_res)
+parametro_mejor
+```
+
+También puedes usar `collect_metrics()` y `autoplot()` 
+
+## El ajuste final
+
+```{r}
+#| label: rf-finalize
+
+arbol_flujo <- finalize_workflow(arbol_flujo, parametro_mejor)
+
+ajuste_final <- last_fit(arbol_flujo, taxi_separar) 
+
+collect_metrics(ajuste_final)
+```
+
+## Tu turno {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Modifica tu flujo de modelo para usar por lo menos un parámetro*
+
+*Usa busqueda de cuadricula para encontrar los mejores parametros*
+
+```{r ex-tune-grid}
+#| echo: false
+countdown::countdown(minutes = 5, id = "tune-grid")
+```

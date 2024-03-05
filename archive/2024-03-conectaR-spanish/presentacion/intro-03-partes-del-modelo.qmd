@@ -1,0 +1,731 @@
+---
+title: "3 - Las partes de un modelo"
+subtitle: "Introducciendo Tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+## Tu turno {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*¿Como ajustar un modelo linear en R?*
+
+*¿De cuantas maneras sabes como ajustar este tipo de modelo?*
+
+```{r ex-how-to-fit-linear-model}
+#| echo: false
+countdown::countdown(minutes = 3, id = "how-to-fit-linear-model")
+```
+
+. . .
+
+-   `lm` para regresión linear
+
+-   `glm` para regresión linear generalizada
+
+-   `glmnet` para regresión regularizada
+
+-   `keras` para regresión dentro de Tensorflow
+
+-   `stan` para regresión bayensiana
+
+-   `spark` para datos "grandes"
+
+## Para especificar un modelo `r hexes("parsnip")`
+
+. . .
+
+::: columns
+::: {.column width="40%"}
+-   Elije un [modelo]{.underline}
+-   Especifica el "motor"
+-   Establece el modo 
+:::
+
+::: {.column width="60%"}
+![](images/taxi_spinning.svg)
+:::
+:::
+
+## Para especificar un modelo `r hexes("parsnip")`
+
+```{r setup-previous}
+#| echo: false
+library(tidymodels)
+
+set.seed(123)
+
+taxi <- readRDS(here::here("archive/2024-03-conectaR-spanish/taxi.rds"))
+
+taxi_split <- initial_split(taxi, prop = 0.8, strata = propina)
+taxi_entrenar <- training(taxi_split)
+taxi_prueba <- testing(taxi_split)
+```
+
+```{r logistic-reg}
+logistic_reg()
+```
+
+
+:::notes
+Models have default engines
+:::
+
+## Para especificar un modelo `r hexes("parsnip")`
+
+::: columns
+::: {.column width="40%"}
+-   Elije un modelo
+-   Especifica el ["motor"]{.underline}
+-   Establece el modo 
+:::
+
+::: {.column width="60%"}
+![](images/taxi_spinning.svg)
+:::
+:::
+
+## Para especificar un modelo `r hexes("parsnip")`
+
+```{r logistic-reg-glmnet}
+logistic_reg() %>%
+  set_engine("glmnet")
+```
+
+## Para especificar un modelo `r hexes("parsnip")`
+
+```{r logistic-reg-stan}
+logistic_reg() %>%
+  set_engine("stan")
+```
+
+## Para especificar un modelo `r hexes("parsnip")`
+
+::: columns
+::: {.column width="40%"}
+-   Elije un modelo
+-   Especifica el "motor"
+-   Establece el [modo]{.underline}
+:::
+
+::: {.column width="60%"}
+![](images/taxi_spinning.svg)
+:::
+:::
+
+
+## Para especificar un modelo `r hexes("parsnip")`
+
+```{r decision-tree}
+decision_tree()
+```
+
+:::notes
+Some models have a default mode
+:::
+
+## Para especificar un modelo `r hexes("parsnip")`
+
+```{r decision-tree-classification}
+decision_tree() %>% 
+  set_mode("classification")
+```
+
+. . .
+
+<br></br>
+
+::: r-fit-text
+El listado de modelos se encuentra aquí: <https://www.tidymodels.org/find/parsnip/> 
+:::
+
+::: footer
+:::
+
+## To specify a model `r hexes("parsnip")`
+
+::: columns
+::: {.column width="40%"}
+-   Elije un [modelo]{.underline}
+-   Especifica el ["motor"]{.underline}
+-   Establece el [modo]{.underline}
+:::
+
+::: {.column width="60%"}
+![](images/taxi_spinning.svg)
+:::
+:::
+
+## Tu turno {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Corre el "chunk" `arbol_espec` en tu archivo `.qmd`.*
+
+*Cambia el código para que utilize una regresión linear*<br></br>
+
+::: r-fit-text
+El listado de modelos se encuentra aquí: <https://www.tidymodels.org/find/parsnip/> 
+:::
+
+<br></br>
+
+*Reto: Edita el código para usar otro tipo de modelo. Por ejemplo, trata de usar
+el árbol disponible dentro del paquete partykit, o trata un modelo de tipo 
+diferente*
+
+```{r ex-explore-tree-spec}
+#| echo: false
+countdown::countdown(minutes = 5, id = "explore-tree-spec")
+```
+
+
+## Los modelos que usaremos hoy
+
+* Regresión logística
+* Arboles de decisión
+
+```{r sim-model-viz}
+#| echo: false
+
+set.seed(1)
+dat <- sim_logistic(500, ~ .1 + 2 * A)
+dat$bin <- cut(dat$A, breaks = c(seq(-3, 3, by = 1/2)), include.lowest = TRUE)
+bin_midpoints <- data.frame(A = seq(-3, 3, by = 1/2) + 0.25)
+
+rates <- 
+  dat %>% 
+  nest(.by = bin) %>% 
+  mutate(
+    probs = map(data, ~ binom.test(sum(.x$class == "one"), nrow(.x))),
+    probs = map(probs, ~ tidy(.x))
+  ) %>% 
+  select(-data) %>% 
+  unnest(cols = probs) %>% 
+  arrange(bin) %>% 
+  mutate(A = seq(-3, 3, by = 1/2) + 0.25) 
+
+plot_rates <- left_join(rates, bin_midpoints, by = join_by(A)) %>% 
+  filter(-2.5 < A, A < 3) %>% 
+  ggplot() + 
+  geom_point(aes(A, estimate)) +
+  geom_errorbar(aes(A, estimate, ymin = conf.low, ymax = conf.high), width = .25)  +
+  xlim(c(-3, 3.5)) + 
+  ylab("estimación") +
+  theme_bw(base_size = 18)
+```
+
+## Regresión logística
+
+::: columns
+::: {.column width="60%"}
+```{r plot-rates}
+#| echo: false
+#| fig.width: 8
+#| fig.height: 7
+
+plot_rates
+```
+:::
+
+::: {.column width="40%"}
+:::
+:::
+
+## Regresión logística
+
+::: columns
+::: {.column width="60%"}
+```{r plot-logistic-reg}
+#| echo: false
+#| fig.width: 8
+#| fig.height: 7
+
+logistic_preds <- logistic_reg() %>% 
+  fit(class ~ A, data = dat) %>% 
+  augment(new_data = bin_midpoints) 
+
+plot_rates +
+  geom_line(aes(A, .pred_one, color = I(test_color)), linewidth = 2, alpha = 0.8, data = logistic_preds)
+```
+:::
+
+::: {.column width="40%"}
+:::
+:::
+
+## Regresión logística
+
+::: columns
+::: {.column width="60%"}
+```{r plot-logistic-reg-2}
+#| echo: false
+#| fig.width: 8
+#| fig.height: 7
+
+plot_rates +
+  geom_line(aes(A, .pred_one, col = I(test_color)), linewidth = 2, alpha = 0.8, data = logistic_preds)
+```
+:::
+
+::: {.column width="40%"}
+
+-   El logit del la probabilidad del resultado 
+
+$log(\frac{p}{1 - p}) = \beta_0 + \beta_1\cdot \text{A}$
+
+-   Calcular la línea de sigmoideo que separan las dos clases
+:::
+:::
+
+## Arboles de decisión
+
+::: columns
+::: {.column width="50%"}
+```{r tree-fit}
+#| echo: false
+#| fig.width: 8
+#| fig.height: 7
+
+arbol_flujo <- decision_tree(mode = "classification") %>% 
+  fit(class ~ A, data = mutate(dat, class = forcats::fct_rev(class)))
+
+tree_preds <- augment(arbol_flujo, new_data = bin_midpoints)
+```
+
+
+```{r plot-tree-fit}
+#| echo: false
+#| fig.width: 4
+#| fig.height: 3.5
+#| fig-align: center
+
+library(rpart.plot)
+arbol_flujo %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+
+:::
+
+::: {.column width="50%"}
+:::
+:::
+
+## Arboles de decisión
+
+::: columns
+::: {.column width="50%"}
+```{r plot-tree-fit-2}
+#| echo: false
+#| fig.width: 4
+#| fig.height: 3.5
+#| fig-align: center
+
+library(rpart.plot)
+arbol_flujo %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+:::
+
+::: {.column width="50%"}
+
+-   El resultado es decidido usando una serie de decisiones basados en las 
+variables predictivas
+
+-   Primero, el arbol *crece* hasta que se llega a una decision 
+
+-   Después, el arbol es *recortado* para que no sea tan complejo
+:::
+:::
+
+## Arboles de decisión
+
+::: columns
+::: {.column width="50%"}
+```{r plot-tree-fit-3}
+#| echo: false
+#| fig.width: 4
+#| fig.height: 3.5
+#| fig-align: center
+
+library(rpart.plot)
+arbol_flujo %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+:::
+
+::: {.column width="50%"}
+```{r plot-tree-preds}
+#| echo: false
+#| fig.width: 8
+#| fig.height: 7
+
+plot_rates +
+  geom_step(aes(A, .pred_one, col = I(test_color)), linewidth = 2, alpha = 0.8, data = tree_preds)
+```
+:::
+:::
+
+## Todos los modelos están equivocados, pero algunos pueden ser utíl
+
+::: columns
+::: {.column width="50%"}
+### Regresión logística
+```{r plot-logistic-reg-3}
+#| echo: false
+#| fig.width: 7
+#| fig.height: 6
+
+plot_rates +
+  geom_line(aes(A, .pred_one, col = I(test_color)), linewidth = 2, alpha = 0.8, data = logistic_preds)
+```
+:::
+
+::: {.column width="50%"}
+### Arboles de decisión
+```{r plot-tree-preds-2}
+#| echo: false
+#| fig.width: 7
+#| fig.height: 6
+
+plot_rates +
+  geom_step(aes(A, .pred_one, col = I(test_color)), linewidth = 2, alpha = 0.8, data = tree_preds)
+```
+:::
+:::
+
+# El flujo de trabajo de un modelo
+
+## Los flujos de trabajo combinan el "preprocesamiento" y el modelo
+
+```{mermaid}
+%%| eval: true
+%%| fig-width: 20
+flowchart LR
+  dt[Datos]
+  pr[Predictores]
+  subgraph fl[Flujo del modelo]
+    pca[PCA]
+    ls[Menos cuadrados]
+    pca-->ls
+  end
+  dt-->fl
+  pr-->fl
+  ft[Modelo ajustado]
+  fl-->ft
+  style fl fill:#fff,stroke:#666,color:#000
+```
+
+:::notes
+Explain that PCA that is a preprocessor / dimensionality reduction, used to decorrelate data
+:::
+
+
+## ¿Que no está bien en este flujo? {.annotation}
+
+```{mermaid}
+%%| eval: true
+%%| fig-width: 20
+flowchart LR
+  dt[Datos]
+  pr[Predictores]
+  pca[PCA]
+  subgraph fl[Flujo del modelo]
+    ls[Menos cuadrados]
+  end
+  pca-->fl
+  dt-->pca
+  pr-->pca
+  ft[Modelo ajustado]
+  fl-->ft
+  style fl fill:#fff,stroke:#666,color:#000
+```
+
+## ¿Por que utilizar `workflow()`? `r hexes("workflows")`
+
+. . .
+
+
+-  `workflow` maneja nuevos niveles factoriales mejor que las herramientas regulares
+de R
+
+. . .
+
+
+-   Puedes utilizar "preprocesadores" que no son formulas 
+
+. . .
+
+
+-   Ayudan a organizar un proyecto que utiliza varios modelos
+
+. . .
+
+
+-   [Aún más importante,]{.underline} un flujo de `workflow` encaja todo el
+processo de modelamiento, desde la creación (`fit()`) del modelo, hasta el uso del modelo 
+(`predict()`)
+
+::: notes
+Two ways workflows handle levels better than base R:
+
+-   Enforces that new levels are not allowed at prediction time (this is an optional check that can be turned off)
+
+-   Restores missing levels that were present at fit time, but happen to be missing at prediction time (like, if your "new" data just doesn't have an instance of that level)
+:::
+
+## El flujo de trabajo de un modelo `r hexes("parsnip", "workflows")`
+
+```{r tree-spec}
+arbol_espec <-
+  decision_tree(cost_complexity = 0.002) %>% 
+  set_mode("classification")
+
+arbol_espec %>% 
+  fit(propina ~ ., data = taxi_entrenar) 
+```
+
+## El flujo de trabajo de un modelo `r hexes("parsnip", "workflows")`
+
+```{r tree-wflow}
+arbol_espec <-
+  decision_tree(cost_complexity = 0.002) %>% 
+  set_mode("classification")
+
+workflow() %>%
+  add_formula(propina ~ .) %>%
+  add_model(arbol_espec) %>%
+  fit(data = taxi_entrenar) 
+```
+
+## El flujo de trabajo de un modelo `r hexes("parsnip", "workflows")`
+
+```{r tree-wflow-fit}
+arbol_espec <-
+  decision_tree(cost_complexity = 0.002) %>% 
+  set_mode("classification")
+
+workflow(propina ~ ., arbol_espec) %>% 
+  fit(data = taxi_entrenar) 
+```
+
+## Tu turno {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Corre el "chunk" `arbol_flujo` en tu archivo `.qmd`.*
+
+*Edita el codigo para crear un flujo con un modelo que tú elijas*
+
+<br></br>
+
+*Reto: ¿Que otros "preprocesadores", aparte de formulas, podemos usar en `workflow`?*
+
+```{r ex-explore-tree-workflow}
+#| echo: false
+countdown::countdown(minutes = 5, id = "explore-tree-workflow")
+```
+
+## Predecir usando tu modelo `r hexes("parsnip", "workflows")`
+
+¿Como usar su nuevo modelo `arbol_flujo`?
+
+```{r tree-wflow-fit-2}
+arbol_espec <-
+  decision_tree(cost_complexity = 0.002) %>% 
+  set_mode("classification")
+
+arbol_flujo <-
+  workflow(propina ~ ., arbol_espec) %>% 
+  fit(data = taxi_entrenar) 
+```
+
+## Tu turno {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Corre:*
+
+`predict(arbol_flujo, new_data = taxi_prueba)`
+
+*¿Que resultado te dio?*
+
+```{r ex-predict-tree-fit}
+#| echo: false
+countdown::countdown(minutes = 3, id = "predict-tree-fit")
+```
+
+## Tu turno
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Corre:*
+
+`augment(arbol_flujo, new_data = taxi_prueba)`
+
+*¿Que resultado te dio?*
+
+```{r ex-augment-tree-fit}
+#| echo: false
+countdown::countdown(minutes = 3, id = "augment-tree-fit")
+```
+
+# La garantía de predicciones en Tidymodels! 
+
+. . .
+
+-   Las predicciones siempre estarán dentro de una tabla tipo **tibble**
+-   Los nombres de las columnas van a ser **predecibles** y **sin sorpresas**
+-   El número de filas en los nuevos datos (`new_data`) y los resultados siempre
+var a ser el mismo 
+
+## Entiendedo tú modelo `r hexes("parsnip", "workflows")`
+
+¿Como podemos **entender** nuestro nuevo modelo `arbol_flujo`?
+
+```{r plot-tree-fit-4}
+#| echo: false
+#| fig-align: center
+library(rpart.plot)
+arbol_flujo %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+
+## Entiendedo tú modelo `r hexes("parsnip", "workflows")`
+
+¿Como podemos **entender** nuestro nuevo modelo `arbol_flujo`?
+
+```{r plot-tree-fit-5}
+#| eval: false
+library(rpart.plot)
+arbol_flujo %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+
+Puedes extraer varios componentes de tu flujo usando las funciones
+que empiezan con `extract_*()`
+
+. . .
+
+⚠️ *¡Nunca trate de predecir usando los componentes extraídos!*
+
+::: notes
+`roundint = FALSE` is only to quiet a warning
+:::
+
+## Entiendedo tú modelo `r hexes("parsnip", "workflows")`
+
+¿Como podemos **entender** nuestro nuevo modelo `arbol_flujo`?
+
+. . .
+
+
+Puedes usar tu flujo ajustado para obtener explicaciones del modelo o de las
+predicciones:
+
+. . .
+
+
+-   El paquete [vip](https://koalaverse.github.io/vip/) puede dar la importancia
+de cada variable
+
+. . .
+
+-   Para obtener explicaciones del modelo, puede usar el paquete [DALEXtra](https://dalex.drwhy.ai/)
+
+. . .
+
+Para aprender más: <https://www.tmwr.org/explain.html>
+
+##  {background-iframe="https://hardhat.tidymodels.org/reference/hardhat-extract.html"}
+
+::: footer
+:::
+
+## Tu turno {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+<br>
+
+*Extrae el "motor" del modelo de tu flujo y examínalo*
+
+```{r ex-extract-methods}
+#| echo: false
+countdown::countdown(minutes = 5, id = "extract-methods")
+```
+
+:::notes
+Afterward, ask what kind of object people got from the extraction, and what they did with it (e.g. give it to `summary()`, `plot()`, `broom::tidy()` ). Live code along
+:::
+
+## Expectativas del taller - Donde estamos
+
+```{mermaid}
+%%| eval: true
+%%| fig-width: 12
+flowchart LR
+  ad[Todos\nlos datos]
+  style ad fill:#fff,stroke:#666,color:#000
+  tr[Entrenamiento]
+  style tr fill:#FBE9BF,stroke:#666,color:#000
+  ts[Prueba]
+  style ts fill:#E5E7FD,stroke:#666,color:#000
+  ad --> tr
+  ad --> ts
+  rs[Remuestreo]
+  style rs fill:#fff,stroke:#eee,color:#ddd
+  tr --> dt
+  lg[Regresión\nlogística]
+  style lg fill:#fff,stroke:#eee,color:#ddd
+  rs --> lg
+  dt[Arbol de\nDecisión]
+  style dt fill:#FDF4E3,stroke:#666,color:#000
+  rs --> dt
+  rf[Bosque\nAleatorio]
+  style rf fill:#fff,stroke:#eee,color:#ddd
+  rs --> rf
+  sm[Seleccionar\nmodelo]
+  style sm fill:#fff,stroke:#eee,color:#ddd
+  lg --> sm
+  dt --> sm
+  rf --> sm
+  fm[Entrenar modelo\nselecionado]
+  style fm fill:#fff,stroke:#eee,color:#ddd
+  sm --> fm
+  tr --> fm
+  vm[Verificar la\ncalidad]
+  style vm fill:#fff,stroke:#eee,color:#ddd
+  fm --> vm
+  ts --> vm
+
+```
+
+
+:::notes
+Stress that fitting a model on the entire training set was only for illustrating how to fit a model
+:::

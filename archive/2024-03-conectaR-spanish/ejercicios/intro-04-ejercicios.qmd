@@ -1,0 +1,300 @@
+---
+title: "4 - Evaluar modelos - Ejercicios"
+subtitle: "Introducciendo Tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+Recomendamos que reinicie R después de cada sección
+
+## Preparación
+
+Preparación despues de la 3ra sección
+
+```{r}
+library(tidymodels)
+
+set.seed(123)
+taxi <- readRDS("archive/2024-03-conectaR-spanish/taxi.rds")
+
+taxi_separar <- initial_split(taxi, prop = 0.8, strata = propina)
+taxi_entrenar <- training(taxi_separar)
+taxi_prueba <- testing(taxi_separar)
+
+arbol_espec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
+arbol_flujo <- workflow(propina ~ ., arbol_espec)
+taxi_ajustado <- fit(arbol_flujo, taxi_entrenar)
+```
+
+## Métricas de la calidad de modelo
+
+Utiliza `conf_mat()` para ver que tan bien predice el modelo
+
+```{r}
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  conf_mat(truth = propina, estimate = .pred_class)
+```
+
+También tiene buenas funciones para gráficar
+
+```{r}
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  conf_mat(truth = propina, estimate = .pred_class) %>%
+  autoplot(type = "heatmap")
+```
+
+También puedes usarlo para calcular las métricas
+
+```{r}
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  accuracy(truth = propina, estimate = .pred_class)
+```
+
+Todas las funciones de yardstick también funcionan con datos agrupados
+
+```{r}
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  group_by(local) %>%
+  accuracy(truth = propina, estimate = .pred_class)
+```
+
+Los sets the métricas son una manera de combinar varias métricas 
+
+```{r}
+taxi_metrics <- metric_set(accuracy, specificity, sensitivity)
+
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  taxi_metrics(truth = propina, estimate = .pred_class)
+```
+
+## Tu turno
+
+Calcula y gráfica una curva ROC para tu modelo
+
+¿Que datos son utilizados en la curva ROC?
+
+```{r}
+# ¡Tu código va aqui!
+
+```
+
+## Los peligros del sobreajustar
+
+¡Es malo re-predecir en el set the entrenamiento!
+
+```{r}
+taxi_ajustado %>%
+  augment(taxi_entrenar)
+```
+
+"Resubstitución en los datos de entrenamiento" - Esta va a ser la mejor calidad
+que vamos a obtener, pero es bastante engañoso
+
+```{r}
+taxi_ajustado %>%
+  augment(taxi_entrenar) %>%
+  accuracy(propina, .pred_class)
+```
+
+Ahora, ¿ves que contra el set the prueba, la calidad baja? Esto es mas cercano
+a como la calidad sería en la vida "real"
+
+```{r}
+taxi_ajustado %>%
+  augment(taxi_prueba) %>%
+  accuracy(propina, .pred_class)
+```
+
+## Tu turno
+
+Usa `augment()` y una función de métrica para calcular una métrica de classificación,
+por ejemplo `brier_class()`
+
+Calcula las métricas para los datos de entrenamiento y de prueba para
+demonstrar el sobreajuste
+
+Nota la evidencia de sobreajuste
+
+```{r}
+# ¡Tu código va aqui!
+
+```
+
+## Tu turno
+
+Si usamos 10 plieges (folds), cual es el porcentaje de datos de entrenamiento
+
+-   cuantos terminan en análisis
+-   cuantos terminan en evaluación (assesment)
+
+...para **cada** pliege?
+
+## Remuestreo
+
+```{r}
+vfold_cv(taxi_entrenar) 
+```
+
+¿Cual es el resultado del remuestreo?
+
+```{r}
+taxi_plieges <- vfold_cv(taxi_entrenar)
+taxi_plieges$splits[1:3]
+```
+
+Estratificar usualmente ayuda, y con pocos malas consecuencias 
+
+```{r}
+vfold_cv(taxi_entrenar, strata = propina)
+```
+
+Usaremos esto:
+
+```{r}
+set.seed(123)
+taxi_plieges <- vfold_cv(taxi_entrenar, v = 10, strata = propina)
+taxi_plieges
+```
+
+## Evaluando la calidad del modelo
+
+```{r}
+taxi_res <- fit_resamples(arbol_flujo, taxi_plieges)
+taxi_res
+```
+
+Agrega las métricas
+
+```{r}
+taxi_res %>%
+  collect_metrics()
+```
+
+If you want to analyze the assessment set (i.e. holdout) predictions, then you need to adjust the control object and tell it to save them:
+
+Si quieres analizar los sets the pruebas del remuestreo, ajusta la llamada de 
+la función para que las grabe:
+
+```{r}
+ctrl_taxi <- control_resamples(save_pred = TRUE)
+taxi_res <- fit_resamples(arbol_flujo, taxi_plieges, control = ctrl_taxi)
+
+taxi_preds <- collect_predictions(taxi_res)
+taxi_preds
+```
+
+## Bootstrapping
+
+```{r}
+set.seed(3214)
+bootstraps(taxi_entrenar)
+```
+
+## Tu turno
+
+Create:
+
+- Monte Carlo Cross-Validation sets
+- validation set
+
+(use the reference guide to find the functions)
+
+https://rsample.tidymodels.org/reference/index.html
+
+Don't forget to set a seed when you resample!
+
+Crea un:
+
+-   Set de validación cruzada tipo Monte Carlo
+-   Set de validación
+
+
+No te olvides de usar `set.seed()`
+
+```{r}
+# ¡Tu código va aqui!
+
+```
+
+## Crear un modelo de bosque aleatorio 
+
+```{r rf-spec}
+rf_spec <- rand_forest(trees = 1000, mode = "classification")
+rf_spec
+```
+
+
+```{r}
+rf_wflow <- workflow(propina ~ ., rf_spec)
+rf_wflow
+```
+
+## Tu turno
+
+Usa `fit_resamples()` y `rf_wflow` para lo siguiente:
+
+-   Quedarse con las predicciones
+-   Calcular las métricas
+
+```{r}
+# ¡Tu código va aqui!
+
+```
+
+## Evaluando la calidad del modelo
+
+```{r}
+wf_set <- workflow_set(list(propina ~ .), list(arbol_espec, rf_spec))
+wf_set
+```
+
+```{r}
+wf_set_ajustado <- wf_set %>%
+  workflow_map("fit_resamples", resamples = taxi_plieges)
+
+wf_set_ajustado
+```
+
+Ordena los sets de modelos para ver sus métricas 
+
+```{r}
+wf_set_ajustado %>%
+  rank_results()
+```
+
+## El ajuste final
+
+```{r}
+ajuste_final <- last_fit(rf_wflow, taxi_separar) 
+
+ajuste_final
+```
+
+Las métricas del ajuste final
+
+```{r}
+collect_metrics(ajuste_final)
+```
+
+Ve las predicciones
+
+```{r}
+collect_predictions(ajuste_final)
+```
+
+```{r}
+collect_predictions(ajuste_final) %>%
+  ggplot(aes(.pred_class, fill = propina)) + 
+  geom_bar() 
+```
+
+```{r}
+extract_workflow(ajuste_final)
+```
+
+## Tu turno
+
+¿Cual modelo piensas usar?
+
+¿Que fue lo que más te sorprendio?
+
