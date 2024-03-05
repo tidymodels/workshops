@@ -14,8 +14,6 @@ Preparación despues de la 3ra sección
 ```{r}
 library(tidymodels)
 
-library(tidymodels)
-
 set.seed(123)
 taxi <- readRDS("archive/2024-03-conectaR-spanish/taxi.rds")
 
@@ -48,16 +46,16 @@ augment(taxi_ajustado, new_data = taxi_entrenar) %>%
 También puedes usarlo para calcular las métricas
 
 ```{r}
-augment(taxi_fit, new_data = taxi_train) %>%
-  accuracy(truth = tip, estimate = .pred_class)
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  accuracy(truth = propina, estimate = .pred_class)
 ```
 
 Todas las funciones de yardstick también funcionan con datos agrupados
 
 ```{r}
-augment(taxi_fit, new_data = taxi_train) %>%
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
   group_by(local) %>%
-  accuracy(truth = tip, estimate = .pred_class)
+  accuracy(truth = propina, estimate = .pred_class)
 ```
 
 Los sets the métricas son una manera de combinar varias métricas 
@@ -65,8 +63,8 @@ Los sets the métricas son una manera de combinar varias métricas
 ```{r}
 taxi_metrics <- metric_set(accuracy, specificity, sensitivity)
 
-augment(taxi_fit, new_data = taxi_train) %>%
-  taxi_metrics(truth = tip, estimate = .pred_class)
+augment(taxi_ajustado, new_data = taxi_entrenar) %>%
+  taxi_metrics(truth = propina, estimate = .pred_class)
 ```
 
 ## Tu turno
@@ -76,7 +74,7 @@ Calcula y gráfica una curva ROC para tu modelo
 ¿Que datos son utilizados en la curva ROC?
 
 ```{r}
-# Your code here!
+# ¡Tu código va aqui!
 
 ```
 
@@ -88,8 +86,6 @@ Calcula y gráfica una curva ROC para tu modelo
 taxi_ajustado %>%
   augment(taxi_entrenar)
 ```
-
-"Resubstitution estimate" - This should be the best possible performance that you could ever achieve, but it can be very misleading!
 
 "Resubstitución en los datos de entrenamiento" - Esta va a ser la mejor calidad
 que vamos a obtener, pero es bastante engañoso
@@ -120,10 +116,8 @@ demonstrar el sobreajuste
 Nota la evidencia de sobreajuste
 
 ```{r}
-# Your code here!
+# ¡Tu código va aqui!
 
-# Use `augment()` and `brier_class()` with `taxi_fit`
-taxi_fit
 ```
 
 ## Tu turno
@@ -148,7 +142,7 @@ taxi_plieges <- vfold_cv(taxi_entrenar)
 taxi_plieges$splits[1:3]
 ```
 
-tratificar usualmente ayuda, y con pocos malas consecuencias 
+Estratificar usualmente ayuda, y con pocos malas consecuencias 
 
 ```{r}
 vfold_cv(taxi_entrenar, strata = propina)
@@ -162,16 +156,14 @@ taxi_plieges <- vfold_cv(taxi_entrenar, v = 10, strata = propina)
 taxi_plieges
 ```
 
-## Evaluating model performance
+## Evaluando la calidad del modelo
 
 ```{r}
-# Fit the workflow on each analysis set,
-# then compute performance on each assessment set
-taxi_res <- fit_resamples(taxi_wflow, taxi_plieges)
+taxi_res <- fit_resamples(arbol_flujo, taxi_plieges)
 taxi_res
 ```
 
-Aggregate metrics
+Agrega las métricas
 
 ```{r}
 taxi_res %>%
@@ -180,11 +172,12 @@ taxi_res %>%
 
 If you want to analyze the assessment set (i.e. holdout) predictions, then you need to adjust the control object and tell it to save them:
 
-```{r}
-# Save the assessment set results
-ctrl_taxi <- control_resamples(save_pred = TRUE)
+Si quieres analizar los sets the pruebas del remuestreo, ajusta la llamada de 
+la función para que las grabe:
 
-taxi_res <- fit_resamples(taxi_wflow, taxi_plieges, control = ctrl_taxi)
+```{r}
+ctrl_taxi <- control_resamples(save_pred = TRUE)
+taxi_res <- fit_resamples(arbol_flujo, taxi_plieges, control = ctrl_taxi)
 
 taxi_preds <- collect_predictions(taxi_res)
 taxi_preds
@@ -194,10 +187,10 @@ taxi_preds
 
 ```{r}
 set.seed(3214)
-bootstraps(taxi_train)
+bootstraps(taxi_entrenar)
 ```
 
-## Your turn
+## Tu turno
 
 Create:
 
@@ -210,97 +203,98 @@ https://rsample.tidymodels.org/reference/index.html
 
 Don't forget to set a seed when you resample!
 
+Crea un:
+
+-   Set de validación cruzada tipo Monte Carlo
+-   Set de validación
+
+
+No te olvides de usar `set.seed()`
+
 ```{r}
-# Your code here!
+# ¡Tu código va aqui!
 
 ```
 
-## Create a random forest model
+## Crear un modelo de bosque aleatorio 
 
-```{r}
+```{r rf-spec}
 rf_spec <- rand_forest(trees = 1000, mode = "classification")
 rf_spec
 ```
 
+
 ```{r}
-rf_wflow <- workflow(tip ~ ., rf_spec)
+rf_wflow <- workflow(propina ~ ., rf_spec)
 rf_wflow
 ```
 
-## Your turn
+## Tu turno
 
-Use `fit_resamples()` and `rf_wflow` to:
+Usa `fit_resamples()` y `rf_wflow` para lo siguiente:
 
-- Keep predictions
-- Compute metrics
+-   Quedarse con las predicciones
+-   Calcular las métricas
 
 ```{r}
-# Your code here!
+# ¡Tu código va aqui!
 
 ```
 
-## Evaluate a workflow set
+## Evaluando la calidad del modelo
 
 ```{r}
-wf_set <- workflow_set(list(tip ~ .), list(tree_spec, rf_spec))
+wf_set <- workflow_set(list(propina ~ .), list(arbol_espec, rf_spec))
 wf_set
 ```
 
 ```{r}
-wf_set_fit <- wf_set %>%
+wf_set_ajustado <- wf_set %>%
   workflow_map("fit_resamples", resamples = taxi_plieges)
 
-wf_set_fit
+wf_set_ajustado
 ```
 
-Rank the sets of models by their aggregate metric performance
+Ordena los sets de modelos para ver sus métricas 
 
 ```{r}
-wf_set_fit %>%
+wf_set_ajustado %>%
   rank_results()
 ```
 
-## Your turn
-
-When do you think a workflow set would be useful?
-
-Discuss with your neighbors!
-
-## The final fit
+## El ajuste final
 
 ```{r}
-# `taxi_split` has train + test info
-final_fit <- last_fit(rf_wflow, taxi_split) 
+ajuste_final <- last_fit(rf_wflow, taxi_separar) 
 
-final_fit
+ajuste_final
 ```
 
-Test set metrics:
+Las métricas del ajuste final
 
 ```{r}
-collect_metrics(final_fit)
+collect_metrics(ajuste_final)
 ```
 
-Test set predictions:
+Ve las predicciones
 
 ```{r}
-collect_predictions(final_fit)
+collect_predictions(ajuste_final)
 ```
 
 ```{r}
-collect_predictions(final_fit) %>%
-  ggplot(aes(.pred_class, fill = tip)) + 
+collect_predictions(ajuste_final) %>%
+  ggplot(aes(.pred_class, fill = propina)) + 
   geom_bar() 
 ```
 
 ```{r}
-extract_workflow(final_fit)
+extract_workflow(ajuste_final)
 ```
 
-## Your turn
+## Tu turno
 
-Which model do you think you would decide to use?
+¿Cual modelo piensas usar?
 
-What surprised you the most?
+¿Que fue lo que más te sorprendio?
 
-If you're taking Advanced tidymodels tomorrow, what is one thing you are looking forward to learning?

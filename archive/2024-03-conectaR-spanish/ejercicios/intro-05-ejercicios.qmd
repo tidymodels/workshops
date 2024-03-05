@@ -1,26 +1,27 @@
 ---
-title: "5 - Tuning models - Classwork"
-subtitle: "Introduction to tidymodels"
+title: "5 - Afinando modelos - Ejercicios"
+subtitle: "Introducciendo Tidymodels"
 editor_options: 
   chunk_output_type: console
 ---
 
-We recommend restarting R between each slide deck!
+Recomendamos que reinicie R después de cada sección
 
-## Setup
+## Preparación
 
-Setup from deck 3
+Preparación despues de la 4ta sección
 
 ```{r}
 library(tidymodels)
 
 set.seed(123)
-taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
-taxi_train <- training(taxi_split)
-taxi_test <- testing(taxi_split)
+taxi <- readRDS("archive/2024-03-conectaR-spanish/taxi.rds")
 
-set.seed(123)
-taxi_plieges <- vfold_cv(taxi_train, v = 10, strata = tip)
+taxi_separar <- initial_split(taxi, prop = 0.8, strata = propina)
+taxi_entrenar <- training(taxi_separar)
+taxi_prueba <- testing(taxi_separar)
+
+taxi_plieges <- vfold_cv(taxi_prueba, v = 10, strata = propina)
 ```
 
 ## Tag parameters for tuning
@@ -29,7 +30,7 @@ taxi_plieges <- vfold_cv(taxi_train, v = 10, strata = tip)
 rf_spec <- rand_forest(min_n = tune()) %>% 
   set_mode("classification")
 
-rf_wflow <- workflow(tip ~ ., rf_spec)
+rf_wflow <- workflow(propina ~ ., rf_spec)
 rf_wflow
 ```
 
@@ -44,32 +45,32 @@ rf_res <- tune_grid(
 )
 ```
 
-## Compare results
+## Compara los resultados
 
 ```{r}
 show_best(rf_res)
 
-best_parameter <- select_best(rf_res)
-best_parameter
+parametro_mejor <- select_best(rf_res)
+parametro_mejor
 ```
 
-## The final fit
+## El ajuste final
 
 ```{r}
-rf_wflow <- finalize_workflow(rf_wflow, best_parameter)
+arbol_flujo <- finalize_workflow(arbol_flujo, parametro_mejor)
 
-final_fit <- last_fit(rf_wflow, taxi_split) 
+ajuste_final <- last_fit(arbol_flujo, taxi_separar) 
 
-collect_metrics(final_fit)
+collect_metrics(ajuste_final)
 ```
 
-## Your turn
+## Tu turno
 
-Modify your model workflow to tune one or more parameters.
+Modifica tu flujo de modelo para usar por lo menos un parámetro
 
-Use grid search to find the best parameter(s).
+Usa busqueda de cuadricula para encontrar los mejores parametros
 
 ```{r}
-# Your code here!
+# ¡Tu código va aqui!
 
 ```
