@@ -40,5 +40,6 @@ execute:
 	* The generated slides are added to `_freeze/archive/YYYY-MM-workshop-name` rather than in `archive/YYYY-MM-workshop-name`. 
 	* The generated slides work (specifically, that filepaths to figures function correctly.)
 * In `index.qmd`, add an entry in H2 "Past workshops" like `[M YYYY](archive/YYYY-MM-workshop-name/) in workshop-name`
+* If you are adding slides other than English, update the navbar link in `_quarto.yml`.
 
 Once the above changes are merged to `main`, make a GitHub Release noting the big-picture changes since the previous iteration of the workshop.
