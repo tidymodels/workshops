@@ -9,9 +9,9 @@
 <link href="../site_libs/quarto-html/light-border.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.4.104">
+  <meta name="generator" content="quarto-1.5.30">
 
-  <title>Machine learning with tidymodels - Extras - Time-based data splitting</title>
+  <title>Machine learning with tidymodels – Extras - Time-based data splitting</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -31,7 +31,7 @@
     }
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span { line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -42,7 +42,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -70,7 +70,7 @@
     code span.at { color: #657422; } /* Attribute */
     code span.bn { color: #ad0000; } /* BaseN */
     code span.bu { } /* BuiltIn */
-    code span.cf { color: #003b4f; } /* ControlFlow */
+    code span.cf { color: #003b4f; font-weight: bold; } /* ControlFlow */
     code span.ch { color: #20794d; } /* Char */
     code span.cn { color: #8f5902; } /* Constant */
     code span.co { color: #5e5e5e; } /* Comment */
@@ -84,7 +84,7 @@
     code span.fu { color: #4758ab; } /* Function */
     code span.im { color: #00769e; } /* Import */
     code span.in { color: #5e5e5e; } /* Information */
-    code span.kw { color: #003b4f; } /* Keyword */
+    code span.kw { color: #003b4f; font-weight: bold; } /* Keyword */
     code span.op { color: #5e5e5e; } /* Operator */
     code span.ot { color: #003b4f; } /* Other */
     code span.pp { color: #ad0000; } /* Preprocessor */
@@ -221,7 +221,8 @@
   }
 
   .callout.callout-titled .callout-body > .callout-content > :last-child {
-    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0;
   }
 
   .callout.callout-titled .callout-icon::before {
@@ -386,7 +387,7 @@
   </style>
 <meta property="og:title" content="Machine learning with tidymodels - Extras - Time-based data splitting">
 <meta property="og:description" content="Introduction to tidymodels">
-<meta property="og:site-name" content="Machine learning with tidymodels">
+<meta property="og:site_name" content="Machine learning with tidymodels">
 <meta name="twitter:title" content="Machine learning with tidymodels - Extras - Time-based data splitting">
 <meta name="twitter:description" content="Introduction to tidymodels">
 <meta name="twitter:card" content="summary">
@@ -409,33 +410,33 @@
 <p>We prepared the data set specifically for this introductory workshop.</p>
 <p>It looked similar to this:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">glimpse</span>(taxi_raw)</span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="co">#&gt; Rows: 10,000</span></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="co">#&gt; Columns: 24</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="co">#&gt; $ trip_id                    &lt;chr&gt; "3ac8d4412642a35e9b9a493285814d7983d5a159",…</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a><span class="co">#&gt; $ taxi_id                    &lt;chr&gt; "391317d70c5d06deec744062c4595dc1958b200fda…</span></span>
-<span id="cb1-6"><a href="#cb1-6"></a><span class="co">#&gt; $ trip_start_timestamp       &lt;dttm&gt; 2023-06-10 18:45:00, 2023-05-21 21:30:00, …</span></span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="co">#&gt; $ trip_end_timestamp         &lt;dttm&gt; 2023-06-10 19:30:00, 2023-05-21 21:45:00, …</span></span>
-<span id="cb1-8"><a href="#cb1-8"></a><span class="co">#&gt; $ trip_seconds               &lt;dbl&gt; 3258, 839, 476, 2220, 1588, 2270, 1575, 267…</span></span>
-<span id="cb1-9"><a href="#cb1-9"></a><span class="co">#&gt; $ trip_miles                 &lt;dbl&gt; 17.02, 2.16, 1.05, 17.40, 17.62, 16.36, 18.…</span></span>
-<span id="cb1-10"><a href="#cb1-10"></a><span class="co">#&gt; $ pickup_census_tract        &lt;dbl&gt; 17031980000, 17031839100, 17031320100, 1703…</span></span>
-<span id="cb1-11"><a href="#cb1-11"></a><span class="co">#&gt; $ dropoff_census_tract       &lt;dbl&gt; 17031081403, 17031081300, 17031081403, 1703…</span></span>
-<span id="cb1-12"><a href="#cb1-12"></a><span class="co">#&gt; $ pickup_community_area      &lt;dbl&gt; 76, 32, 32, 76, 32, 76, 76, 32, 32, 33, 8, …</span></span>
-<span id="cb1-13"><a href="#cb1-13"></a><span class="co">#&gt; $ dropoff_community_area     &lt;dbl&gt; 8, 8, 8, 32, 76, 8, 32, 76, 28, 32, 7, 33, …</span></span>
-<span id="cb1-14"><a href="#cb1-14"></a><span class="co">#&gt; $ fare                       &lt;dbl&gt; 44.50, 10.00, 6.75, 45.00, 44.25, 41.25, 44…</span></span>
-<span id="cb1-15"><a href="#cb1-15"></a><span class="co">#&gt; $ tips                       &lt;dbl&gt; 12.25, 4.00, 2.00, 9.90, 8.00, 9.15, 12.31,…</span></span>
-<span id="cb1-16"><a href="#cb1-16"></a><span class="co">#&gt; $ tolls                      &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…</span></span>
-<span id="cb1-17"><a href="#cb1-17"></a><span class="co">#&gt; $ extras                     &lt;dbl&gt; 4.0, 1.0, 0.0, 4.0, 2.0, 4.0, 4.0, 0.0, 0.0…</span></span>
-<span id="cb1-18"><a href="#cb1-18"></a><span class="co">#&gt; $ trip_total                 &lt;dbl&gt; 61.25, 15.50, 9.25, 58.90, 54.75, 54.90, 61…</span></span>
-<span id="cb1-19"><a href="#cb1-19"></a><span class="co">#&gt; $ payment_type               &lt;chr&gt; "Credit Card", "Credit Card", "Credit Card"…</span></span>
-<span id="cb1-20"><a href="#cb1-20"></a><span class="co">#&gt; $ company                    &lt;chr&gt; "Taxicab Insurance Agency Llc", "Chicago In…</span></span>
-<span id="cb1-21"><a href="#cb1-21"></a><span class="co">#&gt; $ pickup_centroid_latitude   &lt;dbl&gt; 41.97907, 41.88099, 41.88499, 41.97907, 41.…</span></span>
-<span id="cb1-22"><a href="#cb1-22"></a><span class="co">#&gt; $ pickup_centroid_longitude  &lt;dbl&gt; -87.90304, -87.63275, -87.62099, -87.90304,…</span></span>
-<span id="cb1-23"><a href="#cb1-23"></a><span class="co">#&gt; $ pickup_centroid_location   &lt;chr&gt; "POINT (-87.9030396611 41.9790708201)", "PO…</span></span>
-<span id="cb1-24"><a href="#cb1-24"></a><span class="co">#&gt; $ dropoff_centroid_latitude  &lt;dbl&gt; 41.89092, 41.89833, 41.89092, 41.87102, 41.…</span></span>
-<span id="cb1-25"><a href="#cb1-25"></a><span class="co">#&gt; $ dropoff_centroid_longitude &lt;dbl&gt; -87.61887, -87.62076, -87.61887, -87.63141,…</span></span>
-<span id="cb1-26"><a href="#cb1-26"></a><span class="co">#&gt; $ dropoff_centroid_location  &lt;chr&gt; "POINT (-87.6188683546 41.8909220259)", "PO…</span></span>
-<span id="cb1-27"><a href="#cb1-27"></a><span class="co">#&gt; $ tip                        &lt;fct&gt; yes, yes, yes, yes, yes, yes, yes, yes, yes…</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">glimpse</span>(taxi_raw)</span>
+<span id="cb1-2"><a></a><span class="co">#&gt; Rows: 10,000</span></span>
+<span id="cb1-3"><a></a><span class="co">#&gt; Columns: 24</span></span>
+<span id="cb1-4"><a></a><span class="co">#&gt; $ trip_id                    &lt;chr&gt; "3ac8d4412642a35e9b9a493285814d7983d5a159",…</span></span>
+<span id="cb1-5"><a></a><span class="co">#&gt; $ taxi_id                    &lt;chr&gt; "391317d70c5d06deec744062c4595dc1958b200fda…</span></span>
+<span id="cb1-6"><a></a><span class="co">#&gt; $ trip_start_timestamp       &lt;dttm&gt; 2023-06-10 18:45:00, 2023-05-21 21:30:00, …</span></span>
+<span id="cb1-7"><a></a><span class="co">#&gt; $ trip_end_timestamp         &lt;dttm&gt; 2023-06-10 19:30:00, 2023-05-21 21:45:00, …</span></span>
+<span id="cb1-8"><a></a><span class="co">#&gt; $ trip_seconds               &lt;dbl&gt; 3258, 839, 476, 2220, 1588, 2270, 1575, 267…</span></span>
+<span id="cb1-9"><a></a><span class="co">#&gt; $ trip_miles                 &lt;dbl&gt; 17.02, 2.16, 1.05, 17.40, 17.62, 16.36, 18.…</span></span>
+<span id="cb1-10"><a></a><span class="co">#&gt; $ pickup_census_tract        &lt;dbl&gt; 17031980000, 17031839100, 17031320100, 1703…</span></span>
+<span id="cb1-11"><a></a><span class="co">#&gt; $ dropoff_census_tract       &lt;dbl&gt; 17031081403, 17031081300, 17031081403, 1703…</span></span>
+<span id="cb1-12"><a></a><span class="co">#&gt; $ pickup_community_area      &lt;dbl&gt; 76, 32, 32, 76, 32, 76, 76, 32, 32, 33, 8, …</span></span>
+<span id="cb1-13"><a></a><span class="co">#&gt; $ dropoff_community_area     &lt;dbl&gt; 8, 8, 8, 32, 76, 8, 32, 76, 28, 32, 7, 33, …</span></span>
+<span id="cb1-14"><a></a><span class="co">#&gt; $ fare                       &lt;dbl&gt; 44.50, 10.00, 6.75, 45.00, 44.25, 41.25, 44…</span></span>
+<span id="cb1-15"><a></a><span class="co">#&gt; $ tips                       &lt;dbl&gt; 12.25, 4.00, 2.00, 9.90, 8.00, 9.15, 12.31,…</span></span>
+<span id="cb1-16"><a></a><span class="co">#&gt; $ tolls                      &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0…</span></span>
+<span id="cb1-17"><a></a><span class="co">#&gt; $ extras                     &lt;dbl&gt; 4.0, 1.0, 0.0, 4.0, 2.0, 4.0, 4.0, 0.0, 0.0…</span></span>
+<span id="cb1-18"><a></a><span class="co">#&gt; $ trip_total                 &lt;dbl&gt; 61.25, 15.50, 9.25, 58.90, 54.75, 54.90, 61…</span></span>
+<span id="cb1-19"><a></a><span class="co">#&gt; $ payment_type               &lt;chr&gt; "Credit Card", "Credit Card", "Credit Card"…</span></span>
+<span id="cb1-20"><a></a><span class="co">#&gt; $ company                    &lt;chr&gt; "Taxicab Insurance Agency Llc", "Chicago In…</span></span>
+<span id="cb1-21"><a></a><span class="co">#&gt; $ pickup_centroid_latitude   &lt;dbl&gt; 41.97907, 41.88099, 41.88499, 41.97907, 41.…</span></span>
+<span id="cb1-22"><a></a><span class="co">#&gt; $ pickup_centroid_longitude  &lt;dbl&gt; -87.90304, -87.63275, -87.62099, -87.90304,…</span></span>
+<span id="cb1-23"><a></a><span class="co">#&gt; $ pickup_centroid_location   &lt;chr&gt; "POINT (-87.9030396611 41.9790708201)", "PO…</span></span>
+<span id="cb1-24"><a></a><span class="co">#&gt; $ dropoff_centroid_latitude  &lt;dbl&gt; 41.89092, 41.89833, 41.89092, 41.87102, 41.…</span></span>
+<span id="cb1-25"><a></a><span class="co">#&gt; $ dropoff_centroid_longitude &lt;dbl&gt; -87.61887, -87.62076, -87.61887, -87.63141,…</span></span>
+<span id="cb1-26"><a></a><span class="co">#&gt; $ dropoff_centroid_location  &lt;chr&gt; "POINT (-87.6188683546 41.8909220259)", "PO…</span></span>
+<span id="cb1-27"><a></a><span class="co">#&gt; $ tip                        &lt;fct&gt; yes, yes, yes, yes, yes, yes, yes, yes, yes…</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <aside class="notes">
 <p><code>trip_start_time</code> has date and time rounded to “quarters of the hour”.</p>
@@ -466,22 +467,22 @@
 <p>The more recent observations are assumed to be more similar to new data, so <code>initial_time_split()</code> puts them into the test set.</p>
 <p>The function assumes that the data are already ordered.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>taxi_raw <span class="ot">&lt;-</span> taxi_raw <span class="sc">%&gt;%</span></span>
-<span id="cb2-2"><a href="#cb2-2"></a>  <span class="fu">arrange</span>(trip_start_timestamp)</span>
-<span id="cb2-3"><a href="#cb2-3"></a></span>
-<span id="cb2-4"><a href="#cb2-4"></a>taxi_split <span class="ot">&lt;-</span> <span class="fu">initial_time_split</span>(taxi_raw, <span class="at">prop =</span> <span class="dv">3</span> <span class="sc">/</span> <span class="dv">4</span>)</span>
-<span id="cb2-5"><a href="#cb2-5"></a>taxi_split</span>
-<span id="cb2-6"><a href="#cb2-6"></a><span class="co">#&gt; &lt;Training/Testing/Total&gt;</span></span>
-<span id="cb2-7"><a href="#cb2-7"></a><span class="co">#&gt; &lt;7500/2500/10000&gt;</span></span>
-<span id="cb2-8"><a href="#cb2-8"></a></span>
-<span id="cb2-9"><a href="#cb2-9"></a>taxi_train <span class="ot">&lt;-</span> <span class="fu">training</span>(taxi_split)</span>
-<span id="cb2-10"><a href="#cb2-10"></a>taxi_test  <span class="ot">&lt;-</span> <span class="fu">testing</span>(taxi_split)</span>
-<span id="cb2-11"><a href="#cb2-11"></a></span>
-<span id="cb2-12"><a href="#cb2-12"></a><span class="fu">nrow</span>(taxi_train)</span>
-<span id="cb2-13"><a href="#cb2-13"></a><span class="co">#&gt; [1] 7500</span></span>
-<span id="cb2-14"><a href="#cb2-14"></a> </span>
-<span id="cb2-15"><a href="#cb2-15"></a><span class="fu">nrow</span>(taxi_test)</span>
-<span id="cb2-16"><a href="#cb2-16"></a><span class="co">#&gt; [1] 2500</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a>taxi_raw <span class="ot">&lt;-</span> taxi_raw <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a></a>  <span class="fu">arrange</span>(trip_start_timestamp)</span>
+<span id="cb2-3"><a></a></span>
+<span id="cb2-4"><a></a>taxi_split <span class="ot">&lt;-</span> <span class="fu">initial_time_split</span>(taxi_raw, <span class="at">prop =</span> <span class="dv">3</span> <span class="sc">/</span> <span class="dv">4</span>)</span>
+<span id="cb2-5"><a></a>taxi_split</span>
+<span id="cb2-6"><a></a><span class="co">#&gt; &lt;Training/Testing/Total&gt;</span></span>
+<span id="cb2-7"><a></a><span class="co">#&gt; &lt;7500/2500/10000&gt;</span></span>
+<span id="cb2-8"><a></a></span>
+<span id="cb2-9"><a></a>taxi_train <span class="ot">&lt;-</span> <span class="fu">training</span>(taxi_split)</span>
+<span id="cb2-10"><a></a>taxi_test  <span class="ot">&lt;-</span> <span class="fu">testing</span>(taxi_split)</span>
+<span id="cb2-11"><a></a></span>
+<span id="cb2-12"><a></a><span class="fu">nrow</span>(taxi_train)</span>
+<span id="cb2-13"><a></a><span class="co">#&gt; [1] 7500</span></span>
+<span id="cb2-14"><a></a> </span>
+<span id="cb2-15"><a></a><span class="fu">nrow</span>(taxi_test)</span>
+<span id="cb2-16"><a></a><span class="co">#&gt; [1] 2500</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="time-series-resampling" class="slide level2">
@@ -497,7 +498,7 @@
 <section id="rolling-origin-forecast-resampling" class="slide level2">
 <h2>Rolling origin forecast resampling</h2>
 
-<img data-src="images/rolling.svg" style="width:70.0%" class="r-stretch quarto-figure-center"><aside class="notes">
+<img data-src="images/rolling.svg" class="quarto-figure quarto-figure-center r-stretch" style="width:70.0%"><aside class="notes">
 <p>This image shows overlapping assessment sets. We will use non-overlapping data but it could be done either way.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
@@ -514,91 +515,93 @@
 <section id="times-series-resampling" class="slide level2">
 <h2>Times series resampling <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3" data-code-line-numbers="4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>taxi_rs <span class="ot">&lt;-</span></span>
-<span id="cb3-2"><a href="#cb3-2"></a>  taxi_train <span class="sc">%&gt;%</span></span>
-<span id="cb3-3"><a href="#cb3-3"></a>  <span class="fu">sliding_period</span>(</span>
-<span id="cb3-4"><a href="#cb3-4"></a>    <span class="at">index =</span> <span class="st">"trip_start_timestamp"</span>,  </span>
-<span id="cb3-5"><a href="#cb3-5"></a></span>
-<span id="cb3-6"><a href="#cb3-6"></a></span>
-<span id="cb3-7"><a href="#cb3-7"></a></span>
-<span id="cb3-8"><a href="#cb3-8"></a></span>
-<span id="cb3-9"><a href="#cb3-9"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3" data-code-line-numbers="4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a>taxi_rs <span class="ot">&lt;-</span></span>
+<span id="cb3-2"><a></a>  taxi_train <span class="sc">%&gt;%</span></span>
+<span id="cb3-3"><a></a>  <span class="fu">sliding_period</span>(</span>
+<span id="cb3-4"><a></a>    <span class="at">index =</span> <span class="st">"trip_start_timestamp"</span>,  </span>
+<span id="cb3-5"><a></a></span>
+<span id="cb3-6"><a></a></span>
+<span id="cb3-7"><a></a></span>
+<span id="cb3-8"><a></a></span>
+<span id="cb3-9"><a></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Use the <code>trip_start_timestamp</code> column to find the date data.</p>
 </section>
 <section id="times-series-resampling-1" class="slide level2">
 <h2>Times series resampling <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4" data-code-line-numbers="5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>taxi_rs <span class="ot">&lt;-</span></span>
-<span id="cb4-2"><a href="#cb4-2"></a>  taxi_train <span class="sc">%&gt;%</span></span>
-<span id="cb4-3"><a href="#cb4-3"></a>  <span class="fu">sliding_period</span>(</span>
-<span id="cb4-4"><a href="#cb4-4"></a>    <span class="at">index =</span> <span class="st">"trip_start_timestamp"</span>,  </span>
-<span id="cb4-5"><a href="#cb4-5"></a>    <span class="at">period =</span> <span class="st">"week"</span>,</span>
-<span id="cb4-6"><a href="#cb4-6"></a></span>
-<span id="cb4-7"><a href="#cb4-7"></a></span>
-<span id="cb4-8"><a href="#cb4-8"></a></span>
-<span id="cb4-9"><a href="#cb4-9"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4" data-code-line-numbers="5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a>taxi_rs <span class="ot">&lt;-</span></span>
+<span id="cb4-2"><a></a>  taxi_train <span class="sc">%&gt;%</span></span>
+<span id="cb4-3"><a></a>  <span class="fu">sliding_period</span>(</span>
+<span id="cb4-4"><a></a>    <span class="at">index =</span> <span class="st">"trip_start_timestamp"</span>,  </span>
+<span id="cb4-5"><a></a>    <span class="at">period =</span> <span class="st">"week"</span>,</span>
+<span id="cb4-6"><a></a></span>
+<span id="cb4-7"><a></a></span>
+<span id="cb4-8"><a></a></span>
+<span id="cb4-9"><a></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Our units will be in weeks.</p>
 </section>
 <section id="times-series-resampling-2" class="slide level2">
 <h2>Times series resampling <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5" data-code-line-numbers="6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>taxi_rs <span class="ot">&lt;-</span></span>
-<span id="cb5-2"><a href="#cb5-2"></a>  taxi_train <span class="sc">%&gt;%</span></span>
-<span id="cb5-3"><a href="#cb5-3"></a>  <span class="fu">sliding_period</span>(</span>
-<span id="cb5-4"><a href="#cb5-4"></a>    <span class="at">index =</span> <span class="st">"trip_start_timestamp"</span>,  </span>
-<span id="cb5-5"><a href="#cb5-5"></a>    <span class="at">period =</span> <span class="st">"week"</span>,</span>
-<span id="cb5-6"><a href="#cb5-6"></a>    <span class="at">lookback =</span> <span class="dv">8</span></span>
-<span id="cb5-7"><a href="#cb5-7"></a>    </span>
-<span id="cb5-8"><a href="#cb5-8"></a>    </span>
-<span id="cb5-9"><a href="#cb5-9"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5" data-code-line-numbers="6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a>taxi_rs <span class="ot">&lt;-</span></span>
+<span id="cb5-2"><a></a>  taxi_train <span class="sc">%&gt;%</span></span>
+<span id="cb5-3"><a></a>  <span class="fu">sliding_period</span>(</span>
+<span id="cb5-4"><a></a>    <span class="at">index =</span> <span class="st">"trip_start_timestamp"</span>,  </span>
+<span id="cb5-5"><a></a>    <span class="at">period =</span> <span class="st">"week"</span>,</span>
+<span id="cb5-6"><a></a>    <span class="at">lookback =</span> <span class="dv">8</span></span>
+<span id="cb5-7"><a></a>    </span>
+<span id="cb5-8"><a></a>    </span>
+<span id="cb5-9"><a></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Every analysis set has 8 weeks of data.</p>
 </section>
 <section id="times-series-resampling-3" class="slide level2">
 <h2>Times series resampling <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6" data-code-line-numbers="7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>taxi_rs <span class="ot">&lt;-</span></span>
-<span id="cb6-2"><a href="#cb6-2"></a>  taxi_train <span class="sc">%&gt;%</span></span>
-<span id="cb6-3"><a href="#cb6-3"></a>  <span class="fu">sliding_period</span>(</span>
-<span id="cb6-4"><a href="#cb6-4"></a>    <span class="at">index =</span> <span class="st">"trip_start_timestamp"</span>,  </span>
-<span id="cb6-5"><a href="#cb6-5"></a>    <span class="at">period =</span> <span class="st">"week"</span>,</span>
-<span id="cb6-6"><a href="#cb6-6"></a>    <span class="at">lookback =</span> <span class="dv">8</span>,</span>
-<span id="cb6-7"><a href="#cb6-7"></a>    <span class="at">assess_stop =</span> <span class="dv">3</span>,</span>
-<span id="cb6-8"><a href="#cb6-8"></a></span>
-<span id="cb6-9"><a href="#cb6-9"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6" data-code-line-numbers="7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a>taxi_rs <span class="ot">&lt;-</span></span>
+<span id="cb6-2"><a></a>  taxi_train <span class="sc">%&gt;%</span></span>
+<span id="cb6-3"><a></a>  <span class="fu">sliding_period</span>(</span>
+<span id="cb6-4"><a></a>    <span class="at">index =</span> <span class="st">"trip_start_timestamp"</span>,  </span>
+<span id="cb6-5"><a></a>    <span class="at">period =</span> <span class="st">"week"</span>,</span>
+<span id="cb6-6"><a></a>    <span class="at">lookback =</span> <span class="dv">8</span>,</span>
+<span id="cb6-7"><a></a>    <span class="at">assess_stop =</span> <span class="dv">3</span>,</span>
+<span id="cb6-8"><a></a></span>
+<span id="cb6-9"><a></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Every assessment set has 3 weeks of data.</p>
 </section>
 <section id="times-series-resampling-4" class="slide level2">
 <h2>Times series resampling <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7" data-code-line-numbers="8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>taxi_rs <span class="ot">&lt;-</span></span>
-<span id="cb7-2"><a href="#cb7-2"></a>  taxi_train <span class="sc">%&gt;%</span></span>
-<span id="cb7-3"><a href="#cb7-3"></a>  <span class="fu">sliding_period</span>(</span>
-<span id="cb7-4"><a href="#cb7-4"></a>    <span class="at">index =</span> <span class="st">"trip_start_timestamp"</span>,  </span>
-<span id="cb7-5"><a href="#cb7-5"></a>    <span class="at">period =</span> <span class="st">"week"</span>,</span>
-<span id="cb7-6"><a href="#cb7-6"></a>    <span class="at">lookback =</span> <span class="dv">8</span>,</span>
-<span id="cb7-7"><a href="#cb7-7"></a>    <span class="at">assess_stop =</span> <span class="dv">3</span>,</span>
-<span id="cb7-8"><a href="#cb7-8"></a>    <span class="at">step =</span> <span class="dv">1</span></span>
-<span id="cb7-9"><a href="#cb7-9"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7" data-code-line-numbers="8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a>taxi_rs <span class="ot">&lt;-</span></span>
+<span id="cb7-2"><a></a>  taxi_train <span class="sc">%&gt;%</span></span>
+<span id="cb7-3"><a></a>  <span class="fu">sliding_period</span>(</span>
+<span id="cb7-4"><a></a>    <span class="at">index =</span> <span class="st">"trip_start_timestamp"</span>,  </span>
+<span id="cb7-5"><a></a>    <span class="at">period =</span> <span class="st">"week"</span>,</span>
+<span id="cb7-6"><a></a>    <span class="at">lookback =</span> <span class="dv">8</span>,</span>
+<span id="cb7-7"><a></a>    <span class="at">assess_stop =</span> <span class="dv">3</span>,</span>
+<span id="cb7-8"><a></a>    <span class="at">step =</span> <span class="dv">1</span></span>
+<span id="cb7-9"><a></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Increment by 1 week</p>
 <div class="fragment">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>taxi_rs<span class="sc">$</span>splits[[<span class="dv">1</span>]] <span class="sc">%&gt;%</span> <span class="fu">assessment</span>() <span class="sc">%&gt;%</span> <span class="fu">pluck</span>(<span class="st">"trip_start_timestamp"</span>) <span class="sc">%&gt;%</span> <span class="fu">range</span>()</span>
-<span id="cb8-2"><a href="#cb8-2"></a><span class="co">#&gt; [1] "2023-03-02 05:15:00 UTC" "2023-03-22 22:00:00 UTC"</span></span>
-<span id="cb8-3"><a href="#cb8-3"></a></span>
-<span id="cb8-4"><a href="#cb8-4"></a>taxi_rs<span class="sc">$</span>splits[[<span class="dv">2</span>]] <span class="sc">%&gt;%</span> <span class="fu">assessment</span>() <span class="sc">%&gt;%</span> <span class="fu">pluck</span>(<span class="st">"trip_start_timestamp"</span>) <span class="sc">%&gt;%</span> <span class="fu">range</span>()</span>
-<span id="cb8-5"><a href="#cb8-5"></a><span class="co">#&gt; [1] "2023-03-09 07:00:00 UTC" "2023-03-29 21:15:00 UTC"</span></span>
-<span id="cb8-6"><a href="#cb8-6"></a></span>
-<span id="cb8-7"><a href="#cb8-7"></a>taxi_rs<span class="sc">$</span>splits[[<span class="dv">3</span>]] <span class="sc">%&gt;%</span> <span class="fu">assessment</span>() <span class="sc">%&gt;%</span> <span class="fu">pluck</span>(<span class="st">"trip_start_timestamp"</span>) <span class="sc">%&gt;%</span> <span class="fu">range</span>()</span>
-<span id="cb8-8"><a href="#cb8-8"></a><span class="co">#&gt; [1] "2023-03-16 06:30:00 UTC" "2023-04-05 23:45:00 UTC"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a>taxi_rs<span class="sc">$</span>splits[[<span class="dv">1</span>]] <span class="sc">%&gt;%</span> <span class="fu">assessment</span>() <span class="sc">%&gt;%</span> <span class="fu">pluck</span>(<span class="st">"trip_start_timestamp"</span>) <span class="sc">%&gt;%</span> <span class="fu">range</span>()</span>
+<span id="cb8-2"><a></a><span class="co">#&gt; [1] "2023-03-02 05:15:00 UTC" "2023-03-22 22:00:00 UTC"</span></span>
+<span id="cb8-3"><a></a></span>
+<span id="cb8-4"><a></a>taxi_rs<span class="sc">$</span>splits[[<span class="dv">2</span>]] <span class="sc">%&gt;%</span> <span class="fu">assessment</span>() <span class="sc">%&gt;%</span> <span class="fu">pluck</span>(<span class="st">"trip_start_timestamp"</span>) <span class="sc">%&gt;%</span> <span class="fu">range</span>()</span>
+<span id="cb8-5"><a></a><span class="co">#&gt; [1] "2023-03-09 07:00:00 UTC" "2023-03-29 21:15:00 UTC"</span></span>
+<span id="cb8-6"><a></a></span>
+<span id="cb8-7"><a></a>taxi_rs<span class="sc">$</span>splits[[<span class="dv">3</span>]] <span class="sc">%&gt;%</span> <span class="fu">assessment</span>() <span class="sc">%&gt;%</span> <span class="fu">pluck</span>(<span class="st">"trip_start_timestamp"</span>) <span class="sc">%&gt;%</span> <span class="fu">range</span>()</span>
+<span id="cb8-8"><a></a><span class="co">#&gt; [1] "2023-03-16 06:30:00 UTC" "2023-04-05 23:45:00 UTC"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
+<div class="quarto-auto-generated-content">
 <div class="footer footer-default">
 <p><a href="https://workshops.tidymodels.org" class="uri">https://workshops.tidymodels.org</a></p>
+</div>
 </div>
 </div>
 </section>
@@ -628,7 +631,6 @@
       Reveal.initialize({
 'controlsAuto': true,
 'previewLinksAuto': false,
-'smaller': false,
 'pdfSeparateFragments': false,
 'autoAnimateEasing': "ease",
 'autoAnimateDuration': 1,
@@ -914,18 +916,7 @@
         }
         return false;
       }
-      const clipboard = new window.ClipboardJS('.code-copy-button', {
-        text: function(trigger) {
-          const codeEl = trigger.previousElementSibling.cloneNode(true);
-          for (const childEl of codeEl.children) {
-            if (isCodeAnnotation(childEl)) {
-              childEl.remove();
-            }
-          }
-          return codeEl.innerText;
-        }
-      });
-      clipboard.on('success', function(e) {
+      const onCopySuccess = function(e) {
         // button target
         const button = e.trigger;
         // don't keep focus
@@ -957,7 +948,47 @@
         }, 1000);
         // clear code selection
         e.clearSelection();
+      }
+      const getTextToCopy = function(trigger) {
+          const codeEl = trigger.previousElementSibling.cloneNode(true);
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+      }
+      const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+        text: getTextToCopy
       });
+      clipboard.on('success', onCopySuccess);
+      if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+        // For code content inside modals, clipBoardJS needs to be initialized with a container option
+        // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+        const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+          text: getTextToCopy,
+          container: window.document.getElementById('quarto-embedded-source-code-modal')
+        });
+        clipboardModal.on('success', onCopySuccess);
+      }
+        var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+        var mailtoRegex = new RegExp(/^mailto:/);
+          var filterRegex = new RegExp("https:\/\/workshops\.tidymodels\.org");
+        var isInternal = (href) => {
+            return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+        }
+        // Inspect non-navigation links and adorn them if external
+     	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+        for (var i=0; i<links.length; i++) {
+          const link = links[i];
+          if (!isInternal(link.href)) {
+            // undo the damage that might have been done by quarto-nav.js in the case of
+            // links that we want to consider external
+            if (link.dataset.originalHref !== undefined) {
+              link.href = link.dataset.originalHref;
+            }
+          }
+        }
       function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
         const config = {
           allowHTML: true,
@@ -994,7 +1025,11 @@
           try { href = new URL(href).hash; } catch {}
           const id = href.replace(/^#\/?/, "");
           const note = window.document.getElementById(id);
-          return note.innerHTML;
+          if (note) {
+            return note.innerHTML;
+          } else {
+            return "";
+          }
         });
       }
       const findCites = (el) => {

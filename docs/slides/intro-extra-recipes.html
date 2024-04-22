@@ -9,9 +9,9 @@
 <link href="../site_libs/quarto-html/light-border.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.4.104">
+  <meta name="generator" content="quarto-1.5.30">
 
-  <title>Machine learning with tidymodels - Extras - Recipes</title>
+  <title>Machine learning with tidymodels – Extras - Recipes</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -31,7 +31,7 @@
     }
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span { line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -42,7 +42,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -70,7 +70,7 @@
     code span.at { color: #657422; } /* Attribute */
     code span.bn { color: #ad0000; } /* BaseN */
     code span.bu { } /* BuiltIn */
-    code span.cf { color: #003b4f; } /* ControlFlow */
+    code span.cf { color: #003b4f; font-weight: bold; } /* ControlFlow */
     code span.ch { color: #20794d; } /* Char */
     code span.cn { color: #8f5902; } /* Constant */
     code span.co { color: #5e5e5e; } /* Comment */
@@ -84,7 +84,7 @@
     code span.fu { color: #4758ab; } /* Function */
     code span.im { color: #00769e; } /* Import */
     code span.in { color: #5e5e5e; } /* Information */
-    code span.kw { color: #003b4f; } /* Keyword */
+    code span.kw { color: #003b4f; font-weight: bold; } /* Keyword */
     code span.op { color: #5e5e5e; } /* Operator */
     code span.ot { color: #003b4f; } /* Other */
     code span.pp { color: #ad0000; } /* Preprocessor */
@@ -221,7 +221,8 @@
   }
 
   .callout.callout-titled .callout-body > .callout-content > :last-child {
-    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0;
   }
 
   .callout.callout-titled .callout-icon::before {
@@ -388,7 +389,7 @@
   <script src="../site_libs/countdown-0.4.0/countdown.js"></script>
 <meta property="og:title" content="Machine learning with tidymodels - Extras - Recipes">
 <meta property="og:description" content="Introduction to tidymodels">
-<meta property="og:site-name" content="Machine learning with tidymodels">
+<meta property="og:site_name" content="Machine learning with tidymodels">
 <meta name="twitter:title" content="Machine learning with tidymodels - Extras - Recipes">
 <meta name="twitter:description" content="Introduction to tidymodels">
 <meta name="twitter:card" content="summary">
@@ -409,21 +410,21 @@
 <section id="looking-at-the-predictors" class="slide level2">
 <h2>Looking at the predictors</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>taxi_train</span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="co">#&gt; # A tibble: 8,000 × 7</span></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="co">#&gt;    tip   distance company                      local dow   month  hour</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="co">#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;                        &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;</span></span>
-<span id="cb1-5"><a href="#cb1-5"></a><span class="co">#&gt;  1 yes      17.2  Chicago Independents         no    Thu   Feb      16</span></span>
-<span id="cb1-6"><a href="#cb1-6"></a><span class="co">#&gt;  2 yes       0.88 City Service                 yes   Thu   Mar       8</span></span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="co">#&gt;  3 yes      18.1  other                        no    Mon   Feb      18</span></span>
-<span id="cb1-8"><a href="#cb1-8"></a><span class="co">#&gt;  4 yes      12.2  Chicago Independents         no    Sun   Mar      21</span></span>
-<span id="cb1-9"><a href="#cb1-9"></a><span class="co">#&gt;  5 yes       0.94 Sun Taxi                     yes   Sat   Apr      23</span></span>
-<span id="cb1-10"><a href="#cb1-10"></a><span class="co">#&gt;  6 yes      17.5  Flash Cab                    no    Fri   Mar      12</span></span>
-<span id="cb1-11"><a href="#cb1-11"></a><span class="co">#&gt;  7 yes      17.7  other                        no    Sun   Jan       6</span></span>
-<span id="cb1-12"><a href="#cb1-12"></a><span class="co">#&gt;  8 yes       1.85 Taxicab Insurance Agency Llc no    Fri   Apr      12</span></span>
-<span id="cb1-13"><a href="#cb1-13"></a><span class="co">#&gt;  9 yes       0.53 Sun Taxi                     no    Tue   Mar      18</span></span>
-<span id="cb1-14"><a href="#cb1-14"></a><span class="co">#&gt; 10 yes       6.65 Taxicab Insurance Agency Llc no    Sun   Apr      11</span></span>
-<span id="cb1-15"><a href="#cb1-15"></a><span class="co">#&gt; # ℹ 7,990 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a>taxi_train</span>
+<span id="cb1-2"><a></a><span class="co">#&gt; # A tibble: 8,000 × 7</span></span>
+<span id="cb1-3"><a></a><span class="co">#&gt;    tip   distance company                      local dow   month  hour</span></span>
+<span id="cb1-4"><a></a><span class="co">#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;                        &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;</span></span>
+<span id="cb1-5"><a></a><span class="co">#&gt;  1 yes      17.2  Chicago Independents         no    Thu   Feb      16</span></span>
+<span id="cb1-6"><a></a><span class="co">#&gt;  2 yes       0.88 City Service                 yes   Thu   Mar       8</span></span>
+<span id="cb1-7"><a></a><span class="co">#&gt;  3 yes      18.1  other                        no    Mon   Feb      18</span></span>
+<span id="cb1-8"><a></a><span class="co">#&gt;  4 yes      12.2  Chicago Independents         no    Sun   Mar      21</span></span>
+<span id="cb1-9"><a></a><span class="co">#&gt;  5 yes       0.94 Sun Taxi                     yes   Sat   Apr      23</span></span>
+<span id="cb1-10"><a></a><span class="co">#&gt;  6 yes      17.5  Flash Cab                    no    Fri   Mar      12</span></span>
+<span id="cb1-11"><a></a><span class="co">#&gt;  7 yes      17.7  other                        no    Sun   Jan       6</span></span>
+<span id="cb1-12"><a></a><span class="co">#&gt;  8 yes       1.85 Taxicab Insurance Agency Llc no    Fri   Apr      12</span></span>
+<span id="cb1-13"><a></a><span class="co">#&gt;  9 yes       0.53 Sun Taxi                     no    Tue   Mar      18</span></span>
+<span id="cb1-14"><a></a><span class="co">#&gt; 10 yes       6.65 Taxicab Insurance Agency Llc no    Sun   Apr      11</span></span>
+<span id="cb1-15"><a></a><span class="co">#&gt; # ℹ 7,990 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="working-with-other-models" class="slide level2">
@@ -459,11 +460,11 @@
 <section id="two-types-of-preprocessing" class="slide level2">
 <h2>Two types of preprocessing</h2>
 
-<img data-src="images/fe_venn.svg" class="r-stretch quarto-figure-center"></section>
+<img data-src="images/fe_venn.svg" class="quarto-figure quarto-figure-center r-stretch"></section>
 <section id="two-types-of-preprocessing-1" class="slide level2">
 <h2>Two types of preprocessing</h2>
 
-<img data-src="images/fe_venn_info.svg" class="r-stretch quarto-figure-center"></section>
+<img data-src="images/fe_venn_info.svg" class="quarto-figure quarto-figure-center r-stretch"></section>
 <section id="general-definitions" class="slide level2">
 <h2>General definitions</h2>
 <ul>
@@ -653,67 +654,67 @@
 <section id="printing-a-recipe" class="slide level2">
 <h2>Printing a recipe</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>taxi_rec</span>
-<span id="cb2-2"><a href="#cb2-2"></a><span class="co">#&gt; </span></span>
-<span id="cb2-3"><a href="#cb2-3"></a><span class="co">#&gt; ── Recipe ────────────────────────────────────────────────────────────</span></span>
-<span id="cb2-4"><a href="#cb2-4"></a><span class="co">#&gt; </span></span>
-<span id="cb2-5"><a href="#cb2-5"></a><span class="co">#&gt; ── Inputs</span></span>
-<span id="cb2-6"><a href="#cb2-6"></a><span class="co">#&gt; Number of variables by role</span></span>
-<span id="cb2-7"><a href="#cb2-7"></a><span class="co">#&gt; outcome:   1</span></span>
-<span id="cb2-8"><a href="#cb2-8"></a><span class="co">#&gt; predictor: 6</span></span>
-<span id="cb2-9"><a href="#cb2-9"></a><span class="co">#&gt; </span></span>
-<span id="cb2-10"><a href="#cb2-10"></a><span class="co">#&gt; ── Operations</span></span>
-<span id="cb2-11"><a href="#cb2-11"></a><span class="co">#&gt; • Unknown factor level assignment for: all_nominal_predictors()</span></span>
-<span id="cb2-12"><a href="#cb2-12"></a><span class="co">#&gt; • Dummy variables from: all_nominal_predictors()</span></span>
-<span id="cb2-13"><a href="#cb2-13"></a><span class="co">#&gt; • Zero variance filter on: all_predictors()</span></span>
-<span id="cb2-14"><a href="#cb2-14"></a><span class="co">#&gt; • Log transformation on: distance</span></span>
-<span id="cb2-15"><a href="#cb2-15"></a><span class="co">#&gt; • Centering and scaling for: all_numeric_predictors()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a>taxi_rec</span>
+<span id="cb2-2"><a></a><span class="co">#&gt; </span></span>
+<span id="cb2-3"><a></a><span class="co">#&gt; ── Recipe ────────────────────────────────────────────────────────────</span></span>
+<span id="cb2-4"><a></a><span class="co">#&gt; </span></span>
+<span id="cb2-5"><a></a><span class="co">#&gt; ── Inputs</span></span>
+<span id="cb2-6"><a></a><span class="co">#&gt; Number of variables by role</span></span>
+<span id="cb2-7"><a></a><span class="co">#&gt; outcome:   1</span></span>
+<span id="cb2-8"><a></a><span class="co">#&gt; predictor: 6</span></span>
+<span id="cb2-9"><a></a><span class="co">#&gt; </span></span>
+<span id="cb2-10"><a></a><span class="co">#&gt; ── Operations</span></span>
+<span id="cb2-11"><a></a><span class="co">#&gt; • Unknown factor level assignment for: all_nominal_predictors()</span></span>
+<span id="cb2-12"><a></a><span class="co">#&gt; • Dummy variables from: all_nominal_predictors()</span></span>
+<span id="cb2-13"><a></a><span class="co">#&gt; • Zero variance filter on: all_predictors()</span></span>
+<span id="cb2-14"><a></a><span class="co">#&gt; • Log transformation on: distance</span></span>
+<span id="cb2-15"><a></a><span class="co">#&gt; • Centering and scaling for: all_numeric_predictors()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="prepping-a-recipe" class="slide level2">
 <h2>Prepping a recipe</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">prep</span>(taxi_rec)</span>
-<span id="cb3-2"><a href="#cb3-2"></a><span class="co">#&gt; </span></span>
-<span id="cb3-3"><a href="#cb3-3"></a><span class="co">#&gt; ── Recipe ────────────────────────────────────────────────────────────</span></span>
-<span id="cb3-4"><a href="#cb3-4"></a><span class="co">#&gt; </span></span>
-<span id="cb3-5"><a href="#cb3-5"></a><span class="co">#&gt; ── Inputs</span></span>
-<span id="cb3-6"><a href="#cb3-6"></a><span class="co">#&gt; Number of variables by role</span></span>
-<span id="cb3-7"><a href="#cb3-7"></a><span class="co">#&gt; outcome:   1</span></span>
-<span id="cb3-8"><a href="#cb3-8"></a><span class="co">#&gt; predictor: 6</span></span>
-<span id="cb3-9"><a href="#cb3-9"></a><span class="co">#&gt; </span></span>
-<span id="cb3-10"><a href="#cb3-10"></a><span class="co">#&gt; ── Training information</span></span>
-<span id="cb3-11"><a href="#cb3-11"></a><span class="co">#&gt; Training data contained 8000 data points and no incomplete rows.</span></span>
-<span id="cb3-12"><a href="#cb3-12"></a><span class="co">#&gt; </span></span>
-<span id="cb3-13"><a href="#cb3-13"></a><span class="co">#&gt; ── Operations</span></span>
-<span id="cb3-14"><a href="#cb3-14"></a><span class="co">#&gt; • Unknown factor level assignment for: company, local, ... | Trained</span></span>
-<span id="cb3-15"><a href="#cb3-15"></a><span class="co">#&gt; • Dummy variables from: company, local, dow, month | Trained</span></span>
-<span id="cb3-16"><a href="#cb3-16"></a><span class="co">#&gt; • Zero variance filter removed: company_unknown, ... | Trained</span></span>
-<span id="cb3-17"><a href="#cb3-17"></a><span class="co">#&gt; • Log transformation on: distance | Trained</span></span>
-<span id="cb3-18"><a href="#cb3-18"></a><span class="co">#&gt; • Centering and scaling for: distance, hour, ... | Trained</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a><span class="fu">prep</span>(taxi_rec)</span>
+<span id="cb3-2"><a></a><span class="co">#&gt; </span></span>
+<span id="cb3-3"><a></a><span class="co">#&gt; ── Recipe ────────────────────────────────────────────────────────────</span></span>
+<span id="cb3-4"><a></a><span class="co">#&gt; </span></span>
+<span id="cb3-5"><a></a><span class="co">#&gt; ── Inputs</span></span>
+<span id="cb3-6"><a></a><span class="co">#&gt; Number of variables by role</span></span>
+<span id="cb3-7"><a></a><span class="co">#&gt; outcome:   1</span></span>
+<span id="cb3-8"><a></a><span class="co">#&gt; predictor: 6</span></span>
+<span id="cb3-9"><a></a><span class="co">#&gt; </span></span>
+<span id="cb3-10"><a></a><span class="co">#&gt; ── Training information</span></span>
+<span id="cb3-11"><a></a><span class="co">#&gt; Training data contained 8000 data points and no incomplete rows.</span></span>
+<span id="cb3-12"><a></a><span class="co">#&gt; </span></span>
+<span id="cb3-13"><a></a><span class="co">#&gt; ── Operations</span></span>
+<span id="cb3-14"><a></a><span class="co">#&gt; • Unknown factor level assignment for: company, ... | Trained</span></span>
+<span id="cb3-15"><a></a><span class="co">#&gt; • Dummy variables from: company, local, dow, month | Trained</span></span>
+<span id="cb3-16"><a></a><span class="co">#&gt; • Zero variance filter removed: company_unknown, ... | Trained</span></span>
+<span id="cb3-17"><a></a><span class="co">#&gt; • Log transformation on: distance | Trained</span></span>
+<span id="cb3-18"><a></a><span class="co">#&gt; • Centering and scaling for: distance and hour, ... | Trained</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="baking-a-recipe" class="slide level2">
 <h2>Baking a recipe</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="fu">prep</span>(taxi_rec) <span class="sc">%&gt;%</span></span>
-<span id="cb4-2"><a href="#cb4-2"></a>  <span class="fu">bake</span>(<span class="at">new_data =</span> taxi_train)</span>
-<span id="cb4-3"><a href="#cb4-3"></a><span class="co">#&gt; # A tibble: 8,000 × 19</span></span>
-<span id="cb4-4"><a href="#cb4-4"></a><span class="co">#&gt;    distance   hour tip   company_City.Service company_Flash.Cab company_Sun.Taxi company_Taxi.Affiliatio…¹ company_Taxicab.Insu…² company_other local_no dow_Mon dow_Tue dow_Wed dow_Thu dow_Fri dow_Sat</span></span>
-<span id="cb4-5"><a href="#cb4-5"></a><span class="co">#&gt;       &lt;dbl&gt;  &lt;dbl&gt; &lt;fct&gt;                &lt;dbl&gt;             &lt;dbl&gt;            &lt;dbl&gt;                     &lt;dbl&gt;                  &lt;dbl&gt;         &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span></span>
-<span id="cb4-6"><a href="#cb4-6"></a><span class="co">#&gt;  1    1.38   0.418 yes                 -0.366            -0.333           -0.403                    -0.450                 -0.379        -0.609    0.484  -0.396  -0.441  -0.461   2.01   -0.428  -0.317</span></span>
-<span id="cb4-7"><a href="#cb4-7"></a><span class="co">#&gt;  2   -0.729 -1.42  yes                  2.73             -0.333           -0.403                    -0.450                 -0.379        -0.609   -2.07   -0.396  -0.441  -0.461   2.01   -0.428  -0.317</span></span>
-<span id="cb4-8"><a href="#cb4-8"></a><span class="co">#&gt;  3    1.42   0.877 yes                 -0.366            -0.333           -0.403                    -0.450                 -0.379         1.64     0.484   2.53   -0.441  -0.461  -0.497  -0.428  -0.317</span></span>
-<span id="cb4-9"><a href="#cb4-9"></a><span class="co">#&gt;  4    1.11   1.57  yes                 -0.366            -0.333           -0.403                    -0.450                 -0.379        -0.609    0.484  -0.396  -0.441  -0.461  -0.497  -0.428  -0.317</span></span>
-<span id="cb4-10"><a href="#cb4-10"></a><span class="co">#&gt;  5   -0.694  2.03  yes                 -0.366            -0.333            2.48                     -0.450                 -0.379        -0.609   -2.07   -0.396  -0.441  -0.461  -0.497  -0.428   3.15 </span></span>
-<span id="cb4-11"><a href="#cb4-11"></a><span class="co">#&gt;  6    1.39  -0.502 yes                 -0.366             3.01            -0.403                    -0.450                 -0.379        -0.609    0.484  -0.396  -0.441  -0.461  -0.497   2.34   -0.317</span></span>
-<span id="cb4-12"><a href="#cb4-12"></a><span class="co">#&gt;  7    1.40  -1.88  yes                 -0.366            -0.333           -0.403                    -0.450                 -0.379         1.64     0.484  -0.396  -0.441  -0.461  -0.497  -0.428  -0.317</span></span>
-<span id="cb4-13"><a href="#cb4-13"></a><span class="co">#&gt;  8   -0.289 -0.502 yes                 -0.366            -0.333           -0.403                    -0.450                  2.64         -0.609    0.484  -0.396  -0.441  -0.461  -0.497   2.34   -0.317</span></span>
-<span id="cb4-14"><a href="#cb4-14"></a><span class="co">#&gt;  9   -0.971  0.877 yes                 -0.366            -0.333            2.48                     -0.450                 -0.379        -0.609    0.484  -0.396   2.27   -0.461  -0.497  -0.428  -0.317</span></span>
-<span id="cb4-15"><a href="#cb4-15"></a><span class="co">#&gt; 10    0.631 -0.732 yes                 -0.366            -0.333           -0.403                    -0.450                  2.64         -0.609    0.484  -0.396  -0.441  -0.461  -0.497  -0.428  -0.317</span></span>
-<span id="cb4-16"><a href="#cb4-16"></a><span class="co">#&gt; # ℹ 7,990 more rows</span></span>
-<span id="cb4-17"><a href="#cb4-17"></a><span class="co">#&gt; # ℹ abbreviated names: ¹​company_Taxi.Affiliation.Services, ²​company_Taxicab.Insurance.Agency.Llc</span></span>
-<span id="cb4-18"><a href="#cb4-18"></a><span class="co">#&gt; # ℹ 3 more variables: month_Feb &lt;dbl&gt;, month_Mar &lt;dbl&gt;, month_Apr &lt;dbl&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a><span class="fu">prep</span>(taxi_rec) <span class="sc">%&gt;%</span></span>
+<span id="cb4-2"><a></a>  <span class="fu">bake</span>(<span class="at">new_data =</span> taxi_train)</span>
+<span id="cb4-3"><a></a><span class="co">#&gt; # A tibble: 8,000 × 19</span></span>
+<span id="cb4-4"><a></a><span class="co">#&gt;    distance   hour tip   company_City.Service company_Flash.Cab company_Sun.Taxi company_Taxi.Affiliatio…¹ company_Taxicab.Insu…² company_other local_no dow_Mon dow_Tue dow_Wed dow_Thu dow_Fri dow_Sat</span></span>
+<span id="cb4-5"><a></a><span class="co">#&gt;       &lt;dbl&gt;  &lt;dbl&gt; &lt;fct&gt;                &lt;dbl&gt;             &lt;dbl&gt;            &lt;dbl&gt;                     &lt;dbl&gt;                  &lt;dbl&gt;         &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span></span>
+<span id="cb4-6"><a></a><span class="co">#&gt;  1    1.38   0.418 yes                 -0.366            -0.333           -0.403                    -0.450                 -0.379        -0.609    0.484  -0.396  -0.441  -0.461   2.01   -0.428  -0.317</span></span>
+<span id="cb4-7"><a></a><span class="co">#&gt;  2   -0.729 -1.42  yes                  2.73             -0.333           -0.403                    -0.450                 -0.379        -0.609   -2.07   -0.396  -0.441  -0.461   2.01   -0.428  -0.317</span></span>
+<span id="cb4-8"><a></a><span class="co">#&gt;  3    1.42   0.877 yes                 -0.366            -0.333           -0.403                    -0.450                 -0.379         1.64     0.484   2.53   -0.441  -0.461  -0.497  -0.428  -0.317</span></span>
+<span id="cb4-9"><a></a><span class="co">#&gt;  4    1.11   1.57  yes                 -0.366            -0.333           -0.403                    -0.450                 -0.379        -0.609    0.484  -0.396  -0.441  -0.461  -0.497  -0.428  -0.317</span></span>
+<span id="cb4-10"><a></a><span class="co">#&gt;  5   -0.694  2.03  yes                 -0.366            -0.333            2.48                     -0.450                 -0.379        -0.609   -2.07   -0.396  -0.441  -0.461  -0.497  -0.428   3.15 </span></span>
+<span id="cb4-11"><a></a><span class="co">#&gt;  6    1.39  -0.502 yes                 -0.366             3.01            -0.403                    -0.450                 -0.379        -0.609    0.484  -0.396  -0.441  -0.461  -0.497   2.34   -0.317</span></span>
+<span id="cb4-12"><a></a><span class="co">#&gt;  7    1.40  -1.88  yes                 -0.366            -0.333           -0.403                    -0.450                 -0.379         1.64     0.484  -0.396  -0.441  -0.461  -0.497  -0.428  -0.317</span></span>
+<span id="cb4-13"><a></a><span class="co">#&gt;  8   -0.289 -0.502 yes                 -0.366            -0.333           -0.403                    -0.450                  2.64         -0.609    0.484  -0.396  -0.441  -0.461  -0.497   2.34   -0.317</span></span>
+<span id="cb4-14"><a></a><span class="co">#&gt;  9   -0.971  0.877 yes                 -0.366            -0.333            2.48                     -0.450                 -0.379        -0.609    0.484  -0.396   2.27   -0.461  -0.497  -0.428  -0.317</span></span>
+<span id="cb4-15"><a></a><span class="co">#&gt; 10    0.631 -0.732 yes                 -0.366            -0.333           -0.403                    -0.450                  2.64         -0.609    0.484  -0.396  -0.441  -0.461  -0.497  -0.428  -0.317</span></span>
+<span id="cb4-16"><a></a><span class="co">#&gt; # ℹ 7,990 more rows</span></span>
+<span id="cb4-17"><a></a><span class="co">#&gt; # ℹ abbreviated names: ¹​company_Taxi.Affiliation.Services, ²​company_Taxicab.Insurance.Agency.Llc</span></span>
+<span id="cb4-18"><a></a><span class="co">#&gt; # ℹ 3 more variables: month_Feb &lt;dbl&gt;, month_Mar &lt;dbl&gt;, month_Apr &lt;dbl&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="tidying-a-recipe" class="slide level2">
@@ -741,55 +742,55 @@
 <section id="tidying-a-recipe-1" class="slide level2">
 <h2>Tidying a recipe</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="fu">prep</span>(taxi_rec) <span class="sc">%&gt;%</span></span>
-<span id="cb5-2"><a href="#cb5-2"></a>  <span class="fu">tidy</span>()</span>
-<span id="cb5-3"><a href="#cb5-3"></a><span class="co">#&gt; # A tibble: 5 × 6</span></span>
-<span id="cb5-4"><a href="#cb5-4"></a><span class="co">#&gt;   number operation type      trained skip  id             </span></span>
-<span id="cb5-5"><a href="#cb5-5"></a><span class="co">#&gt;    &lt;int&gt; &lt;chr&gt;     &lt;chr&gt;     &lt;lgl&gt;   &lt;lgl&gt; &lt;chr&gt;          </span></span>
-<span id="cb5-6"><a href="#cb5-6"></a><span class="co">#&gt; 1      1 step      unknown   TRUE    FALSE unknown_NTmu5  </span></span>
-<span id="cb5-7"><a href="#cb5-7"></a><span class="co">#&gt; 2      2 step      dummy     TRUE    FALSE dummy_cT3Uy    </span></span>
-<span id="cb5-8"><a href="#cb5-8"></a><span class="co">#&gt; 3      3 step      zv        TRUE    FALSE zv_z22dk       </span></span>
-<span id="cb5-9"><a href="#cb5-9"></a><span class="co">#&gt; 4      4 step      log       TRUE    FALSE log_QQ1iw      </span></span>
-<span id="cb5-10"><a href="#cb5-10"></a><span class="co">#&gt; 5      5 step      normalize TRUE    FALSE normalize_3cTJb</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a><span class="fu">prep</span>(taxi_rec) <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a></a>  <span class="fu">tidy</span>()</span>
+<span id="cb5-3"><a></a><span class="co">#&gt; # A tibble: 5 × 6</span></span>
+<span id="cb5-4"><a></a><span class="co">#&gt;   number operation type      trained skip  id             </span></span>
+<span id="cb5-5"><a></a><span class="co">#&gt;    &lt;int&gt; &lt;chr&gt;     &lt;chr&gt;     &lt;lgl&gt;   &lt;lgl&gt; &lt;chr&gt;          </span></span>
+<span id="cb5-6"><a></a><span class="co">#&gt; 1      1 step      unknown   TRUE    FALSE unknown_NTmu5  </span></span>
+<span id="cb5-7"><a></a><span class="co">#&gt; 2      2 step      dummy     TRUE    FALSE dummy_cT3Uy    </span></span>
+<span id="cb5-8"><a></a><span class="co">#&gt; 3      3 step      zv        TRUE    FALSE zv_z22dk       </span></span>
+<span id="cb5-9"><a></a><span class="co">#&gt; 4      4 step      log       TRUE    FALSE log_QQ1iw      </span></span>
+<span id="cb5-10"><a></a><span class="co">#&gt; 5      5 step      normalize TRUE    FALSE normalize_3cTJb</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="tidying-a-recipe-2" class="slide level2">
 <h2>Tidying a recipe</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="fu">prep</span>(taxi_rec) <span class="sc">%&gt;%</span></span>
-<span id="cb6-2"><a href="#cb6-2"></a>  <span class="fu">tidy</span>(<span class="at">number =</span> <span class="dv">2</span>)</span>
-<span id="cb6-3"><a href="#cb6-3"></a><span class="co">#&gt; # A tibble: 20 × 3</span></span>
-<span id="cb6-4"><a href="#cb6-4"></a><span class="co">#&gt;    terms   columns                      id         </span></span>
-<span id="cb6-5"><a href="#cb6-5"></a><span class="co">#&gt;    &lt;chr&gt;   &lt;chr&gt;                        &lt;chr&gt;      </span></span>
-<span id="cb6-6"><a href="#cb6-6"></a><span class="co">#&gt;  1 company City Service                 dummy_cT3Uy</span></span>
-<span id="cb6-7"><a href="#cb6-7"></a><span class="co">#&gt;  2 company Flash Cab                    dummy_cT3Uy</span></span>
-<span id="cb6-8"><a href="#cb6-8"></a><span class="co">#&gt;  3 company Sun Taxi                     dummy_cT3Uy</span></span>
-<span id="cb6-9"><a href="#cb6-9"></a><span class="co">#&gt;  4 company Taxi Affiliation Services    dummy_cT3Uy</span></span>
-<span id="cb6-10"><a href="#cb6-10"></a><span class="co">#&gt;  5 company Taxicab Insurance Agency Llc dummy_cT3Uy</span></span>
-<span id="cb6-11"><a href="#cb6-11"></a><span class="co">#&gt;  6 company other                        dummy_cT3Uy</span></span>
-<span id="cb6-12"><a href="#cb6-12"></a><span class="co">#&gt;  7 company unknown                      dummy_cT3Uy</span></span>
-<span id="cb6-13"><a href="#cb6-13"></a><span class="co">#&gt;  8 local   no                           dummy_cT3Uy</span></span>
-<span id="cb6-14"><a href="#cb6-14"></a><span class="co">#&gt;  9 local   unknown                      dummy_cT3Uy</span></span>
-<span id="cb6-15"><a href="#cb6-15"></a><span class="co">#&gt; 10 dow     Mon                          dummy_cT3Uy</span></span>
-<span id="cb6-16"><a href="#cb6-16"></a><span class="co">#&gt; 11 dow     Tue                          dummy_cT3Uy</span></span>
-<span id="cb6-17"><a href="#cb6-17"></a><span class="co">#&gt; 12 dow     Wed                          dummy_cT3Uy</span></span>
-<span id="cb6-18"><a href="#cb6-18"></a><span class="co">#&gt; 13 dow     Thu                          dummy_cT3Uy</span></span>
-<span id="cb6-19"><a href="#cb6-19"></a><span class="co">#&gt; 14 dow     Fri                          dummy_cT3Uy</span></span>
-<span id="cb6-20"><a href="#cb6-20"></a><span class="co">#&gt; 15 dow     Sat                          dummy_cT3Uy</span></span>
-<span id="cb6-21"><a href="#cb6-21"></a><span class="co">#&gt; 16 dow     unknown                      dummy_cT3Uy</span></span>
-<span id="cb6-22"><a href="#cb6-22"></a><span class="co">#&gt; 17 month   Feb                          dummy_cT3Uy</span></span>
-<span id="cb6-23"><a href="#cb6-23"></a><span class="co">#&gt; 18 month   Mar                          dummy_cT3Uy</span></span>
-<span id="cb6-24"><a href="#cb6-24"></a><span class="co">#&gt; 19 month   Apr                          dummy_cT3Uy</span></span>
-<span id="cb6-25"><a href="#cb6-25"></a><span class="co">#&gt; 20 month   unknown                      dummy_cT3Uy</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a><span class="fu">prep</span>(taxi_rec) <span class="sc">%&gt;%</span></span>
+<span id="cb6-2"><a></a>  <span class="fu">tidy</span>(<span class="at">number =</span> <span class="dv">2</span>)</span>
+<span id="cb6-3"><a></a><span class="co">#&gt; # A tibble: 20 × 3</span></span>
+<span id="cb6-4"><a></a><span class="co">#&gt;    terms   columns                      id         </span></span>
+<span id="cb6-5"><a></a><span class="co">#&gt;    &lt;chr&gt;   &lt;chr&gt;                        &lt;chr&gt;      </span></span>
+<span id="cb6-6"><a></a><span class="co">#&gt;  1 company City Service                 dummy_cT3Uy</span></span>
+<span id="cb6-7"><a></a><span class="co">#&gt;  2 company Flash Cab                    dummy_cT3Uy</span></span>
+<span id="cb6-8"><a></a><span class="co">#&gt;  3 company Sun Taxi                     dummy_cT3Uy</span></span>
+<span id="cb6-9"><a></a><span class="co">#&gt;  4 company Taxi Affiliation Services    dummy_cT3Uy</span></span>
+<span id="cb6-10"><a></a><span class="co">#&gt;  5 company Taxicab Insurance Agency Llc dummy_cT3Uy</span></span>
+<span id="cb6-11"><a></a><span class="co">#&gt;  6 company other                        dummy_cT3Uy</span></span>
+<span id="cb6-12"><a></a><span class="co">#&gt;  7 company unknown                      dummy_cT3Uy</span></span>
+<span id="cb6-13"><a></a><span class="co">#&gt;  8 local   no                           dummy_cT3Uy</span></span>
+<span id="cb6-14"><a></a><span class="co">#&gt;  9 local   unknown                      dummy_cT3Uy</span></span>
+<span id="cb6-15"><a></a><span class="co">#&gt; 10 dow     Mon                          dummy_cT3Uy</span></span>
+<span id="cb6-16"><a></a><span class="co">#&gt; 11 dow     Tue                          dummy_cT3Uy</span></span>
+<span id="cb6-17"><a></a><span class="co">#&gt; 12 dow     Wed                          dummy_cT3Uy</span></span>
+<span id="cb6-18"><a></a><span class="co">#&gt; 13 dow     Thu                          dummy_cT3Uy</span></span>
+<span id="cb6-19"><a></a><span class="co">#&gt; 14 dow     Fri                          dummy_cT3Uy</span></span>
+<span id="cb6-20"><a></a><span class="co">#&gt; 15 dow     Sat                          dummy_cT3Uy</span></span>
+<span id="cb6-21"><a></a><span class="co">#&gt; 16 dow     unknown                      dummy_cT3Uy</span></span>
+<span id="cb6-22"><a></a><span class="co">#&gt; 17 month   Feb                          dummy_cT3Uy</span></span>
+<span id="cb6-23"><a></a><span class="co">#&gt; 18 month   Mar                          dummy_cT3Uy</span></span>
+<span id="cb6-24"><a></a><span class="co">#&gt; 19 month   Apr                          dummy_cT3Uy</span></span>
+<span id="cb6-25"><a></a><span class="co">#&gt; 20 month   unknown                      dummy_cT3Uy</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="using-a-recipe-in-tidymodels" class="slide level2">
 <h2>Using a recipe in tidymodels</h2>
 <p>The recommended way to use a recipe in tidymodels is to use it as part of a <code>workflow()</code>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>taxi_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span>  </span>
-<span id="cb7-2"><a href="#cb7-2"></a>  <span class="fu">add_recipe</span>(taxi_rec) <span class="sc">%&gt;%</span>  </span>
-<span id="cb7-3"><a href="#cb7-3"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a>taxi_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span>  </span>
+<span id="cb7-2"><a></a>  <span class="fu">add_recipe</span>(taxi_rec) <span class="sc">%&gt;%</span>  </span>
+<span id="cb7-3"><a></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>When used in this way, you don’t need to worry about <code>prep()</code> and <code>bake()</code> as it is handled for you.</p>
 </section>
@@ -800,8 +801,10 @@
 <li><a href="https://www.tmwr.org/recipes.html" class="uri">https://www.tmwr.org/recipes.html</a></li>
 </ul>
 
+<div class="quarto-auto-generated-content">
 <div class="footer footer-default">
 <p><a href="https://workshops.tidymodels.org" class="uri">https://workshops.tidymodels.org</a></p>
+</div>
 </div>
 </section>
     </div>
@@ -830,7 +833,6 @@
       Reveal.initialize({
 'controlsAuto': true,
 'previewLinksAuto': false,
-'smaller': false,
 'pdfSeparateFragments': false,
 'autoAnimateEasing': "ease",
 'autoAnimateDuration': 1,
@@ -1116,18 +1118,7 @@
         }
         return false;
       }
-      const clipboard = new window.ClipboardJS('.code-copy-button', {
-        text: function(trigger) {
-          const codeEl = trigger.previousElementSibling.cloneNode(true);
-          for (const childEl of codeEl.children) {
-            if (isCodeAnnotation(childEl)) {
-              childEl.remove();
-            }
-          }
-          return codeEl.innerText;
-        }
-      });
-      clipboard.on('success', function(e) {
+      const onCopySuccess = function(e) {
         // button target
         const button = e.trigger;
         // don't keep focus
@@ -1159,7 +1150,47 @@
         }, 1000);
         // clear code selection
         e.clearSelection();
+      }
+      const getTextToCopy = function(trigger) {
+          const codeEl = trigger.previousElementSibling.cloneNode(true);
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+      }
+      const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+        text: getTextToCopy
       });
+      clipboard.on('success', onCopySuccess);
+      if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+        // For code content inside modals, clipBoardJS needs to be initialized with a container option
+        // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+        const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+          text: getTextToCopy,
+          container: window.document.getElementById('quarto-embedded-source-code-modal')
+        });
+        clipboardModal.on('success', onCopySuccess);
+      }
+        var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+        var mailtoRegex = new RegExp(/^mailto:/);
+          var filterRegex = new RegExp("https:\/\/workshops\.tidymodels\.org");
+        var isInternal = (href) => {
+            return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+        }
+        // Inspect non-navigation links and adorn them if external
+     	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+        for (var i=0; i<links.length; i++) {
+          const link = links[i];
+          if (!isInternal(link.href)) {
+            // undo the damage that might have been done by quarto-nav.js in the case of
+            // links that we want to consider external
+            if (link.dataset.originalHref !== undefined) {
+              link.href = link.dataset.originalHref;
+            }
+          }
+        }
       function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
         const config = {
           allowHTML: true,
@@ -1196,7 +1227,11 @@
           try { href = new URL(href).hash; } catch {}
           const id = href.replace(/^#\/?/, "");
           const note = window.document.getElementById(id);
-          return note.innerHTML;
+          if (note) {
+            return note.innerHTML;
+          } else {
+            return "";
+          }
         });
       }
       const findCites = (el) => {

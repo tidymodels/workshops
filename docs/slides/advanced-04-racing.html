@@ -9,9 +9,9 @@
 <link href="../site_libs/quarto-html/light-border.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.4.104">
+  <meta name="generator" content="quarto-1.5.30">
 
-  <title>Machine learning with tidymodels - 3 - Grid Search via Racing</title>
+  <title>Machine learning with tidymodels – 3 - Grid Search via Racing</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -31,7 +31,7 @@
     }
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span { line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -42,7 +42,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -70,7 +70,7 @@
     code span.at { color: #657422; } /* Attribute */
     code span.bn { color: #ad0000; } /* BaseN */
     code span.bu { } /* BuiltIn */
-    code span.cf { color: #003b4f; } /* ControlFlow */
+    code span.cf { color: #003b4f; font-weight: bold; } /* ControlFlow */
     code span.ch { color: #20794d; } /* Char */
     code span.cn { color: #8f5902; } /* Constant */
     code span.co { color: #5e5e5e; } /* Comment */
@@ -84,7 +84,7 @@
     code span.fu { color: #4758ab; } /* Function */
     code span.im { color: #00769e; } /* Import */
     code span.in { color: #5e5e5e; } /* Information */
-    code span.kw { color: #003b4f; } /* Keyword */
+    code span.kw { color: #003b4f; font-weight: bold; } /* Keyword */
     code span.op { color: #5e5e5e; } /* Operator */
     code span.ot { color: #003b4f; } /* Other */
     code span.pp { color: #ad0000; } /* Preprocessor */
@@ -221,7 +221,8 @@
   }
 
   .callout.callout-titled .callout-body > .callout-content > :last-child {
-    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0;
   }
 
   .callout.callout-titled .callout-icon::before {
@@ -388,7 +389,7 @@
   <script src="../site_libs/countdown-0.4.0/countdown.js"></script>
 <meta property="og:title" content="Machine learning with tidymodels - 3 - Grid Search via Racing">
 <meta property="og:description" content="Advanced tidymodels">
-<meta property="og:site-name" content="Machine learning with tidymodels">
+<meta property="og:site_name" content="Machine learning with tidymodels">
 <meta name="twitter:title" content="Machine learning with tidymodels - 3 - Grid Search via Racing">
 <meta name="twitter:description" content="Advanced tidymodels">
 <meta name="twitter:card" content="summary">
@@ -411,34 +412,34 @@
 <div class="columns">
 <div class="column" style="width:40%;">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">library</span>(tidymodels)</span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="fu">library</span>(textrecipes)</span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="fu">library</span>(bonsai)</span>
-<span id="cb1-4"><a href="#cb1-4"></a></span>
-<span id="cb1-5"><a href="#cb1-5"></a><span class="co"># Max's usual settings: </span></span>
-<span id="cb1-6"><a href="#cb1-6"></a><span class="fu">tidymodels_prefer</span>()</span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
-<span id="cb1-8"><a href="#cb1-8"></a><span class="fu">options</span>(</span>
-<span id="cb1-9"><a href="#cb1-9"></a>  <span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, </span>
-<span id="cb1-10"><a href="#cb1-10"></a>  <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span></span>
-<span id="cb1-11"><a href="#cb1-11"></a>)</span>
-<span id="cb1-12"><a href="#cb1-12"></a></span>
-<span id="cb1-13"><a href="#cb1-13"></a>reg_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mae, rsq)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb1-2"><a></a><span class="fu">library</span>(textrecipes)</span>
+<span id="cb1-3"><a></a><span class="fu">library</span>(bonsai)</span>
+<span id="cb1-4"><a></a></span>
+<span id="cb1-5"><a></a><span class="co"># Max's usual settings: </span></span>
+<span id="cb1-6"><a></a><span class="fu">tidymodels_prefer</span>()</span>
+<span id="cb1-7"><a></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
+<span id="cb1-8"><a></a><span class="fu">options</span>(</span>
+<span id="cb1-9"><a></a>  <span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb1-10"><a></a>  <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span></span>
+<span id="cb1-11"><a></a>)</span>
+<span id="cb1-12"><a></a></span>
+<span id="cb1-13"><a></a>reg_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mae, rsq)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div><div class="column" style="width:60%;">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">data</span>(hotel_rates)</span>
-<span id="cb2-2"><a href="#cb2-2"></a><span class="fu">set.seed</span>(<span class="dv">295</span>)</span>
-<span id="cb2-3"><a href="#cb2-3"></a>hotel_rates <span class="ot">&lt;-</span> </span>
-<span id="cb2-4"><a href="#cb2-4"></a>  hotel_rates <span class="sc">%&gt;%</span> </span>
-<span id="cb2-5"><a href="#cb2-5"></a>  <span class="fu">sample_n</span>(<span class="dv">5000</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-6"><a href="#cb2-6"></a>  <span class="fu">arrange</span>(arrival_date) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-7"><a href="#cb2-7"></a>  <span class="fu">select</span>(<span class="sc">-</span>arrival_date) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-8"><a href="#cb2-8"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb2-9"><a href="#cb2-9"></a>    <span class="at">company =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(company)),</span>
-<span id="cb2-10"><a href="#cb2-10"></a>    <span class="at">country =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(country)),</span>
-<span id="cb2-11"><a href="#cb2-11"></a>    <span class="at">agent =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(agent))</span>
-<span id="cb2-12"><a href="#cb2-12"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="fu">data</span>(hotel_rates)</span>
+<span id="cb2-2"><a></a><span class="fu">set.seed</span>(<span class="dv">295</span>)</span>
+<span id="cb2-3"><a></a>hotel_rates <span class="ot">&lt;-</span> </span>
+<span id="cb2-4"><a></a>  hotel_rates <span class="sc">%&gt;%</span> </span>
+<span id="cb2-5"><a></a>  <span class="fu">sample_n</span>(<span class="dv">5000</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-6"><a></a>  <span class="fu">arrange</span>(arrival_date) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-7"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>arrival_date) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-8"><a></a>  <span class="fu">mutate</span>(</span>
+<span id="cb2-9"><a></a>    <span class="at">company =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(company)),</span>
+<span id="cb2-10"><a></a>    <span class="at">country =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(country)),</span>
+<span id="cb2-11"><a></a>    <span class="at">agent =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(agent))</span>
+<span id="cb2-12"><a></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
@@ -446,39 +447,39 @@
 <section id="previously---data-usage" class="slide level2">
 <h2>Previously - Data Usage <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">set.seed</span>(<span class="dv">4028</span>)</span>
-<span id="cb3-2"><a href="#cb3-2"></a>hotel_split <span class="ot">&lt;-</span></span>
-<span id="cb3-3"><a href="#cb3-3"></a>  <span class="fu">initial_split</span>(hotel_rates, <span class="at">strata =</span> avg_price_per_room)</span>
-<span id="cb3-4"><a href="#cb3-4"></a></span>
-<span id="cb3-5"><a href="#cb3-5"></a>hotel_train <span class="ot">&lt;-</span> <span class="fu">training</span>(hotel_split)</span>
-<span id="cb3-6"><a href="#cb3-6"></a>hotel_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(hotel_split)</span>
-<span id="cb3-7"><a href="#cb3-7"></a></span>
-<span id="cb3-8"><a href="#cb3-8"></a><span class="fu">set.seed</span>(<span class="dv">472</span>)</span>
-<span id="cb3-9"><a href="#cb3-9"></a>hotel_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(hotel_train, <span class="at">strata =</span> avg_price_per_room)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a><span class="fu">set.seed</span>(<span class="dv">4028</span>)</span>
+<span id="cb3-2"><a></a>hotel_split <span class="ot">&lt;-</span></span>
+<span id="cb3-3"><a></a>  <span class="fu">initial_split</span>(hotel_rates, <span class="at">strata =</span> avg_price_per_room)</span>
+<span id="cb3-4"><a></a></span>
+<span id="cb3-5"><a></a>hotel_train <span class="ot">&lt;-</span> <span class="fu">training</span>(hotel_split)</span>
+<span id="cb3-6"><a></a>hotel_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(hotel_split)</span>
+<span id="cb3-7"><a></a></span>
+<span id="cb3-8"><a></a><span class="fu">set.seed</span>(<span class="dv">472</span>)</span>
+<span id="cb3-9"><a></a>hotel_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(hotel_train, <span class="at">strata =</span> avg_price_per_room)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="previously---boosting-model" class="slide level2">
 <h2>Previously - Boosting Model <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/textrecipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/bonsai.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>hotel_rec <span class="ot">&lt;-</span></span>
-<span id="cb4-2"><a href="#cb4-2"></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">%&gt;%</span></span>
-<span id="cb4-3"><a href="#cb4-3"></a>  <span class="fu">step_YeoJohnson</span>(lead_time) <span class="sc">%&gt;%</span></span>
-<span id="cb4-4"><a href="#cb4-4"></a>  <span class="fu">step_dummy_hash</span>(agent,   <span class="at">num_terms =</span> <span class="fu">tune</span>(<span class="st">"agent hash"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb4-5"><a href="#cb4-5"></a>  <span class="fu">step_dummy_hash</span>(company, <span class="at">num_terms =</span> <span class="fu">tune</span>(<span class="st">"company hash"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb4-6"><a href="#cb4-6"></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span>
-<span id="cb4-7"><a href="#cb4-7"></a></span>
-<span id="cb4-8"><a href="#cb4-8"></a>lgbm_spec <span class="ot">&lt;-</span> </span>
-<span id="cb4-9"><a href="#cb4-9"></a>  <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>(), <span class="at">min_n =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
-<span id="cb4-10"><a href="#cb4-10"></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb4-11"><a href="#cb4-11"></a>  <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>, <span class="at">num_threads =</span> <span class="dv">1</span>)</span>
-<span id="cb4-12"><a href="#cb4-12"></a></span>
-<span id="cb4-13"><a href="#cb4-13"></a>lgbm_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(hotel_rec, lgbm_spec)</span>
-<span id="cb4-14"><a href="#cb4-14"></a></span>
-<span id="cb4-15"><a href="#cb4-15"></a>lgbm_param <span class="ot">&lt;-</span></span>
-<span id="cb4-16"><a href="#cb4-16"></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb4-17"><a href="#cb4-17"></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb4-18"><a href="#cb4-18"></a>  <span class="fu">update</span>(<span class="st">`</span><span class="at">agent hash</span><span class="st">`</span>   <span class="ot">=</span> <span class="fu">num_hash</span>(<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">8</span>)),</span>
-<span id="cb4-19"><a href="#cb4-19"></a>         <span class="st">`</span><span class="at">company hash</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">num_hash</span>(<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">8</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a>hotel_rec <span class="ot">&lt;-</span></span>
+<span id="cb4-2"><a></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">%&gt;%</span></span>
+<span id="cb4-3"><a></a>  <span class="fu">step_YeoJohnson</span>(lead_time) <span class="sc">%&gt;%</span></span>
+<span id="cb4-4"><a></a>  <span class="fu">step_dummy_hash</span>(agent,   <span class="at">num_terms =</span> <span class="fu">tune</span>(<span class="st">"agent hash"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb4-5"><a></a>  <span class="fu">step_dummy_hash</span>(company, <span class="at">num_terms =</span> <span class="fu">tune</span>(<span class="st">"company hash"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb4-6"><a></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span>
+<span id="cb4-7"><a></a></span>
+<span id="cb4-8"><a></a>lgbm_spec <span class="ot">&lt;-</span> </span>
+<span id="cb4-9"><a></a>  <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>(), <span class="at">min_n =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-10"><a></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-11"><a></a>  <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>, <span class="at">num_threads =</span> <span class="dv">1</span>)</span>
+<span id="cb4-12"><a></a></span>
+<span id="cb4-13"><a></a>lgbm_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(hotel_rec, lgbm_spec)</span>
+<span id="cb4-14"><a></a></span>
+<span id="cb4-15"><a></a>lgbm_param <span class="ot">&lt;-</span></span>
+<span id="cb4-16"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb4-17"><a></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb4-18"><a></a>  <span class="fu">update</span>(<span class="st">`</span><span class="at">agent hash</span><span class="st">`</span>   <span class="ot">=</span> <span class="fu">num_hash</span>(<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">8</span>)),</span>
+<span id="cb4-19"><a></a>         <span class="st">`</span><span class="at">company hash</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">num_hash</span>(<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">8</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="making-grid-search-more-efficient" class="slide level2">
@@ -523,7 +524,7 @@
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="figures/race-data-1.svg" style="width:100.0%"></p>
+<p><img data-src="figures/race-data-1.svg" class="quarto-figure quarto-figure-center" style="width:100.0%"></p>
 </figure>
 </div>
 </div>
@@ -544,7 +545,7 @@
 <section id="evaluating-differences-in-candidates" class="slide level2">
 <h2>Evaluating Differences in Candidates</h2>
 
-<img data-src="figures/race-ci-1.svg" style="width:70.0%" class="r-stretch quarto-figure-center"></section>
+<img data-src="figures/race-ci-1.svg" class="quarto-figure quarto-figure-center r-stretch" style="width:70.0%"></section>
 <section id="interim-analysis-of-results" class="slide level2">
 <h2>Interim Analysis of Results</h2>
 <p>One version of racing uses a <em>mixed model ANOVA</em> to construct one-sided confidence intervals for each candidate versus the current best.</p>
@@ -557,34 +558,34 @@
 <section id="racing" class="slide level2">
 <h2>Racing <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/textrecipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/finetune.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "> <img data-src="hexes/bonsai.png" class="absolute" style="top: -20px; right: 256px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5" data-code-line-numbers="12|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co"># Let's use a larger grid</span></span>
-<span id="cb5-2"><a href="#cb5-2"></a><span class="fu">set.seed</span>(<span class="dv">8945</span>)</span>
-<span id="cb5-3"><a href="#cb5-3"></a>lgbm_grid <span class="ot">&lt;-</span> </span>
-<span id="cb5-4"><a href="#cb5-4"></a>  lgbm_param <span class="sc">%&gt;%</span> </span>
-<span id="cb5-5"><a href="#cb5-5"></a>  <span class="fu">grid_latin_hypercube</span>(<span class="at">size =</span> <span class="dv">50</span>)</span>
-<span id="cb5-6"><a href="#cb5-6"></a></span>
-<span id="cb5-7"><a href="#cb5-7"></a><span class="fu">library</span>(finetune)</span>
-<span id="cb5-8"><a href="#cb5-8"></a></span>
-<span id="cb5-9"><a href="#cb5-9"></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
-<span id="cb5-10"><a href="#cb5-10"></a>lgbm_race_res <span class="ot">&lt;-</span></span>
-<span id="cb5-11"><a href="#cb5-11"></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb5-12"><a href="#cb5-12"></a>  <span class="fu">tune_race_anova</span>(</span>
-<span id="cb5-13"><a href="#cb5-13"></a>    <span class="at">resamples =</span> hotel_rs,</span>
-<span id="cb5-14"><a href="#cb5-14"></a>    <span class="at">grid =</span> lgbm_grid, </span>
-<span id="cb5-15"><a href="#cb5-15"></a>    <span class="at">metrics =</span> reg_metrics</span>
-<span id="cb5-16"><a href="#cb5-16"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5" data-code-line-numbers="12|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a><span class="co"># Let's use a larger grid</span></span>
+<span id="cb5-2"><a></a><span class="fu">set.seed</span>(<span class="dv">8945</span>)</span>
+<span id="cb5-3"><a></a>lgbm_grid <span class="ot">&lt;-</span> </span>
+<span id="cb5-4"><a></a>  lgbm_param <span class="sc">%&gt;%</span> </span>
+<span id="cb5-5"><a></a>  <span class="fu">grid_latin_hypercube</span>(<span class="at">size =</span> <span class="dv">50</span>)</span>
+<span id="cb5-6"><a></a></span>
+<span id="cb5-7"><a></a><span class="fu">library</span>(finetune)</span>
+<span id="cb5-8"><a></a></span>
+<span id="cb5-9"><a></a><span class="fu">set.seed</span>(<span class="dv">9</span>)</span>
+<span id="cb5-10"><a></a>lgbm_race_res <span class="ot">&lt;-</span></span>
+<span id="cb5-11"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb5-12"><a></a>  <span class="fu">tune_race_anova</span>(</span>
+<span id="cb5-13"><a></a>    <span class="at">resamples =</span> hotel_rs,</span>
+<span id="cb5-14"><a></a>    <span class="at">grid =</span> lgbm_grid, </span>
+<span id="cb5-15"><a></a>    <span class="at">metrics =</span> reg_metrics</span>
+<span id="cb5-16"><a></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The syntax and helper functions are extremely similar to those shown for <code>tune_grid()</code>.</p>
 </section>
 <section id="racing-results" class="slide level2">
 <h2>Racing Results <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="fu">show_best</span>(lgbm_race_res, <span class="at">metric =</span> <span class="st">"mae"</span>)</span>
-<span id="cb6-2"><a href="#cb6-2"></a><span class="co">#&gt; # A tibble: 2 × 11</span></span>
-<span id="cb6-3"><a href="#cb6-3"></a><span class="co">#&gt;   trees min_n learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config              </span></span>
-<span id="cb6-4"><a href="#cb6-4"></a><span class="co">#&gt;   &lt;int&gt; &lt;int&gt;      &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
-<span id="cb6-5"><a href="#cb6-5"></a><span class="co">#&gt; 1  1516     7     0.0421          176             12 mae     standard    9.60    10   0.181 Preprocessor42_Model1</span></span>
-<span id="cb6-6"><a href="#cb6-6"></a><span class="co">#&gt; 2  1014     5     0.0791           35            181 mae     standard    9.61    10   0.179 Preprocessor06_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a><span class="fu">show_best</span>(lgbm_race_res, <span class="at">metric =</span> <span class="st">"mae"</span>)</span>
+<span id="cb6-2"><a></a><span class="co">#&gt; # A tibble: 2 × 11</span></span>
+<span id="cb6-3"><a></a><span class="co">#&gt;   trees min_n learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config              </span></span>
+<span id="cb6-4"><a></a><span class="co">#&gt;   &lt;int&gt; &lt;int&gt;      &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
+<span id="cb6-5"><a></a><span class="co">#&gt; 1  1516     7     0.0421          176             12 mae     standard    9.60    10   0.181 Preprocessor42_Model1</span></span>
+<span id="cb6-6"><a></a><span class="co">#&gt; 2  1014     5     0.0791           35            181 mae     standard    9.61    10   0.179 Preprocessor06_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="racing-results-1" class="slide level2">
@@ -596,12 +597,12 @@
 <p>There is a helper function to see how candidate models were removed from consideration.</p>
 </div><div class="column" style="width:50%;">
 <div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="fu">plot_race</span>(lgbm_race_res) <span class="sc">+</span> </span>
-<span id="cb7-2"><a href="#cb7-2"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">pretty_breaks</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a><span class="fu">plot_race</span>(lgbm_race_res) <span class="sc">+</span> </span>
+<span id="cb7-2"><a></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">pretty_breaks</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="figures/plot-race-1.svg" style="width:100.0%"></p>
+<p><img data-src="figures/plot-race-1.svg" class="quarto-figure quarto-figure-center" style="width:100.0%"></p>
 </figure>
 </div>
 </div>
@@ -624,8 +625,10 @@
 </div>
 </div>
 
+<div class="quarto-auto-generated-content">
 <div class="footer footer-default">
 <p><a href="https://workshops.tidymodels.org" class="uri">https://workshops.tidymodels.org</a></p>
+</div>
 </div>
 </section>
     </div>
@@ -654,7 +657,6 @@
       Reveal.initialize({
 'controlsAuto': true,
 'previewLinksAuto': false,
-'smaller': false,
 'pdfSeparateFragments': false,
 'autoAnimateEasing': "ease",
 'autoAnimateDuration': 1,
@@ -940,18 +942,7 @@
         }
         return false;
       }
-      const clipboard = new window.ClipboardJS('.code-copy-button', {
-        text: function(trigger) {
-          const codeEl = trigger.previousElementSibling.cloneNode(true);
-          for (const childEl of codeEl.children) {
-            if (isCodeAnnotation(childEl)) {
-              childEl.remove();
-            }
-          }
-          return codeEl.innerText;
-        }
-      });
-      clipboard.on('success', function(e) {
+      const onCopySuccess = function(e) {
         // button target
         const button = e.trigger;
         // don't keep focus
@@ -983,7 +974,47 @@
         }, 1000);
         // clear code selection
         e.clearSelection();
+      }
+      const getTextToCopy = function(trigger) {
+          const codeEl = trigger.previousElementSibling.cloneNode(true);
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+      }
+      const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+        text: getTextToCopy
       });
+      clipboard.on('success', onCopySuccess);
+      if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+        // For code content inside modals, clipBoardJS needs to be initialized with a container option
+        // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+        const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+          text: getTextToCopy,
+          container: window.document.getElementById('quarto-embedded-source-code-modal')
+        });
+        clipboardModal.on('success', onCopySuccess);
+      }
+        var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+        var mailtoRegex = new RegExp(/^mailto:/);
+          var filterRegex = new RegExp("https:\/\/workshops\.tidymodels\.org");
+        var isInternal = (href) => {
+            return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+        }
+        // Inspect non-navigation links and adorn them if external
+     	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+        for (var i=0; i<links.length; i++) {
+          const link = links[i];
+          if (!isInternal(link.href)) {
+            // undo the damage that might have been done by quarto-nav.js in the case of
+            // links that we want to consider external
+            if (link.dataset.originalHref !== undefined) {
+              link.href = link.dataset.originalHref;
+            }
+          }
+        }
       function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
         const config = {
           allowHTML: true,
@@ -1020,7 +1051,11 @@
           try { href = new URL(href).hash; } catch {}
           const id = href.replace(/^#\/?/, "");
           const note = window.document.getElementById(id);
-          return note.innerHTML;
+          if (note) {
+            return note.innerHTML;
+          } else {
+            return "";
+          }
         });
       }
       const findCites = (el) => {
