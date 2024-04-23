@@ -9,9 +9,9 @@
 <link href="../site_libs/quarto-html/light-border.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.4.104">
+  <meta name="generator" content="quarto-1.5.30">
 
-  <title>Machine learning with tidymodels - 3 - What makes a model?</title>
+  <title>Machine learning with tidymodels – 3 - What makes a model?</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -31,7 +31,7 @@
     }
     /* CSS for syntax highlighting */
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span { line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -42,7 +42,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -70,7 +70,7 @@
     code span.at { color: #657422; } /* Attribute */
     code span.bn { color: #ad0000; } /* BaseN */
     code span.bu { } /* BuiltIn */
-    code span.cf { color: #003b4f; } /* ControlFlow */
+    code span.cf { color: #003b4f; font-weight: bold; } /* ControlFlow */
     code span.ch { color: #20794d; } /* Char */
     code span.cn { color: #8f5902; } /* Constant */
     code span.co { color: #5e5e5e; } /* Comment */
@@ -84,7 +84,7 @@
     code span.fu { color: #4758ab; } /* Function */
     code span.im { color: #00769e; } /* Import */
     code span.in { color: #5e5e5e; } /* Information */
-    code span.kw { color: #003b4f; } /* Keyword */
+    code span.kw { color: #003b4f; font-weight: bold; } /* Keyword */
     code span.op { color: #5e5e5e; } /* Operator */
     code span.ot { color: #003b4f; } /* Other */
     code span.pp { color: #ad0000; } /* Preprocessor */
@@ -221,7 +221,8 @@
   }
 
   .callout.callout-titled .callout-body > .callout-content > :last-child {
-    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0;
   }
 
   .callout.callout-titled .callout-icon::before {
@@ -388,7 +389,7 @@
   <script src="../site_libs/countdown-0.4.0/countdown.js"></script>
 <meta property="og:title" content="Machine learning with tidymodels - 3 - What makes a model?">
 <meta property="og:description" content="Introduction to tidymodels">
-<meta property="og:site-name" content="Machine learning with tidymodels">
+<meta property="og:site_name" content="Machine learning with tidymodels">
 <meta name="twitter:title" content="Machine learning with tidymodels - 3 - What makes a model?">
 <meta name="twitter:description" content="Introduction to tidymodels">
 <meta name="twitter:card" content="summary">
@@ -449,10 +450,10 @@
 <section id="to-specify-a-model-1" class="slide level2">
 <h2>To specify a model <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="fu">logistic_reg</span>()</span>
-<span id="cb1-2"><a href="#cb1-2"></a><span class="co">#&gt; Logistic Regression Model Specification (classification)</span></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="co">#&gt; </span></span>
-<span id="cb1-4"><a href="#cb1-4"></a><span class="co">#&gt; Computational engine: glm</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">logistic_reg</span>()</span>
+<span id="cb1-2"><a></a><span class="co">#&gt; Logistic Regression Model Specification (classification)</span></span>
+<span id="cb1-3"><a></a><span class="co">#&gt; </span></span>
+<span id="cb1-4"><a></a><span class="co">#&gt; Computational engine: glm</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <aside class="notes">
 <p>Models have default engines</p>
@@ -485,21 +486,21 @@
 <section id="to-specify-a-model-3" class="slide level2">
 <h2>To specify a model <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="fu">logistic_reg</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb2-2"><a href="#cb2-2"></a>  <span class="fu">set_engine</span>(<span class="st">"glmnet"</span>)</span>
-<span id="cb2-3"><a href="#cb2-3"></a><span class="co">#&gt; Logistic Regression Model Specification (classification)</span></span>
-<span id="cb2-4"><a href="#cb2-4"></a><span class="co">#&gt; </span></span>
-<span id="cb2-5"><a href="#cb2-5"></a><span class="co">#&gt; Computational engine: glmnet</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="fu">logistic_reg</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a></a>  <span class="fu">set_engine</span>(<span class="st">"glmnet"</span>)</span>
+<span id="cb2-3"><a></a><span class="co">#&gt; Logistic Regression Model Specification (classification)</span></span>
+<span id="cb2-4"><a></a><span class="co">#&gt; </span></span>
+<span id="cb2-5"><a></a><span class="co">#&gt; Computational engine: glmnet</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="to-specify-a-model-4" class="slide level2">
 <h2>To specify a model <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="fu">logistic_reg</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb3-2"><a href="#cb3-2"></a>  <span class="fu">set_engine</span>(<span class="st">"stan"</span>)</span>
-<span id="cb3-3"><a href="#cb3-3"></a><span class="co">#&gt; Logistic Regression Model Specification (classification)</span></span>
-<span id="cb3-4"><a href="#cb3-4"></a><span class="co">#&gt; </span></span>
-<span id="cb3-5"><a href="#cb3-5"></a><span class="co">#&gt; Computational engine: stan</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a><span class="fu">logistic_reg</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb3-2"><a></a>  <span class="fu">set_engine</span>(<span class="st">"stan"</span>)</span>
+<span id="cb3-3"><a></a><span class="co">#&gt; Logistic Regression Model Specification (classification)</span></span>
+<span id="cb3-4"><a></a><span class="co">#&gt; </span></span>
+<span id="cb3-5"><a></a><span class="co">#&gt; Computational engine: stan</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="to-specify-a-model-5" class="slide level2">
@@ -519,10 +520,10 @@
 <section id="to-specify-a-model-6" class="slide level2">
 <h2>To specify a model <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="fu">decision_tree</span>()</span>
-<span id="cb4-2"><a href="#cb4-2"></a><span class="co">#&gt; Decision Tree Model Specification (unknown mode)</span></span>
-<span id="cb4-3"><a href="#cb4-3"></a><span class="co">#&gt; </span></span>
-<span id="cb4-4"><a href="#cb4-4"></a><span class="co">#&gt; Computational engine: rpart</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a><span class="fu">decision_tree</span>()</span>
+<span id="cb4-2"><a></a><span class="co">#&gt; Decision Tree Model Specification (unknown mode)</span></span>
+<span id="cb4-3"><a></a><span class="co">#&gt; </span></span>
+<span id="cb4-4"><a></a><span class="co">#&gt; Computational engine: rpart</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <aside class="notes">
 <p>Some models have a default mode</p>
@@ -541,11 +542,11 @@
 <section id="to-specify-a-model-7" class="slide level2">
 <h2>To specify a model <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="fu">decision_tree</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb5-2"><a href="#cb5-2"></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
-<span id="cb5-3"><a href="#cb5-3"></a><span class="co">#&gt; Decision Tree Model Specification (classification)</span></span>
-<span id="cb5-4"><a href="#cb5-4"></a><span class="co">#&gt; </span></span>
-<span id="cb5-5"><a href="#cb5-5"></a><span class="co">#&gt; Computational engine: rpart</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a><span class="fu">decision_tree</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb5-2"><a></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
+<span id="cb5-3"><a></a><span class="co">#&gt; Decision Tree Model Specification (classification)</span></span>
+<span id="cb5-4"><a></a><span class="co">#&gt; </span></span>
+<span id="cb5-5"><a></a><span class="co">#&gt; Computational engine: rpart</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="fragment">
 <p><br><br></p>
@@ -606,7 +607,11 @@
 <div class="column" style="width:60%;">
 <div class="cell">
 <div class="cell-output-display">
+<div>
+<figure>
 <p><img data-src="figures/plot-rates-1.svg"></p>
+</figure>
+</div>
 </div>
 </div>
 </div><div class="column" style="width:40%;">
@@ -620,7 +625,11 @@
 <div class="column" style="width:60%;">
 <div class="cell">
 <div class="cell-output-display">
+<div>
+<figure>
 <p><img data-src="figures/plot-logistic-reg-1.svg"></p>
+</figure>
+</div>
 </div>
 </div>
 </div><div class="column" style="width:40%;">
@@ -634,7 +643,11 @@
 <div class="column" style="width:60%;">
 <div class="cell">
 <div class="cell-output-display">
+<div>
+<figure>
 <p><img data-src="figures/plot-logistic-reg-2-1.svg"></p>
+</figure>
+</div>
 </div>
 </div>
 </div><div class="column" style="width:40%;">
@@ -656,7 +669,7 @@
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="figures/plot-tree-fit-1.svg"></p>
+<p><img data-src="figures/plot-tree-fit-1.svg" class="quarto-figure quarto-figure-center"></p>
 </figure>
 </div>
 </div>
@@ -674,7 +687,7 @@
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="figures/plot-tree-fit-2-1.svg"></p>
+<p><img data-src="figures/plot-tree-fit-2-1.svg" class="quarto-figure quarto-figure-center"></p>
 </figure>
 </div>
 </div>
@@ -696,7 +709,7 @@
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="figures/plot-tree-fit-3-1.svg"></p>
+<p><img data-src="figures/plot-tree-fit-3-1.svg" class="quarto-figure quarto-figure-center"></p>
 </figure>
 </div>
 </div>
@@ -704,7 +717,11 @@
 </div><div class="column" style="width:50%;">
 <div class="cell">
 <div class="cell-output-display">
+<div>
+<figure>
 <p><img data-src="figures/plot-tree-preds-1.svg"></p>
+</figure>
+</div>
 </div>
 </div>
 </div>
@@ -717,14 +734,22 @@
 <h3 id="logistic-regression-3">Logistic regression</h3>
 <div class="cell">
 <div class="cell-output-display">
+<div>
+<figure>
 <p><img data-src="figures/plot-logistic-reg-3-1.svg"></p>
+</figure>
+</div>
 </div>
 </div>
 </div><div class="column" style="width:50%;">
 <h3 id="decision-trees-3">Decision trees</h3>
 <div class="cell">
 <div class="cell-output-display">
+<div>
+<figure>
 <p><img data-src="figures/plot-tree-preds-2-1.svg"></p>
+</figure>
+</div>
 </div>
 </div>
 </div>
@@ -738,7 +763,7 @@
 <section id="workflows-bind-preprocessors-and-models" class="slide level2">
 <h2>Workflows bind preprocessors and models</h2>
 
-<img data-src="images/good_workflow.png" style="width:70.0%" class="r-stretch quarto-figure-center"><aside class="notes">
+<img data-src="images/good_workflow.png" class="quarto-figure quarto-figure-center r-stretch" style="width:70.0%"><aside class="notes">
 <p>Explain that PCA that is a preprocessor / dimensionality reduction, used to decorrelate data</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
@@ -755,7 +780,7 @@
 <section id="what-is-wrong-with-this" class="slide level2 annotation">
 <h2>What is wrong with this?</h2>
 
-<img data-src="images/bad_workflow.png" style="width:70.0%" class="r-stretch quarto-figure-center"></section>
+<img data-src="images/bad_workflow.png" class="quarto-figure quarto-figure-center r-stretch" style="width:70.0%"></section>
 <section id="why-a-workflow" class="slide level2">
 <h2>Why a <code>workflow()</code>? <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="fragment">
@@ -799,102 +824,102 @@
 <section id="a-model-workflow-1" class="slide level2">
 <h2>A model workflow <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>tree_spec <span class="ot">&lt;-</span></span>
-<span id="cb6-2"><a href="#cb6-2"></a>  <span class="fu">decision_tree</span>(<span class="at">cost_complexity =</span> <span class="fl">0.002</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb6-3"><a href="#cb6-3"></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
-<span id="cb6-4"><a href="#cb6-4"></a></span>
-<span id="cb6-5"><a href="#cb6-5"></a>tree_spec <span class="sc">%&gt;%</span> </span>
-<span id="cb6-6"><a href="#cb6-6"></a>  <span class="fu">fit</span>(tip <span class="sc">~</span> ., <span class="at">data =</span> taxi_train) </span>
-<span id="cb6-7"><a href="#cb6-7"></a><span class="co">#&gt; parsnip model object</span></span>
-<span id="cb6-8"><a href="#cb6-8"></a><span class="co">#&gt; </span></span>
-<span id="cb6-9"><a href="#cb6-9"></a><span class="co">#&gt; n= 8000 </span></span>
-<span id="cb6-10"><a href="#cb6-10"></a><span class="co">#&gt; </span></span>
-<span id="cb6-11"><a href="#cb6-11"></a><span class="co">#&gt; node), split, n, loss, yval, (yprob)</span></span>
-<span id="cb6-12"><a href="#cb6-12"></a><span class="co">#&gt;       * denotes terminal node</span></span>
-<span id="cb6-13"><a href="#cb6-13"></a><span class="co">#&gt; </span></span>
-<span id="cb6-14"><a href="#cb6-14"></a><span class="co">#&gt;  1) root 8000 616 yes (0.92300000 0.07700000)  </span></span>
-<span id="cb6-15"><a href="#cb6-15"></a><span class="co">#&gt;    2) distance&gt;=14.12 2041  68 yes (0.96668300 0.03331700) *</span></span>
-<span id="cb6-16"><a href="#cb6-16"></a><span class="co">#&gt;    3) distance&lt; 14.12 5959 548 yes (0.90803826 0.09196174)  </span></span>
-<span id="cb6-17"><a href="#cb6-17"></a><span class="co">#&gt;      6) distance&lt; 5.275 5419 450 yes (0.91695885 0.08304115) *</span></span>
-<span id="cb6-18"><a href="#cb6-18"></a><span class="co">#&gt;      7) distance&gt;=5.275 540  98 yes (0.81851852 0.18148148)  </span></span>
-<span id="cb6-19"><a href="#cb6-19"></a><span class="co">#&gt;       14) company=Chicago Independents,City Service,Sun Taxi,Taxi Affiliation Services,Taxicab Insurance Agency Llc,other 478  68 yes (0.85774059 0.14225941) *</span></span>
-<span id="cb6-20"><a href="#cb6-20"></a><span class="co">#&gt;       15) company=Flash Cab 62  30 yes (0.51612903 0.48387097)  </span></span>
-<span id="cb6-21"><a href="#cb6-21"></a><span class="co">#&gt;         30) dow=Thu 12   2 yes (0.83333333 0.16666667) *</span></span>
-<span id="cb6-22"><a href="#cb6-22"></a><span class="co">#&gt;         31) dow=Sun,Mon,Tue,Wed,Fri,Sat 50  22 no (0.44000000 0.56000000)  </span></span>
-<span id="cb6-23"><a href="#cb6-23"></a><span class="co">#&gt;           62) distance&gt;=11.77 14   4 yes (0.71428571 0.28571429) *</span></span>
-<span id="cb6-24"><a href="#cb6-24"></a><span class="co">#&gt;           63) distance&lt; 11.77 36  12 no (0.33333333 0.66666667) *</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a>tree_spec <span class="ot">&lt;-</span></span>
+<span id="cb6-2"><a></a>  <span class="fu">decision_tree</span>(<span class="at">cost_complexity =</span> <span class="fl">0.002</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-3"><a></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
+<span id="cb6-4"><a></a></span>
+<span id="cb6-5"><a></a>tree_spec <span class="sc">%&gt;%</span> </span>
+<span id="cb6-6"><a></a>  <span class="fu">fit</span>(tip <span class="sc">~</span> ., <span class="at">data =</span> taxi_train) </span>
+<span id="cb6-7"><a></a><span class="co">#&gt; parsnip model object</span></span>
+<span id="cb6-8"><a></a><span class="co">#&gt; </span></span>
+<span id="cb6-9"><a></a><span class="co">#&gt; n= 8000 </span></span>
+<span id="cb6-10"><a></a><span class="co">#&gt; </span></span>
+<span id="cb6-11"><a></a><span class="co">#&gt; node), split, n, loss, yval, (yprob)</span></span>
+<span id="cb6-12"><a></a><span class="co">#&gt;       * denotes terminal node</span></span>
+<span id="cb6-13"><a></a><span class="co">#&gt; </span></span>
+<span id="cb6-14"><a></a><span class="co">#&gt;  1) root 8000 616 yes (0.92300000 0.07700000)  </span></span>
+<span id="cb6-15"><a></a><span class="co">#&gt;    2) distance&gt;=14.12 2041  68 yes (0.96668300 0.03331700) *</span></span>
+<span id="cb6-16"><a></a><span class="co">#&gt;    3) distance&lt; 14.12 5959 548 yes (0.90803826 0.09196174)  </span></span>
+<span id="cb6-17"><a></a><span class="co">#&gt;      6) distance&lt; 5.275 5419 450 yes (0.91695885 0.08304115) *</span></span>
+<span id="cb6-18"><a></a><span class="co">#&gt;      7) distance&gt;=5.275 540  98 yes (0.81851852 0.18148148)  </span></span>
+<span id="cb6-19"><a></a><span class="co">#&gt;       14) company=Chicago Independents,City Service,Sun Taxi,Taxi Affiliation Services,Taxicab Insurance Agency Llc,other 478  68 yes (0.85774059 0.14225941) *</span></span>
+<span id="cb6-20"><a></a><span class="co">#&gt;       15) company=Flash Cab 62  30 yes (0.51612903 0.48387097)  </span></span>
+<span id="cb6-21"><a></a><span class="co">#&gt;         30) dow=Thu 12   2 yes (0.83333333 0.16666667) *</span></span>
+<span id="cb6-22"><a></a><span class="co">#&gt;         31) dow=Sun,Mon,Tue,Wed,Fri,Sat 50  22 no (0.44000000 0.56000000)  </span></span>
+<span id="cb6-23"><a></a><span class="co">#&gt;           62) distance&gt;=11.77 14   4 yes (0.71428571 0.28571429) *</span></span>
+<span id="cb6-24"><a></a><span class="co">#&gt;           63) distance&lt; 11.77 36  12 no (0.33333333 0.66666667) *</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="a-model-workflow-2" class="slide level2">
 <h2>A model workflow <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>tree_spec <span class="ot">&lt;-</span></span>
-<span id="cb7-2"><a href="#cb7-2"></a>  <span class="fu">decision_tree</span>(<span class="at">cost_complexity =</span> <span class="fl">0.002</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb7-3"><a href="#cb7-3"></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
-<span id="cb7-4"><a href="#cb7-4"></a></span>
-<span id="cb7-5"><a href="#cb7-5"></a><span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb7-6"><a href="#cb7-6"></a>  <span class="fu">add_formula</span>(tip <span class="sc">~</span> .) <span class="sc">%&gt;%</span></span>
-<span id="cb7-7"><a href="#cb7-7"></a>  <span class="fu">add_model</span>(tree_spec) <span class="sc">%&gt;%</span></span>
-<span id="cb7-8"><a href="#cb7-8"></a>  <span class="fu">fit</span>(<span class="at">data =</span> taxi_train) </span>
-<span id="cb7-9"><a href="#cb7-9"></a><span class="co">#&gt; ══ Workflow [trained] ════════════════════════════════════════════════</span></span>
-<span id="cb7-10"><a href="#cb7-10"></a><span class="co">#&gt; Preprocessor: Formula</span></span>
-<span id="cb7-11"><a href="#cb7-11"></a><span class="co">#&gt; Model: decision_tree()</span></span>
-<span id="cb7-12"><a href="#cb7-12"></a><span class="co">#&gt; </span></span>
-<span id="cb7-13"><a href="#cb7-13"></a><span class="co">#&gt; ── Preprocessor ──────────────────────────────────────────────────────</span></span>
-<span id="cb7-14"><a href="#cb7-14"></a><span class="co">#&gt; tip ~ .</span></span>
-<span id="cb7-15"><a href="#cb7-15"></a><span class="co">#&gt; </span></span>
-<span id="cb7-16"><a href="#cb7-16"></a><span class="co">#&gt; ── Model ─────────────────────────────────────────────────────────────</span></span>
-<span id="cb7-17"><a href="#cb7-17"></a><span class="co">#&gt; n= 8000 </span></span>
-<span id="cb7-18"><a href="#cb7-18"></a><span class="co">#&gt; </span></span>
-<span id="cb7-19"><a href="#cb7-19"></a><span class="co">#&gt; node), split, n, loss, yval, (yprob)</span></span>
-<span id="cb7-20"><a href="#cb7-20"></a><span class="co">#&gt;       * denotes terminal node</span></span>
-<span id="cb7-21"><a href="#cb7-21"></a><span class="co">#&gt; </span></span>
-<span id="cb7-22"><a href="#cb7-22"></a><span class="co">#&gt;  1) root 8000 616 yes (0.92300000 0.07700000)  </span></span>
-<span id="cb7-23"><a href="#cb7-23"></a><span class="co">#&gt;    2) distance&gt;=14.12 2041  68 yes (0.96668300 0.03331700) *</span></span>
-<span id="cb7-24"><a href="#cb7-24"></a><span class="co">#&gt;    3) distance&lt; 14.12 5959 548 yes (0.90803826 0.09196174)  </span></span>
-<span id="cb7-25"><a href="#cb7-25"></a><span class="co">#&gt;      6) distance&lt; 5.275 5419 450 yes (0.91695885 0.08304115) *</span></span>
-<span id="cb7-26"><a href="#cb7-26"></a><span class="co">#&gt;      7) distance&gt;=5.275 540  98 yes (0.81851852 0.18148148)  </span></span>
-<span id="cb7-27"><a href="#cb7-27"></a><span class="co">#&gt;       14) company=Chicago Independents,City Service,Sun Taxi,Taxi Affiliation Services,Taxicab Insurance Agency Llc,other 478  68 yes (0.85774059 0.14225941) *</span></span>
-<span id="cb7-28"><a href="#cb7-28"></a><span class="co">#&gt;       15) company=Flash Cab 62  30 yes (0.51612903 0.48387097)  </span></span>
-<span id="cb7-29"><a href="#cb7-29"></a><span class="co">#&gt;         30) dow=Thu 12   2 yes (0.83333333 0.16666667) *</span></span>
-<span id="cb7-30"><a href="#cb7-30"></a><span class="co">#&gt;         31) dow=Sun,Mon,Tue,Wed,Fri,Sat 50  22 no (0.44000000 0.56000000)  </span></span>
-<span id="cb7-31"><a href="#cb7-31"></a><span class="co">#&gt;           62) distance&gt;=11.77 14   4 yes (0.71428571 0.28571429) *</span></span>
-<span id="cb7-32"><a href="#cb7-32"></a><span class="co">#&gt;           63) distance&lt; 11.77 36  12 no (0.33333333 0.66666667) *</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a>tree_spec <span class="ot">&lt;-</span></span>
+<span id="cb7-2"><a></a>  <span class="fu">decision_tree</span>(<span class="at">cost_complexity =</span> <span class="fl">0.002</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-3"><a></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
+<span id="cb7-4"><a></a></span>
+<span id="cb7-5"><a></a><span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb7-6"><a></a>  <span class="fu">add_formula</span>(tip <span class="sc">~</span> .) <span class="sc">%&gt;%</span></span>
+<span id="cb7-7"><a></a>  <span class="fu">add_model</span>(tree_spec) <span class="sc">%&gt;%</span></span>
+<span id="cb7-8"><a></a>  <span class="fu">fit</span>(<span class="at">data =</span> taxi_train) </span>
+<span id="cb7-9"><a></a><span class="co">#&gt; ══ Workflow [trained] ════════════════════════════════════════════════</span></span>
+<span id="cb7-10"><a></a><span class="co">#&gt; Preprocessor: Formula</span></span>
+<span id="cb7-11"><a></a><span class="co">#&gt; Model: decision_tree()</span></span>
+<span id="cb7-12"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-13"><a></a><span class="co">#&gt; ── Preprocessor ──────────────────────────────────────────────────────</span></span>
+<span id="cb7-14"><a></a><span class="co">#&gt; tip ~ .</span></span>
+<span id="cb7-15"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-16"><a></a><span class="co">#&gt; ── Model ─────────────────────────────────────────────────────────────</span></span>
+<span id="cb7-17"><a></a><span class="co">#&gt; n= 8000 </span></span>
+<span id="cb7-18"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-19"><a></a><span class="co">#&gt; node), split, n, loss, yval, (yprob)</span></span>
+<span id="cb7-20"><a></a><span class="co">#&gt;       * denotes terminal node</span></span>
+<span id="cb7-21"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-22"><a></a><span class="co">#&gt;  1) root 8000 616 yes (0.92300000 0.07700000)  </span></span>
+<span id="cb7-23"><a></a><span class="co">#&gt;    2) distance&gt;=14.12 2041  68 yes (0.96668300 0.03331700) *</span></span>
+<span id="cb7-24"><a></a><span class="co">#&gt;    3) distance&lt; 14.12 5959 548 yes (0.90803826 0.09196174)  </span></span>
+<span id="cb7-25"><a></a><span class="co">#&gt;      6) distance&lt; 5.275 5419 450 yes (0.91695885 0.08304115) *</span></span>
+<span id="cb7-26"><a></a><span class="co">#&gt;      7) distance&gt;=5.275 540  98 yes (0.81851852 0.18148148)  </span></span>
+<span id="cb7-27"><a></a><span class="co">#&gt;       14) company=Chicago Independents,City Service,Sun Taxi,Taxi Affiliation Services,Taxicab Insurance Agency Llc,other 478  68 yes (0.85774059 0.14225941) *</span></span>
+<span id="cb7-28"><a></a><span class="co">#&gt;       15) company=Flash Cab 62  30 yes (0.51612903 0.48387097)  </span></span>
+<span id="cb7-29"><a></a><span class="co">#&gt;         30) dow=Thu 12   2 yes (0.83333333 0.16666667) *</span></span>
+<span id="cb7-30"><a></a><span class="co">#&gt;         31) dow=Sun,Mon,Tue,Wed,Fri,Sat 50  22 no (0.44000000 0.56000000)  </span></span>
+<span id="cb7-31"><a></a><span class="co">#&gt;           62) distance&gt;=11.77 14   4 yes (0.71428571 0.28571429) *</span></span>
+<span id="cb7-32"><a></a><span class="co">#&gt;           63) distance&lt; 11.77 36  12 no (0.33333333 0.66666667) *</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="a-model-workflow-3" class="slide level2">
 <h2>A model workflow <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a>tree_spec <span class="ot">&lt;-</span></span>
-<span id="cb8-2"><a href="#cb8-2"></a>  <span class="fu">decision_tree</span>(<span class="at">cost_complexity =</span> <span class="fl">0.002</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb8-3"><a href="#cb8-3"></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
-<span id="cb8-4"><a href="#cb8-4"></a></span>
-<span id="cb8-5"><a href="#cb8-5"></a><span class="fu">workflow</span>(tip <span class="sc">~</span> ., tree_spec) <span class="sc">%&gt;%</span> </span>
-<span id="cb8-6"><a href="#cb8-6"></a>  <span class="fu">fit</span>(<span class="at">data =</span> taxi_train) </span>
-<span id="cb8-7"><a href="#cb8-7"></a><span class="co">#&gt; ══ Workflow [trained] ════════════════════════════════════════════════</span></span>
-<span id="cb8-8"><a href="#cb8-8"></a><span class="co">#&gt; Preprocessor: Formula</span></span>
-<span id="cb8-9"><a href="#cb8-9"></a><span class="co">#&gt; Model: decision_tree()</span></span>
-<span id="cb8-10"><a href="#cb8-10"></a><span class="co">#&gt; </span></span>
-<span id="cb8-11"><a href="#cb8-11"></a><span class="co">#&gt; ── Preprocessor ──────────────────────────────────────────────────────</span></span>
-<span id="cb8-12"><a href="#cb8-12"></a><span class="co">#&gt; tip ~ .</span></span>
-<span id="cb8-13"><a href="#cb8-13"></a><span class="co">#&gt; </span></span>
-<span id="cb8-14"><a href="#cb8-14"></a><span class="co">#&gt; ── Model ─────────────────────────────────────────────────────────────</span></span>
-<span id="cb8-15"><a href="#cb8-15"></a><span class="co">#&gt; n= 8000 </span></span>
-<span id="cb8-16"><a href="#cb8-16"></a><span class="co">#&gt; </span></span>
-<span id="cb8-17"><a href="#cb8-17"></a><span class="co">#&gt; node), split, n, loss, yval, (yprob)</span></span>
-<span id="cb8-18"><a href="#cb8-18"></a><span class="co">#&gt;       * denotes terminal node</span></span>
-<span id="cb8-19"><a href="#cb8-19"></a><span class="co">#&gt; </span></span>
-<span id="cb8-20"><a href="#cb8-20"></a><span class="co">#&gt;  1) root 8000 616 yes (0.92300000 0.07700000)  </span></span>
-<span id="cb8-21"><a href="#cb8-21"></a><span class="co">#&gt;    2) distance&gt;=14.12 2041  68 yes (0.96668300 0.03331700) *</span></span>
-<span id="cb8-22"><a href="#cb8-22"></a><span class="co">#&gt;    3) distance&lt; 14.12 5959 548 yes (0.90803826 0.09196174)  </span></span>
-<span id="cb8-23"><a href="#cb8-23"></a><span class="co">#&gt;      6) distance&lt; 5.275 5419 450 yes (0.91695885 0.08304115) *</span></span>
-<span id="cb8-24"><a href="#cb8-24"></a><span class="co">#&gt;      7) distance&gt;=5.275 540  98 yes (0.81851852 0.18148148)  </span></span>
-<span id="cb8-25"><a href="#cb8-25"></a><span class="co">#&gt;       14) company=Chicago Independents,City Service,Sun Taxi,Taxi Affiliation Services,Taxicab Insurance Agency Llc,other 478  68 yes (0.85774059 0.14225941) *</span></span>
-<span id="cb8-26"><a href="#cb8-26"></a><span class="co">#&gt;       15) company=Flash Cab 62  30 yes (0.51612903 0.48387097)  </span></span>
-<span id="cb8-27"><a href="#cb8-27"></a><span class="co">#&gt;         30) dow=Thu 12   2 yes (0.83333333 0.16666667) *</span></span>
-<span id="cb8-28"><a href="#cb8-28"></a><span class="co">#&gt;         31) dow=Sun,Mon,Tue,Wed,Fri,Sat 50  22 no (0.44000000 0.56000000)  </span></span>
-<span id="cb8-29"><a href="#cb8-29"></a><span class="co">#&gt;           62) distance&gt;=11.77 14   4 yes (0.71428571 0.28571429) *</span></span>
-<span id="cb8-30"><a href="#cb8-30"></a><span class="co">#&gt;           63) distance&lt; 11.77 36  12 no (0.33333333 0.66666667) *</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a>tree_spec <span class="ot">&lt;-</span></span>
+<span id="cb8-2"><a></a>  <span class="fu">decision_tree</span>(<span class="at">cost_complexity =</span> <span class="fl">0.002</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-3"><a></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
+<span id="cb8-4"><a></a></span>
+<span id="cb8-5"><a></a><span class="fu">workflow</span>(tip <span class="sc">~</span> ., tree_spec) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-6"><a></a>  <span class="fu">fit</span>(<span class="at">data =</span> taxi_train) </span>
+<span id="cb8-7"><a></a><span class="co">#&gt; ══ Workflow [trained] ════════════════════════════════════════════════</span></span>
+<span id="cb8-8"><a></a><span class="co">#&gt; Preprocessor: Formula</span></span>
+<span id="cb8-9"><a></a><span class="co">#&gt; Model: decision_tree()</span></span>
+<span id="cb8-10"><a></a><span class="co">#&gt; </span></span>
+<span id="cb8-11"><a></a><span class="co">#&gt; ── Preprocessor ──────────────────────────────────────────────────────</span></span>
+<span id="cb8-12"><a></a><span class="co">#&gt; tip ~ .</span></span>
+<span id="cb8-13"><a></a><span class="co">#&gt; </span></span>
+<span id="cb8-14"><a></a><span class="co">#&gt; ── Model ─────────────────────────────────────────────────────────────</span></span>
+<span id="cb8-15"><a></a><span class="co">#&gt; n= 8000 </span></span>
+<span id="cb8-16"><a></a><span class="co">#&gt; </span></span>
+<span id="cb8-17"><a></a><span class="co">#&gt; node), split, n, loss, yval, (yprob)</span></span>
+<span id="cb8-18"><a></a><span class="co">#&gt;       * denotes terminal node</span></span>
+<span id="cb8-19"><a></a><span class="co">#&gt; </span></span>
+<span id="cb8-20"><a></a><span class="co">#&gt;  1) root 8000 616 yes (0.92300000 0.07700000)  </span></span>
+<span id="cb8-21"><a></a><span class="co">#&gt;    2) distance&gt;=14.12 2041  68 yes (0.96668300 0.03331700) *</span></span>
+<span id="cb8-22"><a></a><span class="co">#&gt;    3) distance&lt; 14.12 5959 548 yes (0.90803826 0.09196174)  </span></span>
+<span id="cb8-23"><a></a><span class="co">#&gt;      6) distance&lt; 5.275 5419 450 yes (0.91695885 0.08304115) *</span></span>
+<span id="cb8-24"><a></a><span class="co">#&gt;      7) distance&gt;=5.275 540  98 yes (0.81851852 0.18148148)  </span></span>
+<span id="cb8-25"><a></a><span class="co">#&gt;       14) company=Chicago Independents,City Service,Sun Taxi,Taxi Affiliation Services,Taxicab Insurance Agency Llc,other 478  68 yes (0.85774059 0.14225941) *</span></span>
+<span id="cb8-26"><a></a><span class="co">#&gt;       15) company=Flash Cab 62  30 yes (0.51612903 0.48387097)  </span></span>
+<span id="cb8-27"><a></a><span class="co">#&gt;         30) dow=Thu 12   2 yes (0.83333333 0.16666667) *</span></span>
+<span id="cb8-28"><a></a><span class="co">#&gt;         31) dow=Sun,Mon,Tue,Wed,Fri,Sat 50  22 no (0.44000000 0.56000000)  </span></span>
+<span id="cb8-29"><a></a><span class="co">#&gt;           62) distance&gt;=11.77 14   4 yes (0.71428571 0.28571429) *</span></span>
+<span id="cb8-30"><a></a><span class="co">#&gt;           63) distance&lt; 11.77 36  12 no (0.33333333 0.66666667) *</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="your-turn-2" class="slide level2" data-transition="slide-in">
@@ -917,13 +942,13 @@
 <h2>Predict with your model <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <p>How do you use your new <code>tree_fit</code> model?</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>tree_spec <span class="ot">&lt;-</span></span>
-<span id="cb9-2"><a href="#cb9-2"></a>  <span class="fu">decision_tree</span>(<span class="at">cost_complexity =</span> <span class="fl">0.002</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-3"><a href="#cb9-3"></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
-<span id="cb9-4"><a href="#cb9-4"></a></span>
-<span id="cb9-5"><a href="#cb9-5"></a>tree_fit <span class="ot">&lt;-</span></span>
-<span id="cb9-6"><a href="#cb9-6"></a>  <span class="fu">workflow</span>(tip <span class="sc">~</span> ., tree_spec) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-7"><a href="#cb9-7"></a>  <span class="fu">fit</span>(<span class="at">data =</span> taxi_train) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a>tree_spec <span class="ot">&lt;-</span></span>
+<span id="cb9-2"><a></a>  <span class="fu">decision_tree</span>(<span class="at">cost_complexity =</span> <span class="fl">0.002</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-3"><a></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
+<span id="cb9-4"><a></a></span>
+<span id="cb9-5"><a></a>tree_fit <span class="ot">&lt;-</span></span>
+<span id="cb9-6"><a></a>  <span class="fu">workflow</span>(tip <span class="sc">~</span> ., tree_spec) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-7"><a></a>  <span class="fu">fit</span>(<span class="at">data =</span> taxi_train) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="your-turn-3" class="slide level2" data-transition="slide-in">
@@ -974,7 +999,7 @@
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="figures/plot-tree-fit-4-1.svg"></p>
+<p><img data-src="figures/plot-tree-fit-4-1.svg" class="quarto-figure quarto-figure-center"></p>
 </figure>
 </div>
 </div>
@@ -984,10 +1009,10 @@
 <h2>Understand your model <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <p>How do you <strong>understand</strong> your new <code>tree_fit</code> model?</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="fu">library</span>(rpart.plot)</span>
-<span id="cb10-2"><a href="#cb10-2"></a>tree_fit <span class="sc">%&gt;%</span></span>
-<span id="cb10-3"><a href="#cb10-3"></a>  <span class="fu">extract_fit_engine</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb10-4"><a href="#cb10-4"></a>  <span class="fu">rpart.plot</span>(<span class="at">roundint =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a><span class="fu">library</span>(rpart.plot)</span>
+<span id="cb10-2"><a></a>tree_fit <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a></a>  <span class="fu">extract_fit_engine</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb10-4"><a></a>  <span class="fu">rpart.plot</span>(<span class="at">roundint =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>You can <code>extract_*()</code> several components of your fitted workflow.</p>
 <div class="fragment">
@@ -1063,7 +1088,7 @@
 <section id="the-whole-game---status-update" class="slide level2">
 <h2>The whole game - status update</h2>
 
-<img data-src="images/whole-game-transparent-model-1.jpg" class="r-stretch quarto-figure-center"><aside class="notes">
+<img data-src="images/whole-game-transparent-model-1.jpg" class="quarto-figure quarto-figure-center r-stretch" width="3543"><aside class="notes">
 <p>Stress that fitting a model on the entire training set was only for illustrating how to fit a model</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
@@ -1077,8 +1102,10 @@
           display:block!important;
       }</style></aside>
 
+<div class="quarto-auto-generated-content">
 <div class="footer footer-default">
 <p><a href="https://workshops.tidymodels.org" class="uri">https://workshops.tidymodels.org</a></p>
+</div>
 </div>
 </section></section>
     </div>
@@ -1107,7 +1134,6 @@
       Reveal.initialize({
 'controlsAuto': true,
 'previewLinksAuto': false,
-'smaller': false,
 'pdfSeparateFragments': false,
 'autoAnimateEasing': "ease",
 'autoAnimateDuration': 1,
@@ -1393,18 +1419,7 @@
         }
         return false;
       }
-      const clipboard = new window.ClipboardJS('.code-copy-button', {
-        text: function(trigger) {
-          const codeEl = trigger.previousElementSibling.cloneNode(true);
-          for (const childEl of codeEl.children) {
-            if (isCodeAnnotation(childEl)) {
-              childEl.remove();
-            }
-          }
-          return codeEl.innerText;
-        }
-      });
-      clipboard.on('success', function(e) {
+      const onCopySuccess = function(e) {
         // button target
         const button = e.trigger;
         // don't keep focus
@@ -1436,7 +1451,47 @@
         }, 1000);
         // clear code selection
         e.clearSelection();
+      }
+      const getTextToCopy = function(trigger) {
+          const codeEl = trigger.previousElementSibling.cloneNode(true);
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+      }
+      const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+        text: getTextToCopy
       });
+      clipboard.on('success', onCopySuccess);
+      if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+        // For code content inside modals, clipBoardJS needs to be initialized with a container option
+        // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+        const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+          text: getTextToCopy,
+          container: window.document.getElementById('quarto-embedded-source-code-modal')
+        });
+        clipboardModal.on('success', onCopySuccess);
+      }
+        var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+        var mailtoRegex = new RegExp(/^mailto:/);
+          var filterRegex = new RegExp("https:\/\/workshops\.tidymodels\.org");
+        var isInternal = (href) => {
+            return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+        }
+        // Inspect non-navigation links and adorn them if external
+     	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+        for (var i=0; i<links.length; i++) {
+          const link = links[i];
+          if (!isInternal(link.href)) {
+            // undo the damage that might have been done by quarto-nav.js in the case of
+            // links that we want to consider external
+            if (link.dataset.originalHref !== undefined) {
+              link.href = link.dataset.originalHref;
+            }
+          }
+        }
       function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
         const config = {
           allowHTML: true,
@@ -1473,7 +1528,11 @@
           try { href = new URL(href).hash; } catch {}
           const id = href.replace(/^#\/?/, "");
           const note = window.document.getElementById(id);
-          return note.innerHTML;
+          if (note) {
+            return note.innerHTML;
+          } else {
+            return "";
+          }
         });
       }
       const findCites = (el) => {
