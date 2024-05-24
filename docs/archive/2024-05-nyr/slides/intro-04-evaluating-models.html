@@ -1,0 +1,1906 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<link href="../../../favicon.ico" rel="icon">
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-html/tabby.min.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.5.22">
+
+  <title>Machine learning with tidymodels – 4 - Evaluating models</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="../../../site_libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="../../../site_libs/revealjs/dist/reveal.css">
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      { color: #003b4f; background-color: #f1f3f5; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #003b4f; } /* Normal */
+    code span.al { color: #ad0000; } /* Alert */
+    code span.an { color: #5e5e5e; } /* Annotation */
+    code span.at { color: #657422; } /* Attribute */
+    code span.bn { color: #ad0000; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #003b4f; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #20794d; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #5e5e5e; } /* Comment */
+    code span.cv { color: #5e5e5e; font-style: italic; } /* CommentVar */
+    code span.do { color: #5e5e5e; font-style: italic; } /* Documentation */
+    code span.dt { color: #ad0000; } /* DataType */
+    code span.dv { color: #ad0000; } /* DecVal */
+    code span.er { color: #ad0000; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #ad0000; } /* Float */
+    code span.fu { color: #4758ab; } /* Function */
+    code span.im { color: #00769e; } /* Import */
+    code span.in { color: #5e5e5e; } /* Information */
+    code span.kw { color: #003b4f; font-weight: bold; } /* Keyword */
+    code span.op { color: #5e5e5e; } /* Operator */
+    code span.ot { color: #003b4f; } /* Other */
+    code span.pp { color: #ad0000; } /* Preprocessor */
+    code span.sc { color: #5e5e5e; } /* SpecialChar */
+    code span.ss { color: #20794d; } /* SpecialString */
+    code span.st { color: #20794d; } /* String */
+    code span.va { color: #111111; } /* Variable */
+    code span.vs { color: #20794d; } /* VerbatimString */
+    code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../../../site_libs/revealjs/dist/theme/quarto.css">
+  <link href="../../../site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="../../../site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="../../../site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="../../../site_libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+
+  .callout {
+    margin-top: 1em;
+    margin-bottom: 1em;  
+    border-radius: .25rem;
+  }
+
+  .callout.callout-style-simple { 
+    padding: 0em 0.5em;
+    border-left: solid #acacac .3rem;
+    border-right: solid 1px silver;
+    border-top: solid 1px silver;
+    border-bottom: solid 1px silver;
+    display: flex;
+  }
+
+  .callout.callout-style-default {
+    border-left: solid #acacac .3rem;
+    border-right: solid 1px silver;
+    border-top: solid 1px silver;
+    border-bottom: solid 1px silver;
+  }
+
+  .callout .callout-body-container {
+    flex-grow: 1;
+  }
+
+  .callout.callout-style-simple .callout-body {
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  .callout.callout-style-default .callout-body {
+    font-size: 0.9rem;
+    font-weight: 400;
+  }
+
+  .callout.callout-titled.callout-style-simple .callout-body {
+    margin-top: 0.2em;
+  }
+
+  .callout:not(.callout-titled) .callout-body {
+      display: flex;
+  }
+
+  .callout:not(.no-icon).callout-titled.callout-style-simple .callout-content {
+    padding-left: 1.6em;
+  }
+
+  .callout.callout-titled .callout-header {
+    padding-top: 0.2em;
+    margin-bottom: -0.2em;
+  }
+
+  .callout.callout-titled .callout-title  p {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+  }
+    
+  .callout.callout-titled.callout-style-simple .callout-content  p {
+    margin-top: 0;
+  }
+
+  .callout.callout-titled.callout-style-default .callout-content  p {
+    margin-top: 0.7em;
+  }
+
+  .callout.callout-style-simple div.callout-title {
+    border-bottom: none;
+    font-size: .9rem;
+    font-weight: 600;
+    opacity: 75%;
+  }
+
+  .callout.callout-style-default  div.callout-title {
+    border-bottom: none;
+    font-weight: 600;
+    opacity: 85%;
+    font-size: 0.9rem;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+  }
+
+  .callout.callout-style-default div.callout-content {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+  }
+
+  .callout.callout-style-simple .callout-icon::before {
+    height: 1rem;
+    width: 1rem;
+    display: inline-block;
+    content: "";
+    background-repeat: no-repeat;
+    background-size: 1rem 1rem;
+  }
+
+  .callout.callout-style-default .callout-icon::before {
+    height: 0.9rem;
+    width: 0.9rem;
+    display: inline-block;
+    content: "";
+    background-repeat: no-repeat;
+    background-size: 0.9rem 0.9rem;
+  }
+
+  .callout-title {
+    display: flex
+  }
+    
+  .callout-icon::before {
+    margin-top: 1rem;
+    padding-right: .5rem;
+  }
+
+  .callout.no-icon::before {
+    display: none !important;
+  }
+
+  .callout.callout-titled .callout-body > .callout-content > :last-child {
+    padding-bottom: 0.5rem;
+    margin-bottom: 0;
+  }
+
+  .callout.callout-titled .callout-icon::before {
+    margin-top: .5rem;
+    padding-right: .5rem;
+  }
+
+  .callout:not(.callout-titled) .callout-icon::before {
+    margin-top: 1rem;
+    padding-right: .5rem;
+  }
+
+  /* Callout Types */
+
+  div.callout-note {
+    border-left-color: #4582ec !important;
+  }
+
+  div.callout-note .callout-icon::before {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAAEU0lEQVRYCcVXTWhcVRQ+586kSUMMxkyaElstCto2SIhitS5Ek8xUKV2poatCcVHtUlFQk8mbaaziwpWgglJwVaquitBOfhQXFlqlzSJpFSpIYyXNjBNiTCck7x2/8/LeNDOZxDuEkgOXe++553zfefee+/OYLOXFk3+1LLrRdiO81yNqZ6K9cG0P3MeFaMIQjXssE8Z1JzLO9ls20MBZX7oG8w9GxB0goaPrW5aNMp1yOZIa7Wv6o2ykpLtmAPs/vrG14Z+6d4jpbSKuhdcSyq9wGMPXjonwmESXrriLzFGOdDBLB8Y6MNYBu0dRokSygMA/mrun8MGFN3behm6VVAwg4WR3i6FvYK1T7MHo9BK7ydH+1uurECoouk5MPRyVSBrBHMYwVobG2aOXM07sWrn5qgB60rc6mcwIDJtQrnrEr44kmy+UO9r0u9O5/YbkS9juQckLed3DyW2XV/qWBBB3ptvI8EUY3I9p/67OW+g967TNr3Sotn3IuVlfMLVnsBwH4fsnebJvyGm5GeIUA3jljERmrv49SizPYuq+z7c2H/jlGC+Ghhupn/hcapqmcudB9jwJ/3jvnvu6vu5lVzF1fXyZuZZ7U8nRmVzytvT+H3kilYvH09mLWrQdwFSsFEsxFVs5fK7A0g8gMZjbif4ACpKbjv7gNGaD8bUrlk8x+KRflttr22JEMRUbTUwwDQScyzPgedQHZT0xnx7ujw2jfVfExwYHwOsDTjLdJ2ebmeQIlJ7neo41s/DrsL3kl+W2lWvAga0tR3zueGr6GL78M3ifH0rGXrBC2aAR8uYcIA5gwV8zIE8onoh8u0Fca/ciF7j1uOzEnqcIm59sEXoGc0+z6+H45V1CvAvHcD7THztu669cnp+L0okAeIc6zjbM/24LgGM1gZk7jnRu1aQWoU9sfUOuhrmtaPIO3YY1KLLWZaEO5TKUbMY5zx8W9UJ6elpLwKXbsaZ4EFl7B4bMtDv0iRipKoDQT2sNQI9b1utXFdYisi+wzZ/ri/1m7QfDgEuvgUUEIJPq3DhX/5DWNqIXDOweC2wvIR90Oq3lDpdMIgD2r0dXvGdsEW5H6x6HLRJYU7C69VefO1x8Gde1ZFSJLfWS1jbCnhtOPxmpfv2LXOA2Xk2tvnwKKPFuZ/oRmwBwqRQDcKNeVQkYcOjtWVBuM/JuYw5b6isojIkYxyYAFn5K7ZBF10fea52y8QltAg6jnMqNHFBmGkQ1j+U43HMi2xMar1Nv0zGsf1s8nUsmUtPOOrbFIR8bHFDMB5zL13Gmr/kGlCkUzedTzzmzsaJXhYawnA3UmARpiYj5ooJZiUoxFRtK3X6pgNPv+IZVPcnwbOl6f+aBaO1CNvPW9n9LmCp01nuSaTRF2YxHqZ8DYQT6WsXT+RD6eUztwYLZ8rM+rcPxamv1VQzFUkzFXvkiVrySGQgJNvXHJAxiU3/NwiC03rSf05VBaPtu/Z7/B8Yn/w7eguloAAAAAElFTkSuQmCC');
+  }
+
+  div.callout-note.callout-style-default .callout-title {
+    background-color: #dae6fb
+  }
+
+  div.callout-important {
+    border-left-color: #d9534f !important;
+  }
+
+  div.callout-important .callout-icon::before {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAAEKklEQVRYCcVXTWhcVRS+575MJym48A+hSRFr00ySRQhURRfd2HYjk2SSTokuBCkU2o0LoSKKraKIBTcuFCoidGFD08nkBzdREbpQ1EDNIv8qSGMFUboImMSZd4/f9zJv8ibJMC8xJQfO3HPPPef7zrvvvnvviIkpC9nsw0UttFunbUhpFzFtarSd6WJkStVMw5xyVqYTvkwfzuf/5FgtkVoB0729j1rjXwThS7Vio+Mo6DNnvLfahoZ+i/o32lULuJ3NNiz7q6+pyAUkJaFF6JwaM2lUJlV0MlnQn5aTRbEu0SEqHUa0A4AdiGuB1kFXRfVyg5d87+Dg4DL6m2TLAub60ilj7A1Ec4odSAc8X95sHh7+ZRPCFo6Fnp7HfU/fBng/hi10CjCnWnJjsxvDNxWw0NfV6Rv5GgP3I3jGWXumdTD/3cbEOP2ZbOZp69yniG3FQ9z1jD7bnBu9Fc2tKGC2q+uAJOQHBDRiZX1x36o7fWBs7J9ownbtO+n0/qWkvW7UPIfc37WgT6ZGR++EOJyeQDSb9UB+DZ1G6DdLDzyS+b/kBCYGsYgJbSQHuThGKRcw5xdeQf8YdNHsc6ePXrlSYMBuSIAFTGAtQo+VuALo4BX83N190NWZWbynBjhOHsmNfFWLeL6v+ynsA58zDvvAC8j5PkbOcXCMg2PZFk3q8MjI7WAG/Dp9AwP7jdGBOOQkAvlFUB+irtm16I1Zw9YBcpGTGXYmk3kQIC/Cds55l+iMI3jqhjAuaoe+am2Jw5GT3Nbz3CkE12NavmzN5+erJW7046n/CH1RO/RVa8lBLozXk9uqykkGAyRXLWlLv5jyp4RFsG5vGVzpDLnIjTWgnRy2Rr+tDKvRc7Y8AyZq10jj8DqXdnIRNtFZb+t/ZRtXcDiVnzpqx8mPcDWxgARUqx0W1QB9MeUZiNrV4qP+Ehc+BpNgATsTX8ozYKL2NtFYAHc84fG7ndxUPr+AR/iQSns7uSUufAymwDOb2+NjK27lEFocm/EE2WpyIy/Hi66MWuMKJn8RvxIcj87IM5Vh9663ziW36kR0HNenXuxmfaD8JC7tfKbrhFr7LiZCrMjrzTeGx+PmkosrkNzW94ObzwocJ7A1HokLolY+AvkTiD/q1H0cN48c5EL8Crkttsa/AXQVDmutfyku0E7jShx49XqV3MFK8IryDhYVbj7Sj2P2eBxwcXoe8T8idsKKPRcnZw1b+slFTubwUwhktrfnAt7J++jwQtLZcm3sr9LQrjRzz6cfMv9aLvgmnAGvpoaGLxM4mAEaLV7iAzQ3oU0IvD5x9ix3yF2RAAuYAOO2f7PEFWCXZ4C9Pb2UsgDeVnFSpbFK7/IWu7TPTvBqzbGdCHOJQSxiEjt6IyZmxQyEJHv6xyQsYk//moVFsN2zP6fRImjfq7/n/wFDguUQFNEwugAAAABJRU5ErkJggg==');
+  }
+
+  div.callout-important.callout-style-default .callout-title {
+    background-color: #f7dddc
+  }
+
+  div.callout-warning {
+    border-left-color: #f0ad4e !important;
+  }
+
+  div.callout-warning .callout-icon::before {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAAETklEQVRYCeVWW2gcVRg+58yaTUnizqbipZeX4uWhBEniBaoUX1Ioze52t7sRq6APio9V9MEaoWlVsFasRq0gltaAPuxms8lu0gcviE/FFOstVbSIxgcv6SU7EZqmdc7v9+9mJtNks51NTUH84ed889/PP+cmxP+d5FIbMJmNbpREu4WUkiTtCicKny0l1pIKmBzovF2S+hIJHX8iEu3hZJ5lNZGqyRrGSIQpq15AzF28jgpeY6yk6GVdrfFqdrD6Iw+QlB8g0YS2g7dyQmXM/IDhBhT0UCiRf59lfqmmDvzRt6kByV/m4JjtzuaujMUM2c5Z2d6JdKrRb3K2q6mA+oYVz8JnDdKPmmNthzkAk/lN63sYPgevrguc72aZX/L9C6x09GYyxBgCX4NlvyGUHOKELlm5rXeR1kchuChJt4SSwyddZRXgvwMGvYo4QSlk3/zkHD8UHxwVJA6zjZZqP8v8kK8OWLnIZtLyCAJagYC4rTGW/9Pqj92N/c+LUaAj27movwbi19tk/whRCIE7Q9vyI6yvRpftAKVTdUjOW40X3h5OXsKCdmFcx0xlLJoSuQngnrJe7Kcjm4OMq9FlC7CMmScQANuNvjfP3PjGXDBaUQmbp296S5L4DrpbrHN1T87ZVEZVCzg1FF0Ft+dKrlLukI+/c9ENo+TvlTDbYFvuKPtQ9+l052rXrgKoWkDAFnvh0wTOmYn8R5f4k/jN/fZiCM1tQx9jQQ4ANhqG4hiL0qIFTGViG9DKB7GYzgubnpofgYRwO+DFjh0Zin2m4b/97EDkXkc+f6xYAPX0KK2I/7fUQuwzuwo/L3AkcjugPNixC8cHf0FyPjWlItmLxWw4Ou9YsQCr5fijMGoD/zpdRy95HRysyXA74MWOnscpO4j2y3HAVisw85hX5+AFBRSHt4ShfLFkIMXTqyKFc46xdzQM6XbAi702a7sy04J0+feReMFKp5q9esYLCqAZYw/k14E/xcLLsFElaornTuJB0svMuJINy8xkIYuL+xPAlWRceH6+HX7THJ0djLUom46zREu7tTkxwmf/FdOZ/sh6Q8qvEAiHpm4PJ4a/doJe0gH1t+aHRgCzOvBvJedEK5OFE5jpm4AGP2a8Dxe3gGJ/pAutug9Gp6he92CsSsWBaEcxGx0FHytmIpuqGkOpldqNYQK8cSoXvd+xLxXADw0kf6UkJNFtdo5MOgaLjiQOQHcn+A6h5NuL2s0qsC2LOM75PcF3yr5STuBSAcGG+meA14K/CI21HcS4LBT6tv0QAh8Dr5l93AhZzG5ZJ4VxAqdZUEl9z7WJ4aN+svMvwHHL21UKTd1mqvChH7/Za5xzXBBKrUcB0TQ+Ulgkfbi/H/YT5EptrGzsEK7tR1B7ln9BBwckYfMiuSqklSznIuoIIOM42MQO+QnduCoFCI0bpkzjCjddHPN/F+2Yu+sd9bKNpVwHhbS3LluK/0zgfwD0xYI5dXuzlQAAAABJRU5ErkJggg==');
+  }
+
+  div.callout-warning.callout-style-default .callout-title {
+    background-color: #fcefdc
+  }
+
+  div.callout-tip {
+    border-left-color: #02b875 !important;
+  }
+
+  div.callout-tip .callout-icon::before {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAADr0lEQVRYCe1XTWgTQRj9ZjZV8a9SPIkKgj8I1bMHsUWrqYLVg4Ue6v9BwZOxSYsIerFao7UiUryIqJcqgtpimhbBXoSCVxUFe9CTiogUrUp2Pt+3aUI2u5vdNh4dmMzOzHvvezuz8xNFM0mjnbXaNu1MvFWRXkXEyE6aYOYJpdW4IXuA4r0fo8qqSMDBU0v1HJUgVieAXxzCsdE/YJTdFcVIZQNMyhruOMJKXYFoLfIfIvVIMWdsrd+Rpd86ZmyzzjJmLStqRn0v8lzkb4rVIXvnpScOJuAn2ACC65FkPzEdEy4TPWRLJ2h7z4cArXzzaOdKlbOvKKX25Wl00jSnrwVxAg3o4dRxhO13RBSdNvH0xSARv3adTXbBdTf64IWO2vH0LT+cv4GR1DJt+DUItaQogeBX/chhbTBxEiZ6gftlDNXTrvT7co4ub5A6gp9HIcHvzTa46OS5fBeP87Qm0fQkr4FsYgVQ7Qg+ZayaDg9jhg1GkWj8RG6lkeSacrrHgDaxdoBiZPg+NXV/KifMuB6//JmYH4CntVEHy/keA6x4h4CU5oFy8GzrBS18cLJMXcljAKB6INjWsRcuZBWVaS3GDrqB7rdapVIeA+isQ57Eev9eCqzqOa81CY05VLd6SamW2wA2H3SiTbnbSxmzfp7WtKZkqy4mdyAlGx7ennghYf8voqp9cLSgKdqNfa6RdRsAAkPwRuJZNbpByn+RrJi1RXTwdi8RQF6ymDwGMAtZ6TVE+4uoKh+MYkcLsT0Hk8eAienbiGdjJHZTpmNjlbFJNKDVAp2fJlYju6IreQxQ08UJDNYdoLSl6AadO+fFuCQqVMB1NJwPm69T04Wv5WhfcWyfXQB+wXRs1pt+nCknRa0LVzSA/2B+a9+zQJadb7IyyV24YAxKp2Jqs3emZTuNnKxsah+uabKbMk7CbTgJx/zIgQYErIeTKRQ9yD9wxVof5YolPHqaWo7TD6tJlh7jQnK5z2n3+fGdggIOx2kaa2YI9QWarc5Ce1ipNWMKeSG4DysFF52KBmTNMmn5HqCFkwy34rDg05gDwgH3bBi+sgFhN/e8QvRn8kbamCOhgrZ9GJhFDgfcMHzFb6BAtjKpFhzTjwv1KCVuxHvCbsSiEz4CANnj84cwHdFXAbAOJ4LTSAawGWFn5tDhLMYz6nWeU2wJfIhmIJBefcd/A5FWQWGgrWzyORZ3Q6HuV+Jf0Bj+BTX69fm1zWgK7By1YTXchFDORywnfQ7GpzOo6S+qECrsx2ifVQAAAABJRU5ErkJggg==');
+  }
+
+  div.callout-tip.callout-style-default .callout-title {
+    background-color: #ccf1e3
+  }
+
+  div.callout-caution {
+    border-left-color: #fd7e14 !important;
+  }
+
+  div.callout-caution .callout-icon::before {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAERlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAIKADAAQAAAABAAAAIAAAAACshmLzAAACV0lEQVRYCdVWzWoUQRCuqp2ICBLJXgITZL1EfQDBW/bkzUMUD7klD+ATSHBEfAIfQO+iXsWDxJsHL96EHAwhgzlkg8nBg25XWb0zIb0zs9muYYWkoKeru+vn664fBqElyZNuyh167NXJ8Ut8McjbmEraKHkd7uAnAFku+VWdb3reSmRV8PKSLfZ0Gjn3a6Xlcq9YGb6tADjn+lUfTXtVmaZ1KwBIvFI11rRXlWlatwIAAv2asaa9mlB9wwygiDX26qaw1yYPzFXg2N1GgG0FMF8Oj+VIx7E/03lHx8UhvYyNZLN7BwSPgekXXLribw7w5/c8EF+DBK5idvDVYtEEwMeYefjjLAdEyQ3M9nfOkgnPTEkYU+sxMq0BxNR6jExrAI31H1rzvLEfRIdgcv1XEdj6QTQAS2wtstEALLG1yEZ3QhH6oDX7ExBSFEkFINXH98NTrme5IOaaA7kIfiu2L8A3qhH9zRbukdCqdsA98TdElyeMe5BI8Rs2xHRIsoTSSVFfCFCWGPn9XHb4cdobRIWABNf0add9jakDjQJpJ1bTXOJXnnRXHRf+dNL1ZV1MBRCXhMbaHqGI1JkKIL7+i8uffuP6wVQAzO7+qVEbF6NbS0LJureYcWXUUhH66nLR5rYmva+2tjRFtojkM2aD76HEGAD3tPtKM309FJg5j/K682ywcWJ3PASCcycH/22u+Bh7Aa0ehM2Fu4z0SAE81HF9RkB21c5bEn4Dzw+/qNOyXr3DCTQDMBOdhi4nAgiFDGCinIa2owCEChUwD8qzd03PG+qdW/4fDzjUMcE1ZpIAAAAASUVORK5CYII=');
+  }
+
+  div.callout-caution.callout-style-default .callout-title {
+    background-color: #ffe5d0
+  }
+
+  </style>
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+  <link href="../../../site_libs/countdown-0.4.0/countdown.css" rel="stylesheet">
+  <script src="../../../site_libs/countdown-0.4.0/countdown.js"></script>
+<meta property="og:title" content="Machine learning with tidymodels - 4 - Evaluating models">
+<meta property="og:description" content="Introduction to tidymodels">
+<meta property="og:site_name" content="Machine learning with tidymodels">
+<meta name="twitter:title" content="Machine learning with tidymodels - 4 - Evaluating models">
+<meta name="twitter:description" content="Introduction to tidymodels">
+<meta name="twitter:card" content="summary">
+</head>
+<body class="quarto-light">
+<script src="https://use.fontawesome.com/5235085b15.js"></script>
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" class="quarto-title-block center">
+  <h1 class="title">4 - Evaluating models</h1>
+  <p class="subtitle">Introduction to tidymodels</p>
+
+<div class="quarto-title-authors">
+</div>
+
+</section>
+<section id="looking-at-predictions" class="slide level2">
+<h2>Looking at predictions</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">augment</span>(taxi_fit, <span class="at">new_data =</span> taxi_train) <span class="sc">%&gt;%</span></span>
+<span id="cb1-2"><a></a>  <span class="fu">relocate</span>(tip, .pred_class, .pred_yes, .pred_no)</span>
+<span id="cb1-3"><a></a><span class="co">#&gt; # A tibble: 8,000 × 10</span></span>
+<span id="cb1-4"><a></a><span class="co">#&gt;    tip   .pred_class .pred_yes .pred_no distance company local dow   month  hour</span></span>
+<span id="cb1-5"><a></a><span class="co">#&gt;    &lt;fct&gt; &lt;fct&gt;           &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;fct&gt;   &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;</span></span>
+<span id="cb1-6"><a></a><span class="co">#&gt;  1 yes   yes             0.967   0.0333    17.2  Chicag… no    Thu   Feb      16</span></span>
+<span id="cb1-7"><a></a><span class="co">#&gt;  2 yes   yes             0.935   0.0646     0.88 City S… yes   Thu   Mar       8</span></span>
+<span id="cb1-8"><a></a><span class="co">#&gt;  3 yes   yes             0.967   0.0333    18.1  other   no    Mon   Feb      18</span></span>
+<span id="cb1-9"><a></a><span class="co">#&gt;  4 yes   yes             0.949   0.0507    12.2  Chicag… no    Sun   Mar      21</span></span>
+<span id="cb1-10"><a></a><span class="co">#&gt;  5 yes   yes             0.821   0.179      0.94 Sun Ta… yes   Sat   Apr      23</span></span>
+<span id="cb1-11"><a></a><span class="co">#&gt;  6 yes   yes             0.967   0.0333    17.5  Flash … no    Fri   Mar      12</span></span>
+<span id="cb1-12"><a></a><span class="co">#&gt;  7 yes   yes             0.967   0.0333    17.7  other   no    Sun   Jan       6</span></span>
+<span id="cb1-13"><a></a><span class="co">#&gt;  8 yes   yes             0.938   0.0616     1.85 Taxica… no    Fri   Apr      12</span></span>
+<span id="cb1-14"><a></a><span class="co">#&gt;  9 yes   yes             0.938   0.0616     0.53 Sun Ta… no    Tue   Mar      18</span></span>
+<span id="cb1-15"><a></a><span class="co">#&gt; 10 yes   yes             0.931   0.0694     6.65 Taxica… no    Sun   Apr      11</span></span>
+<span id="cb1-16"><a></a><span class="co">#&gt; # ℹ 7,990 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="confusion-matrix" class="slide level2">
+<h2>Confusion matrix <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p><img data-src="images/confusion-matrix.png"></p>
+</section>
+<section id="confusion-matrix-1" class="slide level2">
+<h2>Confusion matrix <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="fu">augment</span>(taxi_fit, <span class="at">new_data =</span> taxi_train) <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a></a>  <span class="fu">conf_mat</span>(<span class="at">truth =</span> tip, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb2-3"><a></a><span class="co">#&gt;           Truth</span></span>
+<span id="cb2-4"><a></a><span class="co">#&gt; Prediction  yes   no</span></span>
+<span id="cb2-5"><a></a><span class="co">#&gt;        yes 7341  536</span></span>
+<span id="cb2-6"><a></a><span class="co">#&gt;        no    43   80</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="confusion-matrix-2" class="slide level2">
+<h2>Confusion matrix <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a><span class="fu">augment</span>(taxi_fit, <span class="at">new_data =</span> taxi_train) <span class="sc">%&gt;%</span></span>
+<span id="cb3-2"><a></a>  <span class="fu">conf_mat</span>(<span class="at">truth =</span> tip, <span class="at">estimate =</span> .pred_class) <span class="sc">%&gt;%</span></span>
+<span id="cb3-3"><a></a>  <span class="fu">autoplot</span>(<span class="at">type =</span> <span class="st">"heatmap"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="figures/conf-mat-plot-1.svg"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="metrics-for-model-performance" class="slide level2">
+<h2>Metrics for model performance <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="columns">
+<div class="column" style="width:60%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a><span class="fu">augment</span>(taxi_fit, <span class="at">new_data =</span> taxi_train) <span class="sc">%&gt;%</span></span>
+<span id="cb4-2"><a></a>  <span class="fu">accuracy</span>(<span class="at">truth =</span> tip, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb4-3"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb4-4"><a></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
+<span id="cb4-5"><a></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb4-6"><a></a><span class="co">#&gt; 1 accuracy binary         0.928</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div><div class="column" style="width:40%;">
+<p><img data-src="images/confusion-matrix-accuracy.png"></p>
+</div>
+</div>
+</section>
+<section id="dangers-of-accuracy" class="slide level2">
+<h2>Dangers of accuracy <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p>We need to be careful of using <code>accuracy()</code> since it can give “good” performance by only predicting one way with imbalanced data</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a><span class="fu">augment</span>(taxi_fit, <span class="at">new_data =</span> taxi_train) <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a></a>  <span class="fu">mutate</span>(<span class="at">.pred_class =</span> <span class="fu">factor</span>(<span class="st">"yes"</span>, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"yes"</span>, <span class="st">"no"</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb5-3"><a></a>  <span class="fu">accuracy</span>(<span class="at">truth =</span> tip, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb5-4"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb5-5"><a></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
+<span id="cb5-6"><a></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb5-7"><a></a><span class="co">#&gt; 1 accuracy binary         0.923</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="metrics-for-model-performance-1" class="slide level2">
+<h2>Metrics for model performance <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="columns">
+<div class="column" style="width:60%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a><span class="fu">augment</span>(taxi_fit, <span class="at">new_data =</span> taxi_train) <span class="sc">%&gt;%</span></span>
+<span id="cb6-2"><a></a>  <span class="fu">sensitivity</span>(<span class="at">truth =</span> tip, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb6-3"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb6-4"><a></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
+<span id="cb6-5"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb6-6"><a></a><span class="co">#&gt; 1 sensitivity binary         0.994</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div><div class="column" style="width:40%;">
+<p><img data-src="images/confusion-matrix-sensitivity.png"></p>
+</div>
+</div>
+</section>
+<section id="metrics-for-model-performance-2" class="slide level2">
+<h2>Metrics for model performance <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="columns">
+<div class="column" style="width:60%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7" data-code-line-numbers="3-6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a><span class="fu">augment</span>(taxi_fit, <span class="at">new_data =</span> taxi_train) <span class="sc">%&gt;%</span></span>
+<span id="cb7-2"><a></a>  <span class="fu">sensitivity</span>(<span class="at">truth =</span> tip, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb7-3"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb7-4"><a></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
+<span id="cb7-5"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb7-6"><a></a><span class="co">#&gt; 1 sensitivity binary         0.994</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><br></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a><span class="fu">augment</span>(taxi_fit, <span class="at">new_data =</span> taxi_train) <span class="sc">%&gt;%</span></span>
+<span id="cb8-2"><a></a>  <span class="fu">specificity</span>(<span class="at">truth =</span> tip, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb8-3"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb8-4"><a></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
+<span id="cb8-5"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb8-6"><a></a><span class="co">#&gt; 1 specificity binary         0.130</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div><div class="column" style="width:40%;">
+<p><img data-src="images/confusion-matrix-specificity.png"></p>
+</div>
+</div>
+</section>
+<section id="metrics-for-model-performance-3" class="slide level2">
+<h2>Metrics for model performance <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p>We can use <code>metric_set()</code> to combine multiple calculations into one</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a>taxi_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(accuracy, specificity, sensitivity)</span>
+<span id="cb9-2"><a></a></span>
+<span id="cb9-3"><a></a><span class="fu">augment</span>(taxi_fit, <span class="at">new_data =</span> taxi_train) <span class="sc">%&gt;%</span></span>
+<span id="cb9-4"><a></a>  <span class="fu">taxi_metrics</span>(<span class="at">truth =</span> tip, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb9-5"><a></a><span class="co">#&gt; # A tibble: 3 × 3</span></span>
+<span id="cb9-6"><a></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
+<span id="cb9-7"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb9-8"><a></a><span class="co">#&gt; 1 accuracy    binary         0.928</span></span>
+<span id="cb9-9"><a></a><span class="co">#&gt; 2 specificity binary         0.130</span></span>
+<span id="cb9-10"><a></a><span class="co">#&gt; 3 sensitivity binary         0.994</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="metrics-for-model-performance-4" class="slide level2">
+<h2>Metrics for model performance <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a>taxi_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(accuracy, specificity, sensitivity)</span>
+<span id="cb10-2"><a></a></span>
+<span id="cb10-3"><a></a><span class="fu">augment</span>(taxi_fit, <span class="at">new_data =</span> taxi_train) <span class="sc">%&gt;%</span></span>
+<span id="cb10-4"><a></a>  <span class="fu">group_by</span>(local) <span class="sc">%&gt;%</span></span>
+<span id="cb10-5"><a></a>  <span class="fu">taxi_metrics</span>(<span class="at">truth =</span> tip, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb10-6"><a></a><span class="co">#&gt; # A tibble: 6 × 4</span></span>
+<span id="cb10-7"><a></a><span class="co">#&gt;   local .metric     .estimator .estimate</span></span>
+<span id="cb10-8"><a></a><span class="co">#&gt;   &lt;fct&gt; &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb10-9"><a></a><span class="co">#&gt; 1 yes   accuracy    binary         0.898</span></span>
+<span id="cb10-10"><a></a><span class="co">#&gt; 2 no    accuracy    binary         0.935</span></span>
+<span id="cb10-11"><a></a><span class="co">#&gt; 3 yes   specificity binary         0.169</span></span>
+<span id="cb10-12"><a></a><span class="co">#&gt; 4 no    specificity binary         0.116</span></span>
+<span id="cb10-13"><a></a><span class="co">#&gt; 5 yes   sensitivity binary         0.987</span></span>
+<span id="cb10-14"><a></a><span class="co">#&gt; 6 no    sensitivity binary         0.996</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="two-class-data" class="slide level2">
+<h2>Two class data</h2>
+<p>These metrics assume that we know the threshold for converting “soft” probability predictions into “hard” class predictions.</p>
+<div class="fragment">
+<p>Is a 50% threshold good?</p>
+<p>What happens if we say that we need to be 80% sure to declare an event?</p>
+<ul>
+<li>sensitivity ⬇️, specificity ⬆️</li>
+</ul>
+</div>
+<div class="fragment">
+<p>What happens for a 20% threshold?</p>
+<ul>
+<li>sensitivity ⬆️, specificity ⬇️</li>
+</ul>
+</div>
+</section>
+<section id="varying-the-threshold" class="slide level2">
+<h2>Varying the threshold</h2>
+
+<img data-src="figures/thresholds-1.svg" class="r-stretch"></section>
+<section id="roc-curves" class="slide level2">
+<h2>ROC curves</h2>
+<p>To make an ROC (receiver operator characteristic) curve, we:</p>
+<ul>
+<li><p>calculate the sensitivity and specificity for all possible thresholds</p></li>
+<li><p>plot false positive rate (x-axis) versus true positive rate (y-axis)</p></li>
+</ul>
+<p>given that sensitivity is the true positive rate, and specificity is the true negative rate. Hence <code>1 - specificity</code> is the false positive rate.</p>
+<div class="fragment">
+<p>We can use the area under the ROC curve as a classification metric:</p>
+<ul>
+<li>ROC AUC = 1 💯</li>
+<li>ROC AUC = 1/2 😢</li>
+</ul>
+<aside class="notes">
+<p>ROC curves are insensitive to class imbalance.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</div>
+</section>
+<section id="roc-curves-1" class="slide level2">
+<h2>ROC curves <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a></a><span class="co"># Assumes _first_ factor level is event; there are options to change that</span></span>
+<span id="cb11-2"><a></a><span class="fu">augment</span>(taxi_fit, <span class="at">new_data =</span> taxi_train) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-3"><a></a>  <span class="fu">roc_curve</span>(<span class="at">truth =</span> tip, .pred_yes) <span class="sc">%&gt;%</span></span>
+<span id="cb11-4"><a></a>  <span class="fu">slice</span>(<span class="dv">1</span>, <span class="dv">20</span>, <span class="dv">50</span>)</span>
+<span id="cb11-5"><a></a><span class="co">#&gt; # A tibble: 3 × 3</span></span>
+<span id="cb11-6"><a></a><span class="co">#&gt;   .threshold specificity sensitivity</span></span>
+<span id="cb11-7"><a></a><span class="co">#&gt;        &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;</span></span>
+<span id="cb11-8"><a></a><span class="co">#&gt; 1   -Inf           0         1      </span></span>
+<span id="cb11-9"><a></a><span class="co">#&gt; 2      0.783       0.209     0.981  </span></span>
+<span id="cb11-10"><a></a><span class="co">#&gt; 3      1           1         0.00135</span></span>
+<span id="cb11-11"><a></a></span>
+<span id="cb11-12"><a></a><span class="fu">augment</span>(taxi_fit, <span class="at">new_data =</span> taxi_train) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-13"><a></a>  <span class="fu">roc_auc</span>(<span class="at">truth =</span> tip, .pred_yes)</span>
+<span id="cb11-14"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb11-15"><a></a><span class="co">#&gt;   .metric .estimator .estimate</span></span>
+<span id="cb11-16"><a></a><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb11-17"><a></a><span class="co">#&gt; 1 roc_auc binary         0.691</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="roc-curve-plot" class="slide level2">
+<h2>ROC curve plot <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell columns column-output-location">
+<div class="column">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a></a><span class="fu">augment</span>(taxi_fit, <span class="at">new_data =</span> taxi_train) <span class="sc">%&gt;%</span> </span>
+<span id="cb12-2"><a></a>  <span class="fu">roc_curve</span>(<span class="at">truth =</span> tip, .pred_yes) <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a></a>  <span class="fu">autoplot</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div><div class="column">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="figures/roc-curve-1.svg"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="your-turn" class="slide level2" data-transition="slide-in">
+<h2>Your turn</h2>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
+<p><em>Compute and plot an ROC curve for your current model.</em></p>
+<p><em>What data are being used for this ROC curve plot?</em></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="roc-curve" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
+<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
+</section>
+<section id="section" class="slide level2" data-background-iframe="https://yardstick.tidymodels.org/reference/index.html">
+<h2></h2>
+<div class="footer">
+
+</div>
+</section>
+<section>
+<section id="dangers-of-overfitting" class="title-slide slide level1 center">
+<h1>⚠️ DANGERS OF OVERFITTING ⚠️</h1>
+
+</section>
+<section id="dangers-of-overfitting-1" class="slide level2">
+<h2>Dangers of overfitting ⚠️</h2>
+
+<img data-src="https://raw.githubusercontent.com/topepo/2022-nyr-workshop/main/images/tuning-overfitting-train-1.svg" class="r-stretch"></section>
+<section id="dangers-of-overfitting-2" class="slide level2">
+<h2>Dangers of overfitting ⚠️</h2>
+
+<img data-src="https://raw.githubusercontent.com/topepo/2022-nyr-workshop/main/images/tuning-overfitting-test-1.svg" class="r-stretch"></section>
+<section id="dangers-of-overfitting-3" class="slide level2">
+<h2>Dangers of overfitting ⚠️ <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a></a>taxi_fit <span class="sc">%&gt;%</span></span>
+<span id="cb13-2"><a></a>  <span class="fu">augment</span>(taxi_train)</span>
+<span id="cb13-3"><a></a><span class="co">#&gt; # A tibble: 8,000 × 10</span></span>
+<span id="cb13-4"><a></a><span class="co">#&gt;    .pred_class .pred_yes .pred_no tip   distance company local dow   month  hour</span></span>
+<span id="cb13-5"><a></a><span class="co">#&gt;    &lt;fct&gt;           &lt;dbl&gt;    &lt;dbl&gt; &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;   &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;</span></span>
+<span id="cb13-6"><a></a><span class="co">#&gt;  1 yes             0.967   0.0333 yes      17.2  Chicag… no    Thu   Feb      16</span></span>
+<span id="cb13-7"><a></a><span class="co">#&gt;  2 yes             0.935   0.0646 yes       0.88 City S… yes   Thu   Mar       8</span></span>
+<span id="cb13-8"><a></a><span class="co">#&gt;  3 yes             0.967   0.0333 yes      18.1  other   no    Mon   Feb      18</span></span>
+<span id="cb13-9"><a></a><span class="co">#&gt;  4 yes             0.949   0.0507 yes      12.2  Chicag… no    Sun   Mar      21</span></span>
+<span id="cb13-10"><a></a><span class="co">#&gt;  5 yes             0.821   0.179  yes       0.94 Sun Ta… yes   Sat   Apr      23</span></span>
+<span id="cb13-11"><a></a><span class="co">#&gt;  6 yes             0.967   0.0333 yes      17.5  Flash … no    Fri   Mar      12</span></span>
+<span id="cb13-12"><a></a><span class="co">#&gt;  7 yes             0.967   0.0333 yes      17.7  other   no    Sun   Jan       6</span></span>
+<span id="cb13-13"><a></a><span class="co">#&gt;  8 yes             0.938   0.0616 yes       1.85 Taxica… no    Fri   Apr      12</span></span>
+<span id="cb13-14"><a></a><span class="co">#&gt;  9 yes             0.938   0.0616 yes       0.53 Sun Ta… no    Tue   Mar      18</span></span>
+<span id="cb13-15"><a></a><span class="co">#&gt; 10 yes             0.931   0.0694 yes       6.65 Taxica… no    Sun   Apr      11</span></span>
+<span id="cb13-16"><a></a><span class="co">#&gt; # ℹ 7,990 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We call this “resubstitution” or “repredicting the training set”</p>
+</section>
+<section id="dangers-of-overfitting-4" class="slide level2">
+<h2>Dangers of overfitting ⚠️ <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a></a>taxi_fit <span class="sc">%&gt;%</span></span>
+<span id="cb14-2"><a></a>  <span class="fu">augment</span>(taxi_train) <span class="sc">%&gt;%</span></span>
+<span id="cb14-3"><a></a>  <span class="fu">accuracy</span>(tip, .pred_class)</span>
+<span id="cb14-4"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb14-5"><a></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
+<span id="cb14-6"><a></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb14-7"><a></a><span class="co">#&gt; 1 accuracy binary         0.928</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We call this a “resubstitution estimate”</p>
+</section>
+<section id="dangers-of-overfitting-5" class="slide level2">
+<h2>Dangers of overfitting ⚠️ <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a></a>taxi_fit <span class="sc">%&gt;%</span></span>
+<span id="cb15-2"><a></a>  <span class="fu">augment</span>(taxi_train) <span class="sc">%&gt;%</span></span>
+<span id="cb15-3"><a></a>  <span class="fu">accuracy</span>(tip, .pred_class)</span>
+<span id="cb15-4"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb15-5"><a></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
+<span id="cb15-6"><a></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb15-7"><a></a><span class="co">#&gt; 1 accuracy binary         0.928</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div><div class="column" style="width:50%;">
+
+</div>
+</div>
+</section>
+<section id="dangers-of-overfitting-6" class="slide level2">
+<h2>Dangers of overfitting ⚠️ <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a></a>taxi_fit <span class="sc">%&gt;%</span></span>
+<span id="cb16-2"><a></a>  <span class="fu">augment</span>(taxi_train) <span class="sc">%&gt;%</span></span>
+<span id="cb16-3"><a></a>  <span class="fu">accuracy</span>(tip, .pred_class)</span>
+<span id="cb16-4"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb16-5"><a></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
+<span id="cb16-6"><a></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb16-7"><a></a><span class="co">#&gt; 1 accuracy binary         0.928</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div><div class="column" style="width:50%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a></a>taxi_fit <span class="sc">%&gt;%</span></span>
+<span id="cb17-2"><a></a>  <span class="fu">augment</span>(taxi_test) <span class="sc">%&gt;%</span></span>
+<span id="cb17-3"><a></a>  <span class="fu">accuracy</span>(tip, .pred_class)</span>
+<span id="cb17-4"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb17-5"><a></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
+<span id="cb17-6"><a></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb17-7"><a></a><span class="co">#&gt; 1 accuracy binary         0.908</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<div class="fragment">
+<p>⚠️ Remember that we’re demonstrating overfitting</p>
+</div>
+<div class="fragment">
+<p>⚠️ Don’t use the test set until the <em>end</em> of your modeling analysis</p>
+</div>
+</section>
+<section id="section-1" class="slide level2" data-background-image="https://media.giphy.com/media/55itGuoAJiZEEen9gg/giphy.gif" data-background-size="70%">
+<h2></h2>
+</section>
+<section id="your-turn-1" class="slide level2" data-transition="slide-in">
+<h2>Your turn</h2>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="left: 0px; bottom: 0px; width: 150px; height: 150px; "></p>
+<p><em>Use <code>augment()</code> and a metric function to compute a classification metric like <code>brier_class()</code>.</em></p>
+<p><em>Compute the metrics for both training and testing data to demonstrate overfitting!</em></p>
+<p><em>Notice the evidence of overfitting!</em> ⚠️</p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="augment-metrics" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
+<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
+</section>
+<section id="dangers-of-overfitting-7" class="slide level2">
+<h2>Dangers of overfitting ⚠️ <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a></a>taxi_fit <span class="sc">%&gt;%</span></span>
+<span id="cb18-2"><a></a>  <span class="fu">augment</span>(taxi_train) <span class="sc">%&gt;%</span></span>
+<span id="cb18-3"><a></a>  <span class="fu">brier_class</span>(tip, .pred_yes)</span>
+<span id="cb18-4"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb18-5"><a></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
+<span id="cb18-6"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb18-7"><a></a><span class="co">#&gt; 1 brier_class binary        0.0632</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div><div class="column" style="width:50%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a></a>taxi_fit <span class="sc">%&gt;%</span></span>
+<span id="cb19-2"><a></a>  <span class="fu">augment</span>(taxi_test) <span class="sc">%&gt;%</span></span>
+<span id="cb19-3"><a></a>  <span class="fu">brier_class</span>(tip, .pred_yes)</span>
+<span id="cb19-4"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb19-5"><a></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
+<span id="cb19-6"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb19-7"><a></a><span class="co">#&gt; 1 brier_class binary        0.0782</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+<div class="fragment">
+<p>What if we want to compare more models?</p>
+</div>
+<div class="fragment">
+<p>And/or more model configurations?</p>
+</div>
+<div class="fragment">
+<p>And we want to understand if these are important differences?</p>
+</div>
+</section></section>
+<section id="the-testing-data-are-precious" class="title-slide slide level1 center">
+<h1>The testing data are precious 💎</h1>
+
+</section>
+
+<section>
+<section id="how-can-we-use-the-training-data-to-compare-and-evaluate-different-models" class="title-slide slide level1 center">
+<h1>How can we use the <em>training</em> data to compare and evaluate different models? 🤔</h1>
+
+</section>
+<section id="section-2" class="slide level2" data-background-color="white" data-background-image="https://www.tmwr.org/premade/resampling.svg" data-background-size="80%">
+<h2></h2>
+</section>
+<section id="cross-validation" class="slide level2">
+<h2>Cross-validation</h2>
+
+<img data-src="https://www.tmwr.org/premade/three-CV.svg" class="r-stretch"></section>
+<section id="cross-validation-1" class="slide level2">
+<h2>Cross-validation</h2>
+
+<img data-src="https://www.tmwr.org/premade/three-CV-iter.svg" class="r-stretch"></section>
+<section id="your-turn-2" class="slide level2" data-transition="slide-in">
+<h2>Your turn</h2>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
+<p><em>If we use 10 folds, what percent of the training data</em></p>
+<ul>
+<li><em>ends up in analysis</em></li>
+<li><em>ends up in assessment</em></li>
+</ul>
+<p><em>for</em> <strong>each</strong> <em>fold?</em></p>
+<p><img data-src="images/taxi_spinning.svg" width="300"></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="percent-in-folds" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
+<code class="countdown-time"><span class="countdown-digits minutes">03</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
+</section>
+<section id="cross-validation-2" class="slide level2">
+<h2>Cross-validation <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a></a><span class="fu">vfold_cv</span>(taxi_train) <span class="co"># v = 10 is default</span></span>
+<span id="cb20-2"><a></a><span class="co">#&gt; #  10-fold cross-validation </span></span>
+<span id="cb20-3"><a></a><span class="co">#&gt; # A tibble: 10 × 2</span></span>
+<span id="cb20-4"><a></a><span class="co">#&gt;    splits             id    </span></span>
+<span id="cb20-5"><a></a><span class="co">#&gt;    &lt;list&gt;             &lt;chr&gt; </span></span>
+<span id="cb20-6"><a></a><span class="co">#&gt;  1 &lt;split [7200/800]&gt; Fold01</span></span>
+<span id="cb20-7"><a></a><span class="co">#&gt;  2 &lt;split [7200/800]&gt; Fold02</span></span>
+<span id="cb20-8"><a></a><span class="co">#&gt;  3 &lt;split [7200/800]&gt; Fold03</span></span>
+<span id="cb20-9"><a></a><span class="co">#&gt;  4 &lt;split [7200/800]&gt; Fold04</span></span>
+<span id="cb20-10"><a></a><span class="co">#&gt;  5 &lt;split [7200/800]&gt; Fold05</span></span>
+<span id="cb20-11"><a></a><span class="co">#&gt;  6 &lt;split [7200/800]&gt; Fold06</span></span>
+<span id="cb20-12"><a></a><span class="co">#&gt;  7 &lt;split [7200/800]&gt; Fold07</span></span>
+<span id="cb20-13"><a></a><span class="co">#&gt;  8 &lt;split [7200/800]&gt; Fold08</span></span>
+<span id="cb20-14"><a></a><span class="co">#&gt;  9 &lt;split [7200/800]&gt; Fold09</span></span>
+<span id="cb20-15"><a></a><span class="co">#&gt; 10 &lt;split [7200/800]&gt; Fold10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="cross-validation-3" class="slide level2">
+<h2>Cross-validation <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p>What is in this?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a></a>taxi_folds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(taxi_train)</span>
+<span id="cb21-2"><a></a>taxi_folds<span class="sc">$</span>splits[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>]</span>
+<span id="cb21-3"><a></a><span class="co">#&gt; [[1]]</span></span>
+<span id="cb21-4"><a></a><span class="co">#&gt; &lt;Analysis/Assess/Total&gt;</span></span>
+<span id="cb21-5"><a></a><span class="co">#&gt; &lt;7200/800/8000&gt;</span></span>
+<span id="cb21-6"><a></a><span class="co">#&gt; </span></span>
+<span id="cb21-7"><a></a><span class="co">#&gt; [[2]]</span></span>
+<span id="cb21-8"><a></a><span class="co">#&gt; &lt;Analysis/Assess/Total&gt;</span></span>
+<span id="cb21-9"><a></a><span class="co">#&gt; &lt;7200/800/8000&gt;</span></span>
+<span id="cb21-10"><a></a><span class="co">#&gt; </span></span>
+<span id="cb21-11"><a></a><span class="co">#&gt; [[3]]</span></span>
+<span id="cb21-12"><a></a><span class="co">#&gt; &lt;Analysis/Assess/Total&gt;</span></span>
+<span id="cb21-13"><a></a><span class="co">#&gt; &lt;7200/800/8000&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<aside class="notes">
+<p>Talk about a list column, storing non-atomic types in dataframe</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="cross-validation-4" class="slide level2">
+<h2>Cross-validation <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a></a><span class="fu">vfold_cv</span>(taxi_train, <span class="at">v =</span> <span class="dv">5</span>)</span>
+<span id="cb22-2"><a></a><span class="co">#&gt; #  5-fold cross-validation </span></span>
+<span id="cb22-3"><a></a><span class="co">#&gt; # A tibble: 5 × 2</span></span>
+<span id="cb22-4"><a></a><span class="co">#&gt;   splits              id   </span></span>
+<span id="cb22-5"><a></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;</span></span>
+<span id="cb22-6"><a></a><span class="co">#&gt; 1 &lt;split [6400/1600]&gt; Fold1</span></span>
+<span id="cb22-7"><a></a><span class="co">#&gt; 2 &lt;split [6400/1600]&gt; Fold2</span></span>
+<span id="cb22-8"><a></a><span class="co">#&gt; 3 &lt;split [6400/1600]&gt; Fold3</span></span>
+<span id="cb22-9"><a></a><span class="co">#&gt; 4 &lt;split [6400/1600]&gt; Fold4</span></span>
+<span id="cb22-10"><a></a><span class="co">#&gt; 5 &lt;split [6400/1600]&gt; Fold5</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="cross-validation-5" class="slide level2">
+<h2>Cross-validation <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a></a><span class="fu">vfold_cv</span>(taxi_train, <span class="at">strata =</span> tip)</span>
+<span id="cb23-2"><a></a><span class="co">#&gt; #  10-fold cross-validation using stratification </span></span>
+<span id="cb23-3"><a></a><span class="co">#&gt; # A tibble: 10 × 2</span></span>
+<span id="cb23-4"><a></a><span class="co">#&gt;    splits             id    </span></span>
+<span id="cb23-5"><a></a><span class="co">#&gt;    &lt;list&gt;             &lt;chr&gt; </span></span>
+<span id="cb23-6"><a></a><span class="co">#&gt;  1 &lt;split [7200/800]&gt; Fold01</span></span>
+<span id="cb23-7"><a></a><span class="co">#&gt;  2 &lt;split [7200/800]&gt; Fold02</span></span>
+<span id="cb23-8"><a></a><span class="co">#&gt;  3 &lt;split [7200/800]&gt; Fold03</span></span>
+<span id="cb23-9"><a></a><span class="co">#&gt;  4 &lt;split [7200/800]&gt; Fold04</span></span>
+<span id="cb23-10"><a></a><span class="co">#&gt;  5 &lt;split [7200/800]&gt; Fold05</span></span>
+<span id="cb23-11"><a></a><span class="co">#&gt;  6 &lt;split [7200/800]&gt; Fold06</span></span>
+<span id="cb23-12"><a></a><span class="co">#&gt;  7 &lt;split [7200/800]&gt; Fold07</span></span>
+<span id="cb23-13"><a></a><span class="co">#&gt;  8 &lt;split [7200/800]&gt; Fold08</span></span>
+<span id="cb23-14"><a></a><span class="co">#&gt;  9 &lt;split [7200/800]&gt; Fold09</span></span>
+<span id="cb23-15"><a></a><span class="co">#&gt; 10 &lt;split [7200/800]&gt; Fold10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="fragment">
+<p>Stratification often helps, with very little downside</p>
+</div>
+</section>
+<section id="cross-validation-6" class="slide level2">
+<h2>Cross-validation <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p>We’ll use this setup:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb24-2"><a></a>taxi_folds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(taxi_train, <span class="at">v =</span> <span class="dv">10</span>, <span class="at">strata =</span> tip)</span>
+<span id="cb24-3"><a></a>taxi_folds</span>
+<span id="cb24-4"><a></a><span class="co">#&gt; #  10-fold cross-validation using stratification </span></span>
+<span id="cb24-5"><a></a><span class="co">#&gt; # A tibble: 10 × 2</span></span>
+<span id="cb24-6"><a></a><span class="co">#&gt;    splits             id    </span></span>
+<span id="cb24-7"><a></a><span class="co">#&gt;    &lt;list&gt;             &lt;chr&gt; </span></span>
+<span id="cb24-8"><a></a><span class="co">#&gt;  1 &lt;split [7200/800]&gt; Fold01</span></span>
+<span id="cb24-9"><a></a><span class="co">#&gt;  2 &lt;split [7200/800]&gt; Fold02</span></span>
+<span id="cb24-10"><a></a><span class="co">#&gt;  3 &lt;split [7200/800]&gt; Fold03</span></span>
+<span id="cb24-11"><a></a><span class="co">#&gt;  4 &lt;split [7200/800]&gt; Fold04</span></span>
+<span id="cb24-12"><a></a><span class="co">#&gt;  5 &lt;split [7200/800]&gt; Fold05</span></span>
+<span id="cb24-13"><a></a><span class="co">#&gt;  6 &lt;split [7200/800]&gt; Fold06</span></span>
+<span id="cb24-14"><a></a><span class="co">#&gt;  7 &lt;split [7200/800]&gt; Fold07</span></span>
+<span id="cb24-15"><a></a><span class="co">#&gt;  8 &lt;split [7200/800]&gt; Fold08</span></span>
+<span id="cb24-16"><a></a><span class="co">#&gt;  9 &lt;split [7200/800]&gt; Fold09</span></span>
+<span id="cb24-17"><a></a><span class="co">#&gt; 10 &lt;split [7200/800]&gt; Fold10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="fragment">
+<p>Set the seed when creating resamples</p>
+</div>
+</section></section>
+<section>
+<section id="we-are-equipped-with-metrics-and-resamples" class="title-slide slide level1 center">
+<h1>We are equipped with metrics and resamples!</h1>
+
+</section>
+<section id="fit-our-model-to-the-resamples" class="slide level2">
+<h2>Fit our model to the resamples</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a></a>taxi_res <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(taxi_wflow, taxi_folds)</span>
+<span id="cb25-2"><a></a>taxi_res</span>
+<span id="cb25-3"><a></a><span class="co">#&gt; # Resampling results</span></span>
+<span id="cb25-4"><a></a><span class="co">#&gt; # 10-fold cross-validation using stratification </span></span>
+<span id="cb25-5"><a></a><span class="co">#&gt; # A tibble: 10 × 4</span></span>
+<span id="cb25-6"><a></a><span class="co">#&gt;    splits             id     .metrics         .notes          </span></span>
+<span id="cb25-7"><a></a><span class="co">#&gt;    &lt;list&gt;             &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;          </span></span>
+<span id="cb25-8"><a></a><span class="co">#&gt;  1 &lt;split [7200/800]&gt; Fold01 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;</span></span>
+<span id="cb25-9"><a></a><span class="co">#&gt;  2 &lt;split [7200/800]&gt; Fold02 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;</span></span>
+<span id="cb25-10"><a></a><span class="co">#&gt;  3 &lt;split [7200/800]&gt; Fold03 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;</span></span>
+<span id="cb25-11"><a></a><span class="co">#&gt;  4 &lt;split [7200/800]&gt; Fold04 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;</span></span>
+<span id="cb25-12"><a></a><span class="co">#&gt;  5 &lt;split [7200/800]&gt; Fold05 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;</span></span>
+<span id="cb25-13"><a></a><span class="co">#&gt;  6 &lt;split [7200/800]&gt; Fold06 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;</span></span>
+<span id="cb25-14"><a></a><span class="co">#&gt;  7 &lt;split [7200/800]&gt; Fold07 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;</span></span>
+<span id="cb25-15"><a></a><span class="co">#&gt;  8 &lt;split [7200/800]&gt; Fold08 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;</span></span>
+<span id="cb25-16"><a></a><span class="co">#&gt;  9 &lt;split [7200/800]&gt; Fold09 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;</span></span>
+<span id="cb25-17"><a></a><span class="co">#&gt; 10 &lt;split [7200/800]&gt; Fold10 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="evaluating-model-performance" class="slide level2">
+<h2>Evaluating model performance <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a></a>taxi_res <span class="sc">%&gt;%</span></span>
+<span id="cb26-2"><a></a>  <span class="fu">collect_metrics</span>()</span>
+<span id="cb26-3"><a></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
+<span id="cb26-4"><a></a><span class="co">#&gt;   .metric  .estimator  mean     n std_err .config             </span></span>
+<span id="cb26-5"><a></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb26-6"><a></a><span class="co">#&gt; 1 accuracy binary     0.915    10 0.00309 Preprocessor1_Model1</span></span>
+<span id="cb26-7"><a></a><span class="co">#&gt; 2 roc_auc  binary     0.624    10 0.0105  Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<aside class="notes">
+<p><code>collect_metrics()</code> is one of a suite of <code>collect_*()</code> functions that can be used to work with columns of tuning results. Most columns in a tuning result prefixed with <code>.</code> have a corresponding <code>collect_*()</code> function with options for common summaries.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+<div class="fragment">
+<p>We can reliably measure performance using only the <strong>training</strong> data 🎉</p>
+</div>
+</section>
+<section id="comparing-metrics" class="slide level2">
+<h2>Comparing metrics <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p>How do the metrics from resampling compare to the metrics from training and testing?</p>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a></a>taxi_res <span class="sc">%&gt;%</span></span>
+<span id="cb27-2"><a></a>  <span class="fu">collect_metrics</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb27-3"><a></a>  <span class="fu">select</span>(.metric, mean, n)</span>
+<span id="cb27-4"><a></a><span class="co">#&gt; # A tibble: 2 × 3</span></span>
+<span id="cb27-5"><a></a><span class="co">#&gt;   .metric   mean     n</span></span>
+<span id="cb27-6"><a></a><span class="co">#&gt;   &lt;chr&gt;    &lt;dbl&gt; &lt;int&gt;</span></span>
+<span id="cb27-7"><a></a><span class="co">#&gt; 1 accuracy 0.915    10</span></span>
+<span id="cb27-8"><a></a><span class="co">#&gt; 2 roc_auc  0.624    10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div><div class="column" style="width:50%;">
+<p>The ROC AUC previously was</p>
+<ul>
+<li>0.69 for the training set</li>
+<li>0.64 for test set</li>
+</ul>
+</div>
+</div>
+<div class="fragment">
+<p>Remember that:</p>
+<p>⚠️ the training set gives you overly optimistic metrics</p>
+<p>⚠️ the test set is precious</p>
+</div>
+</section>
+<section id="evaluating-model-performance-1" class="slide level2">
+<h2>Evaluating model performance <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a></a><span class="co"># Save the assessment set results</span></span>
+<span id="cb28-2"><a></a>ctrl_taxi <span class="ot">&lt;-</span> <span class="fu">control_resamples</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb28-3"><a></a>taxi_res <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(taxi_wflow, taxi_folds, <span class="at">control =</span> ctrl_taxi)</span>
+<span id="cb28-4"><a></a></span>
+<span id="cb28-5"><a></a>taxi_res</span>
+<span id="cb28-6"><a></a><span class="co">#&gt; # Resampling results</span></span>
+<span id="cb28-7"><a></a><span class="co">#&gt; # 10-fold cross-validation using stratification </span></span>
+<span id="cb28-8"><a></a><span class="co">#&gt; # A tibble: 10 × 5</span></span>
+<span id="cb28-9"><a></a><span class="co">#&gt;    splits             id     .metrics         .notes           .predictions</span></span>
+<span id="cb28-10"><a></a><span class="co">#&gt;    &lt;list&gt;             &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;           &lt;list&gt;      </span></span>
+<span id="cb28-11"><a></a><span class="co">#&gt;  1 &lt;split [7200/800]&gt; Fold01 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb28-12"><a></a><span class="co">#&gt;  2 &lt;split [7200/800]&gt; Fold02 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb28-13"><a></a><span class="co">#&gt;  3 &lt;split [7200/800]&gt; Fold03 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb28-14"><a></a><span class="co">#&gt;  4 &lt;split [7200/800]&gt; Fold04 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb28-15"><a></a><span class="co">#&gt;  5 &lt;split [7200/800]&gt; Fold05 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb28-16"><a></a><span class="co">#&gt;  6 &lt;split [7200/800]&gt; Fold06 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb28-17"><a></a><span class="co">#&gt;  7 &lt;split [7200/800]&gt; Fold07 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb28-18"><a></a><span class="co">#&gt;  8 &lt;split [7200/800]&gt; Fold08 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb28-19"><a></a><span class="co">#&gt;  9 &lt;split [7200/800]&gt; Fold09 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb28-20"><a></a><span class="co">#&gt; 10 &lt;split [7200/800]&gt; Fold10 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="evaluating-model-performance-2" class="slide level2">
+<h2>Evaluating model performance <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a></a><span class="co"># Save the assessment set results</span></span>
+<span id="cb29-2"><a></a>taxi_preds <span class="ot">&lt;-</span> <span class="fu">collect_predictions</span>(taxi_res)</span>
+<span id="cb29-3"><a></a>taxi_preds</span>
+<span id="cb29-4"><a></a><span class="co">#&gt; # A tibble: 8,000 × 7</span></span>
+<span id="cb29-5"><a></a><span class="co">#&gt;    id     .pred_yes .pred_no  .row .pred_class tip   .config             </span></span>
+<span id="cb29-6"><a></a><span class="co">#&gt;    &lt;chr&gt;      &lt;dbl&gt;    &lt;dbl&gt; &lt;int&gt; &lt;fct&gt;       &lt;fct&gt; &lt;chr&gt;               </span></span>
+<span id="cb29-7"><a></a><span class="co">#&gt;  1 Fold01     0.938   0.0615    14 yes         yes   Preprocessor1_Model1</span></span>
+<span id="cb29-8"><a></a><span class="co">#&gt;  2 Fold01     0.946   0.0544    19 yes         yes   Preprocessor1_Model1</span></span>
+<span id="cb29-9"><a></a><span class="co">#&gt;  3 Fold01     0.973   0.0269    33 yes         yes   Preprocessor1_Model1</span></span>
+<span id="cb29-10"><a></a><span class="co">#&gt;  4 Fold01     0.903   0.0971    43 yes         yes   Preprocessor1_Model1</span></span>
+<span id="cb29-11"><a></a><span class="co">#&gt;  5 Fold01     0.973   0.0269    74 yes         yes   Preprocessor1_Model1</span></span>
+<span id="cb29-12"><a></a><span class="co">#&gt;  6 Fold01     0.903   0.0971   103 yes         yes   Preprocessor1_Model1</span></span>
+<span id="cb29-13"><a></a><span class="co">#&gt;  7 Fold01     0.915   0.0851   104 yes         no    Preprocessor1_Model1</span></span>
+<span id="cb29-14"><a></a><span class="co">#&gt;  8 Fold01     0.903   0.0971   124 yes         yes   Preprocessor1_Model1</span></span>
+<span id="cb29-15"><a></a><span class="co">#&gt;  9 Fold01     0.667   0.333    126 yes         yes   Preprocessor1_Model1</span></span>
+<span id="cb29-16"><a></a><span class="co">#&gt; 10 Fold01     0.949   0.0510   128 yes         yes   Preprocessor1_Model1</span></span>
+<span id="cb29-17"><a></a><span class="co">#&gt; # ℹ 7,990 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="evaluating-model-performance-3" class="slide level2">
+<h2>Evaluating model performance <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a></a>taxi_preds <span class="sc">%&gt;%</span> </span>
+<span id="cb30-2"><a></a>  <span class="fu">group_by</span>(id) <span class="sc">%&gt;%</span></span>
+<span id="cb30-3"><a></a>  <span class="fu">taxi_metrics</span>(<span class="at">truth =</span> tip, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb30-4"><a></a><span class="co">#&gt; # A tibble: 30 × 4</span></span>
+<span id="cb30-5"><a></a><span class="co">#&gt;    id     .metric  .estimator .estimate</span></span>
+<span id="cb30-6"><a></a><span class="co">#&gt;    &lt;chr&gt;  &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb30-7"><a></a><span class="co">#&gt;  1 Fold01 accuracy binary         0.905</span></span>
+<span id="cb30-8"><a></a><span class="co">#&gt;  2 Fold02 accuracy binary         0.925</span></span>
+<span id="cb30-9"><a></a><span class="co">#&gt;  3 Fold03 accuracy binary         0.926</span></span>
+<span id="cb30-10"><a></a><span class="co">#&gt;  4 Fold04 accuracy binary         0.915</span></span>
+<span id="cb30-11"><a></a><span class="co">#&gt;  5 Fold05 accuracy binary         0.902</span></span>
+<span id="cb30-12"><a></a><span class="co">#&gt;  6 Fold06 accuracy binary         0.912</span></span>
+<span id="cb30-13"><a></a><span class="co">#&gt;  7 Fold07 accuracy binary         0.906</span></span>
+<span id="cb30-14"><a></a><span class="co">#&gt;  8 Fold08 accuracy binary         0.91 </span></span>
+<span id="cb30-15"><a></a><span class="co">#&gt;  9 Fold09 accuracy binary         0.918</span></span>
+<span id="cb30-16"><a></a><span class="co">#&gt; 10 Fold10 accuracy binary         0.931</span></span>
+<span id="cb30-17"><a></a><span class="co">#&gt; # ℹ 20 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="where-are-the-fitted-models" class="slide level2 annotation">
+<h2>Where are the fitted models? <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a></a>taxi_res</span>
+<span id="cb31-2"><a></a><span class="co">#&gt; # Resampling results</span></span>
+<span id="cb31-3"><a></a><span class="co">#&gt; # 10-fold cross-validation using stratification </span></span>
+<span id="cb31-4"><a></a><span class="co">#&gt; # A tibble: 10 × 5</span></span>
+<span id="cb31-5"><a></a><span class="co">#&gt;    splits             id     .metrics         .notes           .predictions</span></span>
+<span id="cb31-6"><a></a><span class="co">#&gt;    &lt;list&gt;             &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;           &lt;list&gt;      </span></span>
+<span id="cb31-7"><a></a><span class="co">#&gt;  1 &lt;split [7200/800]&gt; Fold01 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb31-8"><a></a><span class="co">#&gt;  2 &lt;split [7200/800]&gt; Fold02 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb31-9"><a></a><span class="co">#&gt;  3 &lt;split [7200/800]&gt; Fold03 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb31-10"><a></a><span class="co">#&gt;  4 &lt;split [7200/800]&gt; Fold04 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb31-11"><a></a><span class="co">#&gt;  5 &lt;split [7200/800]&gt; Fold05 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb31-12"><a></a><span class="co">#&gt;  6 &lt;split [7200/800]&gt; Fold06 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb31-13"><a></a><span class="co">#&gt;  7 &lt;split [7200/800]&gt; Fold07 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb31-14"><a></a><span class="co">#&gt;  8 &lt;split [7200/800]&gt; Fold08 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb31-15"><a></a><span class="co">#&gt;  9 &lt;split [7200/800]&gt; Fold09 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;    </span></span>
+<span id="cb31-16"><a></a><span class="co">#&gt; 10 &lt;split [7200/800]&gt; Fold10 &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="fragment">
+<p>🗑️</p>
+</div>
+</section></section>
+<section>
+<section id="alternate-resampling-schemes" class="title-slide slide level1 center">
+<h1>Alternate resampling schemes</h1>
+
+</section>
+<section id="bootstrapping" class="slide level2">
+<h2>Bootstrapping</h2>
+
+<img data-src="https://www.tmwr.org/premade/bootstraps.svg" class="r-stretch"></section>
+<section id="bootstrapping-1" class="slide level2">
+<h2>Bootstrapping <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a></a><span class="fu">set.seed</span>(<span class="dv">3214</span>)</span>
+<span id="cb32-2"><a></a><span class="fu">bootstraps</span>(taxi_train)</span>
+<span id="cb32-3"><a></a><span class="co">#&gt; # Bootstrap sampling </span></span>
+<span id="cb32-4"><a></a><span class="co">#&gt; # A tibble: 25 × 2</span></span>
+<span id="cb32-5"><a></a><span class="co">#&gt;    splits              id         </span></span>
+<span id="cb32-6"><a></a><span class="co">#&gt;    &lt;list&gt;              &lt;chr&gt;      </span></span>
+<span id="cb32-7"><a></a><span class="co">#&gt;  1 &lt;split [8000/2902]&gt; Bootstrap01</span></span>
+<span id="cb32-8"><a></a><span class="co">#&gt;  2 &lt;split [8000/2916]&gt; Bootstrap02</span></span>
+<span id="cb32-9"><a></a><span class="co">#&gt;  3 &lt;split [8000/3004]&gt; Bootstrap03</span></span>
+<span id="cb32-10"><a></a><span class="co">#&gt;  4 &lt;split [8000/2979]&gt; Bootstrap04</span></span>
+<span id="cb32-11"><a></a><span class="co">#&gt;  5 &lt;split [8000/2961]&gt; Bootstrap05</span></span>
+<span id="cb32-12"><a></a><span class="co">#&gt;  6 &lt;split [8000/2962]&gt; Bootstrap06</span></span>
+<span id="cb32-13"><a></a><span class="co">#&gt;  7 &lt;split [8000/3026]&gt; Bootstrap07</span></span>
+<span id="cb32-14"><a></a><span class="co">#&gt;  8 &lt;split [8000/2926]&gt; Bootstrap08</span></span>
+<span id="cb32-15"><a></a><span class="co">#&gt;  9 &lt;split [8000/2972]&gt; Bootstrap09</span></span>
+<span id="cb32-16"><a></a><span class="co">#&gt; 10 &lt;split [8000/2972]&gt; Bootstrap10</span></span>
+<span id="cb32-17"><a></a><span class="co">#&gt; # ℹ 15 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="section-3" class="slide level2" data-background-iframe="https://rsample.tidymodels.org/reference/index.html">
+<h2></h2>
+<div class="footer">
+
+</div>
+</section>
+<section id="the-whole-game---status-update" class="slide level2">
+<h2>The whole game - status update</h2>
+
+<img data-src="images/whole-game-transparent-resamples.jpg" class="quarto-figure quarto-figure-center r-stretch" width="3543"></section>
+<section id="your-turn-3" class="slide level2" data-transition="slide-in">
+<h2>Your turn</h2>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
+<p><em>Create:</em></p>
+<ul>
+<li><em>Monte Carlo Cross-Validation sets</em></li>
+<li><em>validation set</em></li>
+</ul>
+<p>(use the reference guide to find the functions)</p>
+<p><em>Don’t forget to set a seed when you resample!</em></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="try-rsample" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
+<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
+</section>
+<section id="monte-carlo-cross-validation" class="slide level2">
+<h2>Monte Carlo Cross-Validation <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a></a><span class="fu">set.seed</span>(<span class="dv">322</span>)</span>
+<span id="cb33-2"><a></a><span class="fu">mc_cv</span>(taxi_train, <span class="at">times =</span> <span class="dv">10</span>)</span>
+<span id="cb33-3"><a></a><span class="co">#&gt; # Monte Carlo cross-validation (0.75/0.25) with 10 resamples  </span></span>
+<span id="cb33-4"><a></a><span class="co">#&gt; # A tibble: 10 × 2</span></span>
+<span id="cb33-5"><a></a><span class="co">#&gt;    splits              id        </span></span>
+<span id="cb33-6"><a></a><span class="co">#&gt;    &lt;list&gt;              &lt;chr&gt;     </span></span>
+<span id="cb33-7"><a></a><span class="co">#&gt;  1 &lt;split [6000/2000]&gt; Resample01</span></span>
+<span id="cb33-8"><a></a><span class="co">#&gt;  2 &lt;split [6000/2000]&gt; Resample02</span></span>
+<span id="cb33-9"><a></a><span class="co">#&gt;  3 &lt;split [6000/2000]&gt; Resample03</span></span>
+<span id="cb33-10"><a></a><span class="co">#&gt;  4 &lt;split [6000/2000]&gt; Resample04</span></span>
+<span id="cb33-11"><a></a><span class="co">#&gt;  5 &lt;split [6000/2000]&gt; Resample05</span></span>
+<span id="cb33-12"><a></a><span class="co">#&gt;  6 &lt;split [6000/2000]&gt; Resample06</span></span>
+<span id="cb33-13"><a></a><span class="co">#&gt;  7 &lt;split [6000/2000]&gt; Resample07</span></span>
+<span id="cb33-14"><a></a><span class="co">#&gt;  8 &lt;split [6000/2000]&gt; Resample08</span></span>
+<span id="cb33-15"><a></a><span class="co">#&gt;  9 &lt;split [6000/2000]&gt; Resample09</span></span>
+<span id="cb33-16"><a></a><span class="co">#&gt; 10 &lt;split [6000/2000]&gt; Resample10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="validation-set" class="slide level2">
+<h2>Validation set <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a></a><span class="fu">set.seed</span>(<span class="dv">853</span>)</span>
+<span id="cb34-2"><a></a>taxi_val_split <span class="ot">&lt;-</span> <span class="fu">initial_validation_split</span>(taxi, <span class="at">strata =</span> tip)</span>
+<span id="cb34-3"><a></a><span class="fu">validation_set</span>(taxi_val_split)</span>
+<span id="cb34-4"><a></a><span class="co">#&gt; # A tibble: 1 × 2</span></span>
+<span id="cb34-5"><a></a><span class="co">#&gt;   splits              id        </span></span>
+<span id="cb34-6"><a></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;     </span></span>
+<span id="cb34-7"><a></a><span class="co">#&gt; 1 &lt;split [6000/2000]&gt; validation</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="fragment">
+<p>A validation set is just another type of resample</p>
+</div>
+</section></section>
+<section id="decision-tree" class="title-slide slide level1 center">
+<h1>Decision tree 🌳</h1>
+
+</section>
+
+<section>
+<section id="random-forest" class="title-slide slide level1 center">
+<h1>Random forest 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌵🌴🌲🌳🌴🌵🌳🌴🌳</h1>
+
+</section>
+<section id="random-forest-1" class="slide level2">
+<h2>Random forest 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵</h2>
+<ul>
+<li><p>Ensemble many decision tree models</p></li>
+<li><p>All the trees vote! 🗳️</p></li>
+<li><p>Bootstrap aggregating + random predictor sampling</p></li>
+</ul>
+<div class="fragment">
+<ul>
+<li>Often works well without tuning hyperparameters (more on this in Advanced tidymodels!), as long as there are enough trees</li>
+</ul>
+</div>
+</section>
+<section id="create-a-random-forest-model" class="slide level2">
+<h2>Create a random forest model <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a></a>rf_spec <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(<span class="at">trees =</span> <span class="dv">1000</span>, <span class="at">mode =</span> <span class="st">"classification"</span>)</span>
+<span id="cb35-2"><a></a>rf_spec</span>
+<span id="cb35-3"><a></a><span class="co">#&gt; Random Forest Model Specification (classification)</span></span>
+<span id="cb35-4"><a></a><span class="co">#&gt; </span></span>
+<span id="cb35-5"><a></a><span class="co">#&gt; Main Arguments:</span></span>
+<span id="cb35-6"><a></a><span class="co">#&gt;   trees = 1000</span></span>
+<span id="cb35-7"><a></a><span class="co">#&gt; </span></span>
+<span id="cb35-8"><a></a><span class="co">#&gt; Computational engine: ranger</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="create-a-random-forest-model-1" class="slide level2">
+<h2>Create a random forest model <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a></a>rf_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(tip <span class="sc">~</span> ., rf_spec)</span>
+<span id="cb36-2"><a></a>rf_wflow</span>
+<span id="cb36-3"><a></a><span class="co">#&gt; ══ Workflow ══════════════════════════════════════════════════════════</span></span>
+<span id="cb36-4"><a></a><span class="co">#&gt; Preprocessor: Formula</span></span>
+<span id="cb36-5"><a></a><span class="co">#&gt; Model: rand_forest()</span></span>
+<span id="cb36-6"><a></a><span class="co">#&gt; </span></span>
+<span id="cb36-7"><a></a><span class="co">#&gt; ── Preprocessor ──────────────────────────────────────────────────────</span></span>
+<span id="cb36-8"><a></a><span class="co">#&gt; tip ~ .</span></span>
+<span id="cb36-9"><a></a><span class="co">#&gt; </span></span>
+<span id="cb36-10"><a></a><span class="co">#&gt; ── Model ─────────────────────────────────────────────────────────────</span></span>
+<span id="cb36-11"><a></a><span class="co">#&gt; Random Forest Model Specification (classification)</span></span>
+<span id="cb36-12"><a></a><span class="co">#&gt; </span></span>
+<span id="cb36-13"><a></a><span class="co">#&gt; Main Arguments:</span></span>
+<span id="cb36-14"><a></a><span class="co">#&gt;   trees = 1000</span></span>
+<span id="cb36-15"><a></a><span class="co">#&gt; </span></span>
+<span id="cb36-16"><a></a><span class="co">#&gt; Computational engine: ranger</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="your-turn-4" class="slide level2" data-transition="slide-in">
+<h2>Your turn</h2>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
+<p><em>Use <code>fit_resamples()</code> and <code>rf_wflow</code> to:</em></p>
+<ul>
+<li><em>keep predictions</em></li>
+<li><em>compute metrics</em></li>
+</ul>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="try-fit-resamples" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
+<code class="countdown-time"><span class="countdown-digits minutes">08</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
+</section>
+<section id="evaluating-model-performance-4" class="slide level2">
+<h2>Evaluating model performance <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a></a>ctrl_taxi <span class="ot">&lt;-</span> <span class="fu">control_resamples</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb37-2"><a></a></span>
+<span id="cb37-3"><a></a><span class="co"># Random forest uses random numbers so set the seed first</span></span>
+<span id="cb37-4"><a></a></span>
+<span id="cb37-5"><a></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
+<span id="cb37-6"><a></a>rf_res <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(rf_wflow, taxi_folds, <span class="at">control =</span> ctrl_taxi)</span>
+<span id="cb37-7"><a></a><span class="fu">collect_metrics</span>(rf_res)</span>
+<span id="cb37-8"><a></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
+<span id="cb37-9"><a></a><span class="co">#&gt;   .metric  .estimator  mean     n std_err .config             </span></span>
+<span id="cb37-10"><a></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb37-11"><a></a><span class="co">#&gt; 1 accuracy binary     0.923    10 0.00317 Preprocessor1_Model1</span></span>
+<span id="cb37-12"><a></a><span class="co">#&gt; 2 roc_auc  binary     0.616    10 0.0147  Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="the-whole-game---status-update-1" class="slide level2">
+<h2>The whole game - status update</h2>
+
+<img data-src="images/whole-game-transparent-select.jpg" class="quarto-figure quarto-figure-center r-stretch" width="3543"></section>
+<section id="the-final-fit" class="slide level2">
+<h2>The final fit <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p>Suppose that we are happy with our random forest model.</p>
+<p>Let’s fit the model on the training set and verify our performance using the test set.</p>
+<div class="fragment">
+<p>We’ve shown you <code>fit()</code> and <code>predict()</code> (+ <code>augment()</code>) but there is a shortcut:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a></a><span class="co"># taxi_split has train + test info</span></span>
+<span id="cb38-2"><a></a>final_fit <span class="ot">&lt;-</span> <span class="fu">last_fit</span>(rf_wflow, taxi_split) </span>
+<span id="cb38-3"><a></a></span>
+<span id="cb38-4"><a></a>final_fit</span>
+<span id="cb38-5"><a></a><span class="co">#&gt; # Resampling results</span></span>
+<span id="cb38-6"><a></a><span class="co">#&gt; # Manual resampling </span></span>
+<span id="cb38-7"><a></a><span class="co">#&gt; # A tibble: 1 × 6</span></span>
+<span id="cb38-8"><a></a><span class="co">#&gt;   splits              id               .metrics .notes   .predictions .workflow </span></span>
+<span id="cb38-9"><a></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;            &lt;list&gt;   &lt;list&gt;   &lt;list&gt;       &lt;list&gt;    </span></span>
+<span id="cb38-10"><a></a><span class="co">#&gt; 1 &lt;split [8000/2000]&gt; train/test split &lt;tibble&gt; &lt;tibble&gt; &lt;tibble&gt;     &lt;workflow&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</section>
+<section id="what-is-in-final_fit" class="slide level2">
+<h2>What is in <code>final_fit</code>? <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a></a><span class="fu">collect_metrics</span>(final_fit)</span>
+<span id="cb39-2"><a></a><span class="co">#&gt; # A tibble: 2 × 4</span></span>
+<span id="cb39-3"><a></a><span class="co">#&gt;   .metric  .estimator .estimate .config             </span></span>
+<span id="cb39-4"><a></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb39-5"><a></a><span class="co">#&gt; 1 accuracy binary         0.914 Preprocessor1_Model1</span></span>
+<span id="cb39-6"><a></a><span class="co">#&gt; 2 roc_auc  binary         0.638 Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="fragment">
+<p>These are metrics computed with the <strong>test</strong> set</p>
+</div>
+</section>
+<section id="what-is-in-final_fit-1" class="slide level2">
+<h2>What is in <code>final_fit</code>? <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a></a><span class="fu">collect_predictions</span>(final_fit)</span>
+<span id="cb40-2"><a></a><span class="co">#&gt; # A tibble: 2,000 × 7</span></span>
+<span id="cb40-3"><a></a><span class="co">#&gt;    id               .pred_yes .pred_no  .row .pred_class tip   .config          </span></span>
+<span id="cb40-4"><a></a><span class="co">#&gt;    &lt;chr&gt;                &lt;dbl&gt;    &lt;dbl&gt; &lt;int&gt; &lt;fct&gt;       &lt;fct&gt; &lt;chr&gt;            </span></span>
+<span id="cb40-5"><a></a><span class="co">#&gt;  1 train/test split     0.957   0.0426     4 yes         yes   Preprocessor1_Mo…</span></span>
+<span id="cb40-6"><a></a><span class="co">#&gt;  2 train/test split     0.938   0.0621    10 yes         yes   Preprocessor1_Mo…</span></span>
+<span id="cb40-7"><a></a><span class="co">#&gt;  3 train/test split     0.958   0.0416    19 yes         yes   Preprocessor1_Mo…</span></span>
+<span id="cb40-8"><a></a><span class="co">#&gt;  4 train/test split     0.894   0.106     23 yes         yes   Preprocessor1_Mo…</span></span>
+<span id="cb40-9"><a></a><span class="co">#&gt;  5 train/test split     0.943   0.0573    28 yes         yes   Preprocessor1_Mo…</span></span>
+<span id="cb40-10"><a></a><span class="co">#&gt;  6 train/test split     0.979   0.0213    34 yes         yes   Preprocessor1_Mo…</span></span>
+<span id="cb40-11"><a></a><span class="co">#&gt;  7 train/test split     0.954   0.0463    35 yes         yes   Preprocessor1_Mo…</span></span>
+<span id="cb40-12"><a></a><span class="co">#&gt;  8 train/test split     0.928   0.0722    38 yes         yes   Preprocessor1_Mo…</span></span>
+<span id="cb40-13"><a></a><span class="co">#&gt;  9 train/test split     0.985   0.0147    40 yes         yes   Preprocessor1_Mo…</span></span>
+<span id="cb40-14"><a></a><span class="co">#&gt; 10 train/test split     0.948   0.0523    42 yes         no    Preprocessor1_Mo…</span></span>
+<span id="cb40-15"><a></a><span class="co">#&gt; # ℹ 1,990 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="what-is-in-final_fit-2" class="slide level2">
+<h2>What is in <code>final_fit</code>? <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a></a><span class="fu">extract_workflow</span>(final_fit)</span>
+<span id="cb41-2"><a></a><span class="co">#&gt; ══ Workflow [trained] ════════════════════════════════════════════════</span></span>
+<span id="cb41-3"><a></a><span class="co">#&gt; Preprocessor: Formula</span></span>
+<span id="cb41-4"><a></a><span class="co">#&gt; Model: rand_forest()</span></span>
+<span id="cb41-5"><a></a><span class="co">#&gt; </span></span>
+<span id="cb41-6"><a></a><span class="co">#&gt; ── Preprocessor ──────────────────────────────────────────────────────</span></span>
+<span id="cb41-7"><a></a><span class="co">#&gt; tip ~ .</span></span>
+<span id="cb41-8"><a></a><span class="co">#&gt; </span></span>
+<span id="cb41-9"><a></a><span class="co">#&gt; ── Model ─────────────────────────────────────────────────────────────</span></span>
+<span id="cb41-10"><a></a><span class="co">#&gt; Ranger result</span></span>
+<span id="cb41-11"><a></a><span class="co">#&gt; </span></span>
+<span id="cb41-12"><a></a><span class="co">#&gt; Call:</span></span>
+<span id="cb41-13"><a></a><span class="co">#&gt;  ranger::ranger(x = maybe_data_frame(x), y = y, num.trees = ~1000,      num.threads = 1, verbose = FALSE, seed = sample.int(10^5,          1), probability = TRUE) </span></span>
+<span id="cb41-14"><a></a><span class="co">#&gt; </span></span>
+<span id="cb41-15"><a></a><span class="co">#&gt; Type:                             Probability estimation </span></span>
+<span id="cb41-16"><a></a><span class="co">#&gt; Number of trees:                  1000 </span></span>
+<span id="cb41-17"><a></a><span class="co">#&gt; Sample size:                      8000 </span></span>
+<span id="cb41-18"><a></a><span class="co">#&gt; Number of independent variables:  6 </span></span>
+<span id="cb41-19"><a></a><span class="co">#&gt; Mtry:                             2 </span></span>
+<span id="cb41-20"><a></a><span class="co">#&gt; Target node size:                 10 </span></span>
+<span id="cb41-21"><a></a><span class="co">#&gt; Variable importance mode:         none </span></span>
+<span id="cb41-22"><a></a><span class="co">#&gt; Splitrule:                        gini </span></span>
+<span id="cb41-23"><a></a><span class="co">#&gt; OOB prediction error (Brier s.):  0.07069778</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="fragment">
+<p>Use this for <strong>prediction</strong> on new data, like for deploying</p>
+</div>
+</section>
+<section id="the-whole-game" class="slide level2">
+<h2>The whole game</h2>
+
+
+<img data-src="images/whole-game-final-performance.jpg" class="quarto-figure quarto-figure-center r-stretch" width="3543"><div class="quarto-auto-generated-content">
+<div class="footer footer-default">
+<p><a href="https://workshops.tidymodels.org" class="uri">https://workshops.tidymodels.org</a></p>
+</div>
+</div>
+</section></section>
+    </div>
+  </div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="../../../site_libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="../../../site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="../../../site_libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/search/search.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/math/math.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': true,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1280,
+
+        height: 720,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.1,
+
+        math: {
+          mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    <script>
+    Reveal.addEventListener( 'slidechanged', function( event ) {
+      console.log("hello")
+
+      slide_id = event.currentSlide.id
+      link = "annotations" + ".html#" + slide_id
+
+      var annotation_div = document.createElement('div')
+      annotation_div.setAttribute("class", "annotation-link")
+
+      var notes_link = document.createElement('a')
+      notes_link.setAttribute("href", link)
+      notes_link.setAttribute("target", "_blank")
+
+      var iii = document.createElement('i')
+      iii.setAttribute("class", "fa fa-info")
+      notes_link.appendChild(iii)
+
+      annotation_div.appendChild(notes_link)
+
+      var tmp = event.currentTarget.getElementsByClassName("annotation-link")
+      if (tmp.length === 1) {
+        tmp[0].remove()
+      }
+
+      if (event.currentSlide.classList.contains("annotation")) {
+        event.currentTarget.append(annotation_div)
+      }
+    } );
+
+    </script>
+    
+    <script>
+      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+      // slide changes (different for each slide format).
+      (function () {
+        // dispatch for htmlwidgets
+        function fireSlideEnter() {
+          const event = window.document.createEvent("Event");
+          event.initEvent("slideenter", true, true);
+          window.document.dispatchEvent(event);
+        }
+
+        function fireSlideChanged(previousSlide, currentSlide) {
+          fireSlideEnter();
+
+          // dispatch for shiny
+          if (window.jQuery) {
+            if (previousSlide) {
+              window.jQuery(previousSlide).trigger("hidden");
+            }
+            if (currentSlide) {
+              window.jQuery(currentSlide).trigger("shown");
+            }
+          }
+        }
+
+        // hookup for slidy
+        if (window.w3c_slidy) {
+          window.w3c_slidy.add_observer(function (slide_num) {
+            // slide_num starts at position 1
+            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+          });
+        }
+
+      })();
+    </script>
+
+    <script id="quarto-html-after-body" type="application/javascript">
+    window.document.addEventListener("DOMContentLoaded", function (event) {
+      const toggleBodyColorMode = (bsSheetEl) => {
+        const mode = bsSheetEl.getAttribute("data-mode");
+        const bodyEl = window.document.querySelector("body");
+        if (mode === "dark") {
+          bodyEl.classList.add("quarto-dark");
+          bodyEl.classList.remove("quarto-light");
+        } else {
+          bodyEl.classList.add("quarto-light");
+          bodyEl.classList.remove("quarto-dark");
+        }
+      }
+      const toggleBodyColorPrimary = () => {
+        const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+        if (bsSheetEl) {
+          toggleBodyColorMode(bsSheetEl);
+        }
+      }
+      toggleBodyColorPrimary();  
+      const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+      tabsets.forEach(function(tabset) {
+        const tabby = new Tabby('#' + tabset.id);
+      });
+      const isCodeAnnotation = (el) => {
+        for (const clz of el.classList) {
+          if (clz.startsWith('code-annotation-')) {                     
+            return true;
+          }
+        }
+        return false;
+      }
+      const clipboard = new window.ClipboardJS('.code-copy-button', {
+        text: function(trigger) {
+          const codeEl = trigger.previousElementSibling.cloneNode(true);
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+        }
+      });
+      clipboard.on('success', function(e) {
+        // button target
+        const button = e.trigger;
+        // don't keep focus
+        button.blur();
+        // flash "checked"
+        button.classList.add('code-copy-button-checked');
+        var currentTitle = button.getAttribute("title");
+        button.setAttribute("title", "Copied!");
+        let tooltip;
+        if (window.bootstrap) {
+          button.setAttribute("data-bs-toggle", "tooltip");
+          button.setAttribute("data-bs-placement", "left");
+          button.setAttribute("data-bs-title", "Copied!");
+          tooltip = new bootstrap.Tooltip(button, 
+            { trigger: "manual", 
+              customClass: "code-copy-button-tooltip",
+              offset: [0, -8]});
+          tooltip.show();    
+        }
+        setTimeout(function() {
+          if (tooltip) {
+            tooltip.hide();
+            button.removeAttribute("data-bs-title");
+            button.removeAttribute("data-bs-toggle");
+            button.removeAttribute("data-bs-placement");
+          }
+          button.setAttribute("title", currentTitle);
+          button.classList.remove('code-copy-button-checked');
+        }, 1000);
+        // clear code selection
+        e.clearSelection();
+      });
+        var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+        var mailtoRegex = new RegExp(/^mailto:/);
+          var filterRegex = new RegExp("https:\/\/workshops\.tidymodels\.org");
+        var isInternal = (href) => {
+            return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+        }
+        // Inspect non-navigation links and adorn them if external
+     	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+        for (var i=0; i<links.length; i++) {
+          const link = links[i];
+          if (!isInternal(link.href)) {
+            // undo the damage that might have been done by quarto-nav.js in the case of
+            // links that we want to consider external
+            if (link.dataset.originalHref !== undefined) {
+              link.href = link.dataset.originalHref;
+            }
+          }
+        }
+      function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+        const config = {
+          allowHTML: true,
+          maxWidth: 500,
+          delay: 100,
+          arrow: false,
+          appendTo: function(el) {
+              return el.closest('section.slide') || el.parentElement;
+          },
+          interactive: true,
+          interactiveBorder: 10,
+          theme: 'light-border',
+          placement: 'bottom-start',
+        };
+        if (contentFn) {
+          config.content = contentFn;
+        }
+        if (onTriggerFn) {
+          config.onTrigger = onTriggerFn;
+        }
+        if (onUntriggerFn) {
+          config.onUntrigger = onUntriggerFn;
+        }
+          config['offset'] = [0,0];
+          config['maxWidth'] = 700;
+        window.tippy(el, config); 
+      }
+      const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+      for (var i=0; i<noterefs.length; i++) {
+        const ref = noterefs[i];
+        tippyHover(ref, function() {
+          // use id or data attribute instead here
+          let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+          try { href = new URL(href).hash; } catch {}
+          const id = href.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note) {
+            return note.innerHTML;
+          } else {
+            return "";
+          }
+        });
+      }
+      const findCites = (el) => {
+        const parentEl = el.parentElement;
+        if (parentEl) {
+          const cites = parentEl.dataset.cites;
+          if (cites) {
+            return {
+              el,
+              cites: cites.split(' ')
+            };
+          } else {
+            return findCites(el.parentElement)
+          }
+        } else {
+          return undefined;
+        }
+      };
+      var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+      for (var i=0; i<bibliorefs.length; i++) {
+        const ref = bibliorefs[i];
+        const citeInfo = findCites(ref);
+        if (citeInfo) {
+          tippyHover(citeInfo.el, function() {
+            var popup = window.document.createElement('div');
+            citeInfo.cites.forEach(function(cite) {
+              var citeDiv = window.document.createElement('div');
+              citeDiv.classList.add('hanging-indent');
+              citeDiv.classList.add('csl-entry');
+              var biblioDiv = window.document.getElementById('ref-' + cite);
+              if (biblioDiv) {
+                citeDiv.innerHTML = biblioDiv.innerHTML;
+              }
+              popup.appendChild(citeDiv);
+            });
+            return popup.innerHTML;
+          });
+        }
+      }
+    });
+    </script>
+    
+
+</body></html>
