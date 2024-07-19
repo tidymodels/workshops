@@ -30,15 +30,16 @@ knitr:
 #| label: setup-previous
 #| echo: false
 library(tidymodels)
+library(forested)
 
 set.seed(123)
-taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
-taxi_train <- training(taxi_split)
-taxi_test <- testing(taxi_split)
+forested_split <- initial_split(forested, prop = 0.8, strata = forested)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
 
 tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
-taxi_wflow <- workflow(tip ~ ., tree_spec)
-taxi_fit <- fit(taxi_wflow, taxi_train)
+forested_wflow <- workflow(forested ~ ., tree_spec)
+forested_fit <- fit(forested_wflow, forested_train)
 ```
 
 ```{r}
@@ -50,8 +51,8 @@ ggplot2::theme_set(ggplot2::theme_bw())
 ```
 
 ```{r}
-#| label: taxi_train
-taxi_train
+#| label: forested_train
+forested_train
 ```
 
 ## Working with other models
@@ -174,22 +175,22 @@ Trained methods need to calculate **sufficient information** to be applied again
 ## How to write a recipe
 
 :::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
-taxi_rec <- recipe(tip ~ ., data = taxi_train) %>%  
+forested_rec <- recipe(forested ~ ., data = forested_train) %>%  
 \ \ step_unknown(all_nominal_predictors()) %>%  
 \ \ step_dummy(all_nominal_predictors()) %>%  
 \ \ step_zv(all_predictors()) %>%  
-\ \ step_log(distance, offset = 0.5) %>%  
+\ \ step_log(canopy_cover, offset = 0.5) %>%  
 \ \ step_normalize(all_numeric_predictors())
 :::
 
 ## How to write a recipe
 
 :::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
-taxi_rec <- [recipe(tip ~ ., data = taxi_train)]{style="color: #CA225E;"} %>%  
+forested_rec <- [recipe(forested ~ ., data = forested_train)]{style="color: #CA225E;"} %>%  
 \ \ step_unknown(all_nominal_predictors()) %>%  
 \ \ step_dummy(all_nominal_predictors()) %>%  
 \ \ step_zv(all_predictors()) %>%  
-\ \ step_log(distance, offset = 0.5) %>%  
+\ \ step_log(canopy_cover, offset = 0.5) %>%  
 \ \ step_normalize(all_numeric_predictors())
 :::
 
@@ -200,11 +201,11 @@ Start by calling `recipe()` to denote the data source and variables used.
 ## How to write a recipe
 
 :::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
-taxi_rec <- recipe(tip ~ ., data = taxi_train) %>%  
+forested_rec <- recipe(forested ~ ., data = forested_train) %>%  
 \ \ [step_unknown]{style="color: #CA225E;"}(all_nominal_predictors()) %>%  
 \ \ [step_dummy]{style="color: #CA225E;"}(all_nominal_predictors()) %>%  
 \ \ [step_zv]{style="color: #CA225E;"}(all_predictors()) %>%  
-\ \ [step_log]{style="color: #CA225E;"}(distance, offset = 0.5) %>%  
+\ \ [step_log]{style="color: #CA225E;"}(canopy_cover, offset = 0.5) %>%  
 \ \ [step_normalize]{style="color: #CA225E;"}(all_numeric_predictors())
 :::
 
@@ -215,11 +216,11 @@ Specify what actions to take by adding `step_*()`s.
 ## How to write a recipe
 
 :::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
-taxi_rec <- recipe(tip ~ ., data = taxi_train) %>%  
+forested_rec <- recipe(forested ~ ., data = forested_train) %>%  
 \ \ step_unknown([all_nominal_predictors()]{style="color: #CA225E;"}) %>%  
 \ \ step_dummy([all_nominal_predictors()]{style="color: #CA225E;"}) %>%  
 \ \ step_zv([all_predictors()]{style="color: #CA225E;"}) %>%  
-\ \ step_log([distance]{style="color: #CA225E;"}, offset = 0.5) %>% 
+\ \ step_log([canopy_cover]{style="color: #CA225E;"}, offset = 0.5) %>% 
 \ \ step_normalize([all_numeric_predictors()]{style="color: #CA225E;"})
 :::
 <br>
@@ -229,11 +230,11 @@ Use {tidyselect} and recipes-specific selectors to denote affected variables.
 ## Using a recipe
 
 :::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
-taxi_rec <- recipe(tip ~ ., data = taxi_train) %>%  
+forested_rec <- recipe(forested ~ ., data = forested_train) %>%  
 \ \ step_unknown(all_nominal_predictors()) %>%  
 \ \ step_dummy(all_nominal_predictors()) %>%  
 \ \ step_zv(all_predictors()) %>%  
-\ \ step_log(distance, offset = 0.5) %>% 
+\ \ step_log(canopy_cover, offset = 0.5) %>% 
 \ \ step_normalize(all_numeric_predictors())
 :::
 
@@ -250,8 +251,8 @@ Recipes are typically combined with a model in a `workflow()` object:
 <br>
 
 :::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
-taxi_wflow <- workflow() %>%  
-\ \ [add_recipe(taxi_rec)]{style="color: #CA225E;"} %>%  
+forested_wflow <- workflow() %>%  
+\ \ [add_recipe(forested_rec)]{style="color: #CA225E;"} %>%  
 \ \ add_model(linear_reg())
 :::
 
@@ -273,7 +274,7 @@ Once a recipe is added to a workflow, this occurs when `fit()` is called.
 
 . . .
 
-- If you have an error and need to debug your recipe, the original recipe object (e.g. `taxi_rec`) can be estimated manually with a function called `prep()`. It is analogous to `fit()`. See [TMwR section 16.4](https://www.tmwr.org/dimensionality.html#recipe-functions).
+- If you have an error and need to debug your recipe, the original recipe object (e.g. `forested_rec`) can be estimated manually with a function called `prep()`. It is analogous to `fit()`. See [TMwR section 16.4](https://www.tmwr.org/dimensionality.html#recipe-functions).
 
 . . .
 
@@ -300,36 +301,36 @@ countdown::countdown(minutes = 5, id = "recipes-prep")
 ## Printing a recipe
 
 ```{r}
-#| label: taxi_rec
+#| label: forested_rec
 #| echo: false
-taxi_rec <- recipe(tip ~ ., data = taxi_train) %>%  
+forested_rec <- recipe(forested ~ ., data = forested_train) %>%  
   step_unknown(all_nominal_predictors()) %>%  
   step_dummy(all_nominal_predictors()) %>%  
   step_zv(all_predictors()) %>%  
-  step_log(distance, offset = 0.5) %>% 
+  step_log(canopy_cover, offset = 0.5) %>% 
   step_normalize(all_numeric_predictors())
 ```
 
 ```{r}
-#| label: taxi_rec-printing
+#| label: forested_rec-printing
 #| message: true
-taxi_rec
+forested_rec
 ```
 
 ## Prepping a recipe
 
 ```{r}
-#| label: taxi_rec-prep-printing
+#| label: forested_rec-prep-printing
 #| message: true
-prep(taxi_rec)
+prep(forested_rec)
 ```
 
 ## Baking a recipe
 
 ```{r}
-#| label: taxi_rec-prep-bake-printing
-prep(taxi_rec) %>%
-  bake(new_data = taxi_train)
+#| label: forested_rec-prep-bake-printing
+prep(forested_rec) %>%
+  bake(new_data = forested_train)
 ```
 
 ## Tidying a recipe
@@ -357,16 +358,16 @@ countdown::countdown(minutes = 5, id = "recipes-tidy")
 ## Tidying a recipe
 
 ```{r}
-#| label: taxi_rec-tidy
-prep(taxi_rec) %>%
+#| label: forested_rec-tidy
+prep(forested_rec) %>%
   tidy()
 ```
 
 ## Tidying a recipe
 
 ```{r}
-#| label: taxi_rec-tidy-2
-prep(taxi_rec) %>%
+#| label: forested_rec-tidy-2
+prep(forested_rec) %>%
   tidy(number = 2)
 ```
 
@@ -377,8 +378,8 @@ The recommended way to use a recipe in tidymodels is to use it as part of a `wor
 
 ```{r}
 #| label: recipes-and-workflows
-taxi_wflow <- workflow() %>%  
-  add_recipe(taxi_rec) %>%  
+forested_wflow <- workflow() %>%  
+  add_recipe(forested_rec) %>%  
   add_model(linear_reg())
 ```
 

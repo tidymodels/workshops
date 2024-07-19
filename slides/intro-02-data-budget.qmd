@@ -26,13 +26,13 @@ knitr:
 ##  {background-image="https://media.giphy.com/media/Lr3UeH9tYu3qJtsSUg/giphy.gif" background-size="40%"}
 
 
-## Data on Chicago taxi trips
+## Data on forests in Washington
 
 ::: columns
 ::: {.column width="60%"}
--   The city of Chicago releases anonymized trip-level data on taxi trips in the city.
--   We pulled a sample of 10,000 rides occurring in early 2022.
--   Type `?taxi` to learn more about this dataset, including references.
+-   The U.S. Forest Service maintains ML models to predict whether a plot of land is "forested."
+-   This classification is important for all sorts of research, legislation, and land management purposes.
+-   Type `?forested` to learn more about this dataset, including references.
 :::
 
 ::: {.column width="40%"}
@@ -42,17 +42,18 @@ knitr:
 :::
 
 ::: footer
-Credit: <https://www.svgrepo.com/svg/8322/taxi>
+Credit: <https://www.svgrepo.com/svg/8322/forested>
 :::
 
-## Data on Chicago taxi trips
+## Data on forests in Washington
 
 ::: columns
 ::: {.column width="60%"}
--   `N = 10,000`
--   A nominal outcome, `tip`, with levels `"yes"` and `"no"`
--   Several **nominal** variables like pickup & dropoff location, taxi ID, and payment type.
--   Several **numeric** variables like trip length and fare subtotals.
+-   `N = 7,109` plots of land, one from each of 7,109 6000-acre hexagons in WA.
+-   A nominal outcome, `forested`, with levels `"Yes"` and `"No"`, measured "on-the-ground."
+-   18 remotely-sensed and easily-accessible predictors:
+     - **numeric** variables based on weather and topography.
+     - **nominal** variables based on classifications from other governmental orgs.
 :::
 
 ::: {.column width="40%"}
@@ -65,25 +66,7 @@ Credit: <https://unsplash.com/photos/7_r85l4eht8>
 :::
 
 :::notes
-
-"Fare subtotals" refers to the fare itself, tax, tolls, tip amount. 
-
-Actual variables in our data:
-
-`tip`: Whether the rider left a tip. A factor with levels "yes" and "no".
-
-`distance`: The trip distance, in odometer miles.
-
-`company`: The taxi company, as a factor. Companies that occurred few times were binned as "other".
-
-`local`: Whether the trip started in the same community area as it began. See the source data for community area values.
-
-`dow`: The day of the week in which the trip began, as a factor.
-
-`month`: The month in which the trip began, as a factor.
-
-`hour`: The hour of the day in which the trip began, as a numeric.
-
+- Those nominal variables are classifications similar to "forested" but from other agencies. e.g. `land_type` is from the European Space Agency, and is a remotely-sensed 3-class distribution based on predictions for how the land is used.
 :::
 
 ## Checklist for predictors
@@ -94,13 +77,17 @@ Actual variables in our data:
 
 - Does this variable contribute to explainability?
 
+:::notes
+- re: ethics -- what issues might arise from releasing the true `lat` and `lon`? In reality, these `lat` and `lon` are slightly jittered to help ensure trust with landowners who allow surveyers to come take measurements.
+:::
 
-## Data on Chicago taxi trips
+## Data on forests in Washington
 
-```{r taxi-print}
+```{r forested-print}
 library(tidymodels)
+library(forested)
 
-taxi
+forested
 ```
 
 
@@ -126,7 +113,7 @@ Do not 🚫 use the test set during training.
 #| 
 set.seed(123)
 library(forcats)
-one_split <- slice(taxi, 1:30) %>% 
+one_split <- slice(forested, 1:30) %>% 
   initial_split() %>% 
   tidy() %>% 
   add_row(Row = 1:30, Data = "Original") %>% 
@@ -176,10 +163,10 @@ countdown::countdown(minutes = 3, id = "when-to-split")
 
 ## The initial split `r hexes("rsample")` {.annotation}
 
-```{r taxi-split}
+```{r forested-split}
 set.seed(123)
-taxi_split <- initial_split(taxi)
-taxi_split
+forested_split <- initial_split(forested)
+forested_split
 ```
 
 :::notes
@@ -198,15 +185,15 @@ Which seed you pick doesn't matter, as long as you don't try a bunch of seeds an
 
 ## Accessing the data `r hexes("rsample")`
 
-```{r taxi-train-test}
-taxi_train <- training(taxi_split)
-taxi_test <- testing(taxi_split)
+```{r forested-train-test}
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
 ```
 
 ## The training set`r hexes("rsample")`
 
-```{r taxi-train}
-taxi_train
+```{r forested-train}
+forested_train
 ```
 
 ## The test set `r hexes("rsample")`
@@ -215,7 +202,7 @@ taxi_train
 
 . . .
 
-There are `r nrow(taxi_test)` rows and `r ncol(taxi_test)` columns in the test set.
+There are `r nrow(forested_test)` rows and `r ncol(forested_test)` columns in the test set.
 
 ## Your turn {transition="slide-in"}
 
@@ -232,14 +219,14 @@ countdown::countdown(minutes = 5, id = "try-splitting")
 
 ## Data splitting and spending `r hexes("rsample")`
 
-```{r taxi-split-prop}
+```{r forested-split-prop}
 set.seed(123)
-taxi_split <- initial_split(taxi, prop = 0.8)
-taxi_train <- training(taxi_split)
-taxi_test <- testing(taxi_split)
+forested_split <- initial_split(forested, prop = 0.8)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
 
-nrow(taxi_train)
-nrow(taxi_test)
+nrow(forested_train)
+nrow(forested_test)
 ```
 
 # What about a validation set?
@@ -250,7 +237,7 @@ nrow(taxi_test)
 
 ```{r}
 set.seed(123)
-initial_validation_split(taxi, prop = c(0.6, 0.2))
+initial_validation_split(forested, prop = c(0.6, 0.2))
 ```
 
 # Exploratory data analysis for ML 🧐
@@ -259,15 +246,15 @@ initial_validation_split(taxi, prop = c(0.6, 0.2))
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Explore the `taxi_train` data on your own!*
+*Explore the `forested_train` data on your own!*
 
-* *What's the distribution of the outcome, `tip`?*
-* *What's the distribution of numeric variables like `distance`?*
-* *How does `tip` differ across the categorical variables?*
+* *What's the distribution of the outcome, `forested`?*
+* *What's the distribution of numeric variables like `precip_annual`?*
+* *How does the distribution of `forested` differ across the categorical variables?*
 
-```{r ex-explore-taxi}
+```{r ex-explore-forested}
 #| echo: false
-countdown::countdown(minutes = 8, id = "explore-taxi")
+countdown::countdown(minutes = 8, id = "explore-forested")
 ```
 
 ::: notes
@@ -276,89 +263,103 @@ Make a plot or summary and then share with neighbor
 
 ## 
 
-```{r taxi-tip-counts}
+```{r forested-forested-counts}
 #| fig-align: 'center'
-taxi_train %>% 
-  ggplot(aes(x = tip)) +
+forested_train %>% 
+  ggplot(aes(x = forested)) +
   geom_bar()
 ```
 
 ## 
 
-```{r taxi-tip-by-local}
+```{r forested-by-tree-no-tree}
 #| fig-align: 'center'
-taxi_train %>% 
-  ggplot(aes(x = tip, fill = local)) +
+forested_train %>% 
+  ggplot(aes(x = forested, fill = tree_no_tree)) +
   geom_bar() +
   scale_fill_viridis_d(end = .5)
 ```
 
 ## 
 
-```{r taxi-tip-by-hour}
+```{r forested-by-precip-annual}
 #| fig-align: 'center'
-taxi_train %>% 
-  ggplot(aes(x = hour, fill = tip)) +
-  geom_bar()
+#| message: false
+#| warning: false
+forested_train %>% 
+  ggplot(aes(x = precip_annual, fill = forested, group = forested)) +
+  geom_histogram() +
+  scale_fill_viridis_d(end = .5)
+```
+
+<!-- TODO: should we `position = "identity", alpha = .5` here? -->
+
+## 
+
+```{r forested-by-precip-annual-fill}
+#| fig-align: 'center'
+#| message: false
+#| warning: false
+forested_train %>% 
+  ggplot(aes(x = precip_annual, fill = forested, group = forested)) +
+  geom_histogram(position = "fill") +
+  scale_fill_viridis_d(end = .5)
 ```
 
 ## 
 
-```{r taxi-tip-by-hour-fill}
+```{r forested-forested-by-lat-lon}
 #| fig-align: 'center'
-taxi_train %>% 
-  ggplot(aes(x = hour, fill = tip)) +
-  geom_bar(position = "fill")
+forested_train %>% 
+  ggplot(aes(x = lon, y = lat, col = forested)) +
+  geom_point() + 
+  scale_color_viridis_d(end = .5)
 ```
 
-## 
-
-```{r taxi-tip-by-distance}
-#| fig-align: 'center'
-taxi_train %>% 
-  ggplot(aes(x = distance)) +
-  geom_histogram(bins = 100) +
-  facet_grid(vars(tip))
-```
+TODO: should we lean into a `forested` color scheme and have green for forested, tan for not?
 
 # Split smarter
 
 ##
 
-```{r taxi-tip-pct, echo = FALSE}
-taxi %>%
-  ggplot(aes(x = "", fill = tip)) +
+```{r forested-forested-pct, echo = FALSE}
+forested %>%
+  ggplot(aes(x = "", fill = forested)) +
   geom_bar(position = "fill") +
-  labs(x = "")
+  labs(x = "") + 
+  scale_fill_viridis_d(end = .5)
 ```
 
 Stratified sampling would split within response values
 
 :::notes
-Based on our EDA, we know that the source data contains fewer `"no"` tip values than `"yes"`. We want to make sure we allot equal proportions of those responses so that both the training and testing data have enough of each to give accurate estimates.
+Based on our EDA, we know that the source data contains fewer `"No"` forested values than `"Yes"`. We want to make sure we allot equal proportions of those responses so that both the training and testing data have enough of each to give accurate estimates.
+
+TODO: this class imbalance is much less present with forested vs taxi -- should we keep it around?
 :::
 
 ## Stratification
 
-Use `strata = tip`
+Use `strata = forested`
 
-```{r taxi-split-prop-strata}
+```{r forested-split-prop-strata}
 set.seed(123)
-taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
-taxi_split
+forested_split <- initial_split(forested, prop = 0.8, strata = forested)
+forested_split
 ```
 
 ## Stratification
 
 Stratification often helps, with very little downside
 
-```{r taxi-tip-pct-by-split, echo = FALSE}
+```{r forested-forested-pct-by-split, echo = FALSE}
 bind_rows(
-  taxi_train %>% mutate(split = "train"),
-  taxi_test %>% mutate(split = "test")
+  forested_train %>% mutate(split = "train"),
+  forested_test %>% mutate(split = "test")
 ) %>%
-  ggplot(aes(x = split, fill = tip)) +
-  geom_bar(position = "fill")
+  ggplot(aes(x = split, fill = forested)) +
+  geom_bar(position = "fill") + 
+  scale_fill_viridis_d(end = .5)
 ```
 
 ## The whole game - status update
