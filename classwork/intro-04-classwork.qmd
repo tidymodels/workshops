@@ -13,15 +13,16 @@ Setup from deck 3
 
 ```{r}
 library(tidymodels)
+library(forested)
 
 set.seed(123)
-taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
-taxi_train <- training(taxi_split)
-taxi_test <- testing(taxi_split)
+forested_split <- initial_split(forested, prop = 0.8, strata = forested)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
 
 tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
-taxi_wflow <- workflow(tip ~ ., tree_spec)
-taxi_fit <- fit(taxi_wflow, taxi_train)
+forested_wflow <- workflow(forested ~ ., tree_spec)
+forested_fit <- fit(forested_wflow, forested_train)
 ```
 
 ## Metrics for model performance
@@ -29,40 +30,40 @@ taxi_fit <- fit(taxi_wflow, taxi_train)
 `conf_mat()` can be used to see how well the model is doing at prediction
 
 ```{r}
-augment(taxi_fit, new_data = taxi_train) %>%
-  conf_mat(truth = tip, estimate = .pred_class)
+augment(forested_fit, new_data = forested_train) %>%
+  conf_mat(truth = forested, estimate = .pred_class)
 ```
 
 and it has nice plotting features
 
 ```{r}
-augment(taxi_fit, new_data = taxi_train) %>%
-  conf_mat(truth = tip, estimate = .pred_class) %>%
+augment(forested_fit, new_data = forested_train) %>%
+  conf_mat(truth = forested, estimate = .pred_class) %>%
   autoplot(type = "heatmap")
 ```
 
 using the same interface we can calculate metrics
 
 ```{r}
-augment(taxi_fit, new_data = taxi_train) %>%
-  accuracy(truth = tip, estimate = .pred_class)
+augment(forested_fit, new_data = forested_train) %>%
+  accuracy(truth = forested, estimate = .pred_class)
 ```
 
 All yardstick metric functions work with grouped data frames!
 
 ```{r}
-augment(taxi_fit, new_data = taxi_train) %>%
-  group_by(local) %>%
-  accuracy(truth = tip, estimate = .pred_class)
+augment(forested_fit, new_data = forested_train) %>%
+  group_by(tree_no_tree) %>%
+  accuracy(truth = forested, estimate = .pred_class)
 ```
 
 Metric sets are a way to combine multiple similar metric functions together into a new function.
 
 ```{r}
-taxi_metrics <- metric_set(accuracy, specificity, sensitivity)
+forested_metrics <- metric_set(accuracy, specificity, sensitivity)
 
-augment(taxi_fit, new_data = taxi_train) %>%
-  taxi_metrics(truth = tip, estimate = .pred_class)
+augment(forested_fit, new_data = forested_train) %>%
+  forested_metrics(truth = forested, estimate = .pred_class)
 ```
 
 ## Your turn
@@ -81,24 +82,24 @@ What data are being used for this ROC curve plot?
 Repredicting the training set, bad!
 
 ```{r}
-taxi_fit %>%
-  augment(taxi_train)
+forested_fit %>%
+  augment(forested_train)
 ```
 
 "Resubstitution estimate" - This should be the best possible performance that you could ever achieve, but it can be very misleading!
 
 ```{r}
-taxi_fit %>%
-  augment(taxi_train) %>%
-  accuracy(tip, .pred_class)
+forested_fit %>%
+  augment(forested_train) %>%
+  accuracy(forested, .pred_class)
 ```
 
 Now on the test set, see that it performs worse? This is closer to "real" performance.
 
 ```{r}
-taxi_fit %>%
-  augment(taxi_test) %>%
-  accuracy(tip, .pred_class)
+forested_fit %>%
+  augment(forested_test) %>%
+  accuracy(forested, .pred_class)
 ```
 
 ## Your turn
@@ -112,8 +113,8 @@ Notice the evidence of overfitting!
 ```{r}
 # Your code here!
 
-# Use `augment()` and `brier_class()` with `taxi_fit`
-taxi_fit
+# Use `augment()` and `brier_class()` with `forested_fit`
+forested_fit
 ```
 
 ## Your turn
@@ -129,30 +130,30 @@ for each fold
 
 ```{r}
 # v = 10 is the default
-vfold_cv(taxi_train)
+vfold_cv(forested_train)
 ```
 
 What is in a resampling result?
 
 ```{r}
-taxi_folds <- vfold_cv(taxi_train, v = 10)
+forested_folds <- vfold_cv(forested_train, v = 10)
 
 # Individual splits of analysis/assessment data
-taxi_folds$splits[1:3]
+forested_folds$splits[1:3]
 ```
 
 Stratification often helps, with very little downside
 
 ```{r}
-vfold_cv(taxi_train, strata = tip)
+vfold_cv(forested_train, strata = forested)
 ```
 
 We'll use this setup:
 
 ```{r}
 set.seed(123)
-taxi_folds <- vfold_cv(taxi_train, v = 10, strata = tip)
-taxi_folds
+forested_folds <- vfold_cv(forested_train, v = 10, strata = forested)
+forested_folds
 ```
 
 ## Evaluating model performance
@@ -160,14 +161,14 @@ taxi_folds
 ```{r}
 # Fit the workflow on each analysis set,
 # then compute performance on each assessment set
-taxi_res <- fit_resamples(taxi_wflow, taxi_folds)
-taxi_res
+forested_res <- fit_resamples(forested_wflow, forested_folds)
+forested_res
 ```
 
 Aggregate metrics
 
 ```{r}
-taxi_res %>%
+forested_res %>%
   collect_metrics()
 ```
 
@@ -175,19 +176,19 @@ If you want to analyze the assessment set (i.e. holdout) predictions, then you n
 
 ```{r}
 # Save the assessment set results
-ctrl_taxi <- control_resamples(save_pred = TRUE)
+ctrl_forested <- control_resamples(save_pred = TRUE)
 
-taxi_res <- fit_resamples(taxi_wflow, taxi_folds, control = ctrl_taxi)
+forested_res <- fit_resamples(forested_wflow, forested_folds, control = ctrl_forested)
 
-taxi_preds <- collect_predictions(taxi_res)
-taxi_preds
+forested_preds <- collect_predictions(forested_res)
+forested_preds
 ```
 
 ## Bootstrapping
 
 ```{r}
 set.seed(3214)
-bootstraps(taxi_train)
+bootstraps(forested_train)
 ```
 
 ## Your turn
@@ -216,7 +217,7 @@ rf_spec
 ```
 
 ```{r}
-rf_wflow <- workflow(tip ~ ., rf_spec)
+rf_wflow <- workflow(forested ~ ., rf_spec)
 rf_wflow
 ```
 
@@ -235,13 +236,13 @@ Use `fit_resamples()` and `rf_wflow` to:
 ## Evaluate a workflow set
 
 ```{r}
-wf_set <- workflow_set(list(tip ~ .), list(tree_spec, rf_spec))
+wf_set <- workflow_set(list(forested ~ .), list(tree_spec, rf_spec))
 wf_set
 ```
 
 ```{r}
 wf_set_fit <- wf_set %>%
-  workflow_map("fit_resamples", resamples = taxi_folds)
+  workflow_map("fit_resamples", resamples = forested_folds)
 
 wf_set_fit
 ```
@@ -262,8 +263,8 @@ Discuss with your neighbors!
 ## The final fit
 
 ```{r}
-# `taxi_split` has train + test info
-final_fit <- last_fit(rf_wflow, taxi_split) 
+# `forested_split` has train + test info
+final_fit <- last_fit(rf_wflow, forested_split) 
 
 final_fit
 ```
@@ -282,7 +283,7 @@ collect_predictions(final_fit)
 
 ```{r}
 collect_predictions(final_fit) %>%
-  ggplot(aes(.pred_class, fill = tip)) + 
+  ggplot(aes(.pred_class, fill = forested)) + 
   geom_bar() 
 ```
 
