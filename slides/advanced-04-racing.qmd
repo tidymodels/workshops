@@ -128,7 +128,12 @@ lgbm_param <-
 ```
 
 
+## First, a shameless promotion
+
+{{< mastodon https://fosstodon.org/@MikeMahoney218/112717894044250955 >}}
+
 ## Making Grid Search More Efficient
+
 
 In the last section, we evaluated 250 models (25 candidates times 10 resamples).
 
@@ -139,7 +144,6 @@ Also, for some models, we can _fit_ far fewer models than the number that are be
  * For boosting, a model with `X` trees can often predict on candidates with less than `X` trees. 
  
 Both of these methods can lead to enormous speed-ups. 
-
 
 ## Model Racing 
 
@@ -187,7 +191,7 @@ race_example <-
   full_join(candidates, by = "model") %>%
   full_join(resamples, by = "resample") %>%
   mutate(
-    error = mean + effect + rnorm(n(), sd = 1),
+    error = mean + effect + rnorm(n(), sd = 1) + 2,
     resample = format(resample)
   ) %>%
   select(-mean, -effect)
@@ -253,19 +257,31 @@ One way to evaluate these models is to do a paired t-test
  
  - or a t-test on their differences matched by resamples
 
-With $n = 10$ resamples, the confidence interval is (`r signif(race_ci$lower[9], 2)`, `r signif(race_ci$upper[9], 2)`), indicating that candidate number 2 has smaller error. 
+With $n = 10$ resamples, the confidence interval for the difference in RMSE is (`r signif(race_ci$lower[9], 2)`, `r signif(race_ci$upper[9], 2)`), indicating that candidate number 2 has smaller error. 
 
-What if we were to compare each model candidate to the current best at each resample? 
-
-One shows superiority when `r which.max(race_ci$lower > 0)` resamples have been evaluated.
 
 
 ## Evaluating Differences in Candidates
 
+
+:::: {.columns}
+
+::: {.column width="40%"}
+What if we were to have compared the candidates while we seqeuntially evaluated each resample? 
+
+`r emo::ji("point_right")`
+
+<be>
+
+One candidate shows superiority when `r which.max(race_ci$lower > 0)` resamples have been evaluated.
+
+:::
+
+::: {.column width="60%"}
 ```{r}
 #| label: race-ci
 #| echo: false
-#| out-width: 70%
+#| out-width: 100%
 #| fig-align: center
 #| fig-width: 6
 #| fig-height: 4.25
@@ -279,6 +295,10 @@ race_ci %>%
   labs(y = "error difference from best") + 
   scale_x_continuous(breaks = pretty_breaks())
 ```
+:::
+
+::::
+
 
 ## Interim Analysis of Results
 
@@ -286,7 +306,7 @@ One version of racing uses a _mixed model ANOVA_ to construct one-sided confiden
 
 Any candidates whose bound does not include zero are discarded.  [Here](https://www.tmwr.org/race_results.mp4) is an animation.
 
-The resamples are analyzed in a random order.
+The resamples are analyzed in a random order (so set the seed).
 
 <br>
 
@@ -300,7 +320,7 @@ The [finetune](https://finetune.tidymodels.org/) package has functions `tune_rac
 
 ```{r } 
 #| label: lgb-grid-race
-#| cache: false
+#| cache: true
 #| code-line-numbers: "12|"
 # Let's use a larger grid
 set.seed(8945)
