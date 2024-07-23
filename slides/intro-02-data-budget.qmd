@@ -173,7 +173,6 @@ forested_split
 :::notes
 How much data in training vs testing?
 This function uses a good default, but this depends on your specific goal/data
-We will talk about more powerful ways of splitting, like stratification, later
 :::
 
 ## What is `set.seed()`?
@@ -316,50 +315,6 @@ forested_train %>%
 ```
 
 TODO: should we lean into a `forested` color scheme and have green for forested, tan for not?
-
-# Split smarter
-
-##
-
-```{r forested-forested-pct, echo = FALSE}
-forested %>%
-  ggplot(aes(x = "", fill = forested)) +
-  geom_bar(position = "fill") +
-  labs(x = "") + 
-  scale_fill_viridis_d(end = .5)
-```
-
-Stratified sampling would split within response values
-
-:::notes
-Based on our EDA, we know that the source data contains fewer `"No"` forested values than `"Yes"`. We want to make sure we allot equal proportions of those responses so that both the training and testing data have enough of each to give accurate estimates.
-
-TODO: this class imbalance is much less present with forested vs taxi -- should we keep it around?
-:::
-
-## Stratification
-
-Use `strata = forested`
-
-```{r forested-split-prop-strata}
-set.seed(123)
-forested_split <- initial_split(forested, prop = 0.8, strata = forested)
-forested_split
-```
-
-## Stratification
-
-Stratification often helps, with very little downside
-
-```{r forested-forested-pct-by-split, echo = FALSE}
-bind_rows(
-  forested_train %>% mutate(split = "train"),
-  forested_test %>% mutate(split = "test")
-) %>%
-  ggplot(aes(x = split, fill = forested)) +
-  geom_bar(position = "fill") + 
-  scale_fill_viridis_d(end = .5)
-```
 
 ## The whole game - status update
 
