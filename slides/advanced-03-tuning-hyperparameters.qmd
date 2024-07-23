@@ -155,18 +155,6 @@ These are based on prior belief.
 ❌
 :::
 
-# Covariance/correlation matrix structure in mixed models?
-
-::: fragment
-Yes, but it is unlikely to affect performance.
-:::
-
-::: fragment
-It will impact inference though.
-🤔
-:::
-
-
 
 # Is the random seed a tuning parameter?
 
@@ -362,6 +350,52 @@ knitr::include_graphics("animations/anime_seq.gif")
 Most basic (but very effective) way to tune models
 :::
 
+## Different types of grids `r hexes(c("dials"))`
+
+
+```{r} 
+#| label: grid-types
+#| echo: false
+#| fig-width: 10
+#| fig-height: 2.7
+#| fig-align: 'center'
+#| out-width: 100%
+
+tree_param <- parameters(trees(), learn_rate())
+
+set.seed(114)
+reg_1 <- grid_regular(tree_param, levels = c(4, 4)) %>% 
+  mutate(type = "Regular (balanced)")
+reg_2 <- grid_regular(tree_param, levels = c(3, 5)) %>% 
+  mutate(type = "Regular (unbalanced)")
+
+irreg_1 <- grid_space_filling(tree_param, size = 16, type = "uniform") %>% 
+  mutate(type = "SFD: Uniform")
+
+set.seed(21)
+irreg_2 <- grid_random(tree_param, size = 16, type = "uniform") %>% 
+  mutate(type = "Random")
+irreg_3 <- grid_space_filling(tree_param, size = 16, type = "latin_hypercube") %>% 
+  mutate(type = "SFD: Latin Hypercube")
+
+lvls <- c("Regular (balanced)", "Regular (unbalanced)", "Random", 
+          "SFD: Latin Hypercube", "SFD: Uniform")
+
+grids <- 
+  bind_rows(reg_1, reg_2, irreg_1, irreg_2, irreg_3) %>% 
+  mutate(type = factor(type, levels = lvls))
+
+grids %>% 
+  ggplot(aes(trees, learn_rate)) + 
+  geom_point() + 
+  scale_y_log10() +
+  facet_wrap(~ type, nrow = 1) +
+  labs(x = trees()$label, y = learn_rate()$label)
+```
+
+
+Space-filling designs (SFD) attempt to cover the parameter space without redunant candidates. We recomment these the most.
+
 ## Create a grid `r hexes(c("dials", "workflows"))`
 
 ```{r get-param}
@@ -388,7 +422,7 @@ set.seed(12)
 grid <- 
   lgbm_wflow %>% 
   extract_parameter_set_dials() %>% 
-  grid_latin_hypercube(size = 25)
+  grid_space_filling(size = 25)
 
 grid
 ```
@@ -456,7 +490,7 @@ lgbm_param <-
 set.seed(712)
 grid <- 
   lgbm_param %>% 
-  grid_latin_hypercube(size = 25)
+  grid_space_filling(size = 25)
 
 grid
 ```
@@ -509,7 +543,7 @@ lgbm_param <-
 
 ```{r tuning} 
 #| label: lgb-grid-tune
-#| cache: false
+#| cache: true
 #| code-line-numbers: "2|"
 set.seed(9)
 ctrl <- control_grid(save_pred = TRUE)
