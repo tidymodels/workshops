@@ -21,7 +21,11 @@ knitr::opts_chunk$set(
 library(countdown)
 library(ggplot2)
 theme_set(theme_bw())
-options(cli.width = 70, ggplot2.discrete.fill = c("#7e96d5", "#de6c4e"))
+options(
+  cli.width = 70,
+  ggplot2.discrete.fill = c("#218239", "#d4ad42"),
+  ggplot2.discrete.colour = c("#218239", "#d4ad42")
+)
 
 train_color <- "#1a162d"
 test_color  <- "#cd4173"
