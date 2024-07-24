@@ -27,14 +27,15 @@ knitr:
 ```{r setup-previous}
 #| echo: false
 library(tidymodels)
+library(forested)
 
 set.seed(123)
-taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
-taxi_train <- training(taxi_split)
-taxi_test <- testing(taxi_split)
+forested_split <- initial_split(forested, prop = 0.8, strata = forested)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
 
 set.seed(123)
-taxi_folds <- vfold_cv(taxi_train, v = 10, strata = tip)
+forested_folds <- vfold_cv(forested_train, v = 10, strata = forested)
 ```
 
 ## Tuning parameters
@@ -81,7 +82,7 @@ Let's take our previous random forest workflow and tag for tuning the minimum nu
 rf_spec <- rand_forest(min_n = tune()) %>% 
   set_mode("classification")
 
-rf_wflow <- workflow(tip ~ ., rf_spec)
+rf_wflow <- workflow(forested ~ ., rf_spec)
 rf_wflow
 ```
 
@@ -96,7 +97,7 @@ rf_wflow
 set.seed(22)
 rf_res <- tune_grid(
   rf_wflow,
-  taxi_folds,
+  forested_folds,
   grid = 5
 )
 ```
@@ -123,7 +124,7 @@ best_parameter
 
 rf_wflow <- finalize_workflow(rf_wflow, best_parameter)
 
-final_fit <- last_fit(rf_wflow, taxi_split) 
+final_fit <- last_fit(rf_wflow, forested_split) 
 
 collect_metrics(final_fit)
 ```

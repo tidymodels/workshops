@@ -30,25 +30,26 @@ knitr:
 ```{r setup-previous}
 #| echo: false
 library(tidymodels)
+library(forested)
 
 set.seed(123)
-taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
-taxi_train <- training(taxi_split)
-taxi_test <- testing(taxi_split)
+forested_split <- initial_split(forested, prop = 0.8, strata = forested)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
 
 tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
-tree_fit <- workflow(tip ~ ., tree_spec) %>% fit(taxi_train)
+tree_fit <- workflow(forested ~ ., tree_spec) %>% fit(forested_train)
 ```
 
 ## Deploying a model `r hexes("vetiver")`
 
-We have a decision tree, `tree_fit`, to model whether or not a taxi trip in Chicago included a tip or not.
+We have a decision tree, `tree_fit`, to model whether or not a plot of land in Washington is forested or not.
 
 How do we use our model in **production**?
 
 ```{r tree-vetiver}
 library(vetiver)
-v <- vetiver_model(tree_fit, "taxi")
+v <- vetiver_model(tree_fit, "forested")
 v
 ```
 
