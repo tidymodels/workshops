@@ -101,7 +101,19 @@ set.seed(472)
 hotel_rs <- vfold_cv(hotel_train, strata = avg_price_per_room)
 ```
 
-## Previously - Boosting Model
+## Our Boosting Model
+
+We used feature hashing to generate a smaller set of indicator columns to deal with the large number of levels for the agent and country predictors. 
+
+<br>
+
+Tree-based models (and a few others) don't require indicators for categorical predictors. They can split on these variables as-is. 
+
+<br>
+
+We'll keep all categorical predictors as factors and focus on optimizing additional boosting parameters. 
+
+## Our Boosting Model
 
 ```{r}
 #| label: setup-lgbm
@@ -115,7 +127,10 @@ lgbm_spec <-
 
 lgbm_wflow <- workflow(avg_price_per_room ~ ., lgbm_spec)
 
-lgbm_param <- lgbm_wflow %>% extract_parameter_set_dials()
+lgbm_param <- 
+  lgbm_wflow %>%
+    extract_parameter_set_dials() %>%
+    update(learn_rate = learn_rate(c(-5, -1)))
 ```
 
 ## Iterative Search
@@ -443,7 +458,7 @@ It has an additional `initial` argument for the initial set of performance estim
 
 ```{r tuning} 
 #| label: lgb-bo-initial
-#| cache: false
+#| cache: true
 reg_metrics <- metric_set(mae, rsq)
 
 set.seed(12)
@@ -456,15 +471,18 @@ init_res <-
     metrics = reg_metrics
   )
 
-show_best(init_res, metric = "mae")
+show_best(init_res, metric = "mae") %>% select(-.metric, -.estimator)
 ```
 
 ## BO using tidymodels
 
 ```{r tuning} 
 #| label: lgb-bo
-#| cache: false
-#| code-line-numbers: "4,6-8|"
+#| cache: true
+#| message: true
+#| code-line-numbers: "1|6,8-11|"
+
+ctrl_bo <- control_bayes(verbose_iter = TRUE) # <- for demonstration
 
 set.seed(15)
 lgbm_bayes_res <-
@@ -474,10 +492,18 @@ lgbm_bayes_res <-
     initial = init_res,     # <- initial results
     iter = 20,
     param_info = lgbm_param,
+    control = ctrl_bo,
     metrics = reg_metrics
   )
 
-show_best(lgbm_bayes_res, metric = "mae")
+show_best(lgbm_bayes_res, metric = "mae") %>% select(-.metric, -.estimator)
+```
+
+## Best results
+```{r tuning} 
+#| label: lgb-bo-best
+
+show_best(lgbm_bayes_res, metric = "mae") %>% select(-.metric, -.estimator)
 ```
 
 
@@ -615,6 +641,13 @@ final_res
 
 ## Test Set Results
 
+```{r}
+#| label: bo-rs
+#| include: false
+
+best_bo_rs <- show_best(lgbm_bayes_res, metric = "mae", n = 1)
+```
+
 :::: {.columns}
 
 ::: {.column width="65%"}
@@ -657,6 +690,8 @@ final_res %>%
 :::
 
 ::::
+
+Recall that resampling predicted the MAE to be `r round(best_bo_rs$mean, 3)`.
 
 ```{r}
 #| label: teardown
