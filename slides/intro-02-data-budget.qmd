@@ -37,19 +37,19 @@ knitr:
 :::
 
 ::: {.column width="40%"}
-![](images/taxi_spinning.svg)
+![](images/forest_mountain.svg)
 :::
 
 :::
 
 ::: footer
-Credit: <https://www.svgrepo.com/svg/8322/taxi>
+Credit: <https://www.svgrepo.com/svg/251793/forest-mountain>
 :::
 
 ## Data on forests in Washington
 
 ::: columns
-::: {.column width="60%"}
+::: {.column width="70%"}
 -   `N = 7,109` plots of land, one from each of 7,109 6000-acre hexagons in WA.
 -   A nominal outcome, `forested`, with levels `"Yes"` and `"No"`, measured "on-the-ground."
 -   18 remotely-sensed and easily-accessible predictors:
@@ -57,13 +57,13 @@ Credit: <https://www.svgrepo.com/svg/8322/taxi>
      - **nominal** variables based on classifications from other governmental orgs.
 :::
 
-::: {.column width="40%"}
-![](images/taxi.png)
+::: {.column width="30%"}
+![](images/forest.svg)
 :::
 :::
 
 ::: footer
-Credit: <https://unsplash.com/photos/7_r85l4eht8>
+Credit: <https://www.svgrepo.com/svg/67614/forest>
 :::
 
 :::notes
@@ -173,7 +173,6 @@ forested_split
 :::notes
 How much data in training vs testing?
 This function uses a good default, but this depends on your specific goal/data
-We will talk about more powerful ways of splitting, like stratification, later
 :::
 
 ## What is `set.seed()`?
@@ -309,50 +308,6 @@ forested_train %>%
 forested_train %>% 
   ggplot(aes(x = lon, y = lat, col = forested)) +
   geom_point()
-```
-
-# Split smarter
-
-##
-
-```{r forested-forested-pct, echo = FALSE}
-forested %>%
-  ggplot(aes(x = "", fill = forested)) +
-  geom_bar(position = "fill") +
-  labs(x = "") + 
-  scale_fill_viridis_d(end = .5)
-```
-
-Stratified sampling would split within response values
-
-:::notes
-Based on our EDA, we know that the source data contains fewer `"No"` forested values than `"Yes"`. We want to make sure we allot equal proportions of those responses so that both the training and testing data have enough of each to give accurate estimates.
-
-TODO: this class imbalance is much less present with forested vs taxi -- should we keep it around?
-:::
-
-## Stratification
-
-Use `strata = forested`
-
-```{r forested-split-prop-strata}
-set.seed(123)
-forested_split <- initial_split(forested, prop = 0.8, strata = forested)
-forested_split
-```
-
-## Stratification
-
-Stratification often helps, with very little downside
-
-```{r forested-forested-pct-by-split, echo = FALSE}
-bind_rows(
-  forested_train %>% mutate(split = "train"),
-  forested_test %>% mutate(split = "test")
-) %>%
-  ggplot(aes(x = split, fill = forested)) +
-  geom_bar(position = "fill") + 
-  scale_fill_viridis_d(end = .5)
 ```
 
 ## The whole game - status update
