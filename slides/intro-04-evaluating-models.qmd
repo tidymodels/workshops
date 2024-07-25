@@ -31,7 +31,7 @@ library(tidymodels)
 library(forested)
 
 set.seed(123)
-forested_split <- initial_split(forested, prop = 0.8, strata = forested)
+forested_split <- initial_split(forested, prop = 0.8)
 forested_train <- training(forested_split)
 forested_test <- testing(forested_split)
 
@@ -134,13 +134,35 @@ augment(forested_fit, new_data = forested_train) %>%
 
 ## Metrics for model performance `r hexes("yardstick")`
 
-```{r forested-metrics-grouped}
-forested_metrics <- metric_set(accuracy, specificity, sensitivity)
+Metrics and metric sets work with grouped data frames!
 
+```{r accuracy-grouped}
 augment(forested_fit, new_data = forested_train) %>%
   group_by(tree_no_tree) %>%
-  forested_metrics(truth = forested, estimate = .pred_class)
+  accuracy(truth = forested, estimate = .pred_class)
 ```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Apply the `forested_metrics` metric set to `augment()` \
+output grouped by `tree_no_tree`.*
+
+*Do any metrics differ substantially between groups?*
+
+```{r ex-forested-grouped-metrics}
+#| echo: false
+countdown::countdown(minutes = 5, id = "forested-grouped-metrics")
+```
+
+:::notes
+The specificity for `"Tree"` is a good bit lower than it is for `"No tree"`.
+
+Specificity is the proportion of negatives that are correctly identified as negatives.
+"Negative" is the non-event level of the outcome, i.e. "non-forested."
+So, when this index classifies the plot as having a tree, the model does not do well at correctly identifying the plot as non-forested when it is indeed non-forested.
+:::
 
 ## Two class data
 
@@ -389,7 +411,7 @@ And we want to understand if these are important differences?
 
 *for* **each** *fold?*
 
-![](images/taxi_spinning.svg){width="300"}
+![](images/forest_mountain.svg){width="200"}
 
 ```{r ex-percent-in-folds}
 #| echo: false
@@ -423,21 +445,11 @@ vfold_cv(forested_train, v = 5)
 
 ## Cross-validation `r hexes("rsample")`
 
-```{r vfold-cv-strata}
-vfold_cv(forested_train, strata = forested)
-```
-
-. . .
-
-Stratification often helps, with very little downside
-
-## Cross-validation `r hexes("rsample")`
-
 We'll use this setup:
 
 ```{r forested-folds}
 set.seed(123)
-forested_folds <- vfold_cv(forested_train, v = 10, strata = forested)
+forested_folds <- vfold_cv(forested_train, v = 10)
 forested_folds
 ```
 
@@ -606,7 +618,7 @@ mc_cv(forested_train, times = 10)
 
 ```{r validation-split}
 set.seed(853)
-forested_val_split <- initial_validation_split(forested, strata = forested)
+forested_val_split <- initial_validation_split(forested)
 validation_set(forested_val_split)
 ```
 

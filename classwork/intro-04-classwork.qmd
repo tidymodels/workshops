@@ -16,7 +16,7 @@ library(tidymodels)
 library(forested)
 
 set.seed(123)
-forested_split <- initial_split(forested, prop = 0.8, strata = forested)
+forested_split <- initial_split(forested, prop = 0.8)
 forested_train <- training(forested_split)
 forested_test <- testing(forested_split)
 
@@ -51,14 +51,6 @@ augment(forested_fit, new_data = forested_train) %>%
   accuracy(truth = forested, estimate = .pred_class)
 ```
 
-All yardstick metric functions work with grouped data frames!
-
-```{r}
-augment(forested_fit, new_data = forested_train) %>%
-  group_by(tree_no_tree) %>%
-  accuracy(truth = forested, estimate = .pred_class)
-```
-
 Metric sets are a way to combine multiple similar metric functions together into a new function.
 
 ```{r}
@@ -66,6 +58,25 @@ forested_metrics <- metric_set(accuracy, specificity, sensitivity)
 
 augment(forested_fit, new_data = forested_train) %>%
   forested_metrics(truth = forested, estimate = .pred_class)
+```
+
+Metrics and metric sets work with grouped data frames!
+
+```{r}
+augment(forested_fit, new_data = forested_train) %>%
+  group_by(tree_no_tree) %>%
+  accuracy(truth = forested, estimate = .pred_class)
+```
+
+## Your turn
+
+Apply the `forested_metrics` metric set to `augment()` output grouped by `tree_no_tree`.
+
+Do any metrics differ substantially between groups?
+
+```{r}
+# Your code here!
+
 ```
 
 ## Your turn
@@ -144,17 +155,11 @@ forested_folds <- vfold_cv(forested_train, v = 10)
 forested_folds$splits[1:3]
 ```
 
-Stratification often helps, with very little downside
-
-```{r}
-vfold_cv(forested_train, strata = forested)
-```
-
 We'll use this setup:
 
 ```{r}
 set.seed(123)
-forested_folds <- vfold_cv(forested_train, v = 10, strata = forested)
+forested_folds <- vfold_cv(forested_train, v = 10)
 forested_folds
 ```
 
@@ -292,11 +297,3 @@ collect_predictions(final_fit) %>%
 ```{r}
 extract_workflow(final_fit)
 ```
-
-## Your turn
-
-Which model do you think you would decide to use?
-
-What surprised you the most?
-
-If you're taking Advanced tidymodels tomorrow, what is one thing you are looking forward to learning?
