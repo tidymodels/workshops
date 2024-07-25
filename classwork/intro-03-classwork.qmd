@@ -13,11 +13,12 @@ Setup from deck 2
 
 ```{r}
 library(tidymodels)
+library(forested)
 
 set.seed(123)
-taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
-taxi_train <- training(taxi_split)
-taxi_test <- testing(taxi_split)
+forested_split <- initial_split(forested, prop = 0.8)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
 ```
 
 ## Your turn
@@ -62,7 +63,7 @@ tree_spec
 
 ```{r}
 tree_spec <-
-  decision_tree(cost_complexity = 0.002) %>% 
+  decision_tree() %>% 
   set_mode("classification")
 ```
 
@@ -70,23 +71,23 @@ Fit parsnip specification:
 
 ```{r}
 tree_spec %>% 
-  fit(tip ~ ., data = taxi_train) 
+  fit(forested ~ ., data = forested_train) 
 ```
 
 Fit with a workflow:
 
 ```{r}
 workflow() %>%
-  add_formula(tip ~ .) %>%
+  add_formula(forested ~ .) %>%
   add_model(tree_spec) %>%
-  fit(data = taxi_train) 
+  fit(data = forested_train) 
 ```
 
 "Shortcut" by specifying the preprocessor and model spec directly in the `workflow()` call:
 
 ```{r}
-workflow(tip ~ ., tree_spec) %>% 
-  fit(data = taxi_train) 
+workflow(forested ~ ., tree_spec) %>% 
+  fit(data = forested_train) 
 ```
 
 ## Your turn
@@ -97,11 +98,11 @@ Extension/Challenge: Other than formulas, what kinds of preprocessors are suppor
 
 ```{r tree_wflow}
 tree_spec <-
-  decision_tree(cost_complexity = 0.002) %>% 
+  decision_tree() %>% 
   set_mode("classification")
 
 tree_wflow <- workflow() %>%
-  add_formula(tip ~ .) %>%
+  add_formula(forested ~ .) %>%
   add_model(tree_spec)
 
 tree_wflow
@@ -111,25 +112,29 @@ tree_wflow
 
 ```{r}
 tree_fit <-
-  workflow(tip ~ ., tree_spec) %>% 
-  fit(data = taxi_train) 
+  workflow(forested ~ ., tree_spec) %>% 
+  fit(data = forested_train) 
 ```
 
 ## Your turn
 
-What do you get from running the following code? What do you notice about the structure of the result?
+Run:
 
 ```{r}
-predict(tree_fit, new_data = taxi_test)
+predict(tree_fit, new_data = forested_test)
 ```
+
+What do you notice about the structure of the result?
 
 ## Your turn
 
-What do you get from running the following code? How is `augment()` different from `predict()`?
+Run:
 
 ```{r}
-augment(tree_fit, new_data = taxi_test)
+augment(tree_fit, new_data = forested_test)
 ```
+
+How does the output compare to the output from `predict()`?
 
 ## Understand your model
 

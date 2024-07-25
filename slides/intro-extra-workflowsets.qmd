@@ -27,18 +27,19 @@ knitr:
 ```{r setup-previous}
 #| echo: false
 library(tidymodels)
+library(forested)
 
 set.seed(123)
-taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
-taxi_train <- training(taxi_split)
-taxi_test <- testing(taxi_split)
+forested_split <- initial_split(forested, prop = 0.8)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
 
 set.seed(123)
-taxi_folds <- vfold_cv(taxi_train, v = 10, strata = tip)
+forested_folds <- vfold_cv(forested_train, v = 10)
 
-tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
-taxi_wflow <- workflow(tip ~ ., tree_spec)
-taxi_fit <- fit(taxi_wflow, taxi_train)
+tree_spec <- decision_tree(mode = "classification")
+forested_wflow <- workflow(forested ~ ., tree_spec)
+forested_fit <- fit(forested_wflow, forested_train)
 
 rf_spec <- rand_forest(trees = 1000, mode = "classification")
 ```
@@ -46,30 +47,30 @@ rf_spec <- rand_forest(trees = 1000, mode = "classification")
 
 ## How can we compare multiple model workflows at once?
 
-```{r taxi-spinning, echo = FALSE}
+```{r forest-mountain, echo = FALSE}
 #| fig-align: "center"
 
-knitr::include_graphics("images/taxi_spinning.svg")
+knitr::include_graphics("images/forest_mountain.svg")
 ```
 
 ## Evaluate a workflow set
 
 ```{r workflow-set}
-workflow_set(list(tip ~ .), list(tree_spec, rf_spec))
+workflow_set(list(forested ~ .), list(tree_spec, rf_spec))
 ```
 
 ## Evaluate a workflow set
 
 ```{r workflow-map}
-workflow_set(list(tip ~ .), list(tree_spec, rf_spec)) %>%
-  workflow_map("fit_resamples", resamples = taxi_folds)
+workflow_set(list(forested ~ .), list(tree_spec, rf_spec)) %>%
+  workflow_map("fit_resamples", resamples = forested_folds)
 ```
 
 ## Evaluate a workflow set
 
 ```{r rank-results}
-workflow_set(list(tip ~ .), list(tree_spec, rf_spec)) %>%
-  workflow_map("fit_resamples", resamples = taxi_folds) %>%
+workflow_set(list(forested ~ .), list(tree_spec, rf_spec)) %>%
+  workflow_map("fit_resamples", resamples = forested_folds) %>%
   rank_results()
 ```
 

@@ -40,8 +40,6 @@ countdown::countdown(minutes = 3, id = "how-to-fit-linear-model")
 
 -   `lm` for linear model
 
--   `glm` for generalized linear model (e.g. logistic regression)
-
 -   `glmnet` for regularized regression
 
 -   `keras` for regression using TensorFlow
@@ -50,19 +48,22 @@ countdown::countdown(minutes = 3, id = "how-to-fit-linear-model")
 
 -   `spark` for large data sets
 
+-   `brulee` for regression using torch
+
 ## To specify a model `r hexes("parsnip")`
 
 . . .
 
 ::: columns
-::: {.column width="40%"}
+::: {.column width="60%"}
 -   Choose a [model]{.underline}
 -   Specify an engine
 -   Set the mode
 :::
 
-::: {.column width="60%"}
-![](images/taxi_spinning.svg)
+::: {.column width="40%"}
+<br><br><br>
+![](images/forest_mountain.svg){.absolute height="300"}
 :::
 :::
 
@@ -71,12 +72,13 @@ countdown::countdown(minutes = 3, id = "how-to-fit-linear-model")
 ```{r setup-previous}
 #| echo: false
 library(tidymodels)
+library(forested)
 
 set.seed(123)
 
-taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
-taxi_train <- training(taxi_split)
-taxi_test <- testing(taxi_split)
+forested_split <- initial_split(forested, prop = 0.8)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
 ```
 
 ```{r logistic-reg}
@@ -91,14 +93,15 @@ Models have default engines
 ## To specify a model `r hexes("parsnip")`
 
 ::: columns
-::: {.column width="40%"}
+::: {.column width="60%"}
 -   Choose a model
 -   Specify an [engine]{.underline}
 -   Set the mode
 :::
 
-::: {.column width="60%"}
-![](images/taxi_spinning.svg)
+::: {.column width="40%"}
+<br><br><br>
+![](images/forest_mountain.svg){.absolute height="300"}
 :::
 :::
 
@@ -119,14 +122,15 @@ logistic_reg() %>%
 ## To specify a model `r hexes("parsnip")`
 
 ::: columns
-::: {.column width="40%"}
+::: {.column width="60%"}
 -   Choose a model
 -   Specify an engine
 -   Set the [mode]{.underline}
 :::
 
-::: {.column width="60%"}
-![](images/taxi_spinning.svg)
+::: {.column width="40%"}
+<br><br><br>
+![](images/forest_mountain.svg){.absolute height="300"}
 :::
 :::
 
@@ -164,14 +168,15 @@ All available models are listed at <https://www.tidymodels.org/find/parsnip/>
 ## To specify a model `r hexes("parsnip")`
 
 ::: columns
-::: {.column width="40%"}
+::: {.column width="60%"}
 -   Choose a [model]{.underline}
 -   Specify an [engine]{.underline}
 -   Set the [mode]{.underline}
 :::
 
-::: {.column width="60%"}
-![](images/taxi_spinning.svg)
+::: {.column width="40%"}
+<br><br><br>
+![](images/forest_mountain.svg){.absolute height="300"}
 :::
 :::
 
@@ -466,35 +471,35 @@ Two ways workflows handle levels better than base R:
 
 ```{r tree-spec}
 tree_spec <-
-  decision_tree(cost_complexity = 0.002) %>% 
+  decision_tree() %>% 
   set_mode("classification")
 
 tree_spec %>% 
-  fit(tip ~ ., data = taxi_train) 
+  fit(forested ~ ., data = forested_train) 
 ```
 
 ## A model workflow `r hexes("parsnip", "workflows")`
 
 ```{r tree-wflow}
 tree_spec <-
-  decision_tree(cost_complexity = 0.002) %>% 
+  decision_tree() %>% 
   set_mode("classification")
 
 workflow() %>%
-  add_formula(tip ~ .) %>%
+  add_formula(forested ~ .) %>%
   add_model(tree_spec) %>%
-  fit(data = taxi_train) 
+  fit(data = forested_train) 
 ```
 
 ## A model workflow `r hexes("parsnip", "workflows")`
 
 ```{r tree-wflow-fit}
 tree_spec <-
-  decision_tree(cost_complexity = 0.002) %>% 
+  decision_tree() %>% 
   set_mode("classification")
 
-workflow(tip ~ ., tree_spec) %>% 
-  fit(data = taxi_train) 
+workflow(forested ~ ., tree_spec) %>% 
+  fit(data = forested_train) 
 ```
 
 ## Your turn {transition="slide-in"}
@@ -520,12 +525,12 @@ How do you use your new `tree_fit` model?
 
 ```{r tree-wflow-fit-2}
 tree_spec <-
-  decision_tree(cost_complexity = 0.002) %>% 
+  decision_tree() %>% 
   set_mode("classification")
 
 tree_fit <-
-  workflow(tip ~ ., tree_spec) %>% 
-  fit(data = taxi_train) 
+  workflow(forested ~ ., tree_spec) %>% 
+  fit(data = forested_train) 
 ```
 
 ## Your turn {transition="slide-in"}
@@ -534,9 +539,9 @@ tree_fit <-
 
 *Run:*
 
-`predict(tree_fit, new_data = taxi_test)`
+`predict(tree_fit, new_data = forested_test)`
 
-*What do you get?*
+*What do you notice about the structure of the result?*
 
 ```{r ex-predict-tree-fit}
 #| echo: false
@@ -549,9 +554,9 @@ countdown::countdown(minutes = 3, id = "predict-tree-fit")
 
 *Run:*
 
-`augment(tree_fit, new_data = taxi_test)`
+`augment(tree_fit, new_data = forested_test)`
 
-*What do you get?*
+*How does the output compare to the output from `predict()`?*
 
 ```{r ex-augment-tree-fit}
 #| echo: false

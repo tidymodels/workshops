@@ -11,22 +11,23 @@ We recommend restarting R between each slide deck!
 
 ```{r}
 library(tidymodels)
+library(forested)
 
 set.seed(123)
-taxi_split <- initial_split(taxi, prop = 0.8, strata = tip)
-taxi_train <- training(taxi_split)
-taxi_test <- testing(taxi_split)
+forested_split <- initial_split(forested, prop = 0.8)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
 
 set.seed(123)
-taxi_folds <- vfold_cv(taxi_train, v = 10, strata = tip)
+forested_folds <- vfold_cv(forested_train, v = 10)
 
 tree_spec <-
   decision_tree() %>% 
   set_mode("classification")
 
 tree_fit <-
-  workflow(tip ~ ., tree_spec) %>% 
-  fit(data = taxi_train) 
+  workflow(forested ~ ., tree_spec) %>% 
+  fit(data = forested_train) 
 ```
 
 ## Your turn
@@ -38,7 +39,7 @@ library(vetiver)
 library(plumber)
 
 # Create a vetiver model object
-v <- vetiver_model(tree_fit, "taxi_tips")
+v <- vetiver_model(tree_fit, "forested")
 v
 ```
 
