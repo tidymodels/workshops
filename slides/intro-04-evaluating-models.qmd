@@ -259,6 +259,70 @@ augment(forested_fit, new_data = forested_train) %>%
 countdown::countdown(minutes = 5, id = "roc-curve")
 ```
 
+## Brier score
+
+What if we don't turn predicted probabilties into class predictions?
+
+. . .
+
+The Brier score is analogous to the mean squared error in regression models:
+
+$$
+Brier_{class} = \frac{1}{N}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
+$$
+
+## Brier score
+
+```{r brier}
+augment(forested_fit, new_data = forested_train) %>% 
+  brier_class(truth = forested, .pred_Yes) 
+```
+
+. . .
+
+Smaller values are better, for binary classification the "bad model threshold" is about 0.25.
+
+
+## Separation vs calibration
+
+The ROC captures separation, the Brier score captures calibration.
+
+::: columns
+::: {.column width="50%"}
+```{r separation-forested}
+#| echo: false
+#| fig-height: 4
+#| fig-width: 5
+#| out-width: 100%
+augment(forested_fit, new_data = forested_train) %>% 
+  ggplot(aes(.pred_Yes, col = forested, fill = forested)) + 
+  stat_density(alpha = 1 / 4, trim = TRUE, adjust = 1.2) + 
+  lims(x = 0:1) +
+  labs(x = "Predicted probability of forested") +
+  theme(legend.position = "top")
+```
+:::
+::: {.column width="50%"}
+```{r calibration-forested}
+#| echo: false
+#| fig-height: 4
+#| fig-width: 5
+#| out-width: 100%
+library(probably)
+
+augment(forested_fit, new_data = forested_train) %>% 
+  cal_plot_breaks(forested, .pred_Yes, num_breaks = 30)
+```
+:::
+:::
+
+::: notes
+- Good separation: the densities don't overlap.
+- Good calibration: the calibration line follows the diagonal.
+
+Calibration plot: We bin observations according to predicted probability. In the bin for 20%-30% predicted prob, we should see an event rate of ~25% if the model is well calibrated.
+:::
+
 ##  {background-iframe="https://yardstick.tidymodels.org/reference/index.html"}
 
 ::: footer
