@@ -9,7 +9,7 @@
 <link href="../site_libs/quarto-html/light-border.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.5.30">
+  <meta name="generator" content="quarto-1.6.1">
 
   <title>Machine learning with tidymodels – 2 - Tuning Hyperparameters</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -387,10 +387,10 @@
   </style>
   <link href="../site_libs/countdown-0.4.0/countdown.css" rel="stylesheet">
   <script src="../site_libs/countdown-0.4.0/countdown.js"></script>
-<meta property="og:title" content="Machine learning with tidymodels - 2 - Tuning Hyperparameters">
+<meta property="og:title" content="2 - Tuning Hyperparameters – Machine learning with tidymodels">
 <meta property="og:description" content="Advanced tidymodels">
 <meta property="og:site_name" content="Machine learning with tidymodels">
-<meta name="twitter:title" content="Machine learning with tidymodels - 2 - Tuning Hyperparameters">
+<meta name="twitter:title" content="2 - Tuning Hyperparameters – Machine learning with tidymodels">
 <meta name="twitter:description" content="Advanced tidymodels">
 <meta name="twitter:card" content="summary">
 </head>
@@ -441,8 +441,7 @@
 <span id="cb2-11"><a></a>    <span class="at">agent =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(agent))</span>
 <span id="cb2-12"><a></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
-</div>
+</div></div>
 </section>
 <section id="previously---data-usage" class="slide level2">
 <h2>Previously - Data Usage <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
@@ -511,19 +510,9 @@
 </div>
 </section>
 
-<section id="covariancecorrelation-matrix-structure-in-mixed-models" class="title-slide slide level1 center">
-<h1>Covariance/correlation matrix structure in mixed models?</h1>
-<div class="fragment">
-<p>Yes, but it is unlikely to affect performance.</p>
-</div>
-<div class="fragment">
-<p>It will impact inference though. 🤔</p>
-</div>
-</section>
-
 <section>
-<section id="is-the-random-seed-a-tuning-parameter" class="title-slide slide level1 center">
-<h1>Is the random seed a tuning parameter?</h1>
+<section id="the-random-seed" class="title-slide slide level1 center">
+<h1>The random seed?</h1>
 <div class="fragment">
 <p>Nope. It is not. ❌</p>
 </div>
@@ -681,6 +670,19 @@
           display:block!important;
       }</style></aside>
 </section>
+<section id="different-types-of-grids" class="slide level2 annotation">
+<h2>Different types of grids <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="figures/grid-types-1.svg" class="quarto-figure quarto-figure-center" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Space-filling designs (SFD) attempt to cover the parameter space without redundant candidates. We recommend these the most.</p>
+</section>
 <section id="create-a-grid" class="slide level2">
 <h2>Create a grid <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
@@ -709,39 +711,28 @@
 </section>
 <section id="create-a-grid-1" class="slide level2">
 <h2>Create a grid <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
-<div class="columns">
-<div class="column" style="width:65%;">
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a><span class="fu">set.seed</span>(<span class="dv">12</span>)</span>
 <span id="cb9-2"><a></a>grid <span class="ot">&lt;-</span> </span>
 <span id="cb9-3"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span> </span>
 <span id="cb9-4"><a></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb9-5"><a></a>  <span class="fu">grid_latin_hypercube</span>(<span class="at">size =</span> <span class="dv">25</span>)</span>
+<span id="cb9-5"><a></a>  <span class="fu">grid_space_filling</span>(<span class="at">size =</span> <span class="dv">25</span>)</span>
 <span id="cb9-6"><a></a></span>
 <span id="cb9-7"><a></a>grid</span>
 <span id="cb9-8"><a></a><span class="co">#&gt; # A tibble: 25 × 4</span></span>
-<span id="cb9-9"><a></a><span class="co">#&gt;    trees    learn_rate `agent hash` `company hash`</span></span>
-<span id="cb9-10"><a></a><span class="co">#&gt;    &lt;int&gt;         &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt;</span></span>
-<span id="cb9-11"><a></a><span class="co">#&gt;  1  1629 0.00000440             524           1454</span></span>
-<span id="cb9-12"><a></a><span class="co">#&gt;  2  1746 0.0000000751          1009           2865</span></span>
-<span id="cb9-13"><a></a><span class="co">#&gt;  3    53 0.0000180             2313            367</span></span>
-<span id="cb9-14"><a></a><span class="co">#&gt;  4   442 0.000000445            347            460</span></span>
-<span id="cb9-15"><a></a><span class="co">#&gt;  5  1413 0.0000000208          3232            553</span></span>
-<span id="cb9-16"><a></a><span class="co">#&gt;  6  1488 0.0000578             3692            639</span></span>
-<span id="cb9-17"><a></a><span class="co">#&gt;  7   906 0.000385               602            332</span></span>
-<span id="cb9-18"><a></a><span class="co">#&gt;  8  1884 0.00000000101         1127            567</span></span>
-<span id="cb9-19"><a></a><span class="co">#&gt;  9  1812 0.0239                 961           1183</span></span>
-<span id="cb9-20"><a></a><span class="co">#&gt; 10   393 0.000000117            487           1783</span></span>
+<span id="cb9-9"><a></a><span class="co">#&gt;    trees learn_rate `agent hash` `company hash`</span></span>
+<span id="cb9-10"><a></a><span class="co">#&gt;    &lt;int&gt;      &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt;</span></span>
+<span id="cb9-11"><a></a><span class="co">#&gt;  1     1   7.50e- 6          574            574</span></span>
+<span id="cb9-12"><a></a><span class="co">#&gt;  2    84   1.78e- 5         2048           2298</span></span>
+<span id="cb9-13"><a></a><span class="co">#&gt;  3   167   5.62e-10         1824            912</span></span>
+<span id="cb9-14"><a></a><span class="co">#&gt;  4   250   4.22e- 5         3250            512</span></span>
+<span id="cb9-15"><a></a><span class="co">#&gt;  5   334   1.78e- 8          512           2896</span></span>
+<span id="cb9-16"><a></a><span class="co">#&gt;  6   417   1.33e- 3          322           1625</span></span>
+<span id="cb9-17"><a></a><span class="co">#&gt;  7   500   1   e- 1         1448           1149</span></span>
+<span id="cb9-18"><a></a><span class="co">#&gt;  8   584   1   e- 7         1290            256</span></span>
+<span id="cb9-19"><a></a><span class="co">#&gt;  9   667   2.37e-10          456            724</span></span>
+<span id="cb9-20"><a></a><span class="co">#&gt; 10   750   1.78e- 2          645            322</span></span>
 <span id="cb9-21"><a></a><span class="co">#&gt; # ℹ 15 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</div><div class="column" style="width:35%;">
-<div class="fragment">
-<ul>
-<li>A <em>space-filling design</em> tends to perform better than random grids.</li>
-<li>Space-filling designs are also usually more efficient than regular grids.</li>
-</ul>
-</div>
-</div>
 </div>
 </section>
 <section id="your-turn" class="slide level2" data-transition="slide-in">
@@ -802,22 +793,22 @@
 <span id="cb11-7"><a></a><span class="fu">set.seed</span>(<span class="dv">712</span>)</span>
 <span id="cb11-8"><a></a>grid <span class="ot">&lt;-</span> </span>
 <span id="cb11-9"><a></a>  lgbm_param <span class="sc">%&gt;%</span> </span>
-<span id="cb11-10"><a></a>  <span class="fu">grid_latin_hypercube</span>(<span class="at">size =</span> <span class="dv">25</span>)</span>
+<span id="cb11-10"><a></a>  <span class="fu">grid_space_filling</span>(<span class="at">size =</span> <span class="dv">25</span>)</span>
 <span id="cb11-11"><a></a></span>
 <span id="cb11-12"><a></a>grid</span>
 <span id="cb11-13"><a></a><span class="co">#&gt; # A tibble: 25 × 4</span></span>
 <span id="cb11-14"><a></a><span class="co">#&gt;    trees learn_rate `agent hash` `company hash`</span></span>
 <span id="cb11-15"><a></a><span class="co">#&gt;    &lt;int&gt;      &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt;</span></span>
-<span id="cb11-16"><a></a><span class="co">#&gt;  1    75  0.000312          2991           1250</span></span>
-<span id="cb11-17"><a></a><span class="co">#&gt;  2     4  0.0000337          899           3088</span></span>
-<span id="cb11-18"><a></a><span class="co">#&gt;  3    15  0.0295             520           1578</span></span>
-<span id="cb11-19"><a></a><span class="co">#&gt;  4     8  0.0997            1256           3592</span></span>
-<span id="cb11-20"><a></a><span class="co">#&gt;  5    80  0.000622           419            258</span></span>
-<span id="cb11-21"><a></a><span class="co">#&gt;  6    70  0.000474          2499           1089</span></span>
-<span id="cb11-22"><a></a><span class="co">#&gt;  7    35  0.000165           287           2376</span></span>
-<span id="cb11-23"><a></a><span class="co">#&gt;  8    64  0.00137            389            359</span></span>
-<span id="cb11-24"><a></a><span class="co">#&gt;  9    58  0.0000250          616            881</span></span>
-<span id="cb11-25"><a></a><span class="co">#&gt; 10    84  0.0639            2311           2635</span></span>
+<span id="cb11-16"><a></a><span class="co">#&gt;  1     1  0.00147            574            574</span></span>
+<span id="cb11-17"><a></a><span class="co">#&gt;  2     5  0.00215           2048           2298</span></span>
+<span id="cb11-18"><a></a><span class="co">#&gt;  3     9  0.0000215         1824            912</span></span>
+<span id="cb11-19"><a></a><span class="co">#&gt;  4    13  0.00316           3250            512</span></span>
+<span id="cb11-20"><a></a><span class="co">#&gt;  5    17  0.0001             512           2896</span></span>
+<span id="cb11-21"><a></a><span class="co">#&gt;  6    21  0.0147             322           1625</span></span>
+<span id="cb11-22"><a></a><span class="co">#&gt;  7    25  0.1               1448           1149</span></span>
+<span id="cb11-23"><a></a><span class="co">#&gt;  8    29  0.000215          1290            256</span></span>
+<span id="cb11-24"><a></a><span class="co">#&gt;  9    34  0.0000147          456            724</span></span>
+<span id="cb11-25"><a></a><span class="co">#&gt; 10    38  0.0464             645            322</span></span>
 <span id="cb11-26"><a></a><span class="co">#&gt; # ℹ 15 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
@@ -833,13 +824,12 @@
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="figures/sfd-1.svg" class="quarto-figure quarto-figure-center"></p>
+<p><img data-src="figures/sfd-1.svg" class="quarto-figure quarto-figure-center" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
-</div>
-</div>
-<p>Note that the learning rates are uniform on the log-10 scale.</p>
+</div></div>
+<p>Note that the learning rates are uniform on the log-10 scale and this shows 2 of 4 dimensions.</p>
 </section></section>
 <section>
 <section id="use-the-tune_-functions-to-tune-models" class="title-slide slide level1 center">
@@ -1020,8 +1010,7 @@
 </figure>
 </div>
 </div>
-</div>
-</div>
+</div></div>
 </section>
 <section id="running-in-parallel" class="slide level2">
 <h2>Running in parallel</h2>
@@ -1053,8 +1042,7 @@
 </div>
 </div>
 </div>
-</div>
-</div>
+</div></div>
 </section>
 <section id="running-in-parallel-1" class="slide level2">
 <h2>Running in parallel</h2>
@@ -1290,7 +1278,7 @@
         margin: 0.1,
 
         math: {
-          mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js',
           config: 'TeX-AMS_HTML-full',
           tex2jax: {
             inlineMath: [['\\(','\\)']],
