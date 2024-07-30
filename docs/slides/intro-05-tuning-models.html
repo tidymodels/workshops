@@ -9,7 +9,7 @@
 <link href="../site_libs/quarto-html/light-border.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.5.30">
+  <meta name="generator" content="quarto-1.6.1">
 
   <title>Machine learning with tidymodels – 5 - Tuning models</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -387,10 +387,10 @@
   </style>
   <link href="../site_libs/countdown-0.4.0/countdown.css" rel="stylesheet">
   <script src="../site_libs/countdown-0.4.0/countdown.js"></script>
-<meta property="og:title" content="Machine learning with tidymodels - 5 - Tuning models">
+<meta property="og:title" content="5 - Tuning models – Machine learning with tidymodels">
 <meta property="og:description" content="Introduction to tidymodels">
 <meta property="og:site_name" content="Machine learning with tidymodels">
-<meta name="twitter:title" content="Machine learning with tidymodels - 5 - Tuning models">
+<meta name="twitter:title" content="5 - Tuning models – Machine learning with tidymodels">
 <meta name="twitter:description" content="Introduction to tidymodels">
 <meta name="twitter:card" content="summary">
 </head>
@@ -451,14 +451,14 @@
 <div class="sourceCode cell-code" id="cb1" data-code-line-numbers="1|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a>rf_spec <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(<span class="at">min_n =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
 <span id="cb1-2"><a></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
 <span id="cb1-3"><a></a></span>
-<span id="cb1-4"><a></a>rf_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(tip <span class="sc">~</span> ., rf_spec)</span>
+<span id="cb1-4"><a></a>rf_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(forested <span class="sc">~</span> ., rf_spec)</span>
 <span id="cb1-5"><a></a>rf_wflow</span>
 <span id="cb1-6"><a></a><span class="co">#&gt; ══ Workflow ══════════════════════════════════════════════════════════</span></span>
 <span id="cb1-7"><a></a><span class="co">#&gt; Preprocessor: Formula</span></span>
 <span id="cb1-8"><a></a><span class="co">#&gt; Model: rand_forest()</span></span>
 <span id="cb1-9"><a></a><span class="co">#&gt; </span></span>
 <span id="cb1-10"><a></a><span class="co">#&gt; ── Preprocessor ──────────────────────────────────────────────────────</span></span>
-<span id="cb1-11"><a></a><span class="co">#&gt; tip ~ .</span></span>
+<span id="cb1-11"><a></a><span class="co">#&gt; forested ~ .</span></span>
 <span id="cb1-12"><a></a><span class="co">#&gt; </span></span>
 <span id="cb1-13"><a></a><span class="co">#&gt; ── Model ─────────────────────────────────────────────────────────────</span></span>
 <span id="cb1-14"><a></a><span class="co">#&gt; Random Forest Model Specification (classification)</span></span>
@@ -476,7 +476,7 @@
 <div class="sourceCode cell-code" id="cb2" data-code-line-numbers="2|3-4|5|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="fu">set.seed</span>(<span class="dv">22</span>)</span>
 <span id="cb2-2"><a></a>rf_res <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(</span>
 <span id="cb2-3"><a></a>  rf_wflow,</span>
-<span id="cb2-4"><a></a>  taxi_folds,</span>
+<span id="cb2-4"><a></a>  forested_folds,</span>
 <span id="cb2-5"><a></a>  <span class="at">grid =</span> <span class="dv">5</span></span>
 <span id="cb2-6"><a></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -489,18 +489,18 @@
 <span id="cb3-2"><a></a><span class="co">#&gt; # A tibble: 5 × 7</span></span>
 <span id="cb3-3"><a></a><span class="co">#&gt;   min_n .metric .estimator  mean     n std_err .config             </span></span>
 <span id="cb3-4"><a></a><span class="co">#&gt;   &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
-<span id="cb3-5"><a></a><span class="co">#&gt; 1    33 roc_auc binary     0.623    10  0.0149 Preprocessor1_Model1</span></span>
-<span id="cb3-6"><a></a><span class="co">#&gt; 2    31 roc_auc binary     0.622    10  0.0154 Preprocessor1_Model3</span></span>
-<span id="cb3-7"><a></a><span class="co">#&gt; 3    21 roc_auc binary     0.620    10  0.0149 Preprocessor1_Model4</span></span>
-<span id="cb3-8"><a></a><span class="co">#&gt; 4    13 roc_auc binary     0.617    10  0.0137 Preprocessor1_Model5</span></span>
-<span id="cb3-9"><a></a><span class="co">#&gt; 5     6 roc_auc binary     0.611    10  0.0156 Preprocessor1_Model2</span></span>
+<span id="cb3-5"><a></a><span class="co">#&gt; 1    21 roc_auc binary     0.972    10 0.00295 Preprocessor1_Model4</span></span>
+<span id="cb3-6"><a></a><span class="co">#&gt; 2     6 roc_auc binary     0.972    10 0.00303 Preprocessor1_Model2</span></span>
+<span id="cb3-7"><a></a><span class="co">#&gt; 3    31 roc_auc binary     0.972    10 0.00317 Preprocessor1_Model3</span></span>
+<span id="cb3-8"><a></a><span class="co">#&gt; 4    13 roc_auc binary     0.972    10 0.00311 Preprocessor1_Model5</span></span>
+<span id="cb3-9"><a></a><span class="co">#&gt; 5    33 roc_auc binary     0.972    10 0.00323 Preprocessor1_Model1</span></span>
 <span id="cb3-10"><a></a></span>
 <span id="cb3-11"><a></a>best_parameter <span class="ot">&lt;-</span> <span class="fu">select_best</span>(rf_res)</span>
 <span id="cb3-12"><a></a>best_parameter</span>
 <span id="cb3-13"><a></a><span class="co">#&gt; # A tibble: 1 × 2</span></span>
 <span id="cb3-14"><a></a><span class="co">#&gt;   min_n .config             </span></span>
 <span id="cb3-15"><a></a><span class="co">#&gt;   &lt;int&gt; &lt;chr&gt;               </span></span>
-<span id="cb3-16"><a></a><span class="co">#&gt; 1    33 Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-16"><a></a><span class="co">#&gt; 1    21 Preprocessor1_Model4</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p><code>collect_metrics()</code> and <code>autoplot()</code> are also available.</p>
 </section>
@@ -509,15 +509,15 @@
 <div class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a>rf_wflow <span class="ot">&lt;-</span> <span class="fu">finalize_workflow</span>(rf_wflow, best_parameter)</span>
 <span id="cb4-2"><a></a></span>
-<span id="cb4-3"><a></a>final_fit <span class="ot">&lt;-</span> <span class="fu">last_fit</span>(rf_wflow, taxi_split) </span>
+<span id="cb4-3"><a></a>final_fit <span class="ot">&lt;-</span> <span class="fu">last_fit</span>(rf_wflow, forested_split) </span>
 <span id="cb4-4"><a></a></span>
 <span id="cb4-5"><a></a><span class="fu">collect_metrics</span>(final_fit)</span>
 <span id="cb4-6"><a></a><span class="co">#&gt; # A tibble: 3 × 4</span></span>
 <span id="cb4-7"><a></a><span class="co">#&gt;   .metric     .estimator .estimate .config             </span></span>
 <span id="cb4-8"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               </span></span>
-<span id="cb4-9"><a></a><span class="co">#&gt; 1 accuracy    binary        0.913  Preprocessor1_Model1</span></span>
-<span id="cb4-10"><a></a><span class="co">#&gt; 2 roc_auc     binary        0.648  Preprocessor1_Model1</span></span>
-<span id="cb4-11"><a></a><span class="co">#&gt; 3 brier_class binary        0.0763 Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-9"><a></a><span class="co">#&gt; 1 accuracy    binary        0.906  Preprocessor1_Model1</span></span>
+<span id="cb4-10"><a></a><span class="co">#&gt; 2 roc_auc     binary        0.970  Preprocessor1_Model1</span></span>
+<span id="cb4-11"><a></a><span class="co">#&gt; 3 brier_class binary        0.0656 Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="your-turn" class="slide level2" data-transition="slide-in">
@@ -724,7 +724,7 @@
         margin: 0.1,
 
         math: {
-          mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js',
           config: 'TeX-AMS_HTML-full',
           tex2jax: {
             inlineMath: [['\\(','\\)']],

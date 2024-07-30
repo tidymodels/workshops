@@ -9,7 +9,7 @@
 <link href="../site_libs/quarto-html/light-border.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/quarto-html.min.css" rel="stylesheet" data-mode="light">
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.5.30">
+  <meta name="generator" content="quarto-1.6.1">
 
   <title>Machine learning with tidymodels – 3 - Grid Search via Racing</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -387,10 +387,10 @@
   </style>
   <link href="../site_libs/countdown-0.4.0/countdown.css" rel="stylesheet">
   <script src="../site_libs/countdown-0.4.0/countdown.js"></script>
-<meta property="og:title" content="Machine learning with tidymodels - 3 - Grid Search via Racing">
+<meta property="og:title" content="3 - Grid Search via Racing – Machine learning with tidymodels">
 <meta property="og:description" content="Advanced tidymodels">
 <meta property="og:site_name" content="Machine learning with tidymodels">
-<meta name="twitter:title" content="Machine learning with tidymodels - 3 - Grid Search via Racing">
+<meta name="twitter:title" content="3 - Grid Search via Racing – Machine learning with tidymodels">
 <meta name="twitter:description" content="Advanced tidymodels">
 <meta name="twitter:card" content="summary">
 </head>
@@ -441,8 +441,7 @@
 <span id="cb2-11"><a></a>    <span class="at">agent =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(agent))</span>
 <span id="cb2-12"><a></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
-</div>
+</div></div>
 </section>
 <section id="previously---data-usage" class="slide level2">
 <h2>Previously - Data Usage <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
@@ -482,6 +481,10 @@
 <span id="cb4-19"><a></a>         <span class="st">`</span><span class="at">company hash</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">num_hash</span>(<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">8</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
+<section id="first-a-shameless-promotion" class="slide level2">
+<h2>First, a shameless promotion</h2>
+
+<img data-src="images/finetune-toot.png" class="quarto-figure quarto-figure-center r-stretch" style="width:50.0%"></section>
 <section id="making-grid-search-more-efficient" class="slide level2">
 <h2>Making Grid Search More Efficient</h2>
 <p>In the last section, we evaluated 250 models (25 candidates times 10 resamples).</p>
@@ -529,8 +532,7 @@
 </div>
 </div>
 </div>
-</div>
-</div>
+</div></div>
 </section>
 <section id="are-candidates-different" class="slide level2">
 <h2>Are Candidates Different?</h2>
@@ -538,19 +540,33 @@
 <ul>
 <li>or a t-test on their differences matched by resamples</li>
 </ul>
-<p>With <span class="math inline">\(n = 10\)</span> resamples, the confidence interval is (0.99, 2.8), indicating that candidate number 2 has smaller error.</p>
-<p>What if we were to compare each model candidate to the current best at each resample?</p>
-<p>One shows superiority when 4 resamples have been evaluated.</p>
+<p>With <span class="math inline">\(n = 10\)</span> resamples, the confidence interval for the difference in RMSE is (0.99, 2.8), indicating that candidate number 2 has smaller error.</p>
 </section>
 <section id="evaluating-differences-in-candidates" class="slide level2">
 <h2>Evaluating Differences in Candidates</h2>
-
-<img data-src="figures/race-ci-1.svg" class="quarto-figure quarto-figure-center r-stretch" style="width:70.0%"></section>
+<div class="columns">
+<div class="column" style="width:40%;">
+<p>What if we were to have compared the candidates while we seqeuntially evaluated each resample?</p>
+<p>👉</p>
+<p><be></be></p>
+<p>One candidate shows superiority when 4 resamples have been evaluated.</p>
+</div><div class="column" style="width:60%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="figures/race-ci-1.svg" class="quarto-figure quarto-figure-center" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</div></div>
+</section>
 <section id="interim-analysis-of-results" class="slide level2">
 <h2>Interim Analysis of Results</h2>
 <p>One version of racing uses a <em>mixed model ANOVA</em> to construct one-sided confidence intervals for each candidate versus the current best.</p>
 <p>Any candidates whose bound does not include zero are discarded. <a href="https://www.tmwr.org/race_results.mp4">Here</a> is an animation.</p>
-<p>The resamples are analyzed in a random order.</p>
+<p>The resamples are analyzed in a random order (so set the seed).</p>
 <p><br></p>
 <p><a href="https://arxiv.org/abs/1405.6974">Kuhn (2014)</a> has examples and simulations to show that the method works.</p>
 <p>The <a href="https://finetune.tidymodels.org/">finetune</a> package has functions <code>tune_race_anova()</code> and <code>tune_race_win_loss()</code>.</p>
@@ -562,7 +578,7 @@
 <span id="cb5-2"><a></a><span class="fu">set.seed</span>(<span class="dv">8945</span>)</span>
 <span id="cb5-3"><a></a>lgbm_grid <span class="ot">&lt;-</span> </span>
 <span id="cb5-4"><a></a>  lgbm_param <span class="sc">%&gt;%</span> </span>
-<span id="cb5-5"><a></a>  <span class="fu">grid_latin_hypercube</span>(<span class="at">size =</span> <span class="dv">50</span>)</span>
+<span id="cb5-5"><a></a>  <span class="fu">grid_space_filling</span>(<span class="at">size =</span> <span class="dv">50</span>)</span>
 <span id="cb5-6"><a></a></span>
 <span id="cb5-7"><a></a><span class="fu">library</span>(finetune)</span>
 <span id="cb5-8"><a></a></span>
@@ -584,8 +600,8 @@
 <span id="cb6-2"><a></a><span class="co">#&gt; # A tibble: 2 × 11</span></span>
 <span id="cb6-3"><a></a><span class="co">#&gt;   trees min_n learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config              </span></span>
 <span id="cb6-4"><a></a><span class="co">#&gt;   &lt;int&gt; &lt;int&gt;      &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;                </span></span>
-<span id="cb6-5"><a></a><span class="co">#&gt; 1  1516     7     0.0421          176             12 mae     standard    9.60    10   0.181 Preprocessor42_Model1</span></span>
-<span id="cb6-6"><a></a><span class="co">#&gt; 2  1014     5     0.0791           35            181 mae     standard    9.61    10   0.179 Preprocessor06_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-5"><a></a><span class="co">#&gt; 1  1347     5     0.0655           66             26 mae     standard    9.64    10   0.173 Preprocessor34_Model1</span></span>
+<span id="cb6-6"><a></a><span class="co">#&gt; 2   980     8     0.0429           17            135 mae     standard    9.76    10   0.164 Preprocessor25_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="racing-results-1" class="slide level2">
@@ -607,8 +623,7 @@
 </div>
 </div>
 </div>
-</div>
-</div>
+</div></div>
 </section>
 <section id="your-turn" class="slide level2" data-transition="slide-in">
 <h2>Your turn</h2>
@@ -815,7 +830,7 @@
         margin: 0.1,
 
         math: {
-          mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js',
           config: 'TeX-AMS_HTML-full',
           tex2jax: {
             inlineMath: [['\\(','\\)']],
