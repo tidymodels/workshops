@@ -1,3 +1,9 @@
+# packages needed to make the slides, but not needed for participants
+# dev_pkgs <- c("countdown", "forcats", "hadley/emo", "sessioninfo", "svglite")
+# pak::pak(dev_pkgs)
+
+#   ----------------------------------------------------------------------
+
 hexes <- function(..., size = 64) {
   x <- c(...)
   x <- sort(unique(x), decreasing = TRUE)
