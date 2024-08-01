@@ -3707,14 +3707,14 @@
     "href": "slides/advanced-05-iterative.html#an-initial-grid",
     "title": "4 - Iterative Search",
     "section": "An Initial Grid",
-    "text": "An Initial Grid\n\nreg_metrics &lt;- metric_set(mae, rsq)\n\nset.seed(12)\ninit_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_grid(\n    resamples = hotel_rs,\n    grid = nrow(lgbm_param) + 2,\n    param_info = lgbm_param,\n    metrics = reg_metrics\n  )\n\nshow_best(init_res, metric = \"mae\")\n#&gt; # A tibble: 5 × 11\n#&gt;   trees min_n   learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config             \n#&gt;   &lt;int&gt; &lt;int&gt;        &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1   390    10 0.0139                 13             62 mae     standard    11.3    10   0.202 Preprocessor1_Model1\n#&gt; 2   718    31 0.00112                72             25 mae     standard    29.0    10   0.335 Preprocessor4_Model1\n#&gt; 3  1236    22 0.0000261              11             17 mae     standard    51.8    10   0.416 Preprocessor7_Model1\n#&gt; 4  1044    25 0.00000832             34             12 mae     standard    52.8    10   0.424 Preprocessor5_Model1\n#&gt; 5  1599     7 0.0000000402          254            179 mae     standard    53.2    10   0.427 Preprocessor6_Model1"
+    "text": "An Initial Grid\n\nreg_metrics &lt;- metric_set(mae, rsq)\n\nset.seed(12)\ninit_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_grid(\n    resamples = hotel_rs,\n    grid = nrow(lgbm_param) + 2,\n    param_info = lgbm_param,\n    metrics = reg_metrics\n  )\n\nshow_best(init_res, metric = \"mae\") %&gt;% select(-.metric, -.estimator)\n#&gt; # A tibble: 5 × 9\n#&gt;   min_n tree_depth learn_rate loss_reduction stop_iter  mean     n std_err .config             \n#&gt;   &lt;int&gt;      &lt;int&gt;      &lt;dbl&gt;          &lt;dbl&gt;     &lt;int&gt; &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1    16         12   0.0136         1.91e- 3         9  10.1    10   0.196 Preprocessor1_Model4\n#&gt; 2     9          4   0.0415         5.21e- 9        13  10.2    10   0.167 Preprocessor1_Model1\n#&gt; 3    25          8   0.00256        9.58e-10         7  14.1    10   0.278 Preprocessor1_Model7\n#&gt; 4    22          9   0.00154        5.77e- 6         5  19.3    10   0.326 Preprocessor1_Model5\n#&gt; 5    32          3   0.000144       3.02e+ 1        18  47.6    10   0.387 Preprocessor1_Model6"
   },
   {
     "objectID": "slides/advanced-05-iterative.html#bo-using-tidymodels",
     "href": "slides/advanced-05-iterative.html#bo-using-tidymodels",
     "title": "4 - Iterative Search",
     "section": "BO using tidymodels",
-    "text": "BO using tidymodels\n\nset.seed(15)\nlgbm_bayes_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_bayes(\n    resamples = hotel_rs,\n    initial = init_res,     # &lt;- initial results\n    iter = 20,\n    param_info = lgbm_param,\n    metrics = reg_metrics\n  )\n\nshow_best(lgbm_bayes_res, metric = \"mae\")\n#&gt; # A tibble: 5 × 12\n#&gt;   trees min_n learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config .iter\n#&gt;   &lt;int&gt; &lt;int&gt;      &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;int&gt;\n#&gt; 1  1984     2     0.0387            9             20 mae     standard    9.58    10   0.152 Iter7       7\n#&gt; 2  1948     3     0.0467           11            144 mae     standard    9.58    10   0.159 Iter12     12\n#&gt; 3  1784     2     0.0402           11            190 mae     standard    9.58    10   0.178 Iter16     16\n#&gt; 4  1953     9     0.0374           12             10 mae     standard    9.62    10   0.208 Iter14     14\n#&gt; 5  1504     2     0.0475           13            109 mae     standard    9.65    10   0.180 Iter15     15"
+    "text": "BO using tidymodels\n\nctrl_bo &lt;- control_bayes(verbose_iter = TRUE) # &lt;- for demonstration\n\nset.seed(15)\nlgbm_bayes_res &lt;-\n  lgbm_wflow %&gt;%\n  tune_bayes(\n    resamples = hotel_rs,\n    initial = init_res,     # &lt;- initial results\n    iter = 20,\n    param_info = lgbm_param,\n    control = ctrl_bo,\n    metrics = reg_metrics\n  )\n#&gt; Optimizing mae using the expected improvement\n#&gt; \n#&gt; ── Iteration 1 ───────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=10.13 (@iter 0)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=32, tree_depth=12, learn_rate=0.0178, loss_reduction=1.03e-10, stop_iter=12\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ♥ Newest results:    mae=10.08 (+/-0.175)\n#&gt; \n#&gt; ── Iteration 2 ───────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=10.08 (@iter 1)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=15, tree_depth=14, learn_rate=0.0977, loss_reduction=0.00535, stop_iter=4\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ♥ Newest results:    mae=9.719 (+/-0.187)\n#&gt; \n#&gt; ── Iteration 3 ───────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.719 (@iter 2)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=38, tree_depth=1, learn_rate=0.1, loss_reduction=0.0809, stop_iter=10\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ⓧ Newest results:    mae=15.45 (+/-0.253)\n#&gt; \n#&gt; ── Iteration 4 ───────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.719 (@iter 2)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=32, tree_depth=1, learn_rate=0.00833, loss_reduction=1.31e-06, stop_iter=8\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ⓧ Newest results:    mae=19.44 (+/-0.33)\n#&gt; \n#&gt; ── Iteration 5 ───────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.719 (@iter 2)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=18, tree_depth=8, learn_rate=0.0495, loss_reduction=1.4e-06, stop_iter=5\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ⓧ Newest results:    mae=9.757 (+/-0.146)\n#&gt; \n#&gt; ── Iteration 6 ───────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.719 (@iter 2)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=3, tree_depth=14, learn_rate=0.0319, loss_reduction=4.02e-09, stop_iter=17\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ⓧ Newest results:    mae=9.76 (+/-0.163)\n#&gt; \n#&gt; ── Iteration 7 ───────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.719 (@iter 2)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=6, tree_depth=8, learn_rate=0.0883, loss_reduction=1.94e-08, stop_iter=4\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ♥ Newest results:    mae=9.712 (+/-0.17)\n#&gt; \n#&gt; ── Iteration 8 ───────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.712 (@iter 7)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=6, tree_depth=8, learn_rate=0.025, loss_reduction=7.82e-05, stop_iter=19\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ⓧ Newest results:    mae=9.838 (+/-0.17)\n#&gt; \n#&gt; ── Iteration 9 ───────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.712 (@iter 7)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=32, tree_depth=6, learn_rate=0.0737, loss_reduction=2.15e-07, stop_iter=8\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ⓧ Newest results:    mae=10.06 (+/-0.2)\n#&gt; \n#&gt; ── Iteration 10 ──────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.712 (@iter 7)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=5, tree_depth=11, learn_rate=0.0451, loss_reduction=3.45e-10, stop_iter=7\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ♥ Newest results:    mae=9.637 (+/-0.156)\n#&gt; \n#&gt; ── Iteration 11 ──────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.637 (@iter 10)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=2, tree_depth=7, learn_rate=0.0372, loss_reduction=2.44e-09, stop_iter=11\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ⓧ Newest results:    mae=9.761 (+/-0.171)\n#&gt; \n#&gt; ── Iteration 12 ──────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.637 (@iter 10)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=26, tree_depth=15, learn_rate=0.00626, loss_reduction=0.00554, stop_iter=16\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ⓧ Newest results:    mae=10.79 (+/-0.198)\n#&gt; \n#&gt; ── Iteration 13 ──────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.637 (@iter 10)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=29, tree_depth=10, learn_rate=0.0996, loss_reduction=4.5e-05, stop_iter=16\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ⓧ Newest results:    mae=9.838 (+/-0.169)\n#&gt; \n#&gt; ── Iteration 14 ──────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.637 (@iter 10)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=12, tree_depth=13, learn_rate=0.085, loss_reduction=2.16, stop_iter=9\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ⓧ Newest results:    mae=9.795 (+/-0.16)\n#&gt; \n#&gt; ── Iteration 15 ──────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.637 (@iter 10)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=4, tree_depth=9, learn_rate=0.0418, loss_reduction=0.00293, stop_iter=7\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ⓧ Newest results:    mae=9.75 (+/-0.168)\n#&gt; \n#&gt; ── Iteration 16 ──────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.637 (@iter 10)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=6, tree_depth=15, learn_rate=0.0703, loss_reduction=5.15e-10, stop_iter=13\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ⓧ Newest results:    mae=9.672 (+/-0.134)\n#&gt; \n#&gt; ── Iteration 17 ──────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.637 (@iter 10)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=27, tree_depth=15, learn_rate=0.0956, loss_reduction=3.74e-10, stop_iter=17\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ⓧ Newest results:    mae=9.861 (+/-0.197)\n#&gt; \n#&gt; ── Iteration 18 ──────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.637 (@iter 10)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=2, tree_depth=11, learn_rate=0.0871, loss_reduction=0.00196, stop_iter=18\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ♥ Newest results:    mae=9.601 (+/-0.147)\n#&gt; \n#&gt; ── Iteration 19 ──────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.601 (@iter 18)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=2, tree_depth=12, learn_rate=0.0991, loss_reduction=8.45e-06, stop_iter=14\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ⓧ Newest results:    mae=9.61 (+/-0.17)\n#&gt; \n#&gt; ── Iteration 20 ──────────────────────────────────────────────────────\n#&gt; \n#&gt; i Current best:      mae=9.601 (@iter 18)\n#&gt; i Gaussian process model\n#&gt; ✓ Gaussian process model\n#&gt; i Generating 5000 candidates\n#&gt; i Predicted candidates\n#&gt; i min_n=4, tree_depth=15, learn_rate=0.0206, loss_reduction=1.46e-06, stop_iter=15\n#&gt; i Estimating performance\n#&gt; ✓ Estimating performance\n#&gt; ⓧ Newest results:    mae=9.881 (+/-0.177)"
   },
   {
     "objectID": "slides/advanced-05-iterative.html#plotting-bo-results",
@@ -3749,7 +3749,7 @@
     "href": "slides/advanced-05-iterative.html#your-turn-1",
     "title": "4 - Iterative Search",
     "section": "Your turn",
-    "text": "Your turn\nLet’s try a different acquisition function: conf_bound(kappa).\nWe’ll use the objective argument to set it.\nChoose your own kappa value:\n\nLarger values will explore the space more.\n“Large” values are usually less than one.\n\n\n\n\n−+\n10:00"
+    "text": "Your turn\nLet’s try a different acquisition function: conf_bound(kappa).\nWe’ll use the objective argument to set it.\nChoose your own kappa value:\n\nLarger values will explore the space more.\n“Large” values are usually less than one.\n\nBonus points: Before the optimization is done, press &lt;esc&gt; and see what happens.\n\n\n\n−+\n10:00"
   },
   {
     "objectID": "slides/advanced-05-iterative.html#notes",
@@ -3770,7 +3770,7 @@
     "href": "slides/advanced-05-iterative.html#locking-down-the-tuning-parameters",
     "title": "4 - Iterative Search",
     "section": "Locking Down the Tuning Parameters",
-    "text": "Locking Down the Tuning Parameters\nWe can take the results of the Bayesian optimization and accept the best results:\n\nbest_param &lt;- select_best(lgbm_bayes_res, metric = \"mae\")\nfinal_wflow &lt;- \n  lgbm_wflow %&gt;% \n  finalize_workflow(best_param)\nfinal_wflow\n#&gt; ══ Workflow ══════════════════════════════════════════════════════════\n#&gt; Preprocessor: Recipe\n#&gt; Model: boost_tree()\n#&gt; \n#&gt; ── Preprocessor ──────────────────────────────────────────────────────\n#&gt; 4 Recipe Steps\n#&gt; \n#&gt; • step_YeoJohnson()\n#&gt; • step_dummy_hash()\n#&gt; • step_dummy_hash()\n#&gt; • step_zv()\n#&gt; \n#&gt; ── Model ─────────────────────────────────────────────────────────────\n#&gt; Boosted Tree Model Specification (regression)\n#&gt; \n#&gt; Main Arguments:\n#&gt;   trees = 1984\n#&gt;   min_n = 2\n#&gt;   learn_rate = 0.0386760025079899\n#&gt; \n#&gt; Engine-Specific Arguments:\n#&gt;   num_threads = 1\n#&gt; \n#&gt; Computational engine: lightgbm"
+    "text": "Locking Down the Tuning Parameters\nWe can take the results of the Bayesian optimization and accept the best results:\n\nbest_param &lt;- select_best(lgbm_bayes_res, metric = \"mae\")\nfinal_wflow &lt;- \n  lgbm_wflow %&gt;% \n  finalize_workflow(best_param)\nfinal_wflow\n#&gt; ══ Workflow ══════════════════════════════════════════════════════════\n#&gt; Preprocessor: Formula\n#&gt; Model: boost_tree()\n#&gt; \n#&gt; ── Preprocessor ──────────────────────────────────────────────────────\n#&gt; avg_price_per_room ~ .\n#&gt; \n#&gt; ── Model ─────────────────────────────────────────────────────────────\n#&gt; Boosted Tree Model Specification (regression)\n#&gt; \n#&gt; Main Arguments:\n#&gt;   trees = 1000\n#&gt;   min_n = 2\n#&gt;   tree_depth = 11\n#&gt;   learn_rate = 0.0871075826616985\n#&gt;   loss_reduction = 0.00195652467829182\n#&gt;   stop_iter = 18\n#&gt; \n#&gt; Engine-Specific Arguments:\n#&gt;   num_threads = 1\n#&gt; \n#&gt; Computational engine: lightgbm"
   },
   {
     "objectID": "slides/advanced-05-iterative.html#the-final-fit",
@@ -3784,7 +3784,7 @@
     "href": "slides/advanced-05-iterative.html#test-set-results",
     "title": "4 - Iterative Search",
     "section": "Test Set Results",
-    "text": "Test Set Results\n\n\n\nfinal_res %&gt;% \n  collect_predictions() %&gt;% \n  cal_plot_regression(\n    truth = avg_price_per_room, \n    estimate = .pred)\n\nTest set performance:\n\nfinal_res %&gt;% collect_metrics()\n#&gt; # A tibble: 2 × 4\n#&gt;   .metric .estimator .estimate .config             \n#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 mae     standard       9.81  Preprocessor1_Model1\n#&gt; 2 rsq     standard       0.945 Preprocessor1_Model1\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Test Set Results\n\n\n\nfinal_res %&gt;% \n  collect_predictions() %&gt;% \n  cal_plot_regression(\n    truth = avg_price_per_room, \n    estimate = .pred)\n\nTest set performance:\n\nfinal_res %&gt;% collect_metrics()\n#&gt; # A tibble: 2 × 4\n#&gt;   .metric .estimator .estimate .config             \n#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               \n#&gt; 1 mae     standard       9.60  Preprocessor1_Model1\n#&gt; 2 rsq     standard       0.949 Preprocessor1_Model1\n\n\n\n\n\n\n\n\n\n\n\n\nRecall that resampling predicted the MAE to be 9.601.\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
     "objectID": "archive/2023-09-posit-conf/intro-03-what-makes-a-model.html#your-turn",
@@ -5233,7 +5233,7 @@
     "href": "slides/intro-02-data-budget.html#what-is-set.seed",
     "title": "2 - Your data budget",
     "section": "What is set.seed()?",
-    "text": "What is set.seed()?\nTo create that split of the data, R generates “pseudo-random” numbers: while they are made to behave like random numbers, their generation is deterministic give a “seed”.\nThis allows us to reproduce results by setting that seed.\nWhich seed you pick doesn’t matter, as long as you don’t try a bunch of seeds and pick the one that gives you the best performance."
+    "text": "What is set.seed()?\nTo create that split of the data, R generates “pseudo-random” numbers: while they are made to behave like random numbers, their generation is deterministic given a “seed”.\nThis allows us to reproduce results by setting that seed.\nWhich seed you pick doesn’t matter, as long as you don’t try a bunch of seeds and pick the one that gives you the best performance."
   },
   {
     "objectID": "slides/intro-02-data-budget.html#accessing-the-data",
@@ -5289,28 +5289,28 @@
     "href": "slides/intro-02-data-budget.html#section-2",
     "title": "2 - Your data budget",
     "section": "",
-    "text": "forested_train %&gt;% \n  ggplot(aes(x = forested)) +\n  geom_bar()"
+    "text": "forested_train %&gt;% \n  ggplot(aes(x = forested, fill = tree_no_tree)) +\n  geom_bar()"
   },
   {
     "objectID": "slides/intro-02-data-budget.html#section-3",
     "href": "slides/intro-02-data-budget.html#section-3",
     "title": "2 - Your data budget",
     "section": "",
-    "text": "forested_train %&gt;% \n  ggplot(aes(x = forested, fill = tree_no_tree)) +\n  geom_bar()"
+    "text": "forested_train %&gt;% \n  ggplot(aes(x = precip_annual, fill = forested, group = forested)) +\n  geom_histogram(position = \"identity\", alpha = .7)"
   },
   {
     "objectID": "slides/intro-02-data-budget.html#section-4",
     "href": "slides/intro-02-data-budget.html#section-4",
     "title": "2 - Your data budget",
     "section": "",
-    "text": "forested_train %&gt;% \n  ggplot(aes(x = precip_annual, fill = forested, group = forested)) +\n  geom_histogram(position = \"identity\", alpha = .7)"
+    "text": "forested_train %&gt;% \n  ggplot(aes(x = precip_annual, fill = forested, group = forested)) +\n  geom_histogram(position = \"fill\")"
   },
   {
     "objectID": "slides/intro-02-data-budget.html#section-5",
     "href": "slides/intro-02-data-budget.html#section-5",
     "title": "2 - Your data budget",
     "section": "",
-    "text": "forested_train %&gt;% \n  ggplot(aes(x = precip_annual, fill = forested, group = forested)) +\n  geom_histogram(position = \"fill\")"
+    "text": "forested_train %&gt;% \n  ggplot(aes(x = lon, y = lat, col = forested)) +\n  geom_point()"
   },
   {
     "objectID": "slides/intro-02-data-budget.html#section-6",
@@ -5765,7 +5765,7 @@
     "href": "slides/intro-extra-recipes.html#general-definitions",
     "title": "Extras - Recipes",
     "section": "General definitions",
-    "text": "General definitions\n\nData preprocessing are the steps that you take to make your model successful.\nFeature engineering are what you do to the original predictors to make the model do the least work to perform great."
+    "text": "General definitions\n\nData preprocessing is what you do to make your model successful.\nFeature engineering is what you do to the original predictors to make the model do the least work to perform great."
   },
   {
     "objectID": "slides/intro-extra-recipes.html#working-with-dates",
@@ -5779,7 +5779,7 @@
     "href": "slides/intro-extra-recipes.html#your-turn",
     "title": "Extras - Recipes",
     "section": "Your turn",
-    "text": "Your turn\n\n\nWhat other transformations could we do with the raw time variable?\nRemember that the transformations are tied to the specific modeling problem.\n\n\n\n−+\n03:00"
+    "text": "Your turn\n\n\nTake the recipe and prep() then bake() it to see what the resulting data set looks like.\nTry removing steps to see how the result changes.\n\n\n\n\n−+\n05:00"
   },
   {
     "objectID": "slides/intro-extra-recipes.html#two-types-of-transformations",
@@ -5800,35 +5800,35 @@
     "href": "slides/intro-extra-recipes.html#how-to-write-a-recipe",
     "title": "Extras - Recipes",
     "section": "How to write a recipe",
-    "text": "How to write a recipe\n\nforested_rec &lt;- recipe(forested ~ ., data = forested_train) %&gt;%\n  step_unknown(all_nominal_predictors()) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(canopy_cover, offset = 0.5) %&gt;%\n  step_normalize(all_numeric_predictors())"
+    "text": "How to write a recipe\n\nforested_rec &lt;- recipe(forested ~ ., data = forested_train) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(canopy_cover, offset = 0.5) %&gt;%\n  step_normalize(all_numeric_predictors())"
   },
   {
     "objectID": "slides/intro-extra-recipes.html#how-to-write-a-recipe-1",
     "href": "slides/intro-extra-recipes.html#how-to-write-a-recipe-1",
     "title": "Extras - Recipes",
     "section": "How to write a recipe",
-    "text": "How to write a recipe\n\nforested_rec &lt;- recipe(forested ~ ., data = forested_train) %&gt;%\n  step_unknown(all_nominal_predictors()) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(canopy_cover, offset = 0.5) %&gt;%\n  step_normalize(all_numeric_predictors())\n\n\nStart by calling recipe() to denote the data source and variables used."
+    "text": "How to write a recipe\n\nforested_rec &lt;- recipe(forested ~ ., data = forested_train) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(canopy_cover, offset = 0.5) %&gt;%\n  step_normalize(all_numeric_predictors())\n\n\nStart by calling recipe() to denote the data source and variables used."
   },
   {
     "objectID": "slides/intro-extra-recipes.html#how-to-write-a-recipe-2",
     "href": "slides/intro-extra-recipes.html#how-to-write-a-recipe-2",
     "title": "Extras - Recipes",
     "section": "How to write a recipe",
-    "text": "How to write a recipe\n\nforested_rec &lt;- recipe(forested ~ ., data = forested_train) %&gt;%\n  step_unknown(all_nominal_predictors()) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(canopy_cover, offset = 0.5) %&gt;%\n  step_normalize(all_numeric_predictors())\n\n\nSpecify what actions to take by adding step_*()s."
+    "text": "How to write a recipe\n\nforested_rec &lt;- recipe(forested ~ ., data = forested_train) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(canopy_cover, offset = 0.5) %&gt;%\n  step_normalize(all_numeric_predictors())\n\n\nSpecify what actions to take by adding step_*()s."
   },
   {
     "objectID": "slides/intro-extra-recipes.html#how-to-write-a-recipe-3",
     "href": "slides/intro-extra-recipes.html#how-to-write-a-recipe-3",
     "title": "Extras - Recipes",
     "section": "How to write a recipe",
-    "text": "How to write a recipe\n\nforested_rec &lt;- recipe(forested ~ ., data = forested_train) %&gt;%\n  step_unknown(all_nominal_predictors()) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(canopy_cover, offset = 0.5) %&gt;%   step_normalize(all_numeric_predictors())\n\n\nUse {tidyselect} and recipes-specific selectors to denote affected variables."
+    "text": "How to write a recipe\n\nforested_rec &lt;- recipe(forested ~ ., data = forested_train) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(canopy_cover, offset = 0.5) %&gt;%   step_normalize(all_numeric_predictors())\n\n\nUse {tidyselect} and recipes-specific selectors to denote affected variables."
   },
   {
     "objectID": "slides/intro-extra-recipes.html#using-a-recipe",
     "href": "slides/intro-extra-recipes.html#using-a-recipe",
     "title": "Extras - Recipes",
     "section": "Using a recipe",
-    "text": "Using a recipe\n\nforested_rec &lt;- recipe(forested ~ ., data = forested_train) %&gt;%\n  step_unknown(all_nominal_predictors()) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(canopy_cover, offset = 0.5) %&gt;%   step_normalize(all_numeric_predictors())\n\n\nSave the recipe we like so that we can use it in various places, e.g., with different models."
+    "text": "Using a recipe\n\nforested_rec &lt;- recipe(forested ~ ., data = forested_train) %&gt;%\n  step_dummy(all_nominal_predictors()) %&gt;%\n  step_zv(all_predictors()) %&gt;%\n  step_log(canopy_cover, offset = 0.5) %&gt;%   step_normalize(all_numeric_predictors())\n\n\nSave the recipe we like so that we can use it in various places, e.g., with different models."
   },
   {
     "objectID": "slides/intro-extra-recipes.html#using-a-recipe-with-workflows",
@@ -5856,21 +5856,21 @@
     "href": "slides/intro-extra-recipes.html#your-turn-1",
     "title": "Extras - Recipes",
     "section": "Your turn",
-    "text": "Your turn\n\n\nTake the recipe and prep() then bake() it to see what the resulting data set looks like.\nTry removing steps to see how the result changes.\n\n\n\n\n−+\n05:00"
+    "text": "Your turn\n\nTake a prepped recipe and use the tidy() function on it.\nUse the number argument to inspect different steps.\n\n\n\n\n−+\n05:00"
   },
   {
     "objectID": "slides/intro-extra-recipes.html#printing-a-recipe",
     "href": "slides/intro-extra-recipes.html#printing-a-recipe",
     "title": "Extras - Recipes",
     "section": "Printing a recipe",
-    "text": "Printing a recipe\n\nforested_rec\n#&gt; \n#&gt; ── Recipe ────────────────────────────────────────────────────────────\n#&gt; \n#&gt; ── Inputs\n#&gt; Number of variables by role\n#&gt; outcome:    1\n#&gt; predictor: 18\n#&gt; \n#&gt; ── Operations\n#&gt; • Unknown factor level assignment for: all_nominal_predictors()\n#&gt; • Dummy variables from: all_nominal_predictors()\n#&gt; • Zero variance filter on: all_predictors()\n#&gt; • Log transformation on: canopy_cover\n#&gt; • Centering and scaling for: all_numeric_predictors()"
+    "text": "Printing a recipe\n\nforested_rec\n#&gt; \n#&gt; ── Recipe ────────────────────────────────────────────────────────────\n#&gt; \n#&gt; ── Inputs\n#&gt; Number of variables by role\n#&gt; outcome:    1\n#&gt; predictor: 18\n#&gt; \n#&gt; ── Operations\n#&gt; • Dummy variables from: all_nominal_predictors()\n#&gt; • Zero variance filter on: all_predictors()\n#&gt; • Log transformation on: canopy_cover\n#&gt; • Centering and scaling for: all_numeric_predictors()"
   },
   {
     "objectID": "slides/intro-extra-recipes.html#prepping-a-recipe",
     "href": "slides/intro-extra-recipes.html#prepping-a-recipe",
     "title": "Extras - Recipes",
     "section": "Prepping a recipe",
-    "text": "Prepping a recipe\n\nprep(forested_rec)\n#&gt; \n#&gt; ── Recipe ────────────────────────────────────────────────────────────\n#&gt; \n#&gt; ── Inputs\n#&gt; Number of variables by role\n#&gt; outcome:    1\n#&gt; predictor: 18\n#&gt; \n#&gt; ── Training information\n#&gt; Training data contained 5685 data points and no incomplete rows.\n#&gt; \n#&gt; ── Operations\n#&gt; • Unknown factor level assignment for: tree_no_tree, ... | Trained\n#&gt; • Dummy variables from: tree_no_tree and land_type | Trained\n#&gt; • Zero variance filter removed: tree_no_tree_unknown and\n#&gt;   land_type_unknown | Trained\n#&gt; • Log transformation on: canopy_cover | Trained\n#&gt; • Centering and scaling for: year and elevation, ... | Trained"
+    "text": "Prepping a recipe\n\nprep(forested_rec)\n#&gt; \n#&gt; ── Recipe ────────────────────────────────────────────────────────────\n#&gt; \n#&gt; ── Inputs\n#&gt; Number of variables by role\n#&gt; outcome:    1\n#&gt; predictor: 18\n#&gt; \n#&gt; ── Training information\n#&gt; Training data contained 5685 data points and no incomplete rows.\n#&gt; \n#&gt; ── Operations\n#&gt; • Dummy variables from: tree_no_tree and land_type | Trained\n#&gt; • Zero variance filter removed: &lt;none&gt; | Trained\n#&gt; • Log transformation on: canopy_cover | Trained\n#&gt; • Centering and scaling for: year and elevation, ... | Trained"
   },
   {
     "objectID": "slides/intro-extra-recipes.html#baking-a-recipe",
@@ -5898,14 +5898,14 @@
     "href": "slides/intro-extra-recipes.html#tidying-a-recipe-1",
     "title": "Extras - Recipes",
     "section": "Tidying a recipe",
-    "text": "Tidying a recipe\n\nprep(forested_rec) %&gt;%\n  tidy()\n#&gt; # A tibble: 5 × 6\n#&gt;   number operation type      trained skip  id             \n#&gt;    &lt;int&gt; &lt;chr&gt;     &lt;chr&gt;     &lt;lgl&gt;   &lt;lgl&gt; &lt;chr&gt;          \n#&gt; 1      1 step      unknown   TRUE    FALSE unknown_X71Zp  \n#&gt; 2      2 step      dummy     TRUE    FALSE dummy_jlmcG    \n#&gt; 3      3 step      zv        TRUE    FALSE zv_mYCvS       \n#&gt; 4      4 step      log       TRUE    FALSE log_eme6b      \n#&gt; 5      5 step      normalize TRUE    FALSE normalize_ScVef"
+    "text": "Tidying a recipe\n\nprep(forested_rec) %&gt;%\n  tidy()\n#&gt; # A tibble: 4 × 6\n#&gt;   number operation type      trained skip  id             \n#&gt;    &lt;int&gt; &lt;chr&gt;     &lt;chr&gt;     &lt;lgl&gt;   &lt;lgl&gt; &lt;chr&gt;          \n#&gt; 1      1 step      dummy     TRUE    FALSE dummy_jlmcG    \n#&gt; 2      2 step      zv        TRUE    FALSE zv_mYCvS       \n#&gt; 3      3 step      log       TRUE    FALSE log_eme6b      \n#&gt; 4      4 step      normalize TRUE    FALSE normalize_ScVef"
   },
   {
     "objectID": "slides/intro-extra-recipes.html#tidying-a-recipe-2",
     "href": "slides/intro-extra-recipes.html#tidying-a-recipe-2",
     "title": "Extras - Recipes",
     "section": "Tidying a recipe",
-    "text": "Tidying a recipe\n\nprep(forested_rec) %&gt;%\n  tidy(number = 2)\n#&gt; # A tibble: 5 × 3\n#&gt;   terms        columns             id         \n#&gt;   &lt;chr&gt;        &lt;chr&gt;               &lt;chr&gt;      \n#&gt; 1 tree_no_tree No tree             dummy_jlmcG\n#&gt; 2 tree_no_tree unknown             dummy_jlmcG\n#&gt; 3 land_type    Non-tree vegetation dummy_jlmcG\n#&gt; 4 land_type    Tree                dummy_jlmcG\n#&gt; 5 land_type    unknown             dummy_jlmcG"
+    "text": "Tidying a recipe\n\nprep(forested_rec) %&gt;%\n  tidy(number = 2)\n#&gt; # A tibble: 0 × 2\n#&gt; # ℹ 2 variables: terms &lt;chr&gt;, id &lt;chr&gt;"
   },
   {
     "objectID": "slides/intro-extra-recipes.html#using-a-recipe-in-tidymodels",
@@ -6591,7 +6591,7 @@
     "href": "slides/advanced-06-wrapping-up.html#resources-to-keep-learning",
     "title": "6 - Wrapping up",
     "section": "Resources to keep learning",
-    "text": "Resources to keep learning\n\n\nhttps://www.tidymodels.org/\n\n\n\n\nhttps://www.tmwr.org/\n\n\n\n\nhttp://www.feat.engineering/\n\n\n\n\nhttps://smltar.com/\n\n\n\nFollow us on Mastodon and at the tidyverse blog for updates!\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Resources to keep learning\n\n\nhttps://www.tidymodels.org/\n\n\n\n\nhttps://www.tmwr.org/\n\n\n\n\nhttp://www.feat.engineering/\n\n\n\n\nhttps://smltar.com/\n\n\n\nFollow us on Mastodon and at the tidyverse blog for updates!"
   },
   {
     "objectID": "archive/2023-07-nyr/index.html",
@@ -6717,14 +6717,14 @@
     "href": "index.html",
     "title": "Machine learning with tidymodels",
     "section": "",
-    "text": "These are the materials for workshops on tidymodels offered at LatinR 2023. The tidymodels framework is a collection of packages for modeling and machine learning using tidyverse principles. This website hosts the materials for both the Introduction to tidymodels and Advanced tidymodels courses.\nIntroduction to tidymodels will teach you core tidymodels packages and their uses: data splitting/resampling with rsample, model fitting with parsnip, measuring model performance with yardstick, and basic pre-processing with recipes. Time permitting, you’ll be introduced to model optimization using the tune package. You’ll learn tidymodels syntax as well as the process of predictive modeling for tabular data.\nAdvanced tidymodels will teach you about model optimization using the tune and finetune packages, including racing and iterative methods. You’ll be able to do more sophisticated feature engineering with recipes. Time permitting, model ensembles via stacking will be introduced. This course is focused on the analysis of tabular data and does not include deep learning methods."
+    "text": "These are the materials for workshops on tidymodels offered at posit::conf 2024. The tidymodels framework is a collection of packages for modeling and machine learning using tidyverse principles. This website hosts the materials for both the Introduction to tidymodels and Advanced tidymodels courses.\nIntroduction to tidymodels will teach you core tidymodels packages and their uses: data splitting/resampling with rsample, model fitting with parsnip, measuring model performance with yardstick, and model optimization using the tune package. Time permitting, you’ll be introduced to basic pre-processing with recipes. You’ll learn tidymodels syntax as well as the process of predictive modeling for tabular data.\nAdvanced tidymodels will teach you about model optimization using the tune and finetune packages, including racing and iterative methods. You’ll be able to do more sophisticated feature engineering with recipes. Time permitting, model ensembles via stacking will be introduced. This course is focused on the analysis of tabular data and does not include deep learning methods."
   },
   {
     "objectID": "index.html#welcome",
     "href": "index.html#welcome",
     "title": "Machine learning with tidymodels",
     "section": "",
-    "text": "These are the materials for workshops on tidymodels offered at LatinR 2023. The tidymodels framework is a collection of packages for modeling and machine learning using tidyverse principles. This website hosts the materials for both the Introduction to tidymodels and Advanced tidymodels courses.\nIntroduction to tidymodels will teach you core tidymodels packages and their uses: data splitting/resampling with rsample, model fitting with parsnip, measuring model performance with yardstick, and basic pre-processing with recipes. Time permitting, you’ll be introduced to model optimization using the tune package. You’ll learn tidymodels syntax as well as the process of predictive modeling for tabular data.\nAdvanced tidymodels will teach you about model optimization using the tune and finetune packages, including racing and iterative methods. You’ll be able to do more sophisticated feature engineering with recipes. Time permitting, model ensembles via stacking will be introduced. This course is focused on the analysis of tabular data and does not include deep learning methods."
+    "text": "These are the materials for workshops on tidymodels offered at posit::conf 2024. The tidymodels framework is a collection of packages for modeling and machine learning using tidyverse principles. This website hosts the materials for both the Introduction to tidymodels and Advanced tidymodels courses.\nIntroduction to tidymodels will teach you core tidymodels packages and their uses: data splitting/resampling with rsample, model fitting with parsnip, measuring model performance with yardstick, and model optimization using the tune package. Time permitting, you’ll be introduced to basic pre-processing with recipes. You’ll learn tidymodels syntax as well as the process of predictive modeling for tabular data.\nAdvanced tidymodels will teach you about model optimization using the tune and finetune packages, including racing and iterative methods. You’ll be able to do more sophisticated feature engineering with recipes. Time permitting, model ensembles via stacking will be introduced. This course is focused on the analysis of tabular data and does not include deep learning methods."
   },
   {
     "objectID": "index.html#is-this-workshop-for-me",
@@ -6738,7 +6738,7 @@
     "href": "index.html#preparation",
     "title": "Machine learning with tidymodels",
     "section": "Preparation",
-    "text": "Preparation\nThe process to set up your computer for either workshop will look the same. Please join the workshop with a computer that has the following installed (all available for free):\n\nA recent version of R, available at https://cran.r-project.org/\nA recent version of RStudio Desktop (RStudio Desktop Open Source License, at least v2022.02), available at https://posit.co/download/rstudio-desktop/\nThe following R packages, which you can install from the R console:\n\n\n# Install the packages for the workshop\npkgs &lt;- \n  c(\"bonsai\", \"doParallel\", \"embed\", \"finetune\", \"lightgbm\", \"lme4\",\n    \"plumber\", \"probably\", \"ranger\", \"rpart\", \"rpart.plot\", \"rules\",\n    \"splines2\", \"stacks\", \"text2vec\", \"textrecipes\", \"tidymodels\", \n    \"vetiver\", \"remotes\")\n\ninstall.packages(pkgs)\n\nIf you’re a Windows user and encounter an error message during installation noting a missing Rtools installation, install Rtools using the installer linked here."
+    "text": "Preparation\nThe process to set up your computer for either workshop will look the same. Please join the workshop with a computer that has the following installed (all available for free):\n\nA recent version of R, available at https://cran.r-project.org/\nA recent version of RStudio Desktop (RStudio Desktop Open Source License, at least v2024.04.0), available at https://posit.co/download/rstudio-desktop/\nThe following R packages, which you can install from the R console:\n\n\n# Install the packages for the workshop\npkgs &lt;- \n  c(\"bonsai\", \"doParallel\", \"embed\", \"finetune\", \"forested\", \"lightgbm\", \"lme4\",\n    \"plumber\", \"probably\", \"ranger\", \"rpart\", \"rpart.plot\", \"rules\",\n    \"splines2\", \"stacks\", \"text2vec\", \"textrecipes\", \"tidymodels\", \n    \"vetiver\")\n\ninstall.packages(pkgs)\n\nFor the advanced course, you should install the newest version of the dials package (version 1.3.0). To check this, you can run:\n\nrlang::check_installed(\"dials\", version = \"1.3.0\")\n\nIf you’re a Windows user and encounter an error message during installation noting a missing Rtools installation, install Rtools using the installer linked here."
   },
   {
     "objectID": "index.html#slides",
@@ -6913,7 +6913,7 @@
     "href": "slides/intro-06-wrapping-up.html#resources-to-keep-learning",
     "title": "6 - Wrapping up",
     "section": "Resources to keep learning",
-    "text": "Resources to keep learning\n\n\nhttps://www.tidymodels.org/\n\n\n\n\nhttps://www.tmwr.org/\n\n\n\n\nhttp://www.feat.engineering/\n\n\n\n\nhttps://smltar.com/\n\n\n\nFollow us on Mastodon and at the tidyverse blog for updates!\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Resources to keep learning\n\n\nhttps://www.tidymodels.org/\n\n\n\n\nhttps://www.tmwr.org/\n\n\n\n\nhttp://www.feat.engineering/\n\n\n\n\nhttps://smltar.com/\n\n\n\nFollow us on Mastodon and at the tidyverse blog for updates!"
   },
   {
     "objectID": "archive/2022-08-Reykjavik-City/08-wrapping-up.html#your-turn",
@@ -7060,28 +7060,28 @@
     "href": "slides/intro-extra-workflowsets.html#evaluate-a-workflow-set",
     "title": "Extras - workflowsets",
     "section": "Evaluate a workflow set",
-    "text": "Evaluate a workflow set\n\nworkflow_set(list(forested ~ .), list(tree_spec, rf_spec))\n#&gt; # A workflow set/tibble: 2 × 4\n#&gt;   wflow_id              info             option    result    \n#&gt;   &lt;chr&gt;                 &lt;list&gt;           &lt;list&gt;    &lt;list&gt;    \n#&gt; 1 formula_decision_tree &lt;tibble [1 × 4]&gt; &lt;opts[0]&gt; &lt;list [0]&gt;\n#&gt; 2 formula_rand_forest   &lt;tibble [1 × 4]&gt; &lt;opts[0]&gt; &lt;list [0]&gt;"
+    "text": "Evaluate a workflow set\n\nwf_set &lt;- workflow_set(list(forested ~ .), list(tree_spec, rf_spec))\nwf_set\n#&gt; # A workflow set/tibble: 2 × 4\n#&gt;   wflow_id              info             option    result    \n#&gt;   &lt;chr&gt;                 &lt;list&gt;           &lt;list&gt;    &lt;list&gt;    \n#&gt; 1 formula_decision_tree &lt;tibble [1 × 4]&gt; &lt;opts[0]&gt; &lt;list [0]&gt;\n#&gt; 2 formula_rand_forest   &lt;tibble [1 × 4]&gt; &lt;opts[0]&gt; &lt;list [0]&gt;"
   },
   {
     "objectID": "slides/intro-extra-workflowsets.html#evaluate-a-workflow-set-1",
     "href": "slides/intro-extra-workflowsets.html#evaluate-a-workflow-set-1",
     "title": "Extras - workflowsets",
     "section": "Evaluate a workflow set",
-    "text": "Evaluate a workflow set\n\nworkflow_set(list(forested ~ .), list(tree_spec, rf_spec)) %&gt;%\n  workflow_map(\"fit_resamples\", resamples = forested_folds)\n#&gt; # A workflow set/tibble: 2 × 4\n#&gt;   wflow_id              info             option    result   \n#&gt;   &lt;chr&gt;                 &lt;list&gt;           &lt;list&gt;    &lt;list&gt;   \n#&gt; 1 formula_decision_tree &lt;tibble [1 × 4]&gt; &lt;opts[1]&gt; &lt;rsmp[+]&gt;\n#&gt; 2 formula_rand_forest   &lt;tibble [1 × 4]&gt; &lt;opts[1]&gt; &lt;rsmp[+]&gt;"
+    "text": "Evaluate a workflow set\n\nwf_set_fit &lt;- wf_set %&gt;%\n  workflow_map(\"fit_resamples\", resamples = forested_folds)\nwf_set_fit\n#&gt; # A workflow set/tibble: 2 × 4\n#&gt;   wflow_id              info             option    result   \n#&gt;   &lt;chr&gt;                 &lt;list&gt;           &lt;list&gt;    &lt;list&gt;   \n#&gt; 1 formula_decision_tree &lt;tibble [1 × 4]&gt; &lt;opts[1]&gt; &lt;rsmp[+]&gt;\n#&gt; 2 formula_rand_forest   &lt;tibble [1 × 4]&gt; &lt;opts[1]&gt; &lt;rsmp[+]&gt;"
   },
   {
     "objectID": "slides/intro-extra-workflowsets.html#evaluate-a-workflow-set-2",
     "href": "slides/intro-extra-workflowsets.html#evaluate-a-workflow-set-2",
     "title": "Extras - workflowsets",
     "section": "Evaluate a workflow set",
-    "text": "Evaluate a workflow set\n\nworkflow_set(list(forested ~ .), list(tree_spec, rf_spec)) %&gt;%\n  workflow_map(\"fit_resamples\", resamples = forested_folds) %&gt;%\n  rank_results()\n#&gt; # A tibble: 6 × 9\n#&gt;   wflow_id         .config .metric   mean std_err     n preprocessor model  rank\n#&gt;   &lt;chr&gt;            &lt;chr&gt;   &lt;chr&gt;    &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;        &lt;chr&gt; &lt;int&gt;\n#&gt; 1 formula_rand_fo… Prepro… accura… 0.918  0.00538    10 formula      rand…     1\n#&gt; 2 formula_rand_fo… Prepro… brier_… 0.0616 0.00334    10 formula      rand…     1\n#&gt; 3 formula_rand_fo… Prepro… roc_auc 0.972  0.00303    10 formula      rand…     1\n#&gt; 4 formula_decisio… Prepro… accura… 0.891  0.00420    10 formula      deci…     2\n#&gt; 5 formula_decisio… Prepro… brier_… 0.0914 0.00312    10 formula      deci…     2\n#&gt; 6 formula_decisio… Prepro… roc_auc 0.908  0.00384    10 formula      deci…     2\n\nThe first metric of the metric set is used for ranking. Use rank_metric to change that.\n\nLots more available with workflow sets, like collect_metrics(), autoplot() methods, and more!"
+    "text": "Evaluate a workflow set\n\nwf_set_fit %&gt;%\n  rank_results()\n#&gt; # A tibble: 6 × 9\n#&gt;   wflow_id         .config .metric   mean std_err     n preprocessor model  rank\n#&gt;   &lt;chr&gt;            &lt;chr&gt;   &lt;chr&gt;    &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;        &lt;chr&gt; &lt;int&gt;\n#&gt; 1 formula_rand_fo… Prepro… accura… 0.918  0.00585    10 formula      rand…     1\n#&gt; 2 formula_rand_fo… Prepro… brier_… 0.0617 0.00343    10 formula      rand…     1\n#&gt; 3 formula_rand_fo… Prepro… roc_auc 0.972  0.00311    10 formula      rand…     1\n#&gt; 4 formula_decisio… Prepro… accura… 0.891  0.00420    10 formula      deci…     2\n#&gt; 5 formula_decisio… Prepro… brier_… 0.0914 0.00312    10 formula      deci…     2\n#&gt; 6 formula_decisio… Prepro… roc_auc 0.908  0.00384    10 formula      deci…     2\n\nThe first metric of the metric set is used for ranking. Use rank_metric to change that.\n\nLots more available with workflow sets, like collect_metrics(), autoplot() methods, and more!"
   },
   {
     "objectID": "slides/intro-extra-workflowsets.html#your-turn",
     "href": "slides/intro-extra-workflowsets.html#your-turn",
     "title": "Extras - workflowsets",
     "section": "Your turn",
-    "text": "Your turn\n\nWhen do you think a workflow set would be useful?\n\n\n\n−+\n03:00\n\n\n\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Your turn\n\nWhen do you think a workflow set would be useful?\nDiscuss with your neighbors!\n\n\n\n−+\n03:00\n\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
     "objectID": "archive/2022-07-RStudio-conf/annotations.html",
@@ -7487,7 +7487,7 @@
     "href": "slides/advanced-01-introduction.html#lets-install-some-packages",
     "title": "1 - Introduction",
     "section": "Let’s install some packages",
-    "text": "Let’s install some packages\nIf you are using your own laptop instead of RStudio Cloud:\n\n# Install the packages for the workshop\npkgs &lt;- \n  c(\"bonsai\", \"doParallel\", \"embed\", \"finetune\", \"lightgbm\", \"lme4\",\n    \"plumber\", \"probably\", \"ranger\", \"rpart\", \"rpart.plot\", \"rules\",\n    \"splines2\", \"stacks\", \"text2vec\", \"textrecipes\", \"tidymodels\", \n    \"vetiver\", \"remotes\")\n\ninstall.packages(pkgs)"
+    "text": "Let’s install some packages\nIf you are using your own laptop instead of RStudio Cloud:\n\n# Install the packages for the workshop\npkgs &lt;- \n  c(\"bonsai\", \"doParallel\", \"embed\", \"finetune\", \"forested\", \"lightgbm\", \"lme4\",\n    \"plumber\", \"probably\", \"ranger\", \"rpart\", \"rpart.plot\", \"rules\",\n    \"splines2\", \"stacks\", \"text2vec\", \"textrecipes\", \"tidymodels\", \n    \"vetiver\")\n\ninstall.packages(pkgs)"
   },
   {
     "objectID": "slides/advanced-01-introduction.html#hotel-data",
@@ -7529,7 +7529,7 @@
     "href": "slides/advanced-01-introduction.html#our-versions",
     "title": "1 - Introduction",
     "section": "Our versions",
-    "text": "Our versions\nR version 4.4.1 (2024-06-14), Quarto (1.6.1)\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nbonsai\n0.2.1\n\n\nbroom\n1.0.6\n\n\ndials\n1.2.1.9000\n\n\ndoParallel\n1.0.17\n\n\ndplyr\n1.1.4\n\n\nembed\n1.1.4\n\n\nfinetune\n1.2.0\n\n\nggplot2\n3.5.1\n\n\nlightgbm\n4.3.0\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nlme4\n1.1-35.5\n\n\nmodeldata\n1.4.0\n\n\nparsnip\n1.2.1\n\n\nplumber\n1.2.2\n\n\nprobably\n1.0.3\n\n\npurrr\n1.0.2\n\n\nranger\n0.16.0\n\n\nrecipes\n1.1.0\n\n\nremotes\n2.5.0.9000\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nrpart\n4.1.23\n\n\nrpart.plot\n3.1.2\n\n\nrsample\n1.2.1.9000\n\n\nrules\n1.0.2\n\n\nscales\n1.3.0\n\n\nsplines2\n0.5.2\n\n\nstacks\n1.0.4\n\n\ntext2vec\n0.6.4\n\n\ntextrecipes\n1.0.6\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\ntibble\n3.2.1\n\n\ntidymodels\n1.2.0\n\n\ntidyr\n1.3.1\n\n\ntune\n1.2.1\n\n\nvetiver\n0.2.5\n\n\nworkflows\n1.1.4\n\n\nworkflowsets\n1.1.0\n\n\nyardstick\n1.3.1\n\n\n\n\n\n\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Our versions\nR version 4.4.1 (2024-06-14), Quarto (1.6.1)\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nbonsai\n0.2.1\n\n\nbroom\n1.0.6\n\n\ndials\n1.3.0\n\n\ndoParallel\n1.0.17\n\n\ndplyr\n1.1.4\n\n\nembed\n1.1.4\n\n\nfinetune\n1.2.0\n\n\nforested\n0.0.0.9000\n\n\nggplot2\n3.5.1\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nlightgbm\n4.3.0\n\n\nlme4\n1.1-35.5\n\n\nmodeldata\n1.4.0\n\n\nparsnip\n1.2.1\n\n\nplumber\n1.2.2\n\n\nprobably\n1.0.3\n\n\npurrr\n1.0.2\n\n\nranger\n0.16.0\n\n\nrecipes\n1.1.0\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nrpart\n4.1.23\n\n\nrpart.plot\n3.1.2\n\n\nrsample\n1.2.1.9000\n\n\nrules\n1.0.2\n\n\nscales\n1.3.0\n\n\nsplines2\n0.5.2\n\n\nstacks\n1.0.4\n\n\ntext2vec\n0.6.4\n\n\ntextrecipes\n1.0.6\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\ntibble\n3.2.1\n\n\ntidymodels\n1.2.0\n\n\ntidyr\n1.3.1\n\n\ntune\n1.2.1\n\n\nvetiver\n0.2.5\n\n\nworkflows\n1.1.4\n\n\nworkflowsets\n1.1.0\n\n\nyardstick\n1.3.1\n\n\n\n\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
     "objectID": "slides/advanced-04-racing.html#previously---setup",
@@ -8215,7 +8215,7 @@
     "href": "slides/intro-01-introduction.html#what-is-tidymodels",
     "title": "1 - Introduction",
     "section": "What is tidymodels? ",
-    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n#&gt; ── Attaching packages ──────────────────────────── tidymodels 1.2.0 ──\n#&gt; ✔ broom        1.0.6          ✔ rsample      1.2.1.9000\n#&gt; ✔ dials        1.2.1.9000     ✔ tibble       3.2.1     \n#&gt; ✔ dplyr        1.1.4          ✔ tidyr        1.3.1     \n#&gt; ✔ infer        1.0.7          ✔ tune         1.2.1     \n#&gt; ✔ modeldata    1.4.0          ✔ workflows    1.1.4     \n#&gt; ✔ parsnip      1.2.1          ✔ workflowsets 1.1.0     \n#&gt; ✔ purrr        1.0.2          ✔ yardstick    1.3.1     \n#&gt; ✔ recipes      1.1.0\n#&gt; ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#&gt; ✖ purrr::discard() masks scales::discard()\n#&gt; ✖ dplyr::filter()  masks stats::filter()\n#&gt; ✖ dplyr::lag()     masks stats::lag()\n#&gt; ✖ recipes::step()  masks stats::step()\n#&gt; • Use suppressPackageStartupMessages() to eliminate package startup messages"
+    "text": "What is tidymodels? \n\nlibrary(tidymodels)\n#&gt; ── Attaching packages ──────────────────────────── tidymodels 1.2.0 ──\n#&gt; ✔ broom        1.0.6          ✔ rsample      1.2.1.9000\n#&gt; ✔ dials        1.3.0          ✔ tibble       3.2.1     \n#&gt; ✔ dplyr        1.1.4          ✔ tidyr        1.3.1     \n#&gt; ✔ infer        1.0.7          ✔ tune         1.2.1     \n#&gt; ✔ modeldata    1.4.0          ✔ workflows    1.1.4     \n#&gt; ✔ parsnip      1.2.1          ✔ workflowsets 1.1.0     \n#&gt; ✔ purrr        1.0.2          ✔ yardstick    1.3.1     \n#&gt; ✔ recipes      1.1.0\n#&gt; ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──\n#&gt; ✖ purrr::discard() masks scales::discard()\n#&gt; ✖ dplyr::filter()  masks stats::filter()\n#&gt; ✖ dplyr::lag()     masks stats::lag()\n#&gt; ✖ recipes::step()  masks stats::step()\n#&gt; • Dig deeper into tidy modeling with R at https://www.tmwr.org"
   },
   {
     "objectID": "slides/intro-01-introduction.html#the-whole-game",
@@ -8278,14 +8278,14 @@
     "href": "slides/intro-01-introduction.html#lets-install-some-packages",
     "title": "1 - Introduction",
     "section": "Let’s install some packages",
-    "text": "Let’s install some packages\nIf you are using your own laptop instead of Posit Cloud:\n\n# Install the packages for the workshop\npkgs &lt;- \n  c(\"bonsai\", \"doParallel\", \"embed\", \"finetune\", \"lightgbm\", \"lme4\",\n    \"plumber\", \"probably\", \"ranger\", \"rpart\", \"rpart.plot\", \"rules\",\n    \"splines2\", \"stacks\", \"text2vec\", \"textrecipes\", \"tidymodels\", \n    \"vetiver\", \"remotes\")\n\ninstall.packages(pkgs)"
+    "text": "Let’s install some packages\nIf you are using your own laptop instead of Posit Cloud:\n\n# Install the packages for the workshop\npkgs &lt;- \n  c(\"bonsai\", \"doParallel\", \"embed\", \"finetune\", \"forested\", \"lightgbm\", \"lme4\",\n    \"plumber\", \"probably\", \"ranger\", \"rpart\", \"rpart.plot\", \"rules\",\n    \"splines2\", \"stacks\", \"text2vec\", \"textrecipes\", \"tidymodels\", \n    \"vetiver\")\n\ninstall.packages(pkgs)"
   },
   {
     "objectID": "slides/intro-01-introduction.html#our-versions",
     "href": "slides/intro-01-introduction.html#our-versions",
     "title": "1 - Introduction",
     "section": "Our versions",
-    "text": "Our versions\nR version 4.4.1 (2024-06-14), Quarto (1.6.1)\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nbonsai\n0.2.1\n\n\nbroom\n1.0.6\n\n\ndials\n1.2.1.9000\n\n\ndoParallel\n1.0.17\n\n\ndplyr\n1.1.4\n\n\nembed\n1.1.4\n\n\nfinetune\n1.2.0\n\n\nggplot2\n3.5.1\n\n\nlightgbm\n4.3.0\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nlme4\n1.1-35.5\n\n\nmodeldata\n1.4.0\n\n\nparsnip\n1.2.1\n\n\nplumber\n1.2.2\n\n\nprobably\n1.0.3\n\n\npurrr\n1.0.2\n\n\nranger\n0.16.0\n\n\nrecipes\n1.1.0\n\n\nremotes\n2.5.0.9000\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nrpart\n4.1.23\n\n\nrpart.plot\n3.1.2\n\n\nrsample\n1.2.1.9000\n\n\nrules\n1.0.2\n\n\nscales\n1.3.0\n\n\nsplines2\n0.5.2\n\n\nstacks\n1.0.4\n\n\ntext2vec\n0.6.4\n\n\ntextrecipes\n1.0.6\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\ntibble\n3.2.1\n\n\ntidymodels\n1.2.0\n\n\ntidyr\n1.3.1\n\n\ntune\n1.2.1\n\n\nvetiver\n0.2.5\n\n\nworkflows\n1.1.4\n\n\nworkflowsets\n1.1.0\n\n\nyardstick\n1.3.1\n\n\n\n\n\n\n\n\n\nhttps://workshops.tidymodels.org"
+    "text": "Our versions\nR version 4.4.1 (2024-06-14), Quarto (1.6.1)\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nbonsai\n0.2.1\n\n\nbroom\n1.0.6\n\n\ndials\n1.3.0\n\n\ndoParallel\n1.0.17\n\n\ndplyr\n1.1.4\n\n\nembed\n1.1.4\n\n\nfinetune\n1.2.0\n\n\nforested\n0.0.0.9000\n\n\nggplot2\n3.5.1\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nlightgbm\n4.3.0\n\n\nlme4\n1.1-35.5\n\n\nmodeldata\n1.4.0\n\n\nparsnip\n1.2.1\n\n\nplumber\n1.2.2\n\n\nprobably\n1.0.3\n\n\npurrr\n1.0.2\n\n\nranger\n0.16.0\n\n\nrecipes\n1.1.0\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\nrpart\n4.1.23\n\n\nrpart.plot\n3.1.2\n\n\nrsample\n1.2.1.9000\n\n\nrules\n1.0.2\n\n\nscales\n1.3.0\n\n\nsplines2\n0.5.2\n\n\nstacks\n1.0.4\n\n\ntext2vec\n0.6.4\n\n\ntextrecipes\n1.0.6\n\n\n\n\n\n\n\n\n\n\n\npackage\nversion\n\n\n\n\ntibble\n3.2.1\n\n\ntidymodels\n1.2.0\n\n\ntidyr\n1.3.1\n\n\ntune\n1.2.1\n\n\nvetiver\n0.2.5\n\n\nworkflows\n1.1.4\n\n\nworkflowsets\n1.1.0\n\n\nyardstick\n1.3.1\n\n\n\n\n\n\n\n\n\nhttps://workshops.tidymodels.org"
   },
   {
     "objectID": "archive/2023-09-posit-conf/intro-01-introduction.html#workshop-policies",
@@ -13227,7 +13227,7 @@
     "href": "slides/intro-02-data-budget.html#data-on-forests-in-washington-1",
     "title": "2 - Your data budget",
     "section": "Data on forests in Washington",
-    "text": "Data on forests in Washington\n\n\n\nN = 7,109 plots of land, one from each of 7,109 6000-acre hexagons in WA.\nA nominal outcome, forested, with levels \"Yes\" and \"No\", measured “on-the-ground.”\n18 remotely-sensed and easily-accessible predictors:\n\nnumeric variables based on weather and topography.\nnominal variables based on classifications from other governmental orgs.\n\n\n\n\n\n\nCredit: https://www.svgrepo.com/svg/67614/forest\n\n\n\nThose nominal variables are classifications similar to “forested” but from other agencies. e.g. land_type is from the European Space Agency, and is a remotely-sensed 3-class distribution based on predictions for how the land is used."
+    "text": "Data on forests in Washington\n\n\n\nN = 7,107 plots of land, one from each of 7,107 6000-acre hexagons in WA.\nA nominal outcome, forested, with levels \"Yes\" and \"No\", measured “on-the-ground.”\n18 remotely-sensed and easily-accessible predictors:\n\nnumeric variables based on weather and topography.\nnominal variables based on classifications from other governmental orgs.\n\n\n\n\n\n\nCredit: https://www.svgrepo.com/svg/67614/forest\n\n\n\nThose nominal variables are classifications similar to “forested” but from other agencies. e.g. land_type is from the European Space Agency, and is a remotely-sensed 3-class distribution based on predictions for how the land is used."
   },
   {
     "objectID": "slides/intro-02-data-budget.html#data-on-forests-in-washington-2",
@@ -13262,7 +13262,7 @@
     "href": "slides/annotations.html#data-splitting-and-spending",
     "title": "Annotations",
     "section": "Data splitting and spending",
-    "text": "Data splitting and spending\nMore about the initial data split can be found in Chapter 3 of Applied Machine Learning for Tabular Data (AML4TD)."
+    "text": "Data splitting and spending\nMore about the initial data split can be found in Chapter 3 of Applied Machine Learning for Tabular Data (AML4TD).\nIn particular, a three-way split into training, validation, and testing set can be done via\n\nset.seed(123)\ninitial_validation_split(forested, prop = c(0.6, 0.2))\n#&gt; &lt;Training/Validation/Testing/Total&gt;\n#&gt; &lt;4264/1421/1422/7107&gt;"
   },
   {
     "objectID": "slides/annotations.html#brier-score",
@@ -13339,7 +13339,7 @@
     "href": "slides/intro-01-introduction.html#discord",
     "title": "1 - Introduction",
     "section": "Discord ",
-    "text": "Discord \n\npos.it/conf-event-portal (login)\nClick on “Join Discord, the virtual networking platform!”\nBrowse Channels -&gt; #TODO-ADD-LATER"
+    "text": "Discord \n\npos.it/conf-event-portal (login)\nClick on “Join Discord, the virtual networking platform!”\nBrowse Channels -&gt; #workshop-tidymodels-intro"
   },
   {
     "objectID": "slides/advanced-05-iterative.html",
@@ -13388,6 +13388,69 @@
     "href": "slides/advanced-01-introduction.html#discord",
     "title": "1 - Introduction",
     "section": "Discord ",
-    "text": "Discord \n\n\nhttps://reg.conf.posit.co/flow/posit/positconf24/reg/login (login)\nClick on “Join Discord, the virtual networking platform!”\nBrowse Channels -&gt; #TODO-ADD-LATER"
+    "text": "Discord \n\npos.it/conf-event-portal (login)\nClick on “Join Discord, the virtual networking platform!”\nBrowse Channels -&gt; #workshop-tidymodels-advanced"
+  },
+  {
+    "objectID": "slides/intro-02-data-budget.html#section-1",
+    "href": "slides/intro-02-data-budget.html#section-1",
+    "title": "2 - Your data budget",
+    "section": "",
+    "text": "forested_train %&gt;% \n  ggplot(aes(x = forested)) +\n  geom_bar()"
+  },
+  {
+    "objectID": "slides/annotations.html#what-is-set.seed",
+    "href": "slides/annotations.html#what-is-set.seed",
+    "title": "Annotations",
+    "section": "What is set.seed()?",
+    "text": "What is set.seed()?\nWhat does set.seed() do?\nWe’ll use pseudo-random numbers (PRN) to partition the data into training and testing. PRN are numbers that emulate truly random numbers (but really are not truly random).\nThink of PRN as a box that takes a starting value (the “seed”) that produces random numbers using that starting value as an input into its process.\nIf we know a seed value, we can reproduce our “random” numbers. To use a different set of random numbers, choose a different seed value.\nFor example:\n\nset.seed(1)\nrunif(3)\n#&gt; [1] 0.2655087 0.3721239 0.5728534\n\n# Get a new set of random numbers:\nset.seed(2)\nrunif(3)\n#&gt; [1] 0.1848823 0.7023740 0.5733263\n\n# We can reproduce the old ones with the same seed\nset.seed(1)\nrunif(3)\n#&gt; [1] 0.2655087 0.3721239 0.5728534\n\nIf we don’t set the seed, R uses the clock time and the process ID to create a seed. This isn’t reproducible.\nSince we want our code to be reproducible, we set the seeds before random numbers are used.\nIn theory, you can set the seed once at the start of a script. However, if we do interactive data analysis, we might unwittingly use random numbers while coding. In that case, the stream is not the same and we don’t get reproducible results.\nThe value of the seed is an integer and really has no meaning. Max has a script to generate random integers to use as seeds to “spread the randomness around”. It is basically:\n\ncat(paste0(\"set.seed(\", sample.int(10000, 5), \")\", collapse = \"\\n\"))\n#&gt; set.seed(9725)\n#&gt; set.seed(8462)\n#&gt; set.seed(4050)\n#&gt; set.seed(8789)\n#&gt; set.seed(1301)"
+  },
+  {
+    "objectID": "slides/advanced-01-introduction.html",
+    "href": "slides/advanced-01-introduction.html",
+    "title": "1 - Introduction",
+    "section": "",
+    "text": "Welcome!"
+  },
+  {
+    "objectID": "slides/advanced-01-introduction.html#asking-for-help",
+    "href": "slides/advanced-01-introduction.html#asking-for-help",
+    "title": "1 - Introduction",
+    "section": "Asking for help",
+    "text": "Asking for help\n. . .\n🟪 “I’m stuck and need help!”\n. . .\n🟩 “I finished the exercise”"
+  },
+  {
+    "objectID": "slides/intro-01-introduction.html#what-is-machine-learning-2024-edition",
+    "href": "slides/intro-01-introduction.html#what-is-machine-learning-2024-edition",
+    "title": "1 - Introduction",
+    "section": "What is machine learning? (2024 edition)",
+    "text": "What is machine learning? (2024 edition)\n\n\nIllustration credit: https://vas3k.com/blog/machine_learning/\n\n\nIn the early 2010s, “Artificial intelligence” (AI) was largely synonymous with what we’ll refer to as “machine learning” in this workshop. In the late 2010s and early 2020s, AI usually referred to deep learning methods. Since the release of ChatGPT in late 2022, “AI” has come to also encompass large language models / generative models."
+  },
+  {
+    "objectID": "slides/advanced-03-tuning-hyperparameters.html#the-future-of-parallel-processing",
+    "href": "slides/advanced-03-tuning-hyperparameters.html#the-future-of-parallel-processing",
+    "title": "2 - Tuning Hyperparameters",
+    "section": "The ‘future’ of parallel processing",
+    "text": "The ‘future’ of parallel processing\nWe have relied on the foreach package for parallel processing.\nWe will start the transition to using the future package in the upcoming version of the tune package (version 1.3.0).\nWe’ll have a period of backward compatibility where you can still use foreach with future via the doFuture package.\nAfter that, the transition to future will occur.\nOverall, there will be minimal changes to your code."
+  },
+  {
+    "objectID": "slides/advanced-05-iterative.html#our-boosting-model",
+    "href": "slides/advanced-05-iterative.html#our-boosting-model",
+    "title": "4 - Iterative Search",
+    "section": "Our Boosting Model",
+    "text": "Our Boosting Model\nWe used feature hashing to generate a smaller set of indicator columns to deal with the large number of levels for the agent and country predictors.\n\nTree-based models (and a few others) don’t require indicators for categorical predictors. They can split on these variables as-is.\n\nWe’ll keep all categorical predictors as factors and focus on optimizing additional boosting parameters."
+  },
+  {
+    "objectID": "slides/advanced-05-iterative.html#our-boosting-model-1",
+    "href": "slides/advanced-05-iterative.html#our-boosting-model-1",
+    "title": "4 - Iterative Search",
+    "section": "Our Boosting Model",
+    "text": "Our Boosting Model\n\nlgbm_spec &lt;- \n  boost_tree(trees = 1000, learn_rate = tune(), min_n = tune(), \n             tree_depth = tune(), loss_reduction = tune(), \n             stop_iter = tune()) %&gt;% \n  set_mode(\"regression\") %&gt;% \n  set_engine(\"lightgbm\", num_threads = 1)\n\nlgbm_wflow &lt;- workflow(avg_price_per_room ~ ., lgbm_spec)\n\nlgbm_param &lt;- \n  lgbm_wflow %&gt;%\n    extract_parameter_set_dials() %&gt;%\n    update(learn_rate = learn_rate(c(-5, -1)))"
+  },
+  {
+    "objectID": "slides/advanced-05-iterative.html#best-results",
+    "href": "slides/advanced-05-iterative.html#best-results",
+    "title": "4 - Iterative Search",
+    "section": "Best results",
+    "text": "Best results\n\nshow_best(lgbm_bayes_res, metric = \"mae\") %&gt;% select(-.metric, -.estimator)\n#&gt; # A tibble: 5 × 10\n#&gt;   min_n tree_depth learn_rate loss_reduction stop_iter  mean     n std_err .config .iter\n#&gt;   &lt;int&gt;      &lt;int&gt;      &lt;dbl&gt;          &lt;dbl&gt;     &lt;int&gt; &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;int&gt;\n#&gt; 1     2         11     0.0871       1.96e- 3        18  9.60    10   0.147 Iter18     18\n#&gt; 2     2         12     0.0991       8.45e- 6        14  9.61    10   0.170 Iter19     19\n#&gt; 3     5         11     0.0451       3.45e-10         7  9.64    10   0.156 Iter10     10\n#&gt; 4     6         15     0.0703       5.15e-10        13  9.67    10   0.134 Iter16     16\n#&gt; 5     6          8     0.0883       1.94e- 8         4  9.71    10   0.170 Iter7       7"
   }
 ]

@@ -454,28 +454,30 @@
 <span id="cb3-8"><a></a>hotel_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(hotel_train, <span class="at">strata =</span> avg_price_per_room)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="previously---boosting-model" class="slide level2">
-<h2>Previously - Boosting Model</h2>
+<section id="our-boosting-model" class="slide level2">
+<h2>Our Boosting Model</h2>
+<p>We used feature hashing to generate a smaller set of indicator columns to deal with the large number of levels for the agent and country predictors.</p>
+<p><br></p>
+<p>Tree-based models (and a few others) don’t require indicators for categorical predictors. They can split on these variables as-is.</p>
+<p><br></p>
+<p>We’ll keep all categorical predictors as factors and focus on optimizing additional boosting parameters.</p>
+</section>
+<section id="our-boosting-model-1" class="slide level2">
+<h2>Our Boosting Model</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a>hotel_rec <span class="ot">&lt;-</span></span>
-<span id="cb4-2"><a></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">%&gt;%</span></span>
-<span id="cb4-3"><a></a>  <span class="fu">step_YeoJohnson</span>(lead_time) <span class="sc">%&gt;%</span></span>
-<span id="cb4-4"><a></a>  <span class="fu">step_dummy_hash</span>(agent,   <span class="at">num_terms =</span> <span class="fu">tune</span>(<span class="st">"agent hash"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb4-5"><a></a>  <span class="fu">step_dummy_hash</span>(company, <span class="at">num_terms =</span> <span class="fu">tune</span>(<span class="st">"company hash"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb4-6"><a></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a>lgbm_spec <span class="ot">&lt;-</span> </span>
+<span id="cb4-2"><a></a>  <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="dv">1000</span>, <span class="at">learn_rate =</span> <span class="fu">tune</span>(), <span class="at">min_n =</span> <span class="fu">tune</span>(), </span>
+<span id="cb4-3"><a></a>             <span class="at">tree_depth =</span> <span class="fu">tune</span>(), <span class="at">loss_reduction =</span> <span class="fu">tune</span>(), </span>
+<span id="cb4-4"><a></a>             <span class="at">stop_iter =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-5"><a></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-6"><a></a>  <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>, <span class="at">num_threads =</span> <span class="dv">1</span>)</span>
 <span id="cb4-7"><a></a></span>
-<span id="cb4-8"><a></a>lgbm_spec <span class="ot">&lt;-</span> </span>
-<span id="cb4-9"><a></a>  <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>(), <span class="at">min_n =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
-<span id="cb4-10"><a></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb4-11"><a></a>  <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>, <span class="at">num_threads =</span> <span class="dv">1</span>)</span>
-<span id="cb4-12"><a></a></span>
-<span id="cb4-13"><a></a>lgbm_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(hotel_rec, lgbm_spec)</span>
-<span id="cb4-14"><a></a></span>
-<span id="cb4-15"><a></a>lgbm_param <span class="ot">&lt;-</span></span>
-<span id="cb4-16"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb4-17"><a></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb4-18"><a></a>  <span class="fu">update</span>(<span class="st">`</span><span class="at">agent hash</span><span class="st">`</span>   <span class="ot">=</span> <span class="fu">num_hash</span>(<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">8</span>)),</span>
-<span id="cb4-19"><a></a>         <span class="st">`</span><span class="at">company hash</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">num_hash</span>(<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">8</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-8"><a></a>lgbm_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(avg_price_per_room <span class="sc">~</span> ., lgbm_spec)</span>
+<span id="cb4-9"><a></a></span>
+<span id="cb4-10"><a></a>lgbm_param <span class="ot">&lt;-</span> </span>
+<span id="cb4-11"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb4-12"><a></a>    <span class="fu">extract_parameter_set_dials</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb4-13"><a></a>    <span class="fu">update</span>(<span class="at">learn_rate =</span> <span class="fu">learn_rate</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">5</span>, <span class="sc">-</span><span class="dv">1</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="iterative-search" class="slide level2">
@@ -653,68 +655,316 @@
 <span id="cb6-10"><a></a>    <span class="at">metrics =</span> reg_metrics</span>
 <span id="cb6-11"><a></a>  )</span>
 <span id="cb6-12"><a></a></span>
-<span id="cb6-13"><a></a><span class="fu">show_best</span>(init_res, <span class="at">metric =</span> <span class="st">"mae"</span>)</span>
-<span id="cb6-14"><a></a><span class="co">#&gt; # A tibble: 5 × 11</span></span>
-<span id="cb6-15"><a></a><span class="co">#&gt;   trees min_n   learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config             </span></span>
-<span id="cb6-16"><a></a><span class="co">#&gt;   &lt;int&gt; &lt;int&gt;        &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
-<span id="cb6-17"><a></a><span class="co">#&gt; 1   390    10 0.0139                 13             62 mae     standard    11.3    10   0.202 Preprocessor1_Model1</span></span>
-<span id="cb6-18"><a></a><span class="co">#&gt; 2   718    31 0.00112                72             25 mae     standard    29.0    10   0.335 Preprocessor4_Model1</span></span>
-<span id="cb6-19"><a></a><span class="co">#&gt; 3  1236    22 0.0000261              11             17 mae     standard    51.8    10   0.416 Preprocessor7_Model1</span></span>
-<span id="cb6-20"><a></a><span class="co">#&gt; 4  1044    25 0.00000832             34             12 mae     standard    52.8    10   0.424 Preprocessor5_Model1</span></span>
-<span id="cb6-21"><a></a><span class="co">#&gt; 5  1599     7 0.0000000402          254            179 mae     standard    53.2    10   0.427 Preprocessor6_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-13"><a></a><span class="fu">show_best</span>(init_res, <span class="at">metric =</span> <span class="st">"mae"</span>) <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">-</span>.metric, <span class="sc">-</span>.estimator)</span>
+<span id="cb6-14"><a></a><span class="co">#&gt; # A tibble: 5 × 9</span></span>
+<span id="cb6-15"><a></a><span class="co">#&gt;   min_n tree_depth learn_rate loss_reduction stop_iter  mean     n std_err .config             </span></span>
+<span id="cb6-16"><a></a><span class="co">#&gt;   &lt;int&gt;      &lt;int&gt;      &lt;dbl&gt;          &lt;dbl&gt;     &lt;int&gt; &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb6-17"><a></a><span class="co">#&gt; 1    16         12   0.0136         1.91e- 3         9  10.1    10   0.196 Preprocessor1_Model4</span></span>
+<span id="cb6-18"><a></a><span class="co">#&gt; 2     9          4   0.0415         5.21e- 9        13  10.2    10   0.167 Preprocessor1_Model1</span></span>
+<span id="cb6-19"><a></a><span class="co">#&gt; 3    25          8   0.00256        9.58e-10         7  14.1    10   0.278 Preprocessor1_Model7</span></span>
+<span id="cb6-20"><a></a><span class="co">#&gt; 4    22          9   0.00154        5.77e- 6         5  19.3    10   0.326 Preprocessor1_Model5</span></span>
+<span id="cb6-21"><a></a><span class="co">#&gt; 5    32          3   0.000144       3.02e+ 1        18  47.6    10   0.387 Preprocessor1_Model6</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="bo-using-tidymodels" class="slide level2">
 <h2>BO using tidymodels</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7" data-code-line-numbers="4,6-8|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a><span class="fu">set.seed</span>(<span class="dv">15</span>)</span>
-<span id="cb7-2"><a></a>lgbm_bayes_res <span class="ot">&lt;-</span></span>
-<span id="cb7-3"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb7-4"><a></a>  <span class="fu">tune_bayes</span>(</span>
-<span id="cb7-5"><a></a>    <span class="at">resamples =</span> hotel_rs,</span>
-<span id="cb7-6"><a></a>    <span class="at">initial =</span> init_res,     <span class="co"># &lt;- initial results</span></span>
-<span id="cb7-7"><a></a>    <span class="at">iter =</span> <span class="dv">20</span>,</span>
-<span id="cb7-8"><a></a>    <span class="at">param_info =</span> lgbm_param,</span>
-<span id="cb7-9"><a></a>    <span class="at">metrics =</span> reg_metrics</span>
-<span id="cb7-10"><a></a>  )</span>
-<span id="cb7-11"><a></a></span>
-<span id="cb7-12"><a></a><span class="fu">show_best</span>(lgbm_bayes_res, <span class="at">metric =</span> <span class="st">"mae"</span>)</span>
-<span id="cb7-13"><a></a><span class="co">#&gt; # A tibble: 5 × 12</span></span>
-<span id="cb7-14"><a></a><span class="co">#&gt;   trees min_n learn_rate `agent hash` `company hash` .metric .estimator  mean     n std_err .config .iter</span></span>
-<span id="cb7-15"><a></a><span class="co">#&gt;   &lt;int&gt; &lt;int&gt;      &lt;dbl&gt;        &lt;int&gt;          &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;int&gt;</span></span>
-<span id="cb7-16"><a></a><span class="co">#&gt; 1  1984     2     0.0387            9             20 mae     standard    9.58    10   0.152 Iter7       7</span></span>
-<span id="cb7-17"><a></a><span class="co">#&gt; 2  1948     3     0.0467           11            144 mae     standard    9.58    10   0.159 Iter12     12</span></span>
-<span id="cb7-18"><a></a><span class="co">#&gt; 3  1784     2     0.0402           11            190 mae     standard    9.58    10   0.178 Iter16     16</span></span>
-<span id="cb7-19"><a></a><span class="co">#&gt; 4  1953     9     0.0374           12             10 mae     standard    9.62    10   0.208 Iter14     14</span></span>
-<span id="cb7-20"><a></a><span class="co">#&gt; 5  1504     2     0.0475           13            109 mae     standard    9.65    10   0.180 Iter15     15</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7" data-code-line-numbers="1|6,8-11|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a>ctrl_bo <span class="ot">&lt;-</span> <span class="fu">control_bayes</span>(<span class="at">verbose_iter =</span> <span class="cn">TRUE</span>) <span class="co"># &lt;- for demonstration</span></span>
+<span id="cb7-2"><a></a></span>
+<span id="cb7-3"><a></a><span class="fu">set.seed</span>(<span class="dv">15</span>)</span>
+<span id="cb7-4"><a></a>lgbm_bayes_res <span class="ot">&lt;-</span></span>
+<span id="cb7-5"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb7-6"><a></a>  <span class="fu">tune_bayes</span>(</span>
+<span id="cb7-7"><a></a>    <span class="at">resamples =</span> hotel_rs,</span>
+<span id="cb7-8"><a></a>    <span class="at">initial =</span> init_res,     <span class="co"># &lt;- initial results</span></span>
+<span id="cb7-9"><a></a>    <span class="at">iter =</span> <span class="dv">20</span>,</span>
+<span id="cb7-10"><a></a>    <span class="at">param_info =</span> lgbm_param,</span>
+<span id="cb7-11"><a></a>    <span class="at">control =</span> ctrl_bo,</span>
+<span id="cb7-12"><a></a>    <span class="at">metrics =</span> reg_metrics</span>
+<span id="cb7-13"><a></a>  )</span>
+<span id="cb7-14"><a></a><span class="co">#&gt; Optimizing mae using the expected improvement</span></span>
+<span id="cb7-15"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-16"><a></a><span class="co">#&gt; ── Iteration 1 ───────────────────────────────────────────────────────</span></span>
+<span id="cb7-17"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-18"><a></a><span class="co">#&gt; i Current best:      mae=10.13 (@iter 0)</span></span>
+<span id="cb7-19"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-20"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-21"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-22"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-23"><a></a><span class="co">#&gt; i min_n=32, tree_depth=12, learn_rate=0.0178, loss_reduction=1.03e-10, stop_iter=12</span></span>
+<span id="cb7-24"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-25"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-26"><a></a><span class="co">#&gt; ♥ Newest results:    mae=10.08 (+/-0.175)</span></span>
+<span id="cb7-27"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-28"><a></a><span class="co">#&gt; ── Iteration 2 ───────────────────────────────────────────────────────</span></span>
+<span id="cb7-29"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-30"><a></a><span class="co">#&gt; i Current best:      mae=10.08 (@iter 1)</span></span>
+<span id="cb7-31"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-32"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-33"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-34"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-35"><a></a><span class="co">#&gt; i min_n=15, tree_depth=14, learn_rate=0.0977, loss_reduction=0.00535, stop_iter=4</span></span>
+<span id="cb7-36"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-37"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-38"><a></a><span class="co">#&gt; ♥ Newest results:    mae=9.719 (+/-0.187)</span></span>
+<span id="cb7-39"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-40"><a></a><span class="co">#&gt; ── Iteration 3 ───────────────────────────────────────────────────────</span></span>
+<span id="cb7-41"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-42"><a></a><span class="co">#&gt; i Current best:      mae=9.719 (@iter 2)</span></span>
+<span id="cb7-43"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-44"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-45"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-46"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-47"><a></a><span class="co">#&gt; i min_n=38, tree_depth=1, learn_rate=0.1, loss_reduction=0.0809, stop_iter=10</span></span>
+<span id="cb7-48"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-49"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-50"><a></a><span class="co">#&gt; ⓧ Newest results:    mae=15.45 (+/-0.253)</span></span>
+<span id="cb7-51"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-52"><a></a><span class="co">#&gt; ── Iteration 4 ───────────────────────────────────────────────────────</span></span>
+<span id="cb7-53"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-54"><a></a><span class="co">#&gt; i Current best:      mae=9.719 (@iter 2)</span></span>
+<span id="cb7-55"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-56"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-57"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-58"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-59"><a></a><span class="co">#&gt; i min_n=32, tree_depth=1, learn_rate=0.00833, loss_reduction=1.31e-06, stop_iter=8</span></span>
+<span id="cb7-60"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-61"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-62"><a></a><span class="co">#&gt; ⓧ Newest results:    mae=19.44 (+/-0.33)</span></span>
+<span id="cb7-63"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-64"><a></a><span class="co">#&gt; ── Iteration 5 ───────────────────────────────────────────────────────</span></span>
+<span id="cb7-65"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-66"><a></a><span class="co">#&gt; i Current best:      mae=9.719 (@iter 2)</span></span>
+<span id="cb7-67"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-68"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-69"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-70"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-71"><a></a><span class="co">#&gt; i min_n=18, tree_depth=8, learn_rate=0.0495, loss_reduction=1.4e-06, stop_iter=5</span></span>
+<span id="cb7-72"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-73"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-74"><a></a><span class="co">#&gt; ⓧ Newest results:    mae=9.757 (+/-0.146)</span></span>
+<span id="cb7-75"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-76"><a></a><span class="co">#&gt; ── Iteration 6 ───────────────────────────────────────────────────────</span></span>
+<span id="cb7-77"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-78"><a></a><span class="co">#&gt; i Current best:      mae=9.719 (@iter 2)</span></span>
+<span id="cb7-79"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-80"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-81"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-82"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-83"><a></a><span class="co">#&gt; i min_n=3, tree_depth=14, learn_rate=0.0319, loss_reduction=4.02e-09, stop_iter=17</span></span>
+<span id="cb7-84"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-85"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-86"><a></a><span class="co">#&gt; ⓧ Newest results:    mae=9.76 (+/-0.163)</span></span>
+<span id="cb7-87"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-88"><a></a><span class="co">#&gt; ── Iteration 7 ───────────────────────────────────────────────────────</span></span>
+<span id="cb7-89"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-90"><a></a><span class="co">#&gt; i Current best:      mae=9.719 (@iter 2)</span></span>
+<span id="cb7-91"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-92"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-93"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-94"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-95"><a></a><span class="co">#&gt; i min_n=6, tree_depth=8, learn_rate=0.0883, loss_reduction=1.94e-08, stop_iter=4</span></span>
+<span id="cb7-96"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-97"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-98"><a></a><span class="co">#&gt; ♥ Newest results:    mae=9.712 (+/-0.17)</span></span>
+<span id="cb7-99"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-100"><a></a><span class="co">#&gt; ── Iteration 8 ───────────────────────────────────────────────────────</span></span>
+<span id="cb7-101"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-102"><a></a><span class="co">#&gt; i Current best:      mae=9.712 (@iter 7)</span></span>
+<span id="cb7-103"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-104"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-105"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-106"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-107"><a></a><span class="co">#&gt; i min_n=6, tree_depth=8, learn_rate=0.025, loss_reduction=7.82e-05, stop_iter=19</span></span>
+<span id="cb7-108"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-109"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-110"><a></a><span class="co">#&gt; ⓧ Newest results:    mae=9.838 (+/-0.17)</span></span>
+<span id="cb7-111"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-112"><a></a><span class="co">#&gt; ── Iteration 9 ───────────────────────────────────────────────────────</span></span>
+<span id="cb7-113"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-114"><a></a><span class="co">#&gt; i Current best:      mae=9.712 (@iter 7)</span></span>
+<span id="cb7-115"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-116"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-117"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-118"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-119"><a></a><span class="co">#&gt; i min_n=32, tree_depth=6, learn_rate=0.0737, loss_reduction=2.15e-07, stop_iter=8</span></span>
+<span id="cb7-120"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-121"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-122"><a></a><span class="co">#&gt; ⓧ Newest results:    mae=10.06 (+/-0.2)</span></span>
+<span id="cb7-123"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-124"><a></a><span class="co">#&gt; ── Iteration 10 ──────────────────────────────────────────────────────</span></span>
+<span id="cb7-125"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-126"><a></a><span class="co">#&gt; i Current best:      mae=9.712 (@iter 7)</span></span>
+<span id="cb7-127"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-128"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-129"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-130"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-131"><a></a><span class="co">#&gt; i min_n=5, tree_depth=11, learn_rate=0.0451, loss_reduction=3.45e-10, stop_iter=7</span></span>
+<span id="cb7-132"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-133"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-134"><a></a><span class="co">#&gt; ♥ Newest results:    mae=9.637 (+/-0.156)</span></span>
+<span id="cb7-135"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-136"><a></a><span class="co">#&gt; ── Iteration 11 ──────────────────────────────────────────────────────</span></span>
+<span id="cb7-137"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-138"><a></a><span class="co">#&gt; i Current best:      mae=9.637 (@iter 10)</span></span>
+<span id="cb7-139"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-140"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-141"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-142"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-143"><a></a><span class="co">#&gt; i min_n=2, tree_depth=7, learn_rate=0.0372, loss_reduction=2.44e-09, stop_iter=11</span></span>
+<span id="cb7-144"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-145"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-146"><a></a><span class="co">#&gt; ⓧ Newest results:    mae=9.761 (+/-0.171)</span></span>
+<span id="cb7-147"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-148"><a></a><span class="co">#&gt; ── Iteration 12 ──────────────────────────────────────────────────────</span></span>
+<span id="cb7-149"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-150"><a></a><span class="co">#&gt; i Current best:      mae=9.637 (@iter 10)</span></span>
+<span id="cb7-151"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-152"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-153"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-154"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-155"><a></a><span class="co">#&gt; i min_n=26, tree_depth=15, learn_rate=0.00626, loss_reduction=0.00554, stop_iter=16</span></span>
+<span id="cb7-156"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-157"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-158"><a></a><span class="co">#&gt; ⓧ Newest results:    mae=10.79 (+/-0.198)</span></span>
+<span id="cb7-159"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-160"><a></a><span class="co">#&gt; ── Iteration 13 ──────────────────────────────────────────────────────</span></span>
+<span id="cb7-161"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-162"><a></a><span class="co">#&gt; i Current best:      mae=9.637 (@iter 10)</span></span>
+<span id="cb7-163"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-164"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-165"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-166"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-167"><a></a><span class="co">#&gt; i min_n=29, tree_depth=10, learn_rate=0.0996, loss_reduction=4.5e-05, stop_iter=16</span></span>
+<span id="cb7-168"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-169"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-170"><a></a><span class="co">#&gt; ⓧ Newest results:    mae=9.838 (+/-0.169)</span></span>
+<span id="cb7-171"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-172"><a></a><span class="co">#&gt; ── Iteration 14 ──────────────────────────────────────────────────────</span></span>
+<span id="cb7-173"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-174"><a></a><span class="co">#&gt; i Current best:      mae=9.637 (@iter 10)</span></span>
+<span id="cb7-175"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-176"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-177"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-178"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-179"><a></a><span class="co">#&gt; i min_n=12, tree_depth=13, learn_rate=0.085, loss_reduction=2.16, stop_iter=9</span></span>
+<span id="cb7-180"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-181"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-182"><a></a><span class="co">#&gt; ⓧ Newest results:    mae=9.795 (+/-0.16)</span></span>
+<span id="cb7-183"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-184"><a></a><span class="co">#&gt; ── Iteration 15 ──────────────────────────────────────────────────────</span></span>
+<span id="cb7-185"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-186"><a></a><span class="co">#&gt; i Current best:      mae=9.637 (@iter 10)</span></span>
+<span id="cb7-187"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-188"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-189"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-190"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-191"><a></a><span class="co">#&gt; i min_n=4, tree_depth=9, learn_rate=0.0418, loss_reduction=0.00293, stop_iter=7</span></span>
+<span id="cb7-192"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-193"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-194"><a></a><span class="co">#&gt; ⓧ Newest results:    mae=9.75 (+/-0.168)</span></span>
+<span id="cb7-195"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-196"><a></a><span class="co">#&gt; ── Iteration 16 ──────────────────────────────────────────────────────</span></span>
+<span id="cb7-197"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-198"><a></a><span class="co">#&gt; i Current best:      mae=9.637 (@iter 10)</span></span>
+<span id="cb7-199"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-200"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-201"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-202"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-203"><a></a><span class="co">#&gt; i min_n=6, tree_depth=15, learn_rate=0.0703, loss_reduction=5.15e-10, stop_iter=13</span></span>
+<span id="cb7-204"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-205"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-206"><a></a><span class="co">#&gt; ⓧ Newest results:    mae=9.672 (+/-0.134)</span></span>
+<span id="cb7-207"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-208"><a></a><span class="co">#&gt; ── Iteration 17 ──────────────────────────────────────────────────────</span></span>
+<span id="cb7-209"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-210"><a></a><span class="co">#&gt; i Current best:      mae=9.637 (@iter 10)</span></span>
+<span id="cb7-211"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-212"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-213"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-214"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-215"><a></a><span class="co">#&gt; i min_n=27, tree_depth=15, learn_rate=0.0956, loss_reduction=3.74e-10, stop_iter=17</span></span>
+<span id="cb7-216"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-217"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-218"><a></a><span class="co">#&gt; ⓧ Newest results:    mae=9.861 (+/-0.197)</span></span>
+<span id="cb7-219"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-220"><a></a><span class="co">#&gt; ── Iteration 18 ──────────────────────────────────────────────────────</span></span>
+<span id="cb7-221"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-222"><a></a><span class="co">#&gt; i Current best:      mae=9.637 (@iter 10)</span></span>
+<span id="cb7-223"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-224"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-225"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-226"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-227"><a></a><span class="co">#&gt; i min_n=2, tree_depth=11, learn_rate=0.0871, loss_reduction=0.00196, stop_iter=18</span></span>
+<span id="cb7-228"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-229"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-230"><a></a><span class="co">#&gt; ♥ Newest results:    mae=9.601 (+/-0.147)</span></span>
+<span id="cb7-231"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-232"><a></a><span class="co">#&gt; ── Iteration 19 ──────────────────────────────────────────────────────</span></span>
+<span id="cb7-233"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-234"><a></a><span class="co">#&gt; i Current best:      mae=9.601 (@iter 18)</span></span>
+<span id="cb7-235"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-236"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-237"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-238"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-239"><a></a><span class="co">#&gt; i min_n=2, tree_depth=12, learn_rate=0.0991, loss_reduction=8.45e-06, stop_iter=14</span></span>
+<span id="cb7-240"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-241"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-242"><a></a><span class="co">#&gt; ⓧ Newest results:    mae=9.61 (+/-0.17)</span></span>
+<span id="cb7-243"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-244"><a></a><span class="co">#&gt; ── Iteration 20 ──────────────────────────────────────────────────────</span></span>
+<span id="cb7-245"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-246"><a></a><span class="co">#&gt; i Current best:      mae=9.601 (@iter 18)</span></span>
+<span id="cb7-247"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb7-248"><a></a><span class="co">#&gt; ✓ Gaussian process model</span></span>
+<span id="cb7-249"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb7-250"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb7-251"><a></a><span class="co">#&gt; i min_n=4, tree_depth=15, learn_rate=0.0206, loss_reduction=1.46e-06, stop_iter=15</span></span>
+<span id="cb7-252"><a></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb7-253"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb7-254"><a></a><span class="co">#&gt; ⓧ Newest results:    mae=9.881 (+/-0.177)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="best-results" class="slide level2">
+<h2>Best results</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a><span class="fu">show_best</span>(lgbm_bayes_res, <span class="at">metric =</span> <span class="st">"mae"</span>) <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">-</span>.metric, <span class="sc">-</span>.estimator)</span>
+<span id="cb8-2"><a></a><span class="co">#&gt; # A tibble: 5 × 10</span></span>
+<span id="cb8-3"><a></a><span class="co">#&gt;   min_n tree_depth learn_rate loss_reduction stop_iter  mean     n std_err .config .iter</span></span>
+<span id="cb8-4"><a></a><span class="co">#&gt;   &lt;int&gt;      &lt;int&gt;      &lt;dbl&gt;          &lt;dbl&gt;     &lt;int&gt; &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;int&gt;</span></span>
+<span id="cb8-5"><a></a><span class="co">#&gt; 1     2         11     0.0871       1.96e- 3        18  9.60    10   0.147 Iter18     18</span></span>
+<span id="cb8-6"><a></a><span class="co">#&gt; 2     2         12     0.0991       8.45e- 6        14  9.61    10   0.170 Iter19     19</span></span>
+<span id="cb8-7"><a></a><span class="co">#&gt; 3     5         11     0.0451       3.45e-10         7  9.64    10   0.156 Iter10     10</span></span>
+<span id="cb8-8"><a></a><span class="co">#&gt; 4     6         15     0.0703       5.15e-10        13  9.67    10   0.134 Iter16     16</span></span>
+<span id="cb8-9"><a></a><span class="co">#&gt; 5     6          8     0.0883       1.94e- 8         4  9.71    10   0.170 Iter7       7</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="plotting-bo-results" class="slide level2">
 <h2>Plotting BO Results</h2>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a><span class="fu">autoplot</span>(lgbm_bayes_res, <span class="at">metric =</span> <span class="st">"mae"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a><span class="fu">autoplot</span>(lgbm_bayes_res, <span class="at">metric =</span> <span class="st">"mae"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
 <img data-src="figures/autoplot-marginals-1.svg" class="quarto-figure quarto-figure-center r-stretch" style="width:50.0%"></section>
 <section id="plotting-bo-results-1" class="slide level2">
 <h2>Plotting BO Results</h2>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a><span class="fu">autoplot</span>(lgbm_bayes_res, <span class="at">metric =</span> <span class="st">"mae"</span>, <span class="at">type =</span> <span class="st">"parameters"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a><span class="fu">autoplot</span>(lgbm_bayes_res, <span class="at">metric =</span> <span class="st">"mae"</span>, <span class="at">type =</span> <span class="st">"parameters"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
 <img data-src="figures/autoplot-param-1.svg" class="quarto-figure quarto-figure-center r-stretch" style="width:50.0%"></section>
 <section id="plotting-bo-results-2" class="slide level2">
 <h2>Plotting BO Results</h2>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a><span class="fu">autoplot</span>(lgbm_bayes_res, <span class="at">metric =</span> <span class="st">"mae"</span>, <span class="at">type =</span> <span class="st">"performance"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a></a><span class="fu">autoplot</span>(lgbm_bayes_res, <span class="at">metric =</span> <span class="st">"mae"</span>, <span class="at">type =</span> <span class="st">"performance"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
 <img data-src="figures/autoplot-perf-1.svg" class="quarto-figure quarto-figure-center r-stretch" style="width:50.0%"></section>
 <section id="enhance" class="slide level2">
 <h2>ENHANCE</h2>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a></a><span class="fu">autoplot</span>(lgbm_bayes_res, <span class="at">metric =</span> <span class="st">"mae"</span>, <span class="at">type =</span> <span class="st">"performance"</span>) <span class="sc">+</span></span>
-<span id="cb11-2"><a></a>  <span class="fu">ylim</span>(<span class="fu">c</span>(<span class="dv">9</span>, <span class="dv">14</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a></a><span class="fu">autoplot</span>(lgbm_bayes_res, <span class="at">metric =</span> <span class="st">"mae"</span>, <span class="at">type =</span> <span class="st">"performance"</span>) <span class="sc">+</span></span>
+<span id="cb12-2"><a></a>  <span class="fu">ylim</span>(<span class="fu">c</span>(<span class="dv">9</span>, <span class="dv">14</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
 <img data-src="figures/autoplot-perf-zoomed-1.svg" class="quarto-figure quarto-figure-center r-stretch" style="width:50.0%"></section>
@@ -727,6 +977,7 @@
 <li><em>Larger values will explore the space more.</em></li>
 <li><em>“Large” values are usually less than one.</em></li>
 </ul>
+<p><strong>Bonus points</strong>: Before the optimization is done, press <code>&lt;esc&gt;</code> and see what happens.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div class="countdown" id="conf-bound" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
@@ -760,56 +1011,54 @@
 <h2>Locking Down the Tuning Parameters</h2>
 <p>We can take the results of the Bayesian optimization and accept the best results:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a></a>best_param <span class="ot">&lt;-</span> <span class="fu">select_best</span>(lgbm_bayes_res, <span class="at">metric =</span> <span class="st">"mae"</span>)</span>
-<span id="cb12-2"><a></a>final_wflow <span class="ot">&lt;-</span> </span>
-<span id="cb12-3"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span> </span>
-<span id="cb12-4"><a></a>  <span class="fu">finalize_workflow</span>(best_param)</span>
-<span id="cb12-5"><a></a>final_wflow</span>
-<span id="cb12-6"><a></a><span class="co">#&gt; ══ Workflow ══════════════════════════════════════════════════════════</span></span>
-<span id="cb12-7"><a></a><span class="co">#&gt; Preprocessor: Recipe</span></span>
-<span id="cb12-8"><a></a><span class="co">#&gt; Model: boost_tree()</span></span>
-<span id="cb12-9"><a></a><span class="co">#&gt; </span></span>
-<span id="cb12-10"><a></a><span class="co">#&gt; ── Preprocessor ──────────────────────────────────────────────────────</span></span>
-<span id="cb12-11"><a></a><span class="co">#&gt; 4 Recipe Steps</span></span>
-<span id="cb12-12"><a></a><span class="co">#&gt; </span></span>
-<span id="cb12-13"><a></a><span class="co">#&gt; • step_YeoJohnson()</span></span>
-<span id="cb12-14"><a></a><span class="co">#&gt; • step_dummy_hash()</span></span>
-<span id="cb12-15"><a></a><span class="co">#&gt; • step_dummy_hash()</span></span>
-<span id="cb12-16"><a></a><span class="co">#&gt; • step_zv()</span></span>
-<span id="cb12-17"><a></a><span class="co">#&gt; </span></span>
-<span id="cb12-18"><a></a><span class="co">#&gt; ── Model ─────────────────────────────────────────────────────────────</span></span>
-<span id="cb12-19"><a></a><span class="co">#&gt; Boosted Tree Model Specification (regression)</span></span>
-<span id="cb12-20"><a></a><span class="co">#&gt; </span></span>
-<span id="cb12-21"><a></a><span class="co">#&gt; Main Arguments:</span></span>
-<span id="cb12-22"><a></a><span class="co">#&gt;   trees = 1984</span></span>
-<span id="cb12-23"><a></a><span class="co">#&gt;   min_n = 2</span></span>
-<span id="cb12-24"><a></a><span class="co">#&gt;   learn_rate = 0.0386760025079899</span></span>
-<span id="cb12-25"><a></a><span class="co">#&gt; </span></span>
-<span id="cb12-26"><a></a><span class="co">#&gt; Engine-Specific Arguments:</span></span>
-<span id="cb12-27"><a></a><span class="co">#&gt;   num_threads = 1</span></span>
-<span id="cb12-28"><a></a><span class="co">#&gt; </span></span>
-<span id="cb12-29"><a></a><span class="co">#&gt; Computational engine: lightgbm</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a></a>best_param <span class="ot">&lt;-</span> <span class="fu">select_best</span>(lgbm_bayes_res, <span class="at">metric =</span> <span class="st">"mae"</span>)</span>
+<span id="cb13-2"><a></a>final_wflow <span class="ot">&lt;-</span> </span>
+<span id="cb13-3"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span> </span>
+<span id="cb13-4"><a></a>  <span class="fu">finalize_workflow</span>(best_param)</span>
+<span id="cb13-5"><a></a>final_wflow</span>
+<span id="cb13-6"><a></a><span class="co">#&gt; ══ Workflow ══════════════════════════════════════════════════════════</span></span>
+<span id="cb13-7"><a></a><span class="co">#&gt; Preprocessor: Formula</span></span>
+<span id="cb13-8"><a></a><span class="co">#&gt; Model: boost_tree()</span></span>
+<span id="cb13-9"><a></a><span class="co">#&gt; </span></span>
+<span id="cb13-10"><a></a><span class="co">#&gt; ── Preprocessor ──────────────────────────────────────────────────────</span></span>
+<span id="cb13-11"><a></a><span class="co">#&gt; avg_price_per_room ~ .</span></span>
+<span id="cb13-12"><a></a><span class="co">#&gt; </span></span>
+<span id="cb13-13"><a></a><span class="co">#&gt; ── Model ─────────────────────────────────────────────────────────────</span></span>
+<span id="cb13-14"><a></a><span class="co">#&gt; Boosted Tree Model Specification (regression)</span></span>
+<span id="cb13-15"><a></a><span class="co">#&gt; </span></span>
+<span id="cb13-16"><a></a><span class="co">#&gt; Main Arguments:</span></span>
+<span id="cb13-17"><a></a><span class="co">#&gt;   trees = 1000</span></span>
+<span id="cb13-18"><a></a><span class="co">#&gt;   min_n = 2</span></span>
+<span id="cb13-19"><a></a><span class="co">#&gt;   tree_depth = 11</span></span>
+<span id="cb13-20"><a></a><span class="co">#&gt;   learn_rate = 0.0871075826616985</span></span>
+<span id="cb13-21"><a></a><span class="co">#&gt;   loss_reduction = 0.00195652467829182</span></span>
+<span id="cb13-22"><a></a><span class="co">#&gt;   stop_iter = 18</span></span>
+<span id="cb13-23"><a></a><span class="co">#&gt; </span></span>
+<span id="cb13-24"><a></a><span class="co">#&gt; Engine-Specific Arguments:</span></span>
+<span id="cb13-25"><a></a><span class="co">#&gt;   num_threads = 1</span></span>
+<span id="cb13-26"><a></a><span class="co">#&gt; </span></span>
+<span id="cb13-27"><a></a><span class="co">#&gt; Computational engine: lightgbm</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="the-final-fit" class="slide level2">
 <h2>The Final Fit</h2>
 <p>We can use individual functions:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a></a>final_fit <span class="ot">&lt;-</span> final_wflow <span class="sc">%&gt;%</span> <span class="fu">fit</span>(<span class="at">data =</span> hotel_train)</span>
-<span id="cb13-2"><a></a></span>
-<span id="cb13-3"><a></a><span class="co"># then predict() or augment() </span></span>
-<span id="cb13-4"><a></a><span class="co"># then compute metrics</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a></a>final_fit <span class="ot">&lt;-</span> final_wflow <span class="sc">%&gt;%</span> <span class="fu">fit</span>(<span class="at">data =</span> hotel_train)</span>
+<span id="cb14-2"><a></a></span>
+<span id="cb14-3"><a></a><span class="co"># then predict() or augment() </span></span>
+<span id="cb14-4"><a></a><span class="co"># then compute metrics</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p><br></p>
 <p>Remember that there is also a convenience function to do all of this:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a></a><span class="fu">set.seed</span>(<span class="dv">3893</span>)</span>
-<span id="cb14-2"><a></a>final_res <span class="ot">&lt;-</span> final_wflow <span class="sc">%&gt;%</span> <span class="fu">last_fit</span>(hotel_split, <span class="at">metrics =</span> reg_metrics)</span>
-<span id="cb14-3"><a></a>final_res</span>
-<span id="cb14-4"><a></a><span class="co">#&gt; # Resampling results</span></span>
-<span id="cb14-5"><a></a><span class="co">#&gt; # Manual resampling </span></span>
-<span id="cb14-6"><a></a><span class="co">#&gt; # A tibble: 1 × 6</span></span>
-<span id="cb14-7"><a></a><span class="co">#&gt;   splits              id               .metrics         .notes           .predictions         .workflow </span></span>
-<span id="cb14-8"><a></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;            &lt;list&gt;           &lt;list&gt;           &lt;list&gt;               &lt;list&gt;    </span></span>
-<span id="cb14-9"><a></a><span class="co">#&gt; 1 &lt;split [3749/1251]&gt; train/test split &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [1,251 × 4]&gt; &lt;workflow&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a></a><span class="fu">set.seed</span>(<span class="dv">3893</span>)</span>
+<span id="cb15-2"><a></a>final_res <span class="ot">&lt;-</span> final_wflow <span class="sc">%&gt;%</span> <span class="fu">last_fit</span>(hotel_split, <span class="at">metrics =</span> reg_metrics)</span>
+<span id="cb15-3"><a></a>final_res</span>
+<span id="cb15-4"><a></a><span class="co">#&gt; # Resampling results</span></span>
+<span id="cb15-5"><a></a><span class="co">#&gt; # Manual resampling </span></span>
+<span id="cb15-6"><a></a><span class="co">#&gt; # A tibble: 1 × 6</span></span>
+<span id="cb15-7"><a></a><span class="co">#&gt;   splits              id               .metrics         .notes           .predictions         .workflow </span></span>
+<span id="cb15-8"><a></a><span class="co">#&gt;   &lt;list&gt;              &lt;chr&gt;            &lt;list&gt;           &lt;list&gt;           &lt;list&gt;               &lt;list&gt;    </span></span>
+<span id="cb15-9"><a></a><span class="co">#&gt; 1 &lt;split [3749/1251]&gt; train/test split &lt;tibble [2 × 4]&gt; &lt;tibble [0 × 3]&gt; &lt;tibble [1,251 × 4]&gt; &lt;workflow&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="test-set-results" class="slide level2">
@@ -817,20 +1066,20 @@
 <div class="columns">
 <div class="column" style="width:65%;">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a></a>final_res <span class="sc">%&gt;%</span> </span>
-<span id="cb15-2"><a></a>  <span class="fu">collect_predictions</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb15-3"><a></a>  <span class="fu">cal_plot_regression</span>(</span>
-<span id="cb15-4"><a></a>    <span class="at">truth =</span> avg_price_per_room, </span>
-<span id="cb15-5"><a></a>    <span class="at">estimate =</span> .pred)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a></a>final_res <span class="sc">%&gt;%</span> </span>
+<span id="cb16-2"><a></a>  <span class="fu">collect_predictions</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb16-3"><a></a>  <span class="fu">cal_plot_regression</span>(</span>
+<span id="cb16-4"><a></a>    <span class="at">truth =</span> avg_price_per_room, </span>
+<span id="cb16-5"><a></a>    <span class="at">estimate =</span> .pred)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Test set performance:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a></a>final_res <span class="sc">%&gt;%</span> <span class="fu">collect_metrics</span>()</span>
-<span id="cb16-2"><a></a><span class="co">#&gt; # A tibble: 2 × 4</span></span>
-<span id="cb16-3"><a></a><span class="co">#&gt;   .metric .estimator .estimate .config             </span></span>
-<span id="cb16-4"><a></a><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               </span></span>
-<span id="cb16-5"><a></a><span class="co">#&gt; 1 mae     standard       9.81  Preprocessor1_Model1</span></span>
-<span id="cb16-6"><a></a><span class="co">#&gt; 2 rsq     standard       0.945 Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a></a>final_res <span class="sc">%&gt;%</span> <span class="fu">collect_metrics</span>()</span>
+<span id="cb17-2"><a></a><span class="co">#&gt; # A tibble: 2 × 4</span></span>
+<span id="cb17-3"><a></a><span class="co">#&gt;   .metric .estimator .estimate .config             </span></span>
+<span id="cb17-4"><a></a><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb17-5"><a></a><span class="co">#&gt; 1 mae     standard       9.60  Preprocessor1_Model1</span></span>
+<span id="cb17-6"><a></a><span class="co">#&gt; 2 rsq     standard       0.949 Preprocessor1_Model1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div><div class="column" style="width:35%;">
 <div class="cell" data-layout-align="center">
@@ -843,6 +1092,7 @@
 </div>
 </div>
 </div></div>
+<p>Recall that resampling predicted the MAE to be 9.601.</p>
 
 <div class="quarto-auto-generated-content">
 <div class="footer footer-default">
