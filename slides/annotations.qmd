@@ -274,3 +274,25 @@ Effect encoding might result in a somewhat circular argument: the column is more
 
 Partial pooling somewhat lowers the risk of overfitting since it tends to correct for agents with small sample sizes. It can’t correct for improper data usage or data leakage though. 
 
+# Advanced Extras - Case Study on Transportation
+
+## A recipe - handle correlations
+
+In this code chunk, What's the story with `!!stations`? 
+
+```{r}
+#| label: pca-rec
+#| eval: false
+chi_pca_rec <- 
+  chi_rec %>% 
+  step_normalize(all_of(!!stations)) %>% 
+  step_pca(all_of(!!stations), num_comp = tune())
+```
+
+`stations` is a vector of names of 20 columns that we want to use in the steps. If the list were shorter, we could type them in (e.g., `c("col1", "col2")` etc.). 
+
+The vector lives in our global workspace, and if we are in parallel, the worker processes might not have access to `stations`. The `!!` (frequently said as "bang bang") inserts the actual contents of the vector into the `all_of()` calls so that it looks like you just typed it in. 
+
+This means that the parallel process workers have a copy of the data in their reach and the code will run without error. 
+
+
