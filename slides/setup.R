@@ -1,5 +1,6 @@
 # packages needed to make the slides, but not needed for participants
-# dev_pkgs <- c("countdown", "forcats", "hadley/emo", "sessioninfo", "svglite")
+# dev_pkgs <-
+#   c("countdown", "forcats", "hadley/emo", "sessioninfo", "svglite", "kernlab")
 # pak::pak(dev_pkgs)
 
 #   ----------------------------------------------------------------------
