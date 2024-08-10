@@ -203,23 +203,54 @@ augment(forested_fit, new_data = forested_train) %>%
 
 ## ROC curves
 
-To make an ROC (receiver operator characteristic) curve, we:
+::: columns
+::: {.column width="50%"}
+For an ROC (receiver operator characteristic) curve, we plot
 
-- calculate the sensitivity and specificity for all possible thresholds
+- the false positive rate (1 - specificity) on the x-axis
+- the true positive rate (sensitivity) on the y-axis
 
-- plot false positive rate (x-axis) versus true positive rate (y-axis)
+with sensitivity and specificity calculated at all possible thresholds.
+:::
 
-given that sensitivity is the true positive rate, and specificity is the true negative rate. Hence `1 - specificity` is the false positive rate.
+::: {.column width="50%"}
+```{r roc-curve-1}
+#| echo: false
+#| fig-width: 4
+#| fig-height: 4
+#| out.width: 100%
 
-. . .
+p_roc <- augment(forested_fit, new_data = forested_train) %>% 
+  roc_curve(truth = forested, .pred_Yes) %>%
+  autoplot()
+p_roc
+```
+:::
+:::
 
+:::notes
+ROC curves are insensitive to class imbalance.
+:::
+
+## ROC curves
+
+::: columns
+::: {.column width="50%"}
 We can use the area under the ROC curve as a classification metric: 
 
 - ROC AUC = 1 💯 
 - ROC AUC = 1/2 😢
+:::
 
-:::notes
-ROC curves are insensitive to class imbalance.
+::: {.column width="50%"}
+```{r roc-curve-2}
+#| echo: false
+#| fig-width: 4
+#| fig-height: 4
+#| out.width: 100%
+p_roc
+```
+:::
 :::
 
 ## ROC curves `r hexes("yardstick")`
@@ -236,13 +267,16 @@ augment(forested_fit, new_data = forested_train) %>%
 
 ## ROC curve plot `r hexes("yardstick")`
 
-```{r roc-curve}
-#| fig-width: 6
-#| fig-height: 6
+```{r roc-curve-code}
+#| fig-width: 4
+#| fig-height: 4
+#| out.width: 100%
 #| output-location: "column"
 
-augment(forested_fit, new_data = forested_train) %>% 
-  roc_curve(truth = forested, .pred_Yes) %>%
+augment(forested_fit, 
+        new_data = forested_train) %>% 
+  roc_curve(truth = forested, 
+            .pred_Yes) %>%
   autoplot()
 ```
 
@@ -320,7 +354,7 @@ augment(forested_fit, new_data = forested_train) %>%
 - Good separation: the densities don't overlap.
 - Good calibration: the calibration line follows the diagonal.
 
-Calibration plot: We bin observations according to predicted probability. In the bin for 20%-30% predicted prob, we should see an event rate of ~25% if the model is well calibrated.
+Calibration plot: We bin observations according to predicted probability. In the bin for 20%-30% predicted prob, we should see an event rate of ~25% if the model is well-calibrated.
 :::
 
 ##  {background-iframe="https://yardstick.tidymodels.org/reference/index.html"}
