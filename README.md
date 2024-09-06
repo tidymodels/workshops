@@ -23,7 +23,7 @@ To archive previous workshop notes:
 
 * Make a subdirectory in `archive/` called `YYYY-MM-workshop-name`.
 * Copy the contents of `slides/` into `archive/YYYY-MM-workshop-name`.
-* Copy the contents of `classwork/` into `archive/YYYY-MM-workshop-name`.
+* Copy the contents of `classwork/` into `archive/YYYY-MM-workshop-name/classwork`.
 * Copy `index.qmd` into `archive/YYYY-MM-workshop-name`.
 * In `index.qmd`, remove `slides/` from links to slides.
 * In `_quarto.yml`:
@@ -36,10 +36,10 @@ execute:
 ```
 * In the command line, run `quarto render archive/YYYY-MM-workshop-name`. This will regenerate the workshop slides under `docs/archive/YYYY-MM-workshop-name`.
 * Check that:
-	* Running `quarto render` didn't change any files in `docs/` outside of `docs/archive/`.
+	* Running `quarto render` didn't change any files in `docs/` other than `sitemap.xml` and `search.json` outside of `docs/archive/`.
 	* The generated slides are added to `_freeze/archive/YYYY-MM-workshop-name` rather than in `archive/YYYY-MM-workshop-name`. 
 	* The generated slides work (specifically, that filepaths to figures function correctly.)
-* In `index.qmd`, add an entry in H2 "Past workshops" like `[M YYYY](archive/YYYY-MM-workshop-name/) in workshop-name`
+* In `index.qmd`, add an entry in H2 "Past workshops" like `[M YYYY](archive/YYYY-MM-workshop-name/index.html) in workshop-name`
 * If you are adding slides other than English, update the navbar link in `_quarto.yml`.
 
 Once the above changes are merged to `main`, make a GitHub Release noting the big-picture changes since the previous iteration of the workshop.
