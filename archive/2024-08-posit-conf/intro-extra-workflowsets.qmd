@@ -1,0 +1,96 @@
+---
+title: "Extras - workflowsets"
+subtitle: "Introduction to tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+---
+
+```{r}
+#| label: setup
+#| include: false
+#| file: setup.R
+```
+
+```{r setup-previous}
+#| echo: false
+library(tidymodels)
+library(forested)
+
+set.seed(123)
+forested_split <- initial_split(forested, prop = 0.8)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
+
+set.seed(123)
+forested_folds <- vfold_cv(forested_train, v = 10)
+
+# decrease cost_complexity from its default 0.01 to make a more
+# complex and performant tree. see `?decision_tree()` to learn more.
+tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
+
+rf_spec <- rand_forest(trees = 1000, mode = "classification")
+```
+
+
+## How can we compare multiple model workflows at once?
+
+```{r forest-mountain, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/forest_mountain.svg")
+```
+
+## Evaluate a workflow set
+
+```{r workflow-set}
+wf_set <- workflow_set(list(forested ~ .), list(tree_spec, rf_spec))
+wf_set
+```
+
+## Evaluate a workflow set
+
+```{r workflow-map}
+#| cache: true
+wf_set_fit <- wf_set %>%
+  workflow_map("fit_resamples", resamples = forested_folds)
+wf_set_fit
+```
+
+## Evaluate a workflow set
+
+```{r rank-results}
+wf_set_fit %>%
+  rank_results()
+```
+
+The first metric of the metric set is used for ranking. Use `rank_metric` to change that.
+
+. . .
+
+Lots more available with workflow sets, like `collect_metrics()`, `autoplot()` methods, and more!
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*When do you think a workflow set would be useful?*
+
+*Discuss with your neighbors!*
+
+```{r ex-discuss-workflow-sets}
+#| echo: false
+countdown::countdown(minutes = 3, id = "discuss-workflow-sets")
+```

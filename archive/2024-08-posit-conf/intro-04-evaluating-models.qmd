@@ -1,0 +1,840 @@
+---
+title: "4 - Evaluating models"
+subtitle: "Introduction to tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+## Looking at predictions
+
+```{r setup-previous}
+#| echo: false
+library(tidymodels)
+library(forested)
+
+set.seed(123)
+forested_split <- initial_split(forested, prop = 0.8)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
+
+tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
+forested_wflow <- workflow(forested ~ ., tree_spec)
+forested_fit <- fit(forested_wflow, forested_train)
+```
+
+```{r forested-fit-augment}
+augment(forested_fit, new_data = forested_train)
+```
+
+## Confusion matrix `r hexes("yardstick")`
+
+![](images/confusion-matrix.png)
+
+## Confusion matrix `r hexes("yardstick")`
+
+```{r conf-mat}
+augment(forested_fit, new_data = forested_train) %>%
+  conf_mat(truth = forested, estimate = .pred_class)
+```
+
+## Confusion matrix `r hexes("yardstick")`
+
+```{r conf-mat-plot}
+augment(forested_fit, new_data = forested_train) %>%
+  conf_mat(truth = forested, estimate = .pred_class) %>%
+  autoplot(type = "heatmap")
+```
+
+## Metrics for model performance `r hexes("yardstick")`
+
+::: columns
+::: {.column width="60%"}
+```{r acc}
+augment(forested_fit, new_data = forested_train) %>%
+  accuracy(truth = forested, estimate = .pred_class)
+```
+:::
+
+::: {.column width="40%"}
+![](images/confusion-matrix-accuracy.png)
+:::
+:::
+
+::: notes
+There used to be a slide here calling out the pitfalls of accuracy when classes are imbalanced.
+:::
+
+## Metrics for model performance `r hexes("yardstick")`
+
+::: columns
+::: {.column width="60%"}
+```{r sens}
+augment(forested_fit, new_data = forested_train) %>%
+  sensitivity(truth = forested, estimate = .pred_class)
+```
+:::
+
+::: {.column width="40%"}
+![](images/confusion-matrix-sensitivity.png)
+:::
+:::
+
+
+## Metrics for model performance `r hexes("yardstick")`
+
+::: columns
+::: {.column width="60%"}
+```{r sens-2}
+#| code-line-numbers: "3-6"
+augment(forested_fit, new_data = forested_train) %>%
+  sensitivity(truth = forested, estimate = .pred_class)
+```
+
+<br>
+
+```{r spec}
+augment(forested_fit, new_data = forested_train) %>%
+  specificity(truth = forested, estimate = .pred_class)
+```
+:::
+
+::: {.column width="40%"}
+![](images/confusion-matrix-specificity.png)
+:::
+:::
+
+## Metrics for model performance `r hexes("yardstick")`
+
+We can use `metric_set()` to combine multiple calculations into one
+
+```{r forested-metrics}
+forested_metrics <- metric_set(accuracy, specificity, sensitivity)
+
+augment(forested_fit, new_data = forested_train) %>%
+  forested_metrics(truth = forested, estimate = .pred_class)
+```
+
+## Metrics for model performance `r hexes("yardstick")`
+
+Metrics and metric sets work with grouped data frames!
+
+```{r accuracy-grouped}
+augment(forested_fit, new_data = forested_train) %>%
+  group_by(tree_no_tree) %>%
+  accuracy(truth = forested, estimate = .pred_class)
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Apply the `forested_metrics` metric set to `augment()` \
+output grouped by `tree_no_tree`.*
+
+*Do any metrics differ substantially between groups?*
+
+```{r ex-forested-grouped-metrics}
+#| echo: false
+countdown::countdown(minutes = 5, id = "forested-grouped-metrics")
+```
+
+:::notes
+The specificity for `"Tree"` is a good bit lower than it is for `"No tree"`.
+
+Specificity is the proportion of negatives that are correctly identified as negatives.
+"Negative" is the non-event level of the outcome, i.e. "non-forested."
+So, when this index classifies the plot as having a tree, the model does not do well at correctly identifying the plot as non-forested when it is indeed non-forested.
+:::
+
+## Two class data
+
+These metrics assume that we know the threshold for converting "soft" probability predictions into "hard" class predictions.
+
+. . .
+
+Is a 50% threshold good? 
+
+What happens if we say that we need to be 80% sure to declare an event?
+
+-   sensitivity ⬇️, specificity ⬆️
+
+. . .
+
+What happens for a 20% threshold?
+
+-   sensitivity ⬆️, specificity ⬇️
+
+## Varying the threshold
+
+```{r}
+#| label: thresholds
+#| echo: false
+
+augment(forested_fit, new_data = forested_train) %>% 
+  roc_curve(truth = forested, .pred_Yes) %>% 
+  filter(is.finite(.threshold)) %>% 
+  pivot_longer(c(specificity, sensitivity), names_to = "statistic", values_to = "value") %>% 
+  rename(`event threshold` = .threshold) %>% 
+  ggplot(aes(x = `event threshold`, y = value, col = statistic, group = statistic)) + 
+  geom_line() +
+  scale_color_brewer(palette = "Dark2") +
+  labs(y = NULL) +
+  coord_equal() +
+  theme(legend.position = "top")
+```
+
+## ROC curves
+
+::: columns
+::: {.column width="50%"}
+For an ROC (receiver operator characteristic) curve, we plot
+
+- the false positive rate (1 - specificity) on the x-axis
+- the true positive rate (sensitivity) on the y-axis
+
+with sensitivity and specificity calculated at all possible thresholds.
+:::
+
+::: {.column width="50%"}
+```{r roc-curve-1}
+#| echo: false
+#| fig-width: 4
+#| fig-height: 4
+#| out.width: 100%
+
+p_roc <- augment(forested_fit, new_data = forested_train) %>% 
+  roc_curve(truth = forested, .pred_Yes) %>%
+  autoplot()
+p_roc
+```
+:::
+:::
+
+:::notes
+ROC curves are insensitive to class imbalance.
+:::
+
+## ROC curves
+
+::: columns
+::: {.column width="50%"}
+We can use the area under the ROC curve as a classification metric: 
+
+- ROC AUC = 1 💯 
+- ROC AUC = 1/2 😢
+:::
+
+::: {.column width="50%"}
+```{r roc-curve-2}
+#| echo: false
+#| fig-width: 4
+#| fig-height: 4
+#| out.width: 100%
+p_roc
+```
+:::
+:::
+
+## ROC curves `r hexes("yardstick")`
+
+```{r roc-auc}
+# Assumes _first_ factor level is event; there are options to change that
+augment(forested_fit, new_data = forested_train) %>% 
+  roc_curve(truth = forested, .pred_Yes) %>%
+  slice(1, 20, 50)
+
+augment(forested_fit, new_data = forested_train) %>% 
+  roc_auc(truth = forested, .pred_Yes)
+```
+
+## ROC curve plot `r hexes("yardstick")`
+
+```{r roc-curve-code}
+#| fig-width: 4
+#| fig-height: 4
+#| out.width: 100%
+#| output-location: "column"
+
+augment(forested_fit, 
+        new_data = forested_train) %>% 
+  roc_curve(truth = forested, 
+            .pred_Yes) %>%
+  autoplot()
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Compute and plot an ROC curve for your current model.*
+
+*What data are being used for this ROC curve plot?*
+
+```{r ex-roc-curve}
+#| echo: false
+countdown::countdown(minutes = 5, id = "roc-curve")
+```
+
+## Brier score
+
+What if we don't turn predicted probabilities into class predictions?
+
+. . .
+
+The Brier score is analogous to the mean squared error in regression models:
+
+$$
+Brier_{class} = \frac{1}{N}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
+$$
+
+## Brier score  {.annotation}
+
+```{r brier}
+augment(forested_fit, new_data = forested_train) %>% 
+  brier_class(truth = forested, .pred_Yes) 
+```
+
+. . .
+
+Smaller values are better, for binary classification the "bad model threshold" is about 0.25.
+
+
+## Separation vs calibration
+
+::: columns
+::: {.column width="50%"}
+The ROC captures separation.
+```{r separation-forested}
+#| echo: false
+#| fig-height: 4
+#| fig-width: 5
+#| out-width: 100%
+augment(forested_fit, new_data = forested_train) %>% 
+  ggplot(aes(.pred_Yes, col = forested, fill = forested)) + 
+  stat_density(alpha = 1 / 4, trim = TRUE, adjust = 1.2) + 
+  lims(x = 0:1) +
+  labs(x = "Predicted probability of forested") +
+  theme(legend.position = "top")
+```
+:::
+::: {.column width="50%"}
+The Brier score captures calibration.
+```{r calibration-forested}
+#| echo: false
+#| fig-height: 4
+#| fig-width: 5
+#| out-width: 100%
+library(probably)
+
+augment(forested_fit, new_data = forested_train) %>% 
+  cal_plot_breaks(forested, .pred_Yes, num_breaks = 30)
+```
+:::
+:::
+
+::: notes
+- Good separation: the densities don't overlap.
+- Good calibration: the calibration line follows the diagonal.
+
+Calibration plot: We bin observations according to predicted probability. In the bin for 20%-30% predicted prob, we should see an event rate of ~25% if the model is well-calibrated.
+:::
+
+##  {background-iframe="https://yardstick.tidymodels.org/reference/index.html"}
+
+::: footer
+:::
+
+# ⚠️ DANGERS OF OVERFITTING ⚠️
+
+## Dangers of overfitting  {.annotation}
+
+![](https://raw.githubusercontent.com/topepo/2022-nyr-workshop/main/images/tuning-overfitting-train-1.svg)
+
+## Dangers of overfitting ⚠️
+
+![](https://raw.githubusercontent.com/topepo/2022-nyr-workshop/main/images/tuning-overfitting-test-1.svg)
+
+## Dangers of overfitting ⚠️ `r hexes("yardstick")`
+
+```{r augment-train}
+forested_fit %>%
+  augment(forested_train)
+```
+
+We call this "resubstitution" or "repredicting the training set"
+
+## Dangers of overfitting ⚠️ `r hexes("yardstick")`
+
+```{r augment-acc}
+forested_fit %>%
+  augment(forested_train) %>%
+  accuracy(forested, .pred_class)
+```
+
+We call this a "resubstitution estimate"
+
+## Dangers of overfitting ⚠️ `r hexes("yardstick")`
+
+::: columns
+::: {.column width="50%"}
+```{r augment-acc-2}
+forested_fit %>%
+  augment(forested_train) %>%
+  accuracy(forested, .pred_class)
+```
+:::
+
+::: {.column width="50%"}
+:::
+:::
+
+## Dangers of overfitting ⚠️ `r hexes("yardstick")`
+
+::: columns
+::: {.column width="50%"}
+```{r augment-acc-3}
+forested_fit %>%
+  augment(forested_train) %>%
+  accuracy(forested, .pred_class)
+```
+:::
+
+::: {.column width="50%"}
+```{r augment-acc-test}
+forested_fit %>%
+  augment(forested_test) %>%
+  accuracy(forested, .pred_class)
+```
+:::
+:::
+
+. . .
+
+⚠️ Remember that we're demonstrating overfitting 
+
+. . .
+
+⚠️ Don't use the test set until the *end* of your modeling analysis
+
+
+##  {background-image="https://media.giphy.com/media/55itGuoAJiZEEen9gg/giphy.gif" background-size="70%"}
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute bottom="0" left="0" width="150" height="150"}
+
+*Use `augment()` and a metric function to compute a classification metric like `brier_class()`.*
+
+*Compute the metrics for both training and testing data to demonstrate overfitting!*
+
+*Notice the evidence of overfitting!* ⚠️
+
+```{r ex-augment-metrics}
+#| echo: false
+countdown::countdown(minutes = 5, id = "augment-metrics")
+```
+
+## Dangers of overfitting ⚠️ `r hexes("yardstick")`
+
+::: columns
+::: {.column width="50%"}
+```{r brier-class}
+forested_fit %>%
+  augment(forested_train) %>%
+  brier_class(forested, .pred_Yes)
+```
+:::
+
+::: {.column width="50%"}
+```{r brier-class-2}
+forested_fit %>%
+  augment(forested_test) %>%
+  brier_class(forested, .pred_Yes)
+```
+:::
+:::
+
+. . .
+
+What if we want to compare more models?
+
+. . .
+
+And/or more model configurations?
+
+. . .
+
+And we want to understand if these are important differences?
+
+# The testing data are precious 💎
+
+# How can we use the *training* data to compare and evaluate different models? 🤔
+
+##  {background-color="white" background-image="https://www.tmwr.org/premade/resampling.svg" background-size="80%"}
+
+## Cross-validation
+
+![](https://www.tmwr.org/premade/three-CV.svg)
+
+## Cross-validation
+
+![](https://www.tmwr.org/premade/three-CV-iter.svg)
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*If we use 10 folds, what percent of the training data*
+
+-   *ends up in analysis*
+-   *ends up in assessment*
+
+*for* **each** *fold?*
+
+![](images/forest_mountain.svg){width="200"}
+
+```{r ex-percent-in-folds}
+#| echo: false
+countdown::countdown(minutes = 3, id = "percent-in-folds")
+```
+
+## Cross-validation `r hexes("rsample")`
+
+```{r vfold-cv}
+vfold_cv(forested_train) # v = 10 is default
+```
+
+## Cross-validation `r hexes("rsample")`
+
+What is in this?
+
+```{r forested-splits}
+forested_folds <- vfold_cv(forested_train)
+forested_folds$splits[1:3]
+```
+
+::: notes
+Talk about a list column, storing non-atomic types in dataframe
+:::
+
+## Cross-validation `r hexes("rsample")`
+
+```{r vfold-cv-v}
+vfold_cv(forested_train, v = 5)
+```
+
+## Cross-validation `r hexes("rsample")`
+
+We'll use this setup:
+
+```{r forested-folds}
+set.seed(123)
+forested_folds <- vfold_cv(forested_train, v = 10)
+forested_folds
+```
+
+. . .
+
+Set the seed when creating resamples
+
+# We are equipped with metrics and resamples!
+
+## Fit our model to the resamples
+
+```{r fit-resamples}
+forested_res <- fit_resamples(forested_wflow, forested_folds)
+forested_res
+```
+
+## Evaluating model performance `r hexes("tune")`
+
+```{r collect-metrics}
+forested_res %>%
+  collect_metrics()
+```
+
+::: notes
+`collect_metrics()` is one of a suite of `collect_*()` functions that can be used to work with columns of tuning results. Most columns in a tuning result prefixed with `.` have a corresponding `collect_*()` function with options for common summaries.
+:::
+
+. . .
+
+We can reliably measure performance using only the **training** data 🎉
+
+## Comparing metrics `r hexes("yardstick")`
+
+How do the metrics from resampling compare to the metrics from training and testing?
+
+```{r calc-roc-auc}
+#| echo: false
+forested_training_roc_auc <-
+  forested_fit %>%
+  augment(forested_train) %>%
+  roc_auc(forested, .pred_Yes) %>%
+  pull(.estimate) %>%
+  round(digits = 2)
+
+forested_testing_roc_auc <-
+  forested_fit %>%
+  augment(forested_test) %>%
+  roc_auc(forested, .pred_Yes) %>%
+  pull(.estimate) %>%
+  round(digits = 2)
+```
+
+::: columns
+::: {.column width="50%"}
+```{r collect-metrics-2}
+forested_res %>%
+  collect_metrics() %>% 
+  select(.metric, mean, n)
+```
+:::
+
+::: {.column width="50%"}
+The ROC AUC previously was
+
+- `r forested_training_roc_auc` for the training set
+- `r forested_testing_roc_auc` for test set
+:::
+:::
+
+. . .
+
+Remember that:
+
+⚠️ the training set gives you overly optimistic metrics
+
+⚠️ the test set is precious
+
+## Evaluating model performance `r hexes("tune")`
+
+```{r save-predictions}
+# Save the assessment set results
+ctrl_forested <- control_resamples(save_pred = TRUE)
+forested_res <- fit_resamples(forested_wflow, forested_folds, control = ctrl_forested)
+
+forested_res
+```
+
+## Evaluating model performance `r hexes("tune")`
+
+```{r collect-predictions}
+# Save the assessment set results
+forested_preds <- collect_predictions(forested_res)
+forested_preds
+```
+
+## Evaluating model performance `r hexes("tune")`
+
+```{r forested-metrics-by-id}
+forested_preds %>% 
+  group_by(id) %>%
+  forested_metrics(truth = forested, estimate = .pred_class)
+```
+
+## Where are the fitted models? `r hexes("tune")`  {.annotation}
+
+```{r forested-res}
+forested_res
+```
+
+. . .
+
+🗑️
+
+# Alternate resampling schemes
+
+## Bootstrapping
+
+![](https://www.tmwr.org/premade/bootstraps.svg)
+
+## Bootstrapping `r hexes("rsample")`
+
+```{r bootstraps}
+set.seed(3214)
+bootstraps(forested_train)
+```
+
+##  {background-iframe="https://rsample.tidymodels.org/reference/index.html"}
+
+::: footer
+:::
+
+## The whole game - status update
+
+```{r diagram-resamples, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-transparent-resamples.jpg")
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Create:*
+
+-   *Monte Carlo Cross-Validation sets*
+-   *validation set*
+
+(use the reference guide to find the functions)
+
+*Don't forget to set a seed when you resample!*
+
+```{r ex-try-rsample}
+#| echo: false
+countdown::countdown(minutes = 5, id = "try-rsample")
+```
+
+## Monte Carlo Cross-Validation `r hexes("rsample")`
+
+```{r mc-cv}
+set.seed(322)
+mc_cv(forested_train, times = 10)
+```
+
+## Validation set `r hexes("rsample")`
+
+```{r validation-split}
+set.seed(853)
+forested_val_split <- initial_validation_split(forested)
+validation_set(forested_val_split)
+```
+
+. . .
+
+A validation set is just another type of resample
+
+# Decision tree 🌳
+
+# Random forest 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌵🌴🌲🌳🌴🌵🌳🌴🌳
+
+## Random forest 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵
+
+- Ensemble many decision tree models
+
+- All the trees vote! 🗳️
+
+- Bootstrap aggregating + random predictor sampling
+
+. . .
+
+- Often works well without tuning hyperparameters (more on this later!), as long as there are enough trees
+
+## Create a random forest model `r hexes("parsnip")`
+
+```{r rf-spec}
+rf_spec <- rand_forest(trees = 1000, mode = "classification")
+rf_spec
+```
+
+## Create a random forest model `r hexes("workflows")`
+
+```{r rf-wflow}
+rf_wflow <- workflow(forested ~ ., rf_spec)
+rf_wflow
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Use `fit_resamples()` and `rf_wflow` to:*
+
+-   *keep predictions*
+-   *compute metrics*
+
+```{r ex-try-fit-resamples}
+#| echo: false
+countdown::countdown(minutes = 8, id = "try-fit-resamples")
+```
+
+## Evaluating model performance `r hexes("tune")`
+
+```{r collect-metrics-rf}
+ctrl_forested <- control_resamples(save_pred = TRUE)
+
+# Random forest uses random numbers so set the seed first
+
+set.seed(2)
+rf_res <- fit_resamples(rf_wflow, forested_folds, control = ctrl_forested)
+collect_metrics(rf_res)
+```
+
+## The whole game - status update
+
+```{r diagram-select, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-transparent-select.jpg")
+```
+
+## The final fit `r hexes("tune")` 
+
+Suppose that we are happy with our random forest model.
+
+Let's fit the model on the training set and verify our performance using the test set.
+
+. . .
+
+We've shown you `fit()` and `predict()` (+ `augment()`) but there is a shortcut:
+
+```{r final-fit}
+# forested_split has train + test info
+final_fit <- last_fit(rf_wflow, forested_split) 
+
+final_fit
+```
+
+## What is in `final_fit`? `r hexes("tune")`
+
+```{r collect-metrics-final-fit}
+collect_metrics(final_fit)
+```
+
+. . .
+
+These are metrics computed with the **test** set
+
+## What is in `final_fit`? `r hexes("tune")`
+
+```{r collect-predictions-final-fit}
+collect_predictions(final_fit)
+```
+
+## What is in `final_fit`? `r hexes("tune")`
+
+```{r extract-workflow}
+extract_workflow(final_fit)
+```
+
+. . .
+
+Use this for **prediction** on new data, like for deploying
+
+## The whole game
+
+```{r diagram-final-performance, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-final-performance.jpg")
+```

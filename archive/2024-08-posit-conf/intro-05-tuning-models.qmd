@@ -1,0 +1,143 @@
+---
+title: "5 - Tuning models"
+subtitle: "Introduction to tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+---
+
+```{r}
+#| label: setup
+#| include: false
+#| file: setup.R
+```
+
+```{r setup-previous}
+#| echo: false
+library(tidymodels)
+library(forested)
+
+set.seed(123)
+forested_split <- initial_split(forested, prop = 0.8)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
+
+set.seed(123)
+forested_folds <- vfold_cv(forested_train, v = 10)
+```
+
+## Tuning parameters
+
+Some model or preprocessing parameters cannot be estimated directly from the data.
+
+. . .
+
+Some examples:
+
+- Tree depth in decision trees
+- Number of neighbors in a K-nearest neighbor model
+
+## Optimize tuning parameters
+
+- Try different values and measure their performance.
+
+. . .
+
+- Find good values for these parameters.
+
+. . .
+
+- Once the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set.
+
+## Optimize tuning parameters
+
+The main two strategies for optimization are:
+
+. . .
+
+-   **Grid search** 💠 which tests a pre-defined set of candidate values
+
+-   **Iterative search** 🌀 which suggests/estimates new values of candidate parameters to evaluate
+
+## Specifying tuning parameters
+
+Let's take our previous random forest workflow and tag for tuning the minimum number of data points in each node:
+
+```{r}
+#| label: tag-for-tuning
+#| code-line-numbers: "1|"
+
+rf_spec <- rand_forest(min_n = tune()) %>% 
+  set_mode("classification")
+
+rf_wflow <- workflow(forested ~ ., rf_spec)
+rf_wflow
+```
+
+## Try out multiple values
+
+`tune_grid()` works similar to `fit_resamples()` but covers multiple parameter values:
+
+```{r}
+#| label: rf-tune_grid
+#| code-line-numbers: "2|3-4|5|"
+
+set.seed(22)
+rf_res <- tune_grid(
+  rf_wflow,
+  forested_folds,
+  grid = 5
+)
+```
+
+## Compare results
+
+Inspecting results and selecting the best-performing hyperparameter(s):
+
+```{r}
+#| label: rf-results
+
+show_best(rf_res)
+
+best_parameter <- select_best(rf_res)
+best_parameter
+```
+
+`collect_metrics()` and `autoplot()` are also available.
+
+## The final fit
+
+```{r}
+#| label: rf-finalize
+
+rf_wflow <- finalize_workflow(rf_wflow, best_parameter)
+
+final_fit <- last_fit(rf_wflow, forested_split) 
+
+collect_metrics(final_fit)
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Modify your model workflow to tune one or more parameters.*
+
+*Use grid search to find the best parameter(s).*
+
+```{r ex-tune-grid}
+#| echo: false
+countdown::countdown(minutes = 5, id = "tune-grid")
+```

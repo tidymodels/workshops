@@ -1,0 +1,662 @@
+---
+title: "3 - What makes a model?"
+subtitle: "Introduction to tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*How do you fit a linear model in R?*
+
+*How many different ways can you think of?*
+
+```{r ex-how-to-fit-linear-model}
+#| echo: false
+countdown::countdown(minutes = 3, id = "how-to-fit-linear-model")
+```
+
+. . .
+
+-   `lm` for linear model
+
+-   `glmnet` for regularized regression
+
+-   `keras` for regression using TensorFlow
+
+-   `stan` for Bayesian regression
+
+-   `spark` for large data sets
+
+-   `brulee` for regression using torch
+
+## To specify a model `r hexes("parsnip")`
+
+. . .
+
+::: columns
+::: {.column width="60%"}
+-   Choose a [model]{.underline}
+-   Specify an engine
+-   Set the mode
+:::
+
+::: {.column width="40%"}
+<br><br><br>
+![](images/forest_mountain.svg){.absolute height="300"}
+:::
+:::
+
+## To specify a model `r hexes("parsnip")`
+
+```{r setup-previous}
+#| echo: false
+library(tidymodels)
+library(forested)
+
+set.seed(123)
+
+forested_split <- initial_split(forested, prop = 0.8)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
+```
+
+```{r logistic-reg}
+logistic_reg()
+```
+
+
+:::notes
+Models have default engines
+:::
+
+## To specify a model `r hexes("parsnip")`
+
+::: columns
+::: {.column width="60%"}
+-   Choose a model
+-   Specify an [engine]{.underline}
+-   Set the mode
+:::
+
+::: {.column width="40%"}
+<br><br><br>
+![](images/forest_mountain.svg){.absolute height="300"}
+:::
+:::
+
+## To specify a model `r hexes("parsnip")`
+
+```{r logistic-reg-glmnet}
+logistic_reg() %>%
+  set_engine("glmnet")
+```
+
+## To specify a model `r hexes("parsnip")`
+
+```{r logistic-reg-stan}
+logistic_reg() %>%
+  set_engine("stan")
+```
+
+## To specify a model `r hexes("parsnip")`
+
+::: columns
+::: {.column width="60%"}
+-   Choose a model
+-   Specify an engine
+-   Set the [mode]{.underline}
+:::
+
+::: {.column width="40%"}
+<br><br><br>
+![](images/forest_mountain.svg){.absolute height="300"}
+:::
+:::
+
+
+## To specify a model `r hexes("parsnip")`
+
+```{r decision-tree}
+decision_tree()
+```
+
+:::notes
+Some models have a default mode
+:::
+
+## To specify a model `r hexes("parsnip")`
+
+```{r decision-tree-classification}
+decision_tree() %>% 
+  set_mode("classification")
+```
+
+. . .
+
+<br></br>
+
+::: r-fit-text
+All available models are listed at <https://www.tidymodels.org/find/parsnip/> 
+:::
+
+##  {background-iframe="https://www.tidymodels.org/find/parsnip/"}
+
+::: footer
+:::
+
+## To specify a model `r hexes("parsnip")`
+
+::: columns
+::: {.column width="60%"}
+-   Choose a [model]{.underline}
+-   Specify an [engine]{.underline}
+-   Set the [mode]{.underline}
+:::
+
+::: {.column width="40%"}
+<br><br><br>
+![](images/forest_mountain.svg){.absolute height="300"}
+:::
+:::
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Run the `tree_spec` chunk in your `.qmd`.*
+
+*Edit this code to use a logistic regression model.*<br></br>
+
+::: r-fit-text
+All available models are listed at <https://www.tidymodels.org/find/parsnip/>
+:::
+
+<br></br>
+
+*Extension/Challenge: Edit this code to use a different model. For example, try using a conditional inference tree as implemented in the partykit package by changing the engine - or try an entirely different model type!*
+
+```{r ex-explore-tree-spec}
+#| echo: false
+countdown::countdown(minutes = 5, id = "explore-tree-spec")
+```
+
+
+## Models we'll be using today
+
+* Logistic regression
+* Decision trees
+
+```{r sim-model-viz}
+#| echo: false
+
+set.seed(1)
+dat <- sim_logistic(500, ~ .1 + 2 * A)
+dat$bin <- cut(dat$A, breaks = c(seq(-3, 3, by = 1/2)), include.lowest = TRUE)
+bin_midpoints <- data.frame(A = seq(-3, 3, by = 1/2) + 0.25)
+
+rates <- 
+  dat %>% 
+  nest(.by = bin) %>% 
+  mutate(
+    probs = map(data, ~ binom.test(sum(.x$class == "one"), nrow(.x))),
+    probs = map(probs, ~ tidy(.x))
+  ) %>% 
+  select(-data) %>% 
+  unnest(cols = probs) %>% 
+  arrange(bin) %>% 
+  mutate(A = seq(-3, 3, by = 1/2) + 0.25) 
+
+plot_rates <- left_join(rates, bin_midpoints, by = join_by(A)) %>% 
+  filter(-2.5 < A, A < 3) %>% 
+  ggplot() + 
+  geom_point(aes(A, estimate)) +
+  geom_errorbar(aes(A, estimate, ymin = conf.low, ymax = conf.high), width = .25)  +
+  xlim(c(-3, 3.5)) +
+  theme_bw(base_size = 18)
+```
+
+## Logistic regression
+
+::: columns
+::: {.column width="60%"}
+```{r plot-rates}
+#| echo: false
+#| fig.width: 8
+#| fig.height: 7
+
+plot_rates
+```
+:::
+
+::: {.column width="40%"}
+:::
+:::
+
+## Logistic regression
+
+::: columns
+::: {.column width="60%"}
+```{r plot-logistic-reg}
+#| echo: false
+#| fig.width: 8
+#| fig.height: 7
+
+logistic_preds <- logistic_reg() %>% 
+  fit(class ~ A, data = dat) %>% 
+  augment(new_data = bin_midpoints) 
+
+plot_rates +
+  geom_line(aes(A, .pred_one, color = I(test_color)), linewidth = 2, alpha = 0.8, data = logistic_preds)
+```
+:::
+
+::: {.column width="40%"}
+:::
+:::
+
+## Logistic regression
+
+::: columns
+::: {.column width="60%"}
+```{r plot-logistic-reg-2}
+#| echo: false
+#| fig.width: 8
+#| fig.height: 7
+
+plot_rates +
+  geom_line(aes(A, .pred_one, col = I(test_color)), linewidth = 2, alpha = 0.8, data = logistic_preds)
+```
+:::
+
+::: {.column width="40%"}
+
+-   Logit of outcome probability modeled as linear combination of predictors:
+
+$log(\frac{p}{1 - p}) = \beta_0 + \beta_1\cdot \text{A}$
+
+-   Find a sigmoid line that separates the two classes
+
+:::
+:::
+
+## Decision trees
+
+::: columns
+::: {.column width="50%"}
+```{r tree-fit}
+#| echo: false
+#| fig.width: 8
+#| fig.height: 7
+
+tree_fit <- decision_tree(mode = "classification") %>% 
+  fit(class ~ A, data = mutate(dat, class = forcats::fct_rev(class)))
+
+tree_preds <- augment(tree_fit, new_data = bin_midpoints)
+```
+
+```{r plot-tree-fit}
+#| echo: false
+#| fig.width: 4
+#| fig.height: 3.5
+#| fig-align: center
+
+library(rpart.plot)
+tree_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+
+:::
+
+::: {.column width="50%"}
+:::
+:::
+
+## Decision trees
+
+::: columns
+::: {.column width="50%"}
+```{r plot-tree-fit-2}
+#| echo: false
+#| fig.width: 4
+#| fig.height: 3.5
+#| fig-align: center
+
+library(rpart.plot)
+tree_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+:::
+
+::: {.column width="50%"}
+-   Series of splits or if/then statements based on predictors
+
+-   First the tree *grows* until some condition is met (maximum depth, no more data)
+
+-   Then the tree is *pruned* to reduce its complexity
+:::
+:::
+
+## Decision trees
+
+::: columns
+::: {.column width="50%"}
+```{r plot-tree-fit-3}
+#| echo: false
+#| fig.width: 4
+#| fig.height: 3.5
+#| fig-align: center
+
+library(rpart.plot)
+tree_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+:::
+
+::: {.column width="50%"}
+```{r plot-tree-preds}
+#| echo: false
+#| fig.width: 8
+#| fig.height: 7
+
+plot_rates +
+  geom_step(aes(A, .pred_one, col = I(test_color)), linewidth = 2, alpha = 0.8, data = tree_preds)
+```
+:::
+:::
+
+## All models are wrong, but some are useful!
+
+::: columns
+::: {.column width="50%"}
+### Logistic regression
+```{r plot-logistic-reg-3}
+#| echo: false
+#| fig.width: 7
+#| fig.height: 6
+
+plot_rates +
+  geom_line(aes(A, .pred_one, col = I(test_color)), linewidth = 2, alpha = 0.8, data = logistic_preds)
+```
+:::
+
+::: {.column width="50%"}
+### Decision trees
+```{r plot-tree-preds-2}
+#| echo: false
+#| fig.width: 7
+#| fig.height: 6
+
+plot_rates +
+  geom_step(aes(A, .pred_one, col = I(test_color)), linewidth = 2, alpha = 0.8, data = tree_preds)
+```
+:::
+:::
+
+# A model workflow
+
+## Workflows bind preprocessors and models
+
+```{r good-workflow}
+#| echo: false
+#| out-width: '70%'
+#| fig-align: 'center'
+knitr::include_graphics("images/good_workflow.png")
+```
+
+:::notes
+Explain that PCA that is a preprocessor / dimensionality reduction, used to decorrelate data
+:::
+
+
+## What is wrong with this? {.annotation}
+
+```{r bad-workflow}
+#| echo: false
+#| out-width: '70%'
+#| fig-align: 'center'
+knitr::include_graphics("images/bad_workflow.png")
+```
+
+## Why a `workflow()`? `r hexes("workflows")`
+
+. . .
+
+-   Workflows handle new data better than base R tools in terms of new factor levels
+
+. . .
+
+-   You can use other preprocessors besides formulas (more on feature engineering in Advanced tidymodels!)
+
+. . .
+
+-   They can help organize your work when working with multiple models
+
+. . .
+
+-   [Most importantly]{.underline}, a workflow captures the entire modeling process: `fit()` and `predict()` apply to the preprocessing steps in addition to the actual model fit
+
+::: notes
+Two ways workflows handle levels better than base R:
+
+-   Enforces that new levels are not allowed at prediction time (this is an optional check that can be turned off)
+
+-   Restores missing levels that were present at fit time, but happen to be missing at prediction time (like, if your "new" data just doesn't have an instance of that level)
+:::
+
+## A model workflow `r hexes("parsnip", "workflows")`
+
+```{r tree-spec}
+tree_spec <-
+  decision_tree() %>% 
+  set_mode("classification")
+
+tree_spec %>% 
+  fit(forested ~ ., data = forested_train) 
+```
+
+## A model workflow `r hexes("parsnip", "workflows")`
+
+```{r tree-wflow}
+tree_spec <-
+  decision_tree() %>% 
+  set_mode("classification")
+
+workflow() %>%
+  add_formula(forested ~ .) %>%
+  add_model(tree_spec) %>%
+  fit(data = forested_train) 
+```
+
+## A model workflow `r hexes("parsnip", "workflows")`
+
+```{r tree-wflow-fit}
+tree_spec <-
+  decision_tree() %>% 
+  set_mode("classification")
+
+workflow(forested ~ ., tree_spec) %>% 
+  fit(data = forested_train) 
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Run the `tree_wflow` chunk in your `.qmd`.*
+
+*Edit this code to make a workflow with your own model of choice.*
+
+<br></br>
+
+*Extension/Challenge: Other than formulas, what kinds of preprocessors are supported?*
+
+```{r ex-explore-tree-workflow}
+#| echo: false
+countdown::countdown(minutes = 5, id = "explore-tree-workflow")
+```
+
+## Predict with your model `r hexes("parsnip", "workflows")`
+
+How do you use your new `tree_fit` model?
+
+```{r tree-wflow-fit-2}
+tree_spec <-
+  decision_tree() %>% 
+  set_mode("classification")
+
+tree_fit <-
+  workflow(forested ~ ., tree_spec) %>% 
+  fit(data = forested_train) 
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Run:*
+
+`predict(tree_fit, new_data = forested_test)`
+
+*What do you notice about the structure of the result?*
+
+```{r ex-predict-tree-fit}
+#| echo: false
+countdown::countdown(minutes = 3, id = "predict-tree-fit")
+```
+
+## Your turn
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Run:*
+
+`augment(tree_fit, new_data = forested_test)`
+
+*How does the output compare to the output from `predict()`?*
+
+```{r ex-augment-tree-fit}
+#| echo: false
+countdown::countdown(minutes = 3, id = "augment-tree-fit")
+```
+
+# The tidymodels prediction guarantee!
+
+. . .
+
+-   The predictions will always be inside a **tibble**
+-   The column names and types are **unsurprising** and **predictable**
+-   The number of rows in `new_data` and the output **are the same**
+
+## Understand your model `r hexes("parsnip", "workflows")`
+
+How do you **understand** your new `tree_fit` model?
+
+```{r plot-tree-fit-4}
+#| echo: false
+#| fig-align: center
+library(rpart.plot)
+tree_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+
+## Understand your model `r hexes("parsnip", "workflows")`
+
+How do you **understand** your new `tree_fit` model?
+
+```{r plot-tree-fit-5}
+#| eval: false
+library(rpart.plot)
+tree_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+
+You can `extract_*()` several components of your fitted workflow.
+
+. . .
+
+⚠️ *Never `predict()` with any extracted components!*
+
+::: notes
+`roundint = FALSE` is only to quiet a warning
+:::
+
+
+## Understand your model `r hexes("parsnip", "workflows")`
+
+How do you **understand** your new `tree_fit` model?
+
+. . .
+
+You can use your fitted workflow for model and/or prediction explanations:
+
+. . .
+
+-   overall variable importance, such as with the [vip](https://koalaverse.github.io/vip/) package
+
+. . .
+
+-   flexible model explainers, such as with the [DALEXtra](https://dalex.drwhy.ai/) package
+
+. . .
+
+Learn more at <https://www.tmwr.org/explain.html>
+
+##  {background-iframe="https://hardhat.tidymodels.org/reference/hardhat-extract.html"}
+
+::: footer
+:::
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+<br>
+
+*Extract the model engine object from your fitted workflow and check it out.*
+
+```{r ex-extract-methods}
+#| echo: false
+countdown::countdown(minutes = 5, id = "extract-methods")
+```
+
+:::notes
+Afterward, ask what kind of object people got from the extraction, and what they did with it (e.g. give it to `summary()`, `plot()`, `broom::tidy()` ). Live code along
+:::
+
+## The whole game - status update
+
+```{r diagram-model-1, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-transparent-model-1.jpg")
+```
+
+:::notes
+Stress that fitting a model on the entire training set was only for illustrating how to fit a model
+:::

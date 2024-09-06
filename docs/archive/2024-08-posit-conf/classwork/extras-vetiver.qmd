@@ -1,0 +1,58 @@
+---
+title: "Extras - Tuning - Classwork"
+subtitle: "Introduction to tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Setup
+
+```{r}
+library(tidymodels)
+library(forested)
+
+set.seed(123)
+forested_split <- initial_split(forested, prop = 0.8)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
+
+set.seed(123)
+forested_folds <- vfold_cv(forested_train, v = 10)
+
+tree_spec <-
+  decision_tree() %>% 
+  set_mode("classification")
+
+tree_fit <-
+  workflow(forested ~ ., tree_spec) %>% 
+  fit(data = forested_train) 
+```
+
+## Your turn
+
+Explore how you might deploy your `tree_fit` model using vetiver.
+
+```{r vetiver}
+library(vetiver)
+library(plumber)
+
+# Create a vetiver model object
+v <- vetiver_model(tree_fit, "forested")
+v
+```
+
+```{r}
+# Create a predictable Plumber API
+pr <- pr() %>%
+  vetiver_api(v)
+
+pr
+```
+
+```{r}
+#| eval: false
+# Run the API server in a new window
+pr_run(pr)
+```

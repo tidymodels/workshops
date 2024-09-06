@@ -1,0 +1,345 @@
+---
+title: "1 - Introduction"
+subtitle: "Advanced tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+::: r-fit-text
+Welcome!
+:::
+
+::: columns
+::: {.column width="50%"}
+
+<center>
+
+### <i class="fa fa-wifi"></i>
+
+Wi-Fi network name
+
+`TODO-ADD-LATER`
+
+</center>
+
+:::
+
+::: {.column width="50%"}
+
+<center>
+
+### <i class="fa fa-key"></i>
+
+Wi-Fi password
+
+`TODO-ADD-LATER`
+
+</center>
+
+:::
+:::
+
+## Venue information
+
+-   There are gender neutral bathrooms located on levels 3, 4, 5, 6 & 7
+
+-   A meditation/prayer room is located in 503  
+(Mon & Tue 7am - 7pm, and Wed 7am - 5pm)
+
+-   A lactation room is located in 509  
+(Mon & Tue 7am - 7pm, and Wed 7am - 5pm)
+
+## Workshop policies
+
+-   Please review the posit::conf code of conduct, which applies to all workshops: <https://posit.co/code-of-conduct>
+
+-   CoC site has info on how to report a problem (in person, email, phone)
+
+-   Please do not photograph people wearing red lanyards
+
+## Who are you?
+
+-   You can use the magrittr `%>%` or base R `|>` pipe
+
+-   You are familiar with functions from dplyr, tidyr, ggplot2
+
+-   You have exposure to basic statistical concepts
+
+-   You do **not** need intermediate or expert familiarity with modeling or ML
+
+-   You have used some tidymodels packages
+ 
+-   You have some experience with evaluating statistical models using resampling techniques 
+
+## Who are tidymodels?
+
+-   Simon Couch
+-   Hannah Frick
+-   Emil Hvitfeldt
+-   Max Kuhn
+
+. . .
+
+Many thanks to Davis Vaughan, Julia Silge, David Robinson, Julie Jung, Alison Hill, and Desirée De Leon for their role in creating these materials!
+
+## Asking for help
+
+. . .
+
+🟪 "I'm stuck and need help!"
+
+. . .
+
+🟩 "I finished the exercise"
+
+
+## Discord `r fontawesome::fa("discord")`
+
+-   [pos.it/conf-event-portal](http://pos.it/conf-event-portal) (login)
+-   Click on "Join Discord, the virtual networking platform!"
+-   Browse Channels -> `#workshop-tidymodels-advanced`
+
+## `r emo::ji("eyes")` {.annotation}
+
+![](images/pointing.svg){.absolute top="0" right="0"}
+
+## `r emo::ji("eyes")`
+
+![](images/pointing_down.png){.absolute top="120" left="200" width="40%" }
+
+::: footer
+<span style="color:#CA225E;font-size:1.2rem;"><https://workshops.tidymodels.org></span>
+:::
+
+## Tentative plan for this workshop
+
+- Feature engineering with recipes
+- Model optimization by tuning
+  - Grid search
+  - Racing
+  - Iterative methods
+- Extras (time permitting)
+  - Effect encodings
+  - A case study
+
+##  {.center}
+
+### Introduce yourself to your neighbors 👋
+
+<br></br>
+
+### <i class="fa fa-cloud"></i> Log in to Posit Cloud (free): TODO-ADD-LATER
+
+## Let's install some packages
+
+If you are using your own laptop instead of Posit Cloud:
+
+```{r load-pkgs}
+#| eval: false
+
+# Install the packages for the workshop
+pkgs <- 
+  c("bonsai", "Cubist", "doParallel", "earth", "embed", "finetune", 
+    "forested", "lightgbm", "lme4", "parallelly", "plumber", "probably", 
+    "ranger", "rpart", "rpart.plot", "rules", "splines2", "stacks", 
+    "text2vec", "textrecipes", "tidymodels", "vetiver")
+
+install.packages(pkgs)
+```
+
+Also, you should install the newest version of the dials package (version 1.3.0). To check this, you can run: 
+
+```{r}
+#| label: check-dials
+#| eval: false
+#| echo: true
+rlang::check_installed("dials", version = "1.3.0")
+```
+
+## Hotel Data `r hexes("tidymodels", "dplyr")`
+
+We'll use [data on hotels](https://www.sciencedirect.com/science/article/pii/S2352340918315191) to predict the cost of a room. 
+
+The [data](https://modeldata.tidymodels.org/reference/hotel_rates.html) are in the modeldata package. We'll sample down the data and refactor some columns: 
+
+:::: {.columns}
+
+::: {.column width="40%"}
+
+```{r}
+#| label: tune-startup
+library(tidymodels)
+
+# Max's usual settings: 
+tidymodels_prefer()
+theme_set(theme_bw())
+options(
+  pillar.advice = FALSE, 
+  pillar.min_title_chars = Inf
+)
+```
+
+:::
+
+::: {.column width="60%"}
+
+```{r}
+#| label: data-import
+data(hotel_rates)
+set.seed(295)
+hotel_rates <- 
+  hotel_rates %>% 
+  sample_n(5000) %>% 
+  arrange(arrival_date) %>% 
+  select(-arrival_date) %>% 
+  mutate(
+    company = factor(as.character(company)),
+    country = factor(as.character(country)),
+    agent = factor(as.character(agent))
+  )
+```
+
+
+:::
+
+::::
+
+## Hotel date columns
+
+```{r}
+#| labels: hotel-names
+
+names(hotel_rates)
+```
+
+
+## Data splitting strategy
+
+```{r}
+#| label: spending-diagram
+#| fig-align: "center"
+#| out-width: "20%"
+#| echo: false
+
+knitr::include_graphics("images/initial-split.svg")
+```
+
+
+## Data Spending `r hexes("rsample")`
+
+Let's split the data into a training set (75%) and testing set (25%) using stratification:
+
+```{r}
+#| label: hotel-split
+set.seed(4028)
+hotel_split <- initial_split(hotel_rates, strata = avg_price_per_room)
+
+hotel_train <- training(hotel_split)
+hotel_test <- testing(hotel_split)
+```
+
+
+
+## Your turn {transition="slide-in"}
+
+Let's take some time and investigate the _training data_. The outcome is `avg_price_per_room`. 
+
+Are there any interesting characteristics of the data?
+
+```{r}
+#| label: hotel-investigation-exercise
+#| echo: false
+countdown::countdown(minutes = 10, id = "hotel-investigation")
+```
+
+## Our versions
+
+```{r pkg-list, echo = FALSE}
+deps <- 
+  c("bonsai", "Cubist", "doParallel", "earth", "embed", "finetune", 
+    "lightgbm", "lme4", "parallelly", "plumber", "probably", "rules", "splines2", 
+    "stacks", "text2vec", "textrecipes", "tidymodels", "vetiver")
+
+loaded <- purrr::map(deps, ~ library(.x, character.only = TRUE))
+excl <- c("iterators", "emo", "countdown", "stats", "graphics", 
+          "grDevices", "utils", "datasets", "methods", "base", "forcats", 
+          "infer", "foreach", "Matrix", "R6", "parallel", "devtools", "usethis")
+loaded <- loaded[[length(loaded)]]
+loaded <- loaded[!(loaded %in% excl)]
+pkgs <- 
+  sessioninfo::package_info(loaded, dependencies = FALSE) %>% 
+  select(-date)
+df <- tibble::tibble(
+  package = pkgs$package,
+  version = pkgs$ondiskversion
+)
+
+ids <- split(
+  seq_len(nrow(df)), 
+  ceiling(seq_len(nrow(df)) / ceiling(nrow(df) / 4))
+)
+
+column1 <- df %>%
+  dplyr::slice(ids[[1]])
+
+column2 <- df %>%
+  dplyr::slice(ids[[2]])
+
+column3 <- df %>%
+  dplyr::slice(ids[[3]])
+
+column4 <- df %>%
+  dplyr::slice(ids[[4]])
+
+quarto_info <- paste0("Quarto (", system("quarto --version", intern = TRUE), ")")
+```
+
+`r R.version.string`, `r quarto_info`
+
+::: {.columns style="font-size:0.7em;"}
+::: {.column width="25%"}
+```{r}
+#| echo: false
+knitr::kable(column1)
+```
+:::
+
+::: {.column width="25%"}
+```{r}
+#| echo: false
+knitr::kable(column2)
+```
+:::
+
+::: {.column width="25%"}
+```{r}
+#| echo: false
+knitr::kable(column3)
+```
+:::
+
+::: {.column width="25%"}
+```{r}
+#| echo: false
+knitr::kable(column4)
+```
+:::
+:::
+
