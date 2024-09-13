@@ -1,0 +1,273 @@
+---
+title: "4 - Evaluating models - Classwork"
+subtitle: "Introduction to tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Setup
+
+Setup from deck 3
+
+```{r}
+library(tidymodels)
+library(forested)
+
+set.seed(123)
+forested_split <- initial_split(forested, prop = 0.8)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
+
+# decrease cost_complexity from its default 0.01 to make a more
+# complex and performant tree. see `?decision_tree()` to learn more.
+tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
+forested_wflow <- workflow(forested ~ ., tree_spec)
+forested_fit <- fit(forested_wflow, forested_train)
+```
+
+## Metrics for model performance
+
+`conf_mat()` can be used to see how well the model is doing at prediction
+
+```{r}
+augment(forested_fit, new_data = forested_train) %>%
+  conf_mat(truth = forested, estimate = .pred_class)
+```
+
+and it has nice plotting features
+
+```{r}
+augment(forested_fit, new_data = forested_train) %>%
+  conf_mat(truth = forested, estimate = .pred_class) %>%
+  autoplot(type = "heatmap")
+```
+
+using the same interface we can calculate metrics
+
+```{r}
+augment(forested_fit, new_data = forested_train) %>%
+  accuracy(truth = forested, estimate = .pred_class)
+```
+
+Metric sets are a way to combine multiple similar metric functions together into a new function.
+
+```{r}
+forested_metrics <- metric_set(accuracy, specificity, sensitivity)
+
+augment(forested_fit, new_data = forested_train) %>%
+  forested_metrics(truth = forested, estimate = .pred_class)
+```
+
+Metrics and metric sets work with grouped data frames!
+
+```{r}
+augment(forested_fit, new_data = forested_train) %>%
+  group_by(tree_no_tree) %>%
+  accuracy(truth = forested, estimate = .pred_class)
+```
+
+## Your turn
+
+Apply the `forested_metrics` metric set to `augment()` output grouped by `tree_no_tree`.
+
+Do any metrics differ substantially between groups?
+
+```{r}
+# Your code here!
+
+```
+
+## Your turn
+
+Compute and plot an ROC curve for your current model.
+
+What data are being used for this ROC curve plot?
+
+```{r}
+# Your code here!
+
+```
+
+## Dangers of overfitting
+
+Repredicting the training set, bad!
+
+```{r}
+forested_fit %>%
+  augment(forested_train)
+```
+
+"Resubstitution estimate" - This should be the best possible performance that you could ever achieve, but it can be very misleading!
+
+```{r}
+forested_fit %>%
+  augment(forested_train) %>%
+  accuracy(forested, .pred_class)
+```
+
+Now on the test set, see that it performs worse? This is closer to "real" performance.
+
+```{r}
+forested_fit %>%
+  augment(forested_test) %>%
+  accuracy(forested, .pred_class)
+```
+
+## Your turn
+
+Use `augment()` and and a metric function to compute a classification metric like `brier_class()`.
+
+Compute the metrics for both training and testing data to demonstrate overfitting!
+
+Notice the evidence of overfitting!
+
+```{r}
+# Your code here!
+
+# Use `augment()` and `brier_class()` with `forested_fit`
+forested_fit
+```
+
+## Your turn
+
+If we use 10 folds, what percent of the training data:
+
+- ends up in analysis?
+- ends up in assessment?
+
+for each fold
+
+## Resampling
+
+```{r}
+# v = 10 is the default
+vfold_cv(forested_train)
+```
+
+What is in a resampling result?
+
+```{r}
+forested_folds <- vfold_cv(forested_train, v = 10)
+
+# Individual splits of analysis/assessment data
+forested_folds$splits[1:3]
+```
+
+We'll use this setup:
+
+```{r}
+set.seed(123)
+forested_folds <- vfold_cv(forested_train, v = 10)
+forested_folds
+```
+
+## Evaluating model performance
+
+```{r}
+# Fit the workflow on each analysis set,
+# then compute performance on each assessment set
+forested_res <- fit_resamples(forested_wflow, forested_folds)
+forested_res
+```
+
+Aggregate metrics
+
+```{r}
+forested_res %>%
+  collect_metrics()
+```
+
+If you want to analyze the assessment set (i.e. holdout) predictions, then you need to adjust the control object and tell it to save them:
+
+```{r}
+# Save the assessment set results
+ctrl_forested <- control_resamples(save_pred = TRUE)
+
+forested_res <- fit_resamples(forested_wflow, forested_folds, control = ctrl_forested)
+
+forested_preds <- collect_predictions(forested_res)
+forested_preds
+```
+
+## Bootstrapping
+
+```{r}
+set.seed(3214)
+bootstraps(forested_train)
+```
+
+## Your turn
+
+Create:
+
+- Monte Carlo Cross-Validation sets
+- validation set
+
+(use the reference guide to find the functions)
+
+https://rsample.tidymodels.org/reference/index.html
+
+Don't forget to set a seed when you resample!
+
+```{r}
+# Your code here!
+
+```
+
+## Create a random forest model
+
+```{r}
+rf_spec <- rand_forest(trees = 1000, mode = "classification")
+rf_spec
+```
+
+```{r}
+rf_wflow <- workflow(forested ~ ., rf_spec)
+rf_wflow
+```
+
+## Your turn
+
+Use `fit_resamples()` and `rf_wflow` to:
+
+- Keep predictions
+- Compute metrics
+
+```{r}
+# Your code here!
+
+```
+
+
+## The final fit
+
+```{r}
+# `forested_split` has train + test info
+final_fit <- last_fit(rf_wflow, forested_split) 
+
+final_fit
+```
+
+Test set metrics:
+
+```{r}
+collect_metrics(final_fit)
+```
+
+Test set predictions:
+
+```{r}
+collect_predictions(final_fit)
+```
+
+```{r}
+collect_predictions(final_fit) %>%
+  ggplot(aes(.pred_class, fill = forested)) + 
+  geom_bar() 
+```
+
+```{r}
+extract_workflow(final_fit)
+```

@@ -1,0 +1,164 @@
+---
+title: "3 - What makes a model? - Classwork"
+subtitle: "Introduction to tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Setup
+
+Setup from deck 2
+
+```{r}
+library(tidymodels)
+library(forested)
+
+set.seed(123)
+forested_split <- initial_split(forested, prop = 0.8)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
+```
+
+## Your turn
+
+How do you fit a linear model in R?
+
+How many different ways can you think of?
+
+Discuss with your neighbor!
+
+## To specify a model
+
+```{r}
+# Model
+linear_reg()
+
+# Engine
+linear_reg() %>%
+  set_engine("glmnet")
+
+# Mode - Some models have a default mode, others don't
+decision_tree() %>% 
+  set_mode("regression")
+```
+
+## Your turn
+
+Edit the chunk below to use a logistic regression model.
+
+Extension/Challenge: Edit this code to use a different model. For example, try using a conditional inference tree as implemented in the partykit package by changing the engine - or try an entirely different model type!
+
+All available models are listed at <https://www.tidymodels.org/find/parsnip/>
+
+```{r tree_spec}
+tree_spec <- decision_tree() %>% 
+  set_mode("classification")
+
+tree_spec
+```
+
+## A model workflow
+
+```{r}
+tree_spec <-
+  decision_tree() %>% 
+  set_mode("classification")
+```
+
+Fit parsnip specification:
+
+```{r}
+tree_spec %>% 
+  fit(forested ~ ., data = forested_train) 
+```
+
+Fit with a workflow:
+
+```{r}
+workflow() %>%
+  add_formula(forested ~ .) %>%
+  add_model(tree_spec) %>%
+  fit(data = forested_train) 
+```
+
+"Shortcut" by specifying the preprocessor and model spec directly in the `workflow()` call:
+
+```{r}
+workflow(forested ~ ., tree_spec) %>% 
+  fit(data = forested_train) 
+```
+
+## Your turn
+
+Edit the chunk below to make a workflow with your own model of choice!
+
+Extension/Challenge: Other than formulas, what kinds of preprocessors are supported?
+
+```{r tree_wflow}
+tree_spec <-
+  decision_tree() %>% 
+  set_mode("classification")
+
+tree_wflow <- workflow() %>%
+  add_formula(forested ~ .) %>%
+  add_model(tree_spec)
+
+tree_wflow
+```
+
+## Predict with your model
+
+```{r}
+tree_fit <-
+  workflow(forested ~ ., tree_spec) %>% 
+  fit(data = forested_train) 
+```
+
+## Your turn
+
+Run:
+
+```{r}
+predict(tree_fit, new_data = forested_test)
+```
+
+What do you notice about the structure of the result?
+
+## Your turn
+
+Run:
+
+```{r}
+augment(tree_fit, new_data = forested_test)
+```
+
+How does the output compare to the output from `predict()`?
+
+## Understand your model
+
+```{r}
+library(rpart.plot)
+
+tree_fit %>%
+  extract_fit_engine() %>%
+  rpart.plot(roundint = FALSE)
+```
+
+## Your turn
+
+Try extracting the model engine object from your fitted workflow!
+
+```{r}
+### Your code here
+
+```
+
+What kind of object is it? What can you do with it?
+
+⚠️ Never `predict()` with any extracted components!
+
+You can also read the documentation for object extraction:
+https://workflows.tidymodels.org/reference/extract-workflow.html
+

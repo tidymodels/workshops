@@ -1,0 +1,76 @@
+---
+title: "5 - Tuning models - Classwork"
+subtitle: "Introduction to tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Setup
+
+Setup from deck 3
+
+```{r}
+library(tidymodels)
+library(forested)
+
+set.seed(123)
+forested_split <- initial_split(forested, prop = 0.8)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
+
+set.seed(123)
+forested_folds <- vfold_cv(forested_train, v = 10)
+```
+
+## Tag parameters for tuning
+
+```{r}
+rf_spec <- rand_forest(min_n = tune()) %>% 
+  set_mode("classification")
+
+rf_wflow <- workflow(forested ~ ., rf_spec)
+rf_wflow
+```
+
+## Grid search
+
+```{r}
+set.seed(22)
+rf_res <- tune_grid(
+  rf_wflow,
+  forested_folds,
+  grid = 5
+)
+```
+
+## Compare results
+
+```{r}
+show_best(rf_res)
+
+best_parameter <- select_best(rf_res)
+best_parameter
+```
+
+## The final fit
+
+```{r}
+rf_wflow <- finalize_workflow(rf_wflow, best_parameter)
+
+final_fit <- last_fit(rf_wflow, forested_split) 
+
+collect_metrics(final_fit)
+```
+
+## Your turn
+
+Modify your model workflow to tune one or more parameters.
+
+Use grid search to find the best parameter(s).
+
+```{r}
+# Your code here!
+
+```

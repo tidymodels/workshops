@@ -1,0 +1,56 @@
+---
+title: "Extra - Workflowsets - Classwork"
+subtitle: "Introduction to tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Setup
+
+Setup
+
+```{r}
+library(tidymodels)
+library(forested)
+
+set.seed(123)
+forested_split <- initial_split(forested, prop = 0.8)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
+
+set.seed(123)
+forested_folds <- vfold_cv(forested_train, v = 10)
+
+# decrease cost_complexity from its default 0.01 to make a more
+# complex and performant tree. see `?decision_tree()` to learn more.
+tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
+rf_spec <- rand_forest(trees = 1000, mode = "classification")
+```
+
+## Evaluate a workflow set
+
+```{r}
+wf_set <- workflow_set(list(forested ~ .), list(tree_spec, rf_spec))
+wf_set
+```
+
+```{r}
+wf_set_fit <- wf_set %>%
+  workflow_map("fit_resamples", resamples = forested_folds)
+wf_set_fit
+```
+
+Rank the sets of models by their aggregate metric performance
+
+```{r}
+wf_set_fit %>%
+  rank_results()
+```
+
+## Your turn
+
+When do you think a workflow set would be useful?
+
+Discuss with your neighbors!

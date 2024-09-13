@@ -1,0 +1,308 @@
+---
+title: "2 - Your data budget"
+subtitle: "Introduction to tidymodels"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+    fig.path: "figures/"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+##  {background-image="https://media.giphy.com/media/Lr3UeH9tYu3qJtsSUg/giphy.gif" background-size="40%"}
+
+
+## Data on forests in Washington
+
+::: columns
+::: {.column width="60%"}
+-   The U.S. Forest Service maintains ML models to predict whether a plot of land is "forested."
+-   This classification is important for all sorts of research, legislation, and land management purposes.
+-  Plots are typically remeasured every 10 years and this dataset contains the most recent measurement per plot.
+-   Type `?forested` to learn more about this dataset, including references.
+:::
+
+::: {.column width="40%"}
+![](images/forest_mountain.svg)
+:::
+
+:::
+
+::: footer
+Credit: <https://www.svgrepo.com/svg/251793/forest-mountain>
+:::
+
+## Data on forests in Washington
+
+::: columns
+::: {.column width="70%"}
+-   `N = 7,107` plots of land, one from each of 7,107 6000-acre hexagons in WA.
+-   A nominal outcome, `forested`, with levels `"Yes"` and `"No"`, measured "on-the-ground."
+-   18 remotely-sensed and easily-accessible predictors:
+     - **numeric** variables based on weather and topography.
+     - **nominal** variables based on classifications from other governmental orgs.
+:::
+
+::: {.column width="30%"}
+![](images/forest.svg)
+:::
+:::
+
+::: footer
+Credit: <https://www.svgrepo.com/svg/67614/forest>
+:::
+
+:::notes
+- Those nominal variables are classifications similar to "forested" but from other agencies. e.g. `land_type` is from the European Space Agency, and is a remotely-sensed 3-class distribution based on predictions for how the land is used.
+:::
+
+## Checklist for predictors
+
+- Is it ethical to use this variable? (Or even legal?)
+
+- Will this variable be available at prediction time?
+
+- Does this variable contribute to explainability?
+
+:::notes
+- re: ethics -- what issues might arise from releasing the true `lat` and `lon`? In reality, these `lat` and `lon` are slightly jittered to help ensure trust with landowners who allow surveyers to come take measurements.
+:::
+
+## Data on forests in Washington
+
+```{r forested-print}
+library(tidymodels)
+library(forested)
+
+forested
+```
+
+
+## Data splitting and spending {.annotation}
+
+For machine learning, we typically split data into training and test sets:
+
+. . .
+
+-   The **training set** is used to estimate model parameters.
+-   The **test set** is used to find an independent assessment of model performance.
+
+. . .
+
+Do not 🚫 use the test set during training.
+
+## Data splitting and spending
+
+```{r test-train-split}
+#| echo: false
+#| fig.width: 12
+#| fig.height: 3
+#| 
+set.seed(123)
+library(forcats)
+one_split <- tibble(x = 1:30) %>% 
+  initial_split() %>% 
+  tidy() %>% 
+  add_row(Row = 1:30, Data = "Original") %>% 
+  mutate(Data = case_when(
+    Data == "Analysis" ~ "Training",
+    Data == "Assessment" ~ "Testing",
+    TRUE ~ Data
+  )) %>% 
+  mutate(Data = factor(Data, levels = c("Original", "Training", "Testing")))
+all_split <-
+  ggplot(one_split, aes(x = Row, y = fct_rev(Data), fill = Data)) + 
+  geom_tile(color = "white",
+            linewidth = 1) + 
+  scale_fill_manual(values = splits_pal, guide = "none") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = rel(2)),
+        axis.text.x = element_blank(),
+        legend.position = "top",
+        panel.grid = element_blank()) +
+  coord_equal(ratio = 1) +
+  labs(x = NULL, y = NULL)
+all_split
+```
+
+# The more data<br>we spend 🤑<br><br>the better estimates<br>we'll get.
+
+## Data splitting and spending
+
+-   Spending too much data in **training** prevents us from computing a good assessment of predictive **performance**.
+
+. . .
+
+-   Spending too much data in **testing** prevents us from computing a good estimate of model **parameters**.
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*When is a good time to split your data?*
+
+```{r ex-when-to-split}
+#| echo: false
+countdown::countdown(minutes = 3, id = "when-to-split")
+```
+
+# The testing data is precious 💎
+
+## The initial split `r hexes("rsample")`
+
+```{r forested-split}
+set.seed(123)
+forested_split <- initial_split(forested)
+forested_split
+```
+
+:::notes
+How much data in training vs testing?
+This function uses a good default, but this depends on your specific goal/data
+:::
+
+## What is `set.seed()`? {.annotation}
+
+To create that split of the data, R generates "pseudo-random" numbers: while they are made to behave like random numbers, their generation is deterministic given a "seed".
+
+This allows us to reproduce results by setting that seed.
+
+Which seed you pick doesn't matter, as long as you don't try a bunch of seeds and pick the one that gives you the best performance.
+
+## Accessing the data `r hexes("rsample")`
+
+```{r forested-train-test}
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
+```
+
+## The training set`r hexes("rsample")`
+
+```{r forested-train}
+forested_train
+```
+
+## The test set `r hexes("rsample")`
+
+🙈
+
+. . .
+
+There are `r nrow(forested_test)` rows and `r ncol(forested_test)` columns in the test set.
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Split your data so 20% is held out for the test set.*
+
+*Try out different values in `set.seed()` to see how the results change.*
+
+```{r ex-try-splitting}
+#| echo: false
+countdown::countdown(minutes = 5, id = "try-splitting")
+```
+
+## Data splitting and spending `r hexes("rsample")`
+
+```{r forested-split-prop}
+set.seed(123)
+forested_split <- initial_split(forested, prop = 0.8)
+forested_train <- training(forested_split)
+forested_test <- testing(forested_split)
+
+nrow(forested_train)
+nrow(forested_test)
+```
+
+# Exploratory data analysis for ML 🧐
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Explore the `forested_train` data on your own!*
+
+* *What's the distribution of the outcome, `forested`?*
+* *What's the distribution of numeric variables like `precip_annual`?*
+* *How does the distribution of `forested` differ across the categorical variables?*
+
+```{r ex-explore-forested}
+#| echo: false
+countdown::countdown(minutes = 8, id = "explore-forested")
+```
+
+::: notes
+Make a plot or summary and then share with neighbor
+:::
+
+## 
+
+```{r forested-forested-counts}
+#| fig-align: 'center'
+forested_train %>% 
+  ggplot(aes(x = forested)) +
+  geom_bar()
+```
+
+## 
+
+```{r forested-by-tree-no-tree}
+#| fig-align: 'center'
+forested_train %>% 
+  ggplot(aes(x = forested, fill = tree_no_tree)) +
+  geom_bar()
+```
+
+## 
+
+```{r forested-by-precip-annual}
+#| fig-align: 'center'
+#| message: false
+#| warning: false
+forested_train %>% 
+  ggplot(aes(x = precip_annual, fill = forested, group = forested)) +
+  geom_histogram(position = "identity", alpha = .7)
+```
+
+## 
+
+```{r forested-by-precip-annual-fill}
+#| fig-align: 'center'
+#| message: false
+#| warning: false
+forested_train %>% 
+  ggplot(aes(x = precip_annual, fill = forested, group = forested)) +
+  geom_histogram(position = "fill")
+```
+
+## 
+
+```{r forested-forested-by-lat-lon}
+#| fig-align: 'center'
+forested_train %>% 
+  ggplot(aes(x = lon, y = lat, col = forested)) +
+  geom_point()
+```
+
+## The whole game - status update
+
+```{r diagram-split, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-transparent-split.jpg")
+```
