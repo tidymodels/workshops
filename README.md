@@ -36,7 +36,7 @@ execute:
 ```
 * In the command line, run `quarto render archive/YYYY-MM-workshop-name`. This will regenerate the workshop slides under `docs/archive/YYYY-MM-workshop-name`.
 * Check that:
-	* Running `quarto render` didn't change any files in `docs/` other than `sitemap.xml` and `search.json` outside of `docs/archive/`.
+	* Running `quarto render` didn't change any files in `docs/` other than `index.html`, `sitemap.xml`, and `search.json` outside of `docs/archive/`.
 	* The generated slides are added to `_freeze/archive/YYYY-MM-workshop-name` rather than in `archive/YYYY-MM-workshop-name`. 
 	* The generated slides work (specifically, that filepaths to figures function correctly.)
 * In `index.qmd`, add an entry in H2 "Past workshops" like `[M YYYY](archive/YYYY-MM-workshop-name/index.html) in workshop-name`
