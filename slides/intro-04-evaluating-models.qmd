@@ -78,9 +78,15 @@ augment(forested_fit, new_data = forested_train) %>%
 :::
 :::
 
-::: notes
-There used to be a slide here calling out the pitfalls of accuracy when classes are imbalanced.
-:::
+## Dangers of accuracy `r hexes("yardstick")`
+
+We need to be careful of using `accuracy()` since it can give "good" performance by only predicting one way with imbalanced data:
+
+```{r acc-2}
+augment(forested_fit, new_data = forested_train) %>%
+  mutate(.pred_class = factor("Yes", levels = c("Yes", "No"))) %>%
+  accuracy(truth = forested, estimate = .pred_class)
+```
 
 ## Metrics for model performance `r hexes("yardstick")`
 
