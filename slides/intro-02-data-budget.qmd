@@ -26,14 +26,14 @@ knitr:
 ##  {background-image="https://media.giphy.com/media/Lr3UeH9tYu3qJtsSUg/giphy.gif" background-size="40%"}
 
 
-## Data on forests in Washington
+## Data on forests in Georgia
 
 ::: columns
 ::: {.column width="60%"}
 -   The U.S. Forest Service maintains ML models to predict whether a plot of land is "forested."
 -   This classification is important for all sorts of research, legislation, and land management purposes.
 -  Plots are typically remeasured every 10 years and this dataset contains the most recent measurement per plot.
--   Type `?forested` to learn more about this dataset, including references.
+-   Type `?forested_ga` to learn more about this dataset, including references.
 :::
 
 ::: {.column width="40%"}
@@ -46,11 +46,11 @@ knitr:
 Credit: <https://www.svgrepo.com/svg/251793/forest-mountain>
 :::
 
-## Data on forests in Washington
+## Data on forests in Georgia
 
 ::: columns
 ::: {.column width="70%"}
--   `N = 7,107` plots of land, one from each of 7,107 6000-acre hexagons in WA.
+-   `N = `r nrow(forested_ga)`` plots of land, one from each of `r nrow(forested_ga)` 6000-acre hexagons in Georgia.
 -   A nominal outcome, `forested`, with levels `"Yes"` and `"No"`, measured "on-the-ground."
 -   18 remotely-sensed and easily-accessible predictors:
      - **numeric** variables based on weather and topography.
@@ -67,7 +67,7 @@ Credit: <https://www.svgrepo.com/svg/67614/forest>
 :::
 
 :::notes
-- Those nominal variables are classifications similar to "forested" but from other agencies. e.g. `land_type` is from the European Space Agency, and is a remotely-sensed 3-class distribution based on predictions for how the land is used.
+- Those nominal variables are classifications similar to "forested" but from other agencies. e.g. `land_type` is from the European Space Agency, and is a remotely-sensed 3-class distribution based on predictions for how the land is used. (The data also includes a `county` variable, which is not itself from a model.)
 :::
 
 ## Checklist for predictors
@@ -82,13 +82,13 @@ Credit: <https://www.svgrepo.com/svg/67614/forest>
 - re: ethics -- what issues might arise from releasing the true `lat` and `lon`? In reality, these `lat` and `lon` are slightly jittered to help ensure trust with landowners who allow surveyers to come take measurements.
 :::
 
-## Data on forests in Washington
+## Data on forests in Georgia
 
 ```{r forested-print}
 library(tidymodels)
 library(forested)
 
-forested
+forested_ga
 ```
 
 
@@ -166,7 +166,7 @@ countdown::countdown(minutes = 3, id = "when-to-split")
 
 ```{r forested-split}
 set.seed(123)
-forested_split <- initial_split(forested)
+forested_split <- initial_split(forested_ga)
 forested_split
 ```
 
@@ -221,7 +221,7 @@ countdown::countdown(minutes = 5, id = "try-splitting")
 
 ```{r forested-split-prop}
 set.seed(123)
-forested_split <- initial_split(forested, prop = 0.8)
+forested_split <- initial_split(forested_ga, prop = 0.8)
 forested_train <- training(forested_split)
 forested_test <- testing(forested_split)
 
