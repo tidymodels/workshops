@@ -28,8 +28,8 @@ knitr:
 library(probably)
 
 cores <- parallelly::availableCores(logical = FALSE)
-cl <- parallel::makePSOCKcluster(cores)
-doParallel::registerDoParallel(cl)
+library(future)
+plan("multisession")
 
 options(width = 200)
 
@@ -416,7 +416,6 @@ A parameter set can be updated (e.g. to change the ranges).
 
 ```{r}
 #| label: get-grid 
-set.seed(12)
 grid <- 
   lgbm_wflow %>% 
   extract_parameter_set_dials() %>% 
@@ -443,8 +442,7 @@ countdown::countdown(minutes = 3, id = "make-grid")
 
 ```{r get-regular-grid} 
 #| label: reg-grid
-#| code-line-numbers: "5"
-set.seed(12)
+#| code-line-numbers: "4"
 grid <- 
   lgbm_wflow %>% 
   extract_parameter_set_dials() %>% 
@@ -476,7 +474,6 @@ lgbm_param <-
   update(trees = trees(c(1L, 100L)),
          learn_rate = learn_rate(c(-5, -1)))
 
-set.seed(712)
 grid <- 
   lgbm_param %>% 
   grid_space_filling(size = 25)
@@ -643,14 +640,11 @@ We can use a *parallel backend* to do this:
 #| eval: false
 #| label: parallel-methods
 cores <- parallelly::availableCores(logical = FALSE)
-cl <- parallel::makePSOCKcluster(cores)
-doParallel::registerDoParallel(cl)
+
+library(future)
+plan(multisession, workers = cores)
 
 # Now call `tune_grid()`!
-
-# Shut it down with:
-foreach::registerDoSEQ()
-parallel::stopCluster(cl)
 ```
 :::
 
@@ -745,11 +739,4 @@ Note that you will need to regenerate `lgbm_param` with your new workflow!
 #| label: lgbm-stop
 #| echo: false
 countdown::countdown(minutes = 10, id = "lgbm-stop")
-```
-
-```{r}
-#| label: teardown
-#| echo: false
-
-parallel::stopCluster(cl)
 ```
