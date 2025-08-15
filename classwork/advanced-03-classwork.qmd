@@ -28,10 +28,10 @@ reg_metrics <- metric_set(mae, rsq)
 data(hotel_rates)
 set.seed(295)
 hotel_rates <- 
-  hotel_rates %>% 
-  sample_n(5000) %>% 
-  arrange(arrival_date) %>% 
-  select(-arrival_date) %>% 
+  hotel_rates |> 
+  sample_n(5000) |> 
+  arrange(arrival_date) |> 
+  select(-arrival_date) |> 
   mutate(
     company = factor(as.character(company)),
     country = factor(as.character(country)),
@@ -49,13 +49,13 @@ set.seed(472)
 hotel_rs <- vfold_cv(hotel_train, strata = avg_price_per_room)
 
 hash_rec <-
-  recipe(avg_price_per_room ~ ., data = hotel_train) %>%
-  step_YeoJohnson(lead_time) %>%
+  recipe(avg_price_per_room ~ ., data = hotel_train) |>
+  step_YeoJohnson(lead_time) |>
   # Defaults to 32 signed indicator columns
-  step_dummy_hash(agent) %>%
-  step_dummy_hash(company) %>%
+  step_dummy_hash(agent) |>
+  step_dummy_hash(company) |>
   # Regular indicators for the others
-  step_dummy(all_nominal_predictors()) %>% 
+  step_dummy(all_nominal_predictors()) |> 
   step_zv(all_predictors())
 ```
 
@@ -63,18 +63,18 @@ hash_rec <-
 
 ```{r}
 hash_rec <-
-  recipe(avg_price_per_room ~ ., data = hotel_train) %>%
-  step_YeoJohnson(lead_time) %>%
-  step_dummy_hash(agent,   num_terms = tune("agent hash")) %>%
-  step_dummy_hash(company, num_terms = tune("company hash")) %>%
+  recipe(avg_price_per_room ~ ., data = hotel_train) |>
+  step_YeoJohnson(lead_time) |>
+  step_dummy_hash(agent,   num_terms = tune("agent hash")) |>
+  step_dummy_hash(company, num_terms = tune("company hash")) |>
   step_zv(all_predictors())
 ```
 
 ```{r}
 library(bonsai)
 lgbm_spec <- 
-  boost_tree(trees = tune(), learn_rate = tune()) %>% 
-  set_mode("regression") %>% 
+  boost_tree(trees = tune(), learn_rate = tune()) |> 
+  set_mode("regression") |> 
   set_engine("lightgbm", num_threads = 1)
 
 lgbm_wflow <- workflow(hash_rec, lgbm_spec)
@@ -85,8 +85,8 @@ lgbm_wflow <- workflow(hash_rec, lgbm_spec)
 ```{r}
 set.seed(12)
 grid <- 
-  lgbm_wflow %>% 
-  extract_parameter_set_dials() %>% 
+  lgbm_wflow |> 
+  extract_parameter_set_dials() |> 
   grid_space_filling(size = 25)
 
 grid
@@ -113,21 +113,21 @@ Discuss with your neighbor!
 
 ```{r} 
 lgbm_param <- 
-  lgbm_wflow %>% 
-  extract_parameter_set_dials() %>% 
+  lgbm_wflow |> 
+  extract_parameter_set_dials() |> 
   update(trees = trees(c(1L, 100L)),
          learn_rate = learn_rate(c(-5, -1)))
 
 set.seed(712)
 grid <- 
-  lgbm_param %>% 
+  lgbm_param |> 
   grid_space_filling(size = 25)
 
 grid
 ```
 
 ```{r}
-grid %>% 
+grid |> 
   ggplot(aes(trees, learn_rate)) +
   geom_point(size = 4) +
   scale_y_log10()
@@ -139,16 +139,16 @@ Let's take our previous model and tune more parameters:
 
 ```{r} 
 lgbm_spec <- 
-  boost_tree(trees = tune(), learn_rate = tune(),  min_n = tune()) %>% 
-  set_mode("regression") %>% 
+  boost_tree(trees = tune(), learn_rate = tune(),  min_n = tune()) |> 
+  set_mode("regression") |> 
   set_engine("lightgbm", num_threads = 1)
 
 lgbm_wflow <- workflow(hash_rec, lgbm_spec)
 
 # Update the feature hash ranges (log-2 units)
 lgbm_param <-
-  lgbm_wflow %>%
-  extract_parameter_set_dials() %>%
+  lgbm_wflow |>
+  extract_parameter_set_dials() |>
   update(`agent hash`   = num_hash(c(3, 8)),
          `company hash` = num_hash(c(3, 8)))
 ```
@@ -160,7 +160,7 @@ set.seed(9)
 ctrl <- control_grid(save_pred = TRUE)
 
 lgbm_res <-
-  lgbm_wflow %>%
+  lgbm_wflow |>
   tune_grid(
     resamples = hotel_rs,
     grid = 25,
@@ -194,10 +194,10 @@ lgbm_best
 ```{r}
 library(probably)
 
-lgbm_res %>%
+lgbm_res |>
   collect_predictions(
     parameters = lgbm_best
-  ) %>%
+  ) |>
   cal_plot_regression(
     truth = avg_price_per_room,
     estimate = .pred
