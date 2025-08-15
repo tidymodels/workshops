@@ -231,10 +231,10 @@
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="fu">data</span>(hotel_rates)</span>
 <span id="cb2-2"><a></a><span class="fu">set.seed</span>(<span class="dv">295</span>)</span>
 <span id="cb2-3"><a></a>hotel_rates <span class="ot">&lt;-</span> </span>
-<span id="cb2-4"><a></a>  hotel_rates <span class="sc">%&gt;%</span> </span>
-<span id="cb2-5"><a></a>  <span class="fu">sample_n</span>(<span class="dv">5000</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-6"><a></a>  <span class="fu">arrange</span>(arrival_date) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-7"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>arrival_date) <span class="sc">%&gt;%</span>  </span>
+<span id="cb2-4"><a></a>  hotel_rates <span class="sc">|&gt;</span> </span>
+<span id="cb2-5"><a></a>  <span class="fu">sample_n</span>(<span class="dv">5000</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb2-6"><a></a>  <span class="fu">arrange</span>(arrival_date) <span class="sc">|&gt;</span> </span>
+<span id="cb2-7"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>arrival_date) <span class="sc">|&gt;</span>  </span>
 <span id="cb2-8"><a></a>  <span class="fu">mutate</span>(</span>
 <span id="cb2-9"><a></a>    <span class="at">company =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(company)),</span>
 <span id="cb2-10"><a></a>    <span class="at">country =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(country)),</span>
@@ -270,15 +270,15 @@
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a>lgbm_spec <span class="ot">&lt;-</span> </span>
 <span id="cb4-2"><a></a>  <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="dv">1000</span>, <span class="at">learn_rate =</span> <span class="fu">tune</span>(), <span class="at">min_n =</span> <span class="fu">tune</span>(), </span>
 <span id="cb4-3"><a></a>             <span class="at">tree_depth =</span> <span class="fu">tune</span>(), <span class="at">loss_reduction =</span> <span class="fu">tune</span>(), </span>
-<span id="cb4-4"><a></a>             <span class="at">stop_iter =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
-<span id="cb4-5"><a></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-4"><a></a>             <span class="at">stop_iter =</span> <span class="fu">tune</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb4-5"><a></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">|&gt;</span> </span>
 <span id="cb4-6"><a></a>  <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>, <span class="at">num_threads =</span> <span class="dv">1</span>)</span>
 <span id="cb4-7"><a></a></span>
 <span id="cb4-8"><a></a>lgbm_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(avg_price_per_room <span class="sc">~</span> ., lgbm_spec)</span>
 <span id="cb4-9"><a></a></span>
 <span id="cb4-10"><a></a>lgbm_param <span class="ot">&lt;-</span> </span>
-<span id="cb4-11"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb4-12"><a></a>    <span class="fu">extract_parameter_set_dials</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb4-11"><a></a>  lgbm_wflow <span class="sc">|&gt;</span></span>
+<span id="cb4-12"><a></a>    <span class="fu">extract_parameter_set_dials</span>() <span class="sc">|&gt;</span></span>
 <span id="cb4-13"><a></a>    <span class="fu">update</span>(<span class="at">learn_rate =</span> <span class="fu">learn_rate</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">5</span>, <span class="sc">-</span><span class="dv">1</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
@@ -449,7 +449,7 @@
 <span id="cb6-2"><a></a></span>
 <span id="cb6-3"><a></a><span class="fu">set.seed</span>(<span class="dv">12</span>)</span>
 <span id="cb6-4"><a></a>init_res <span class="ot">&lt;-</span></span>
-<span id="cb6-5"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb6-5"><a></a>  lgbm_wflow <span class="sc">|&gt;</span></span>
 <span id="cb6-6"><a></a>  <span class="fu">tune_grid</span>(</span>
 <span id="cb6-7"><a></a>    <span class="at">resamples =</span> hotel_rs,</span>
 <span id="cb6-8"><a></a>    <span class="at">grid =</span> <span class="fu">nrow</span>(lgbm_param) <span class="sc">+</span> <span class="dv">2</span>,</span>
@@ -457,7 +457,7 @@
 <span id="cb6-10"><a></a>    <span class="at">metrics =</span> reg_metrics</span>
 <span id="cb6-11"><a></a>  )</span>
 <span id="cb6-12"><a></a></span>
-<span id="cb6-13"><a></a><span class="fu">show_best</span>(init_res, <span class="at">metric =</span> <span class="st">"mae"</span>) <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">-</span>.metric, <span class="sc">-</span>.estimator)</span>
+<span id="cb6-13"><a></a><span class="fu">show_best</span>(init_res, <span class="at">metric =</span> <span class="st">"mae"</span>) <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>.metric, <span class="sc">-</span>.estimator)</span>
 <span id="cb6-14"><a></a><span class="co">#&gt; # A tibble: 5 × 9</span></span>
 <span id="cb6-15"><a></a><span class="co">#&gt;   min_n tree_depth learn_rate loss_reduction stop_iter  mean     n std_err .config             </span></span>
 <span id="cb6-16"><a></a><span class="co">#&gt;   &lt;int&gt;      &lt;int&gt;      &lt;dbl&gt;          &lt;dbl&gt;     &lt;int&gt; &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
@@ -475,7 +475,7 @@
 <span id="cb7-2"><a></a></span>
 <span id="cb7-3"><a></a><span class="fu">set.seed</span>(<span class="dv">15</span>)</span>
 <span id="cb7-4"><a></a>lgbm_bayes_res <span class="ot">&lt;-</span></span>
-<span id="cb7-5"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb7-5"><a></a>  lgbm_wflow <span class="sc">|&gt;</span></span>
 <span id="cb7-6"><a></a>  <span class="fu">tune_bayes</span>(</span>
 <span id="cb7-7"><a></a>    <span class="at">resamples =</span> hotel_rs,</span>
 <span id="cb7-8"><a></a>    <span class="at">initial =</span> init_res,     <span class="co"># &lt;- initial results</span></span>
@@ -623,7 +623,7 @@
 <section id="best-results" class="slide level2">
 <h2>Best results</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a><span class="fu">show_best</span>(lgbm_bayes_res, <span class="at">metric =</span> <span class="st">"mae"</span>) <span class="sc">%&gt;%</span> <span class="fu">select</span>(<span class="sc">-</span>.metric, <span class="sc">-</span>.estimator)</span>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a><span class="fu">show_best</span>(lgbm_bayes_res, <span class="at">metric =</span> <span class="st">"mae"</span>) <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>.metric, <span class="sc">-</span>.estimator)</span>
 <span id="cb8-2"><a></a><span class="co">#&gt; # A tibble: 5 × 10</span></span>
 <span id="cb8-3"><a></a><span class="co">#&gt;   min_n tree_depth learn_rate loss_reduction stop_iter  mean     n std_err .config .iter</span></span>
 <span id="cb8-4"><a></a><span class="co">#&gt;   &lt;int&gt;      &lt;int&gt;      &lt;dbl&gt;          &lt;dbl&gt;     &lt;int&gt; &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;   &lt;int&gt;</span></span>
@@ -708,7 +708,7 @@
 <div class="cell">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a></a>best_param <span class="ot">&lt;-</span> <span class="fu">select_best</span>(lgbm_bayes_res, <span class="at">metric =</span> <span class="st">"mae"</span>)</span>
 <span id="cb13-2"><a></a>final_wflow <span class="ot">&lt;-</span> </span>
-<span id="cb13-3"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span> </span>
+<span id="cb13-3"><a></a>  lgbm_wflow <span class="sc">|&gt;</span> </span>
 <span id="cb13-4"><a></a>  <span class="fu">finalize_workflow</span>(best_param)</span>
 <span id="cb13-5"><a></a>final_wflow</span>
 <span id="cb13-6"><a></a><span class="co">#&gt; ══ Workflow ══════════════════════════════════════════════════════════</span></span>
@@ -738,7 +738,7 @@
 <section id="the-final-fit" class="slide level2">
 <h2>The Final Fit</h2>
 <p>We can use individual functions:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a></a>final_fit <span class="ot">&lt;-</span> final_wflow <span class="sc">%&gt;%</span> <span class="fu">fit</span>(<span class="at">data =</span> hotel_train)</span>
+<div class="sourceCode" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a></a>final_fit <span class="ot">&lt;-</span> final_wflow <span class="sc">|&gt;</span> <span class="fu">fit</span>(<span class="at">data =</span> hotel_train)</span>
 <span id="cb14-2"><a></a></span>
 <span id="cb14-3"><a></a><span class="co"># then predict() or augment() </span></span>
 <span id="cb14-4"><a></a><span class="co"># then compute metrics</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -746,7 +746,7 @@
 <p>Remember that there is also a convenience function to do all of this:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a></a><span class="fu">set.seed</span>(<span class="dv">3893</span>)</span>
-<span id="cb15-2"><a></a>final_res <span class="ot">&lt;-</span> final_wflow <span class="sc">%&gt;%</span> <span class="fu">last_fit</span>(hotel_split, <span class="at">metrics =</span> reg_metrics)</span>
+<span id="cb15-2"><a></a>final_res <span class="ot">&lt;-</span> final_wflow <span class="sc">|&gt;</span> <span class="fu">last_fit</span>(hotel_split, <span class="at">metrics =</span> reg_metrics)</span>
 <span id="cb15-3"><a></a>final_res</span>
 <span id="cb15-4"><a></a><span class="co">#&gt; # Resampling results</span></span>
 <span id="cb15-5"><a></a><span class="co">#&gt; # Manual resampling </span></span>
@@ -761,15 +761,15 @@
 <div class="columns">
 <div class="column" style="width:65%;">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a></a>final_res <span class="sc">%&gt;%</span> </span>
-<span id="cb16-2"><a></a>  <span class="fu">collect_predictions</span>() <span class="sc">%&gt;%</span> </span>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a></a>final_res <span class="sc">|&gt;</span> </span>
+<span id="cb16-2"><a></a>  <span class="fu">collect_predictions</span>() <span class="sc">|&gt;</span> </span>
 <span id="cb16-3"><a></a>  <span class="fu">cal_plot_regression</span>(</span>
 <span id="cb16-4"><a></a>    <span class="at">truth =</span> avg_price_per_room, </span>
 <span id="cb16-5"><a></a>    <span class="at">estimate =</span> .pred)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Test set performance:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a></a>final_res <span class="sc">%&gt;%</span> <span class="fu">collect_metrics</span>()</span>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a></a>final_res <span class="sc">|&gt;</span> <span class="fu">collect_metrics</span>()</span>
 <span id="cb17-2"><a></a><span class="co">#&gt; # A tibble: 2 × 4</span></span>
 <span id="cb17-3"><a></a><span class="co">#&gt;   .metric .estimator .estimate .config             </span></span>
 <span id="cb17-4"><a></a><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;               </span></span>

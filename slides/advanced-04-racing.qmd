@@ -68,10 +68,10 @@ reg_metrics <- metric_set(mae, rsq)
 data(hotel_rates)
 set.seed(295)
 hotel_rates <- 
-  hotel_rates %>% 
-  sample_n(5000) %>% 
-  arrange(arrival_date) %>% 
-  select(-arrival_date) %>% 
+  hotel_rates |> 
+  sample_n(5000) |> 
+  arrange(arrival_date) |> 
+  select(-arrival_date) |> 
   mutate(
     company = factor(as.character(company)),
     country = factor(as.character(country)),
@@ -106,22 +106,22 @@ hotel_rs <- vfold_cv(hotel_train, strata = avg_price_per_room)
 ```{r}
 #| label: setup-lgbm
 hotel_rec <-
-  recipe(avg_price_per_room ~ ., data = hotel_train) %>%
-  step_YeoJohnson(lead_time) %>%
-  step_dummy_hash(agent,   num_terms = tune("agent hash")) %>%
-  step_dummy_hash(company, num_terms = tune("company hash")) %>%
+  recipe(avg_price_per_room ~ ., data = hotel_train) |>
+  step_YeoJohnson(lead_time) |>
+  step_dummy_hash(agent,   num_terms = tune("agent hash")) |>
+  step_dummy_hash(company, num_terms = tune("company hash")) |>
   step_zv(all_predictors())
 
 lgbm_spec <- 
-  boost_tree(trees = tune(), learn_rate = tune(), min_n = tune()) %>% 
-  set_mode("regression") %>% 
+  boost_tree(trees = tune(), learn_rate = tune(), min_n = tune()) |> 
+  set_mode("regression") |> 
   set_engine("lightgbm", num_threads = 1)
 
 lgbm_wflow <- workflow(hotel_rec, lgbm_spec)
 
 lgbm_param <-
-  lgbm_wflow %>%
-  extract_parameter_set_dials() %>%
+  lgbm_wflow |>
+  extract_parameter_set_dials() |>
   update(`agent hash`   = num_hash(c(3, 8)),
          `company hash` = num_hash(c(3, 8)))
 ```
@@ -192,19 +192,19 @@ candidates <- tibble(model = paste("candidate", 1:2), mean = c(4, 2))
 set.seed(937)
 resamples <- tibble(resample = 1:num_resamples, effect = rnorm(num_resamples, sd = 2))
 race_example <-
-  race_example %>%
-  full_join(candidates, by = "model") %>%
-  full_join(resamples, by = "resample") %>%
+  race_example |>
+  full_join(candidates, by = "model") |>
+  full_join(resamples, by = "resample") |>
   mutate(
     error = mean + effect + rnorm(n(), sd = 1) + 2,
     resample = format(resample)
-  ) %>%
+  ) |>
   select(-mean, -effect)
 
 
 race_table <- 
-  race_example %>%
-  mutate(model = gsub(" ", "_", model)) %>%
+  race_example |>
+  mutate(model = gsub(" ", "_", model)) |>
   pivot_wider(id_cols = c(resample), names_from = model, values_from = error)
 
 race_cor <- cor(race_table[, -1], method = "spearman")[1,2]
@@ -213,8 +213,8 @@ get_ci <- function(ind) {
   dat <- race_table[1:ind,]
   t_test <- t.test(dat$candidate_1, dat$candidate_2, paired = TRUE)
   t_test <- tidy(t_test, conf)
-  t_test %>% 
-    select(difference = estimate, lower = conf.low, upper = conf.high) %>% 
+  t_test |> 
+    select(difference = estimate, lower = conf.low, upper = conf.high) |> 
     mutate(`number of resamples` = ind)
 }
 
@@ -244,7 +244,7 @@ There is usually a significant resample-to-resample effect (rank corr: `r round(
 #| fig-height: 5
 
 
-race_example %>%
+race_example |>
   ggplot(aes(x = model, y = error, group = resample, col = factor(resample))) +
   geom_point(show.legend = FALSE) +
   geom_line(alpha = 1 / 2, show.legend = FALSE) +
@@ -292,7 +292,7 @@ One candidate shows superiority when `r which.max(race_ci$lower > 0)` resamples 
 #| fig-height: 4.25
 
 
-race_ci %>% 
+race_ci |> 
   ggplot(aes(`number of resamples`, difference)) + 
   geom_point() +
   geom_hline(yintercept = 0, col = "red", lty = 2) +
@@ -329,14 +329,14 @@ The [finetune](https://finetune.tidymodels.org/) package has functions `tune_rac
 #| code-line-numbers: "11|"
 # Let's use a larger grid
 lgbm_grid <- 
-  lgbm_param %>% 
+  lgbm_param |> 
   grid_space_filling(size = 50)
 
 library(finetune)
 
 set.seed(9)
 lgbm_race_res <-
-  lgbm_wflow %>%
+  lgbm_wflow |>
   tune_race_anova(
     resamples = hotel_rs,
     grid = lgbm_grid, 

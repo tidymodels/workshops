@@ -69,10 +69,10 @@ reg_metrics <- metric_set(mae, rsq)
 data(hotel_rates)
 set.seed(295)
 hotel_rates <- 
-  hotel_rates %>% 
-  sample_n(5000) %>% 
-  arrange(arrival_date) %>% 
-  select(-arrival_date) %>% 
+  hotel_rates |> 
+  sample_n(5000) |> 
+  arrange(arrival_date) |> 
+  select(-arrival_date) |> 
   mutate(
     company = factor(as.character(company)),
     country = factor(as.character(country)),
@@ -108,13 +108,13 @@ hotel_rs <- vfold_cv(hotel_train, strata = avg_price_per_room)
 library(textrecipes)
 
 hash_rec <-
-  recipe(avg_price_per_room ~ ., data = hotel_train) %>%
-  step_YeoJohnson(lead_time) %>%
+  recipe(avg_price_per_room ~ ., data = hotel_train) |>
+  step_YeoJohnson(lead_time) |>
   # Defaults to 32 signed indicator columns
-  step_dummy_hash(agent) %>%
-  step_dummy_hash(company) %>%
+  step_dummy_hash(agent) |>
+  step_dummy_hash(company) |>
   # Regular indicators for the others
-  step_dummy(all_nominal_predictors()) %>% 
+  step_dummy(all_nominal_predictors()) |> 
   step_zv(all_predictors())
 ```
 
@@ -206,10 +206,10 @@ Our new recipe is:
 #| label: recipe-tune
 #| code-line-numbers: "4-5|"
 hash_rec <-
-  recipe(avg_price_per_room ~ ., data = hotel_train) %>%
-  step_YeoJohnson(lead_time) %>%
-  step_dummy_hash(agent,   num_terms = tune("agent hash")) %>%
-  step_dummy_hash(company, num_terms = tune("company hash")) %>%
+  recipe(avg_price_per_room ~ ., data = hotel_train) |>
+  step_YeoJohnson(lead_time) |>
+  step_dummy_hash(agent,   num_terms = tune("agent hash")) |>
+  step_dummy_hash(company, num_terms = tune("company hash")) |>
   step_zv(all_predictors())
 ```
 
@@ -268,8 +268,8 @@ We'll need to load the bonsai package. This has the information needed to use li
 
 library(bonsai)
 lgbm_spec <- 
-  boost_tree(trees = tune(), learn_rate = tune()) %>% 
-  set_mode("regression") %>% 
+  boost_tree(trees = tune(), learn_rate = tune()) |> 
+  set_mode("regression") |> 
   set_engine("lightgbm", num_threads = 1)
 
 lgbm_wflow <- workflow(hash_rec, lgbm_spec)
@@ -364,28 +364,28 @@ Most basic (but very effective) way to tune models
 tree_param <- parameters(trees(), learn_rate())
 
 set.seed(114)
-reg_1 <- grid_regular(tree_param, levels = c(4, 4)) %>% 
+reg_1 <- grid_regular(tree_param, levels = c(4, 4)) |> 
   mutate(type = "Regular (balanced)")
-reg_2 <- grid_regular(tree_param, levels = c(3, 5)) %>% 
+reg_2 <- grid_regular(tree_param, levels = c(3, 5)) |> 
   mutate(type = "Regular (unbalanced)")
 
-irreg_1 <- grid_space_filling(tree_param, size = 16, type = "uniform") %>% 
+irreg_1 <- grid_space_filling(tree_param, size = 16, type = "uniform") |> 
   mutate(type = "SFD: Uniform")
 
 set.seed(21)
-irreg_2 <- grid_random(tree_param, size = 16) %>% 
+irreg_2 <- grid_random(tree_param, size = 16) |> 
   mutate(type = "Random")
-irreg_3 <- grid_space_filling(tree_param, size = 16, type = "latin_hypercube") %>% 
+irreg_3 <- grid_space_filling(tree_param, size = 16, type = "latin_hypercube") |> 
   mutate(type = "SFD: Latin Hypercube")
 
 lvls <- c("Regular (balanced)", "Regular (unbalanced)", "Random", 
           "SFD: Latin Hypercube", "SFD: Uniform")
 
 grids <- 
-  bind_rows(reg_1, reg_2, irreg_1, irreg_2, irreg_3) %>% 
+  bind_rows(reg_1, reg_2, irreg_1, irreg_2, irreg_3) |> 
   mutate(type = factor(type, levels = lvls))
 
-grids %>% 
+grids |> 
   ggplot(aes(trees, learn_rate)) + 
   geom_point() + 
   scale_y_log10() +
@@ -400,7 +400,7 @@ Space-filling designs (SFD) attempt to cover the parameter space without redunda
 
 ```{r get-param}
 #| tidy: false
-lgbm_wflow %>% 
+lgbm_wflow |> 
   extract_parameter_set_dials()
 
 # Individual functions: 
@@ -417,8 +417,8 @@ A parameter set can be updated (e.g. to change the ranges).
 ```{r}
 #| label: get-grid 
 grid <- 
-  lgbm_wflow %>% 
-  extract_parameter_set_dials() %>% 
+  lgbm_wflow |> 
+  extract_parameter_set_dials() |> 
   grid_space_filling(size = 25)
 
 grid
@@ -444,8 +444,8 @@ countdown::countdown(minutes = 3, id = "make-grid")
 #| label: reg-grid
 #| code-line-numbers: "4"
 grid <- 
-  lgbm_wflow %>% 
-  extract_parameter_set_dials() %>% 
+  lgbm_wflow |> 
+  extract_parameter_set_dials() |> 
   grid_regular(levels = 4)
 
 grid
@@ -469,13 +469,13 @@ grid
 #| label: update-param
 #| code-line-numbers: "4-5|"
 lgbm_param <- 
-  lgbm_wflow %>% 
-  extract_parameter_set_dials() %>% 
+  lgbm_wflow |> 
+  extract_parameter_set_dials() |> 
   update(trees = trees(c(1L, 100L)),
          learn_rate = learn_rate(c(-5, -1)))
 
 grid <- 
-  lgbm_param %>% 
+  lgbm_param |> 
   grid_space_filling(size = 25)
 
 grid
@@ -491,7 +491,7 @@ grid
 #| fig-height: 4.1
 #| fig-align: 'center'
 #| out-width: 70%
-grid %>% 
+grid |> 
   ggplot(aes(trees, learn_rate)) +
   geom_point(size = 4) +
   scale_y_log10()
@@ -511,16 +511,16 @@ Let's take our previous model and tune more parameters:
 #| label: lgm-more-tune
 #| code-line-numbers: "2,12-13|"
 lgbm_spec <- 
-  boost_tree(trees = tune(), learn_rate = tune(),  min_n = tune()) %>% 
-  set_mode("regression") %>% 
+  boost_tree(trees = tune(), learn_rate = tune(),  min_n = tune()) |> 
+  set_mode("regression") |> 
   set_engine("lightgbm", num_threads = 1)
 
 lgbm_wflow <- workflow(hash_rec, lgbm_spec)
 
 # Update the feature hash ranges (log-2 units)
 lgbm_param <-
-  lgbm_wflow %>%
-  extract_parameter_set_dials() %>%
+  lgbm_wflow |>
+  extract_parameter_set_dials() |>
   update(`agent hash`   = num_hash(c(3, 8)),
          `company hash` = num_hash(c(3, 8)))
 ```
@@ -536,7 +536,7 @@ set.seed(9)
 ctrl <- control_grid(save_pred = TRUE)
 
 lgbm_res <-
-  lgbm_wflow %>%
+  lgbm_wflow |>
   tune_grid(
     resamples = hotel_rs,
     grid = 25,
@@ -615,10 +615,10 @@ lgbm_best
 #| fig-height: 5
 
 library(probably)
-lgbm_res %>%
+lgbm_res |>
   collect_predictions(
     parameters = lgbm_best
-  ) %>%
+  ) |>
   cal_plot_regression(
     truth = avg_price_per_room,
     estimate = .pred
@@ -659,8 +659,8 @@ plan(multisession, workers = cores)
 #| dev-args:
 #|   bg: "transparent"
 load("resamples_times.RData")
-resamples_times %>%
-  dplyr::rename(operation = label) %>% 
+resamples_times |>
+  dplyr::rename(operation = label) |> 
   ggplot(aes(y = id_alt, x = duration, fill = operation)) +
   geom_bar(stat = "identity", color = "black") +
   labs(y = NULL, x = "Elapsed Time") + 

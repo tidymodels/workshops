@@ -229,10 +229,10 @@
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="fu">data</span>(hotel_rates)</span>
 <span id="cb2-2"><a></a><span class="fu">set.seed</span>(<span class="dv">295</span>)</span>
 <span id="cb2-3"><a></a>hotel_rates <span class="ot">&lt;-</span> </span>
-<span id="cb2-4"><a></a>  hotel_rates <span class="sc">%&gt;%</span> </span>
-<span id="cb2-5"><a></a>  <span class="fu">sample_n</span>(<span class="dv">5000</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-6"><a></a>  <span class="fu">arrange</span>(arrival_date) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-7"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>arrival_date) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-4"><a></a>  hotel_rates <span class="sc">|&gt;</span> </span>
+<span id="cb2-5"><a></a>  <span class="fu">sample_n</span>(<span class="dv">5000</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb2-6"><a></a>  <span class="fu">arrange</span>(arrival_date) <span class="sc">|&gt;</span> </span>
+<span id="cb2-7"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>arrival_date) <span class="sc">|&gt;</span> </span>
 <span id="cb2-8"><a></a>  <span class="fu">mutate</span>(</span>
 <span id="cb2-9"><a></a>    <span class="at">company =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(company)),</span>
 <span id="cb2-10"><a></a>    <span class="at">country =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(country)),</span>
@@ -381,10 +381,10 @@
 <div class="sourceCode cell-code" id="cb6" data-code-line-numbers="1,6|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a><span class="fu">library</span>(embed)</span>
 <span id="cb6-2"><a></a></span>
 <span id="cb6-3"><a></a>hotel_effect_rec <span class="ot">&lt;-</span></span>
-<span id="cb6-4"><a></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">%&gt;%</span> </span>
-<span id="cb6-5"><a></a>  <span class="fu">step_YeoJohnson</span>(lead_time) <span class="sc">%&gt;%</span></span>
-<span id="cb6-6"><a></a>  <span class="fu">step_lencode_mixed</span>(agent, company, <span class="at">outcome =</span> <span class="fu">vars</span>(avg_price_per_room)) <span class="sc">%&gt;%</span></span>
-<span id="cb6-7"><a></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb6-4"><a></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">|&gt;</span> </span>
+<span id="cb6-5"><a></a>  <span class="fu">step_YeoJohnson</span>(lead_time) <span class="sc">|&gt;</span></span>
+<span id="cb6-6"><a></a>  <span class="fu">step_lencode_mixed</span>(agent, company, <span class="at">outcome =</span> <span class="fu">vars</span>(avg_price_per_room)) <span class="sc">|&gt;</span></span>
+<span id="cb6-7"><a></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">|&gt;</span></span>
 <span id="cb6-8"><a></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="fragment">
@@ -395,14 +395,14 @@
 <h2>Effect encoding results <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7" data-code-line-numbers="4|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a>hotel_effect_wflow <span class="ot">&lt;-</span></span>
-<span id="cb7-2"><a></a>  <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb7-3"><a></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-2"><a></a>  <span class="fu">workflow</span>() <span class="sc">|&gt;</span></span>
+<span id="cb7-3"><a></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">|&gt;</span> </span>
 <span id="cb7-4"><a></a>  <span class="fu">update_recipe</span>(hotel_effect_rec)</span>
 <span id="cb7-5"><a></a></span>
 <span id="cb7-6"><a></a>reg_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mae, rsq)</span>
 <span id="cb7-7"><a></a></span>
 <span id="cb7-8"><a></a>hotel_effect_res <span class="ot">&lt;-</span></span>
-<span id="cb7-9"><a></a>  hotel_effect_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb7-9"><a></a>  hotel_effect_wflow <span class="sc">|&gt;</span></span>
 <span id="cb7-10"><a></a>  <span class="fu">fit_resamples</span>(hotel_rs, <span class="at">metrics =</span> reg_metrics)</span>
 <span id="cb7-11"><a></a></span>
 <span id="cb7-12"><a></a><span class="fu">collect_metrics</span>(hotel_effect_res)</span>

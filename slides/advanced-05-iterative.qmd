@@ -77,10 +77,10 @@ options(
 data(hotel_rates)
 set.seed(295)
 hotel_rates <- 
-  hotel_rates %>% 
-  sample_n(5000) %>% 
-  arrange(arrival_date) %>% 
-  select(-arrival_date) %>%  
+  hotel_rates |> 
+  sample_n(5000) |> 
+  arrange(arrival_date) |> 
+  select(-arrival_date) |>  
   mutate(
     company = factor(as.character(company)),
     country = factor(as.character(country)),
@@ -128,15 +128,15 @@ We'll keep all categorical predictors as factors and focus on optimizing additio
 lgbm_spec <- 
   boost_tree(trees = 1000, learn_rate = tune(), min_n = tune(), 
              tree_depth = tune(), loss_reduction = tune(), 
-             stop_iter = tune()) %>% 
-  set_mode("regression") %>% 
+             stop_iter = tune()) |> 
+  set_mode("regression") |> 
   set_engine("lightgbm", num_threads = 1)
 
 lgbm_wflow <- workflow(avg_price_per_room ~ ., lgbm_spec)
 
 lgbm_param <- 
-  lgbm_wflow %>%
-    extract_parameter_set_dials() %>%
+  lgbm_wflow |>
+    extract_parameter_set_dials() |>
     update(learn_rate = learn_rate(c(-5, -1)))
 ```
 
@@ -179,7 +179,7 @@ Now suppose that we used a grid of three points in the parameter range for learn
 #| fig-width: 6
 #| fig-height: 4.25
 
-grid_points %>%
+grid_points |>
   ggplot(aes(learn_rate, mean)) +
   geom_line(alpha = 1 / 2, col = "#0b84a5", linewidth = 1.5) +
   scale_x_log10() +
@@ -197,7 +197,7 @@ grid_points %>%
 #| fig-width: 6
 #| fig-height: 4.25
 
-grid_points %>%
+grid_points |>
   ggplot(aes(learn_rate, mean)) +
   geom_line(alpha = 1 / 10, col = "#0b84a5", linewidth = 1.5) +
   geom_point(data = init_points) +
@@ -269,7 +269,7 @@ exerc_data <-
   tibble(MAE = c(rnorm(num_points, 10, 2), rnorm(num_points, 13, 1 / 2)),
          `Choose:` = rep(paste("candidate", 1:2), each = num_points))
 
-exerc_data %>% 
+exerc_data |> 
   ggplot(aes(MAE, col = `Choose:`)) + 
   geom_line(stat = "density", adjust = 1.25, trim = TRUE, linewidth = 1) +
   geom_vline(mapping = aes(xintercept = 14)) +
@@ -298,13 +298,13 @@ countdown::countdown(minutes = 3, id = "mean-var-trade", left = "0")
 #| fig-width: 6
 #| fig-height: 4.25
 
-scaled_obj %>%
-  filter(.iter == 0) %>% 
+scaled_obj |>
+  filter(.iter == 0) |> 
   ggplot(aes(learn_rate, .mean)) +
   geom_line(data = grid_points, aes(y = mean), alpha = 1 / 10, 
             col = "#0b84a5", linewidth = 1.5) +
   geom_line() +
-  geom_point(data = bayes_points %>% filter(.iter == 0), aes(y = mean)) +
+  geom_point(data = bayes_points |> filter(.iter == 0), aes(y = mean)) +
   geom_ribbon(aes(ymin = .mean - .sd, ymax = .mean + .sd),
               alpha = 1 / 7) +
   scale_x_log10() +
@@ -350,10 +350,10 @@ We would probably pick the point with the largest EI as the next point.
 #| fig-width: 6
 #| fig-height: 4.25
 
-scaled_obj %>%
-  filter(.iter == 0) %>% 
+scaled_obj |>
+  filter(.iter == 0) |> 
   ggplot(aes(learn_rate, scaled)) +
-  geom_point(data = bayes_points %>% filter(.iter == 0), aes(y = zero)) +
+  geom_point(data = bayes_points |> filter(.iter == 0), aes(y = zero)) +
   geom_line(alpha = 1 / 2, col = "#D95F02", linewidth = 1) +
   scale_x_log10()  +
   labs(y = "Expected Improvement", x = "Learning Rate")
@@ -382,13 +382,13 @@ We stop when we have completed the allowed number of iterations _or_ if we don't
 #| fig-width: 6
 #| fig-height: 4.25
 
-scaled_obj %>%
-  filter(.iter == 1) %>% 
+scaled_obj |>
+  filter(.iter == 1) |> 
   ggplot(aes(learn_rate, .mean)) +
   geom_line(data = grid_points, aes(y = mean), alpha = 1 / 4, 
             col = "#0b84a5", linewidth = 1.5) +
   geom_line() +
-  geom_point(data = bayes_points %>% filter(.iter == 1), aes(y = mean)) +
+  geom_point(data = bayes_points |> filter(.iter == 1), aes(y = mean)) +
   geom_ribbon(aes(ymin = .mean - .sd, ymax = .mean + .sd),
               alpha = 1 / 7) +
   scale_x_log10() +
@@ -406,10 +406,10 @@ scaled_obj %>%
 #| fig-width: 6
 #| fig-height: 4.25
 
-scaled_obj %>%
-  filter(.iter == 1) %>% 
+scaled_obj |>
+  filter(.iter == 1) |> 
   ggplot(aes(learn_rate, scaled)) +
-  geom_point(data = bayes_points %>% filter(.iter == 1), aes(y = zero)) +
+  geom_point(data = bayes_points |> filter(.iter == 1), aes(y = zero)) +
   geom_line(alpha = 1 / 2, col = "#D95F02", linewidth = 1) +
   scale_x_log10()  +
   labs(y = "Expected Improvement", x = "Learning Rate")
@@ -470,7 +470,7 @@ reg_metrics <- metric_set(mae, rsq)
 
 set.seed(12)
 init_res <-
-  lgbm_wflow %>%
+  lgbm_wflow |>
   tune_grid(
     resamples = hotel_rs,
     grid = nrow(lgbm_param) + 2,
@@ -478,7 +478,7 @@ init_res <-
     metrics = reg_metrics
   )
 
-show_best(init_res, metric = "mae") %>% select(-.metric, -.estimator)
+show_best(init_res, metric = "mae") |> select(-.metric, -.estimator)
 ```
 
 ## BO using tidymodels
@@ -493,7 +493,7 @@ ctrl_bo <- control_bayes(verbose_iter = TRUE) # <- for demonstration
 
 set.seed(15)
 lgbm_bayes_res <-
-  lgbm_wflow %>%
+  lgbm_wflow |>
   tune_bayes(
     resamples = hotel_rs,
     initial = init_res,     # <- initial results
@@ -508,7 +508,7 @@ lgbm_bayes_res <-
 ```{r tuning} 
 #| label: lgb-bo-best
 
-show_best(lgbm_bayes_res, metric = "mae") %>% select(-.metric, -.estimator)
+show_best(lgbm_bayes_res, metric = "mae") |> select(-.metric, -.estimator)
 ```
 
 
@@ -617,7 +617,7 @@ We can take the results of the Bayesian optimization and accept the best results
 
 best_param <- select_best(lgbm_bayes_res, metric = "mae")
 final_wflow <- 
-  lgbm_wflow %>% 
+  lgbm_wflow |> 
   finalize_workflow(best_param)
 final_wflow
 ```
@@ -627,7 +627,7 @@ final_wflow
 We can use individual functions: 
 
 ```r
-final_fit <- final_wflow %>% fit(data = hotel_train)
+final_fit <- final_wflow |> fit(data = hotel_train)
 
 # then predict() or augment() 
 # then compute metrics
@@ -641,7 +641,7 @@ Remember that there is also a convenience function to do all of this:
 #| label: last-fit
 
 set.seed(3893)
-final_res <- final_wflow %>% last_fit(hotel_split, metrics = reg_metrics)
+final_res <- final_wflow |> last_fit(hotel_split, metrics = reg_metrics)
 final_res
 ```
 
@@ -660,8 +660,8 @@ best_bo_rs <- show_best(lgbm_bayes_res, metric = "mae", n = 1)
 ```{r}
 #| label: test-cal-code
 #| eval: false
-final_res %>% 
-  collect_predictions() %>% 
+final_res |> 
+  collect_predictions() |> 
   cal_plot_regression(
     truth = avg_price_per_room, 
     estimate = .pred)
@@ -671,7 +671,7 @@ Test set performance:
 
 ```{r}
 #| label: test-metrics
-final_res %>% collect_metrics()
+final_res |> collect_metrics()
 ```
 :::
 
@@ -686,8 +686,8 @@ final_res %>% collect_metrics()
 #| fig-height: 5
 #| fig-align:  center
 
-final_res %>% 
-  collect_predictions() %>% 
+final_res |> 
+  collect_predictions() |> 
   cal_plot_regression(
     truth = avg_price_per_room, 
     estimate = .pred)

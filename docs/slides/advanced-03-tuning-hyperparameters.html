@@ -233,10 +233,10 @@
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="fu">data</span>(hotel_rates)</span>
 <span id="cb2-2"><a></a><span class="fu">set.seed</span>(<span class="dv">295</span>)</span>
 <span id="cb2-3"><a></a>hotel_rates <span class="ot">&lt;-</span> </span>
-<span id="cb2-4"><a></a>  hotel_rates <span class="sc">%&gt;%</span> </span>
-<span id="cb2-5"><a></a>  <span class="fu">sample_n</span>(<span class="dv">5000</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-6"><a></a>  <span class="fu">arrange</span>(arrival_date) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-7"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>arrival_date) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-4"><a></a>  hotel_rates <span class="sc">|&gt;</span> </span>
+<span id="cb2-5"><a></a>  <span class="fu">sample_n</span>(<span class="dv">5000</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb2-6"><a></a>  <span class="fu">arrange</span>(arrival_date) <span class="sc">|&gt;</span> </span>
+<span id="cb2-7"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>arrival_date) <span class="sc">|&gt;</span> </span>
 <span id="cb2-8"><a></a>  <span class="fu">mutate</span>(</span>
 <span id="cb2-9"><a></a>    <span class="at">company =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(company)),</span>
 <span id="cb2-10"><a></a>    <span class="at">country =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(country)),</span>
@@ -264,13 +264,13 @@
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a><span class="fu">library</span>(textrecipes)</span>
 <span id="cb4-2"><a></a></span>
 <span id="cb4-3"><a></a>hash_rec <span class="ot">&lt;-</span></span>
-<span id="cb4-4"><a></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">%&gt;%</span></span>
-<span id="cb4-5"><a></a>  <span class="fu">step_YeoJohnson</span>(lead_time) <span class="sc">%&gt;%</span></span>
+<span id="cb4-4"><a></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">|&gt;</span></span>
+<span id="cb4-5"><a></a>  <span class="fu">step_YeoJohnson</span>(lead_time) <span class="sc">|&gt;</span></span>
 <span id="cb4-6"><a></a>  <span class="co"># Defaults to 32 signed indicator columns</span></span>
-<span id="cb4-7"><a></a>  <span class="fu">step_dummy_hash</span>(agent) <span class="sc">%&gt;%</span></span>
-<span id="cb4-8"><a></a>  <span class="fu">step_dummy_hash</span>(company) <span class="sc">%&gt;%</span></span>
+<span id="cb4-7"><a></a>  <span class="fu">step_dummy_hash</span>(agent) <span class="sc">|&gt;</span></span>
+<span id="cb4-8"><a></a>  <span class="fu">step_dummy_hash</span>(company) <span class="sc">|&gt;</span></span>
 <span id="cb4-9"><a></a>  <span class="co"># Regular indicators for the others</span></span>
-<span id="cb4-10"><a></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-10"><a></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">|&gt;</span> </span>
 <span id="cb4-11"><a></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
@@ -359,10 +359,10 @@
 <p>Our new recipe is:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6" data-code-line-numbers="4-5|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a>hash_rec <span class="ot">&lt;-</span></span>
-<span id="cb6-2"><a></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">%&gt;%</span></span>
-<span id="cb6-3"><a></a>  <span class="fu">step_YeoJohnson</span>(lead_time) <span class="sc">%&gt;%</span></span>
-<span id="cb6-4"><a></a>  <span class="fu">step_dummy_hash</span>(agent,   <span class="at">num_terms =</span> <span class="fu">tune</span>(<span class="st">"agent hash"</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb6-5"><a></a>  <span class="fu">step_dummy_hash</span>(company, <span class="at">num_terms =</span> <span class="fu">tune</span>(<span class="st">"company hash"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb6-2"><a></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">|&gt;</span></span>
+<span id="cb6-3"><a></a>  <span class="fu">step_YeoJohnson</span>(lead_time) <span class="sc">|&gt;</span></span>
+<span id="cb6-4"><a></a>  <span class="fu">step_dummy_hash</span>(agent,   <span class="at">num_terms =</span> <span class="fu">tune</span>(<span class="st">"agent hash"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb6-5"><a></a>  <span class="fu">step_dummy_hash</span>(company, <span class="at">num_terms =</span> <span class="fu">tune</span>(<span class="st">"company hash"</span>)) <span class="sc">|&gt;</span></span>
 <span id="cb6-6"><a></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p><br></p>
@@ -407,8 +407,8 @@
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a><span class="fu">library</span>(bonsai)</span>
 <span id="cb7-2"><a></a>lgbm_spec <span class="ot">&lt;-</span> </span>
-<span id="cb7-3"><a></a>  <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
-<span id="cb7-4"><a></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-3"><a></a>  <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb7-4"><a></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">|&gt;</span> </span>
 <span id="cb7-5"><a></a>  <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>, <span class="at">num_threads =</span> <span class="dv">1</span>)</span>
 <span id="cb7-6"><a></a></span>
 <span id="cb7-7"><a></a>lgbm_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(hash_rec, lgbm_spec)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -487,7 +487,7 @@
 <section id="create-a-grid" class="slide level2">
 <h2>Create a grid <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a>lgbm_wflow <span class="sc">%&gt;%</span> </span>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a>lgbm_wflow <span class="sc">|&gt;</span> </span>
 <span id="cb8-2"><a></a>  <span class="fu">extract_parameter_set_dials</span>()</span>
 <span id="cb8-3"><a></a></span>
 <span id="cb8-4"><a></a><span class="co"># Individual functions: </span></span>
@@ -502,8 +502,8 @@
 <h2>Create a grid <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a>grid <span class="ot">&lt;-</span> </span>
-<span id="cb9-2"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span> </span>
-<span id="cb9-3"><a></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb9-2"><a></a>  lgbm_wflow <span class="sc">|&gt;</span> </span>
+<span id="cb9-3"><a></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">|&gt;</span> </span>
 <span id="cb9-4"><a></a>  <span class="fu">grid_space_filling</span>(<span class="at">size =</span> <span class="dv">25</span>)</span>
 <span id="cb9-5"><a></a></span>
 <span id="cb9-6"><a></a>grid</span>
@@ -541,8 +541,8 @@
 <h2>Create a regular grid <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb10" data-code-line-numbers="4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a>grid <span class="ot">&lt;-</span> </span>
-<span id="cb10-2"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span> </span>
-<span id="cb10-3"><a></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb10-2"><a></a>  lgbm_wflow <span class="sc">|&gt;</span> </span>
+<span id="cb10-3"><a></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">|&gt;</span> </span>
 <span id="cb10-4"><a></a>  <span class="fu">grid_regular</span>(<span class="at">levels =</span> <span class="dv">4</span>)</span>
 <span id="cb10-5"><a></a></span>
 <span id="cb10-6"><a></a>grid</span>
@@ -572,13 +572,13 @@
 <h2>Update parameter ranges <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb11" data-code-line-numbers="4-5|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a></a>lgbm_param <span class="ot">&lt;-</span> </span>
-<span id="cb11-2"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span> </span>
-<span id="cb11-3"><a></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb11-2"><a></a>  lgbm_wflow <span class="sc">|&gt;</span> </span>
+<span id="cb11-3"><a></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">|&gt;</span> </span>
 <span id="cb11-4"><a></a>  <span class="fu">update</span>(<span class="at">trees =</span> <span class="fu">trees</span>(<span class="fu">c</span>(<span class="dv">1</span>L, <span class="dv">100</span>L)),</span>
 <span id="cb11-5"><a></a>         <span class="at">learn_rate =</span> <span class="fu">learn_rate</span>(<span class="fu">c</span>(<span class="sc">-</span><span class="dv">5</span>, <span class="sc">-</span><span class="dv">1</span>)))</span>
 <span id="cb11-6"><a></a></span>
 <span id="cb11-7"><a></a>grid <span class="ot">&lt;-</span> </span>
-<span id="cb11-8"><a></a>  lgbm_param <span class="sc">%&gt;%</span> </span>
+<span id="cb11-8"><a></a>  lgbm_param <span class="sc">|&gt;</span> </span>
 <span id="cb11-9"><a></a>  <span class="fu">grid_space_filling</span>(<span class="at">size =</span> <span class="dv">25</span>)</span>
 <span id="cb11-10"><a></a></span>
 <span id="cb11-11"><a></a>grid</span>
@@ -602,7 +602,7 @@
 <h2>The results <img data-src="hexes/ggplot2.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell columns column-output-location" data-layout-align="center">
 <div class="column">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a></a>grid <span class="sc">%&gt;%</span> </span>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a></a>grid <span class="sc">|&gt;</span> </span>
 <span id="cb12-2"><a></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(trees, learn_rate)) <span class="sc">+</span></span>
 <span id="cb12-3"><a></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">4</span>) <span class="sc">+</span></span>
 <span id="cb12-4"><a></a>  <span class="fu">scale_y_log10</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -627,16 +627,16 @@
 <p>Let’s take our previous model and tune more parameters:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb13" data-code-line-numbers="2,12-13|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a></a>lgbm_spec <span class="ot">&lt;-</span> </span>
-<span id="cb13-2"><a></a>  <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>(),  <span class="at">min_n =</span> <span class="fu">tune</span>()) <span class="sc">%&gt;%</span> </span>
-<span id="cb13-3"><a></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-2"><a></a>  <span class="fu">boost_tree</span>(<span class="at">trees =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>(),  <span class="at">min_n =</span> <span class="fu">tune</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb13-3"><a></a>  <span class="fu">set_mode</span>(<span class="st">"regression"</span>) <span class="sc">|&gt;</span> </span>
 <span id="cb13-4"><a></a>  <span class="fu">set_engine</span>(<span class="st">"lightgbm"</span>, <span class="at">num_threads =</span> <span class="dv">1</span>)</span>
 <span id="cb13-5"><a></a></span>
 <span id="cb13-6"><a></a>lgbm_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(hash_rec, lgbm_spec)</span>
 <span id="cb13-7"><a></a></span>
 <span id="cb13-8"><a></a><span class="co"># Update the feature hash ranges (log-2 units)</span></span>
 <span id="cb13-9"><a></a>lgbm_param <span class="ot">&lt;-</span></span>
-<span id="cb13-10"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb13-11"><a></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb13-10"><a></a>  lgbm_wflow <span class="sc">|&gt;</span></span>
+<span id="cb13-11"><a></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">|&gt;</span></span>
 <span id="cb13-12"><a></a>  <span class="fu">update</span>(<span class="st">`</span><span class="at">agent hash</span><span class="st">`</span>   <span class="ot">=</span> <span class="fu">num_hash</span>(<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">8</span>)),</span>
 <span id="cb13-13"><a></a>         <span class="st">`</span><span class="at">company hash</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">num_hash</span>(<span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">8</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -648,7 +648,7 @@
 <span id="cb14-2"><a></a>ctrl <span class="ot">&lt;-</span> <span class="fu">control_grid</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb14-3"><a></a></span>
 <span id="cb14-4"><a></a>lgbm_res <span class="ot">&lt;-</span></span>
-<span id="cb14-5"><a></a>  lgbm_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb14-5"><a></a>  lgbm_wflow <span class="sc">|&gt;</span></span>
 <span id="cb14-6"><a></a>  <span class="fu">tune_grid</span>(</span>
 <span id="cb14-7"><a></a>    <span class="at">resamples =</span> hotel_rs,</span>
 <span id="cb14-8"><a></a>    <span class="at">grid =</span> <span class="dv">25</span>,</span>
@@ -780,10 +780,10 @@
 <div class="cell columns column-output-location">
 <div class="column">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a></a><span class="fu">library</span>(probably)</span>
-<span id="cb21-2"><a></a>lgbm_res <span class="sc">%&gt;%</span></span>
+<span id="cb21-2"><a></a>lgbm_res <span class="sc">|&gt;</span></span>
 <span id="cb21-3"><a></a>  <span class="fu">collect_predictions</span>(</span>
 <span id="cb21-4"><a></a>    <span class="at">parameters =</span> lgbm_best</span>
-<span id="cb21-5"><a></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb21-5"><a></a>  ) <span class="sc">|&gt;</span></span>
 <span id="cb21-6"><a></a>  <span class="fu">cal_plot_regression</span>(</span>
 <span id="cb21-7"><a></a>    <span class="at">truth =</span> avg_price_per_room,</span>
 <span id="cb21-8"><a></a>    <span class="at">estimate =</span> .pred</span>
