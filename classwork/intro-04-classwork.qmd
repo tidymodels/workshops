@@ -32,22 +32,22 @@ forested_fit <- fit(forested_wflow, forested_train)
 `conf_mat()` can be used to see how well the model is doing at prediction
 
 ```{r}
-augment(forested_fit, new_data = forested_train) %>%
+augment(forested_fit, new_data = forested_train) |>
   conf_mat(truth = forested, estimate = .pred_class)
 ```
 
 and it has nice plotting features
 
 ```{r}
-augment(forested_fit, new_data = forested_train) %>%
-  conf_mat(truth = forested, estimate = .pred_class) %>%
+augment(forested_fit, new_data = forested_train) |>
+  conf_mat(truth = forested, estimate = .pred_class) |>
   autoplot(type = "heatmap")
 ```
 
 using the same interface we can calculate metrics
 
 ```{r}
-augment(forested_fit, new_data = forested_train) %>%
+augment(forested_fit, new_data = forested_train) |>
   accuracy(truth = forested, estimate = .pred_class)
 ```
 
@@ -56,15 +56,15 @@ Metric sets are a way to combine multiple similar metric functions together into
 ```{r}
 forested_metrics <- metric_set(accuracy, specificity, sensitivity)
 
-augment(forested_fit, new_data = forested_train) %>%
+augment(forested_fit, new_data = forested_train) |>
   forested_metrics(truth = forested, estimate = .pred_class)
 ```
 
 Metrics and metric sets work with grouped data frames!
 
 ```{r}
-augment(forested_fit, new_data = forested_train) %>%
-  group_by(tree_no_tree) %>%
+augment(forested_fit, new_data = forested_train) |>
+  group_by(tree_no_tree) |>
   accuracy(truth = forested, estimate = .pred_class)
 ```
 
@@ -95,23 +95,23 @@ What data are being used for this ROC curve plot?
 Repredicting the training set, bad!
 
 ```{r}
-forested_fit %>%
+forested_fit |>
   augment(forested_train)
 ```
 
 "Resubstitution estimate" - This should be the best possible performance that you could ever achieve, but it can be very misleading!
 
 ```{r}
-forested_fit %>%
-  augment(forested_train) %>%
+forested_fit |>
+  augment(forested_train) |>
   accuracy(forested, .pred_class)
 ```
 
 Now on the test set, see that it performs worse? This is closer to "real" performance.
 
 ```{r}
-forested_fit %>%
-  augment(forested_test) %>%
+forested_fit |>
+  augment(forested_test) |>
   accuracy(forested, .pred_class)
 ```
 
@@ -175,7 +175,7 @@ forested_res
 Aggregate metrics
 
 ```{r}
-forested_res %>%
+forested_res |>
   collect_metrics()
 ```
 
@@ -263,7 +263,7 @@ collect_predictions(final_fit)
 ```
 
 ```{r}
-collect_predictions(final_fit) %>%
+collect_predictions(final_fit) |>
   ggplot(aes(.pred_class, fill = forested)) + 
   geom_bar() 
 ```

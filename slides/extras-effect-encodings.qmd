@@ -30,8 +30,8 @@ library(probably)
 library(finetune)
 
 cores <- parallelly::availableCores(logical = FALSE)
-cl <- parallel::makePSOCKcluster(cores)
-doParallel::registerDoParallel(cl)
+library(future)
+plan("multisession")
 
 options(width = 200)
 
@@ -68,10 +68,10 @@ options(
 data(hotel_rates)
 set.seed(295)
 hotel_rates <- 
-  hotel_rates %>% 
-  sample_n(5000) %>% 
-  arrange(arrival_date) %>% 
-  select(-arrival_date) %>% 
+  hotel_rates |> 
+  sample_n(5000) |> 
+  arrange(arrival_date) |> 
+  select(-arrival_date) |> 
   mutate(
     company = factor(as.character(company)),
     country = factor(as.character(country)),
@@ -124,29 +124,29 @@ We could:
 #| include: false
 
 agent_stats <- 
-  hotel_train %>%
-  group_by(agent) %>%
+  hotel_train |>
+  group_by(agent) |>
   summarize(
     ADR = mean(avg_price_per_room), 
     num_reservations = n(),
     .groups = "drop"
-    ) %>%
+    ) |>
   mutate(agent = reorder(agent, ADR))
 
 library(embed)
 
 estimates <- 
-  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
-  step_lencode_mixed(agent, outcome = vars(avg_price_per_room), id = "encoding") %>%   #<<
-  step_dummy(all_nominal_predictors()) %>% 
-  step_zv(all_predictors()) %>% 
-  step_normalize(all_numeric_predictors()) %>% 
-  prep() %>% 
-  tidy(id = "encoding") %>% 
+  recipe(avg_price_per_room ~ ., data = hotel_train) |> 
+  step_lencode_mixed(agent, outcome = vars(avg_price_per_room), id = "encoding") |>   #<<
+  step_dummy(all_nominal_predictors()) |> 
+  step_zv(all_predictors()) |> 
+  step_normalize(all_numeric_predictors()) |> 
+  prep() |> 
+  tidy(id = "encoding") |> 
   select(agent = level, estimate = value)
 
-before <- hotel_train %>% select(avg_price_per_room, agent) %>% slice(1:7) %>% add_rowindex()
-after <- left_join(before, estimates, by = "agent") %>% 
+before <- hotel_train |> select(avg_price_per_room, agent) |> slice(1:7) |> add_rowindex()
+after <- left_join(before, estimates, by = "agent") |> 
   select(avg_price_per_room, agent = estimate, .row)
 ```
 
@@ -166,7 +166,7 @@ after <- left_join(before, estimates, by = "agent") %>%
 #| dev-args:
 #|   bg: "transparent"
   
-agent_stats %>%   
+agent_stats |>   
   ggplot(aes(x = num_reservations)) +
   geom_histogram(bins = 30, col = "blue", fill = "blue", alpha = 1/3) +
   labs(x = "Number of reservations per agent")
@@ -185,7 +185,7 @@ agent_stats %>%
 #| dev-args:
 #|   bg: "transparent"
 
-agent_stats %>%   
+agent_stats |>   
   ggplot(aes(x = ADR)) +
   geom_histogram(bins = 30, col = "red", fill = "red", alpha = 1/3) +
   labs(x = "Average ADR per agent")
@@ -239,11 +239,11 @@ The `agent` column is replaced with an estimate of the ADR.
 #| dev-args:
 #|   bg: "transparent"
   
-agent_stats %>%   
+agent_stats |>   
   ggplot(aes(x = num_reservations)) +
   geom_histogram(bins = 30, col = "blue", fill = "blue", alpha = 1/3) +
   labs(x = "Number of reservations per agent")
-agent_stats %>%   
+agent_stats |>   
   ggplot(aes(x = ADR)) +
   geom_histogram(bins = 30, col = "red", fill = "red", alpha = 1/3) +
   labs(x = "Average ADR per agent")
@@ -282,7 +282,7 @@ Partial pooling gives better estimates for agents with fewer reservations by shr
 #| dev-args:
 #|   bg: "transparent"
 
-inner_join(agent_stats, estimates, by = "agent") %>% 
+inner_join(agent_stats, estimates, by = "agent") |> 
   ggplot(aes(x = ADR, y = estimate)) + 
   geom_abline(col = "green", lty = 2) +
   geom_point(aes(size = num_reservations), alpha = 1/3) +
@@ -299,10 +299,10 @@ inner_join(agent_stats, estimates, by = "agent") %>%
 library(embed)
 
 hotel_effect_rec <-
-  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
-  step_YeoJohnson(lead_time) %>%
-  step_lencode_mixed(agent, company, outcome = vars(avg_price_per_room)) %>%
-  step_dummy(all_nominal_predictors()) %>%
+  recipe(avg_price_per_room ~ ., data = hotel_train) |> 
+  step_YeoJohnson(lead_time) |>
+  step_lencode_mixed(agent, company, outcome = vars(avg_price_per_room)) |>
+  step_dummy(all_nominal_predictors()) |>
   step_zv(all_predictors())
 ```
 
@@ -316,14 +316,14 @@ It is very important to appropriately validate the effect encoding step to make 
 #| label: resample-encoding
 #| code-line-numbers: "4|"
 hotel_effect_wflow <-
-  workflow() %>%
-  add_model(linear_reg()) %>% 
+  workflow() |>
+  add_model(linear_reg()) |> 
   update_recipe(hotel_effect_rec)
 
 reg_metrics <- metric_set(mae, rsq)
 
 hotel_effect_res <-
-  hotel_effect_wflow %>%
+  hotel_effect_wflow |>
   fit_resamples(hotel_rs, metrics = reg_metrics)
 
 collect_metrics(hotel_effect_res)
@@ -331,10 +331,3 @@ collect_metrics(hotel_effect_res)
 
 Slightly worse but it can handle new agents (if they occur).
 
-```{r}
-#| label: teardown
-#| include: false
-
-parallel::stopCluster(cl)
-
-```

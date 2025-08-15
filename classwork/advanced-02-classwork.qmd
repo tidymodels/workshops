@@ -28,10 +28,10 @@ reg_metrics <- metric_set(mae, rsq)
 data(hotel_rates)
 set.seed(295)
 hotel_rates <- 
-  hotel_rates %>% 
-  sample_n(5000) %>% 
-  arrange(arrival_date) %>% 
-  select(-arrival_date) %>% 
+  hotel_rates |> 
+  sample_n(5000) |> 
+  arrange(arrival_date) |> 
+  select(-arrival_date) |> 
   mutate(
     company = factor(as.character(company)),
     country = factor(as.character(country)),
@@ -76,11 +76,11 @@ What do you think are in the `type` vectors for the `lead_time` and `country` co
 
 ```{r}
 hotel_rec <- 
-  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
+  recipe(avg_price_per_room ~ ., data = hotel_train) |> 
   # create indicator variables
-  step_dummy(all_nominal_predictors()) %>% 
+  step_dummy(all_nominal_predictors()) |> 
   # filter out constant columns
-  step_zv(all_predictors()) %>% 
+  step_zv(all_predictors()) |> 
   # normalize
   step_normalize(all_numeric_predictors())
 ```
@@ -89,24 +89,24 @@ hotel_rec <-
 
 ```{r}
 hotel_rec <- 
-  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
-  step_dummy(all_nominal_predictors()) %>% 
-  step_zv(all_predictors()) %>% 
-  step_normalize(all_numeric_predictors()) %>% 
+  recipe(avg_price_per_room ~ ., data = hotel_train) |> 
+  step_dummy(all_nominal_predictors()) |> 
+  step_zv(all_predictors()) |> 
+  step_normalize(all_numeric_predictors()) |> 
   step_corr(all_numeric_predictors(), threshold = 0.9)
 
 hotel_rec <- 
-  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
-  step_dummy(all_nominal_predictors()) %>% 
-  step_zv(all_predictors()) %>% 
-  step_normalize(all_numeric_predictors()) %>% 
+  recipe(avg_price_per_room ~ ., data = hotel_train) |> 
+  step_dummy(all_nominal_predictors()) |> 
+  step_zv(all_predictors()) |> 
+  step_normalize(all_numeric_predictors()) |> 
   step_pca(all_numeric_predictors())
 
 hotel_rec <- 
-  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
-  step_dummy(all_nominal_predictors()) %>% 
-  step_zv(all_predictors()) %>% 
-  step_normalize(all_numeric_predictors()) %>% 
+  recipe(avg_price_per_room ~ ., data = hotel_train) |> 
+  step_dummy(all_nominal_predictors()) |> 
+  step_zv(all_predictors()) |> 
+  step_normalize(all_numeric_predictors()) |> 
   embed::step_umap(all_numeric_predictors(), outcome = vars(avg_price_per_room))
 ```
 
@@ -116,10 +116,10 @@ For example, natural splines:
 
 ```{r}
 hotel_rec <- 
-  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
-  step_dummy(all_nominal_predictors()) %>% 
-  step_zv(all_predictors()) %>% 
-  step_normalize(all_numeric_predictors()) %>% 
+  recipe(avg_price_per_room ~ ., data = hotel_train) |> 
+  step_dummy(all_nominal_predictors()) |> 
+  step_zv(all_predictors()) |> 
+  step_normalize(all_numeric_predictors()) |> 
   step_spline_natural(arrival_date_num, deg_free = 10)
 ```
 
@@ -140,10 +140,10 @@ Create a `recipe()` for the hotel data to:
 
 ```{r}
 hotel_indicators <-
-  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
-  step_YeoJohnson(lead_time) %>%
-  step_dummy(all_nominal_predictors()) %>%
-  step_zv(all_predictors()) %>% 
+  recipe(avg_price_per_room ~ ., data = hotel_train) |> 
+  step_YeoJohnson(lead_time) |>
+  step_dummy(all_nominal_predictors()) |>
+  step_zv(all_predictors()) |> 
   step_spline_natural(arrival_date_num, deg_free = 10)
 ```
 
@@ -160,13 +160,13 @@ reg_metrics <- metric_set(mae, rsq)
 set.seed(9)
 
 hotel_lm_wflow <-
-  workflow() %>%
-  add_recipe(hotel_indicators) %>%
+  workflow() |>
+  add_recipe(hotel_indicators) |>
   add_model(linear_reg())
  
 ctrl <- control_resamples(save_pred = TRUE)
 hotel_lm_res <-
-  hotel_lm_wflow %>%
+  hotel_lm_wflow |>
   fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
 
 collect_metrics(hotel_lm_res)
@@ -188,7 +188,7 @@ Collect the predictions from the results.
 ```{r}
 # Since we used `save_pred = TRUE`
 lm_cv_pred <- collect_predictions(hotel_lm_res)
-lm_cv_pred %>% slice(1:7)
+lm_cv_pred |> slice(1:7)
 ```
 
 ## Calibration Plot 
@@ -205,19 +205,19 @@ Collapsing factor levels:
 
 ```{r}
 hotel_other_rec <-
-  recipe(avg_price_per_room ~ ., data = hotel_train) %>% 
-  step_YeoJohnson(lead_time) %>%
-  step_other(agent, threshold = 0.001) %>%
-  step_dummy(all_nominal_predictors()) %>%
-  step_zv(all_predictors()) %>% 
+  recipe(avg_price_per_room ~ ., data = hotel_train) |> 
+  step_YeoJohnson(lead_time) |>
+  step_other(agent, threshold = 0.001) |>
+  step_dummy(all_nominal_predictors()) |>
+  step_zv(all_predictors()) |> 
   step_spline_natural(arrival_date_num, deg_free = 10)
 
 hotel_other_wflow <-
-  hotel_lm_wflow %>%
+  hotel_lm_wflow |>
   update_recipe(hotel_other_rec)
 
 hotel_other_res <-
-  hotel_other_wflow %>%
+  hotel_other_wflow |>
   fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
 
 collect_metrics(hotel_other_res)
@@ -229,22 +229,22 @@ Feature Hashing:
 library(textrecipes)
 
 hash_rec <-
-  recipe(avg_price_per_room ~ ., data = hotel_train) %>%
-  step_YeoJohnson(lead_time) %>%
+  recipe(avg_price_per_room ~ ., data = hotel_train) |>
+  step_YeoJohnson(lead_time) |>
   # Defaults to 32 signed indicator columns
-  step_dummy_hash(agent) %>%
-  step_dummy_hash(company) %>%
+  step_dummy_hash(agent) |>
+  step_dummy_hash(company) |>
   # Regular indicators for the others
-  step_dummy(all_nominal_predictors()) %>% 
-  step_zv(all_predictors()) %>% 
+  step_dummy(all_nominal_predictors()) |> 
+  step_zv(all_predictors()) |> 
   step_spline_natural(arrival_date_num, deg_free = 10)
 
 hotel_hash_wflow <-
-  hotel_lm_wflow %>%
+  hotel_lm_wflow |>
   update_recipe(hash_rec)
 
 hotel_hash_res <-
-  hotel_hash_wflow %>%
+  hotel_hash_wflow |>
   fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
 
 collect_metrics(hotel_hash_res)
@@ -260,5 +260,5 @@ hash_rec_fit <- prep(hash_rec)
 tidy(hash_rec_fit, number = 1)
 
 # Get the processed data
-bake(hash_rec_fit, hotel_train %>% slice(1:3), contains("_agent_"))
+bake(hash_rec_fit, hotel_train |> slice(1:3), contains("_agent_"))
 ```

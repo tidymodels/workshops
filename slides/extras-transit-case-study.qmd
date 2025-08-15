@@ -84,19 +84,19 @@ The data are in `modeldata`. See `?Chicago`.
 #| out-width: 100%
 load("station_locations.RData")
 other_stations <- 
-  station_locations %>% 
+  station_locations |> 
   filter(!grepl("Clark/Lake", description, fixed = TRUE))
 clark_lake <- 
   anti_join(station_locations, other_stations, by = c("lon", "lat", "description"))
-leaflet() %>%
-  addProviderTiles(providers$CartoDB.Positron) %>% 
+leaflet() |>
+  addProviderTiles(providers$CartoDB.Positron) |> 
   addCircleMarkers(
     other_stations$lon,
     other_stations$lat,
     popup = other_stations$description,
     color = "red",
     radius = 3
-  ) %>%
+  ) |>
   addCircleMarkers(
     clark_lake$lon,
     clark_lake$lat,
@@ -185,7 +185,7 @@ This image shows overlapping assessment sets. We will use non-overlapping data b
 #| code-line-numbers: "4|"
 
 chi_rs <-
-  chi_train %>%
+  chi_train |>
   sliding_period(
     index = "date",  
 
@@ -206,7 +206,7 @@ Use the `date` column to find the date data.
 #| code-line-numbers: "5|"
 
 chi_rs <-
-  chi_train %>%
+  chi_train |>
   sliding_period(
     index = "date",  
     period = "week",
@@ -227,7 +227,7 @@ Our units will be weeks.
 #| code-line-numbers: "6|"
 
 chi_rs <-
-  chi_train %>%
+  chi_train |>
   sliding_period(
     index = "date",  
     period = "week",
@@ -249,7 +249,7 @@ Every analysis set has 15 years of data
 #| code-line-numbers: "7|"
 
 chi_rs <-
-  chi_train %>%
+  chi_train |>
   sliding_period(
     index = "date",  
     period = "week",
@@ -269,7 +269,7 @@ Every assessment set has 2 weeks of data
 #| code-line-numbers: "8|"
 
 chi_rs <-
-  chi_train %>%
+  chi_train |>
   sliding_period(
     index = "date",  
     period = "week",
@@ -283,8 +283,8 @@ Increment by 2 weeks so that there are no overlapping assessment sets.
 
 ```{r}
 #| label: ranges
-chi_rs$splits[[1]] %>% assessment() %>% pluck("date") %>% range()
-chi_rs$splits[[2]] %>% assessment() %>% pluck("date") %>% range()
+chi_rs$splits[[1]] |> assessment() |> pluck("date") |> range()
+chi_rs$splits[[2]] |> assessment() |> pluck("date") |> range()
 ```
 
 
@@ -341,7 +341,7 @@ summary(chi_rec)
 #| label: step-date
 #| code-line-numbers: "3|"
 chi_rec <- 
-  recipe(ridership ~ ., data = chi_train) %>% 
+  recipe(ridership ~ ., data = chi_train) |> 
   step_date(date, features = c("dow", "month", "year")) 
 ```
 
@@ -354,8 +354,8 @@ This creates three new columns in the data based on the date. Note that the day-
 #| label: holiday
 #| code-line-numbers: "4|"
 chi_rec <- 
-  recipe(ridership ~ ., data = chi_train) %>% 
-  step_date(date, features = c("dow", "month", "year")) %>% 
+  recipe(ridership ~ ., data = chi_train) |> 
+  step_date(date, features = c("dow", "month", "year")) |> 
   step_holiday(date) 
 ```
 
@@ -374,10 +374,10 @@ We might want to change the role (instead of removing the column) because it wil
 #| label: update-role-req
 #| code-line-numbers: "5,6|"
 chi_rec <- 
-  recipe(ridership ~ ., data = chi_train) %>% 
-  step_date(date, features = c("dow", "month", "year")) %>% 
-  step_holiday(date) %>% 
-  update_role(date, new_role = "id") %>%
+  recipe(ridership ~ ., data = chi_train) |> 
+  step_date(date, features = c("dow", "month", "year")) |> 
+  step_holiday(date) |> 
+  update_role(date, new_role = "id") |>
   update_role_requirements(role = "id", bake = TRUE)
 ```
 
@@ -391,11 +391,11 @@ chi_rec <-
 #| label: zv-step
 #| code-line-numbers: "7|"
 chi_rec <- 
-  recipe(ridership ~ ., data = chi_train) %>% 
-  step_date(date, features = c("dow", "month", "year")) %>% 
-  step_holiday(date) %>% 
-  update_role(date, new_role = "id") %>%
-  update_role_requirements(role = "id", bake = TRUE) %>% 
+  recipe(ridership ~ ., data = chi_train) |> 
+  step_date(date, features = c("dow", "month", "year")) |> 
+  step_holiday(date) |> 
+  update_role(date, new_role = "id") |>
+  update_role_requirements(role = "id", bake = TRUE) |> 
   step_zv(all_nominal_predictors()) 
 ```
 
@@ -412,8 +412,8 @@ The vector `stations` contains all station names and can be used to identify all
 #| label: pca-rec
 #| code-line-numbers: "7|"
 chi_pca_rec <- 
-  chi_rec %>% 
-  step_normalize(all_of(!!stations)) %>% 
+  chi_rec |> 
+  step_normalize(all_of(!!stations)) |> 
   step_pca(all_of(!!stations), num_comp = tune())
 ```
 
@@ -426,14 +426,14 @@ Let's try three models. The first one requires the `rules` package (loaded earli
 ```{r}
 #| label: chi-specs
 cb_spec <- cubist_rules(committees = 25, neighbors = tune())
-mars_spec <- mars(prod_degree = tune()) %>% set_mode("regression")
+mars_spec <- mars(prod_degree = tune()) |> set_mode("regression")
 lm_spec <- linear_reg()
 
 chi_set <- 
   workflow_set(
     list(pca = chi_pca_rec, basic = chi_rec), 
     list(cubist = cb_spec, mars = mars_spec, lm = lm_spec)
-  ) %>% 
+  ) |> 
   # Evaluate models using mean absolute errors
   option_add(metrics = metric_set(mae))
 ```
@@ -454,7 +454,7 @@ Briefly talk about Cubist being a (sort of) boosted rule-based model and MARS be
 grid_ctrl <- control_grid(save_pred = TRUE, save_workflow = TRUE)
 
 chi_res <- 
-  chi_set %>% 
+  chi_set |> 
   workflow_map(
     resamples = chi_rs,
     grid = 10,
@@ -486,8 +486,8 @@ We can also pull out the specific tuning results and look at them:
 ```{r}
 #| label: cubist-autoplot
 #| fig-align: center
-chi_res %>% 
-  extract_workflow_set_result("pca_cubist") %>% 
+chi_res |> 
+  extract_workflow_set_result("pca_cubist") |> 
   autoplot()
 ```
 
@@ -538,7 +538,7 @@ Collect all of the resampling results for all model configurations.
 ```{r}
 #| label: add-cand
 chi_stack <- 
-  stacks() %>% 
+  stacks() |> 
   add_candidates(chi_res)
 ```
 
@@ -550,7 +550,7 @@ Which configurations should be retained? Uses a penalized linear model:
 ```{r}
 #| label: blend-pred
 set.seed(122)
-chi_stack_res <- blend_predictions(chi_stack)
+chi_stack_res <- blend_predictions(chi_stack, penalty = 10^seq(-6, -1, length.out = 25))
 
 chi_stack_res
 ```
@@ -595,14 +595,14 @@ We can pull out the results and the workflow to fit the single best cubist model
 ```{r}
 #| label: best-cubist
 best_cubist <- 
-  chi_res %>% 
-  extract_workflow_set_result("pca_cubist") %>% 
+  chi_res |> 
+  extract_workflow_set_result("pca_cubist") |> 
   select_best()
 
 cubist_res <- 
-  chi_res %>% 
-  extract_workflow("pca_cubist") %>% 
-  finalize_workflow(best_cubist) %>% 
+  chi_res |> 
+  extract_workflow("pca_cubist") |> 
+  finalize_workflow(best_cubist) |> 
   last_fit(split = chi_split, metrics = metric_set(mae))
 ```
 
@@ -613,7 +613,7 @@ We don't have `last_fit()` for stacks (yet) so we manually make predictions.
 ```{r}
 #| label: stack-pred
 stack_pred <- 
-  predict(chi_stack_res, chi_test) %>% 
+  predict(chi_stack_res, chi_test) |> 
   bind_cols(chi_test)
 ```
 
@@ -625,7 +625,7 @@ Single best versus the stack:
 #| label: cubist-metrics
 collect_metrics(cubist_res)
 
-stack_pred %>% mae(ridership, .pred)
+stack_pred |> mae(ridership, .pred)
 ```
 
 
@@ -638,8 +638,8 @@ stack_pred %>% mae(ridership, .pred)
 #| fig-height: 5
 #| fig-align: center
 library(probably)
-cubist_res %>% 
-  collect_predictions() %>% 
+cubist_res |> 
+  collect_predictions() |> 
   ggplot(aes(ridership, .pred)) + 
   geom_point(alpha = 1 / 2) + 
   geom_abline(lty = 2, col = "green") + 

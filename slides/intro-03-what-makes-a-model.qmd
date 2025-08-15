@@ -108,14 +108,14 @@ Models have default engines
 ## To specify a model `r hexes("parsnip")`
 
 ```{r logistic-reg-glmnet}
-logistic_reg() %>%
+logistic_reg() |>
   set_engine("glmnet")
 ```
 
 ## To specify a model `r hexes("parsnip")`
 
 ```{r logistic-reg-stan}
-logistic_reg() %>%
+logistic_reg() |>
   set_engine("stan")
 ```
 
@@ -148,7 +148,7 @@ Some models have a default mode
 ## To specify a model `r hexes("parsnip")`
 
 ```{r decision-tree-classification}
-decision_tree() %>% 
+decision_tree() |> 
   set_mode("classification")
 ```
 
@@ -216,19 +216,19 @@ dat$bin <- cut(dat$A, breaks = c(seq(-3, 3, by = 1/2)), include.lowest = TRUE)
 bin_midpoints <- data.frame(A = seq(-3, 3, by = 1/2) + 0.25)
 
 rates <- 
-  dat %>% 
-  nest(.by = bin) %>% 
+  dat |> 
+  nest(.by = bin) |> 
   mutate(
     probs = map(data, ~ binom.test(sum(.x$class == "one"), nrow(.x))),
     probs = map(probs, ~ tidy(.x))
-  ) %>% 
-  select(-data) %>% 
-  unnest(cols = probs) %>% 
-  arrange(bin) %>% 
+  ) |> 
+  select(-data) |> 
+  unnest(cols = probs) |> 
+  arrange(bin) |> 
   mutate(A = seq(-3, 3, by = 1/2) + 0.25) 
 
-plot_rates <- left_join(rates, bin_midpoints, by = join_by(A)) %>% 
-  filter(-2.5 < A, A < 3) %>% 
+plot_rates <- left_join(rates, bin_midpoints, by = join_by(A)) |> 
+  filter(-2.5 < A, A < 3) |> 
   ggplot() + 
   geom_point(aes(A, estimate)) +
   geom_errorbar(aes(A, estimate, ymin = conf.low, ymax = conf.high), width = .25)  +
@@ -262,8 +262,8 @@ plot_rates
 #| fig.width: 8
 #| fig.height: 7
 
-logistic_preds <- logistic_reg() %>% 
-  fit(class ~ A, data = dat) %>% 
+logistic_preds <- logistic_reg() |> 
+  fit(class ~ A, data = dat) |> 
   augment(new_data = bin_midpoints) 
 
 plot_rates +
@@ -309,7 +309,7 @@ $log(\frac{p}{1 - p}) = \beta_0 + \beta_1\cdot \text{A}$
 #| fig.width: 8
 #| fig.height: 7
 
-tree_fit <- decision_tree(mode = "classification") %>% 
+tree_fit <- decision_tree(mode = "classification") |> 
   fit(class ~ A, data = mutate(dat, class = forcats::fct_rev(class)))
 
 tree_preds <- augment(tree_fit, new_data = bin_midpoints)
@@ -322,8 +322,8 @@ tree_preds <- augment(tree_fit, new_data = bin_midpoints)
 #| fig-align: center
 
 library(rpart.plot)
-tree_fit %>%
-  extract_fit_engine() %>%
+tree_fit |>
+  extract_fit_engine() |>
   rpart.plot(roundint = FALSE)
 ```
 
@@ -344,8 +344,8 @@ tree_fit %>%
 #| fig-align: center
 
 library(rpart.plot)
-tree_fit %>%
-  extract_fit_engine() %>%
+tree_fit |>
+  extract_fit_engine() |>
   rpart.plot(roundint = FALSE)
 ```
 :::
@@ -370,8 +370,8 @@ tree_fit %>%
 #| fig-align: center
 
 library(rpart.plot)
-tree_fit %>%
-  extract_fit_engine() %>%
+tree_fit |>
+  extract_fit_engine() |>
   rpart.plot(roundint = FALSE)
 ```
 :::
@@ -471,10 +471,10 @@ Two ways workflows handle levels better than base R:
 
 ```{r tree-spec}
 tree_spec <-
-  decision_tree() %>% 
+  decision_tree() |> 
   set_mode("classification")
 
-tree_spec %>% 
+tree_spec |> 
   fit(forested ~ ., data = forested_train) 
 ```
 
@@ -482,12 +482,12 @@ tree_spec %>%
 
 ```{r tree-wflow}
 tree_spec <-
-  decision_tree() %>% 
+  decision_tree() |> 
   set_mode("classification")
 
-workflow() %>%
-  add_formula(forested ~ .) %>%
-  add_model(tree_spec) %>%
+workflow() |>
+  add_formula(forested ~ .) |>
+  add_model(tree_spec) |>
   fit(data = forested_train) 
 ```
 
@@ -495,10 +495,10 @@ workflow() %>%
 
 ```{r tree-wflow-fit}
 tree_spec <-
-  decision_tree() %>% 
+  decision_tree() |> 
   set_mode("classification")
 
-workflow(forested ~ ., tree_spec) %>% 
+workflow(forested ~ ., tree_spec) |> 
   fit(data = forested_train) 
 ```
 
@@ -525,11 +525,11 @@ How do you use your new `tree_fit` model?
 
 ```{r tree-wflow-fit-2}
 tree_spec <-
-  decision_tree() %>% 
+  decision_tree() |> 
   set_mode("classification")
 
 tree_fit <-
-  workflow(forested ~ ., tree_spec) %>% 
+  workflow(forested ~ ., tree_spec) |> 
   fit(data = forested_train) 
 ```
 
@@ -579,8 +579,8 @@ How do you **understand** your new `tree_fit` model?
 #| echo: false
 #| fig-align: center
 library(rpart.plot)
-tree_fit %>%
-  extract_fit_engine() %>%
+tree_fit |>
+  extract_fit_engine() |>
   rpart.plot(roundint = FALSE)
 ```
 
@@ -591,8 +591,8 @@ How do you **understand** your new `tree_fit` model?
 ```{r plot-tree-fit-5}
 #| eval: false
 library(rpart.plot)
-tree_fit %>%
-  extract_fit_engine() %>%
+tree_fit |>
+  extract_fit_engine() |>
   rpart.plot(roundint = FALSE)
 ```
 
