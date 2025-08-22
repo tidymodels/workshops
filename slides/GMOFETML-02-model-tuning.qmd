@@ -21,3 +21,263 @@ knitr:
 #| include: false
 #| file: setup.R
 ```
+
+## Example data
+
+some are noise; class imbalance
+
+
+## Neural networks using brulee
+
+
+## Cost-sensitive learning
+
+
+## A basic workflow
+
+
+# Optimizing Models via Tuning Parameters
+
+## Tuning parameters
+
+Some model or preprocessing parameters cannot be estimated directly from the data.
+
+. . .
+
+Some examples:
+
+- Tree depth in decision trees
+- Number of neighbors in a K-nearest neighbor model
+
+# Activation function in neural networks?
+
+Sigmoidal functions, ReLu, etc.
+
+::: fragment
+Yes, it is a tuning parameter.
+✅
+:::
+
+# Number of PCA columns to generate for feature extraction?
+
+::: fragment
+Yes, it is a _preprocessing_ tuning parameter.
+✅
+:::
+
+# Bayesian priors for model parameters?
+
+::: fragment
+Hmmmm, probably not.
+These are based on prior belief.
+❌
+:::
+
+# The class probability cutoff
+
+This is a value $C$ used to threshold $Pr[\texttt{.pred\_class\_1} \ge C]. 
+
+For two classes, the default is $C = 1/2$. 
+
+::: fragment
+Yes, it is a _postprocessing_ tuning parameter.
+✅
+:::
+
+
+# The random seed?
+
+::: fragment
+Nope. It is not. 
+❌
+:::
+
+## Optimize tuning parameters
+
+- Try different values and measure their performance.
+
+. . .
+
+- Find good values for these parameters.
+
+. . .
+
+- Once the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set.
+
+
+## Tagging parameters for tuning  `r hexes("tune")`
+
+With tidymodels, you can mark the parameters that you want to optimize with a value of `tune()`. 
+
+<br>
+
+The function itself just returns... itself: 
+
+```{r}
+#| label: tune
+
+tune()
+str(tune())
+
+# optionally add a label
+tune("I hope that the workshop is going well")
+```
+
+. . . 
+
+For example...
+
+
+## Optimizing the neural network `r hexes("tune", "recipes", "textrecipes")`
+
+
+
+## A workflow
+
+
+## Optimize tuning parameters
+
+The main two strategies for optimization are:
+
+. . .
+
+- **Grid search** 💠 which tests a pre-defined set of candidate values
+
+- **Iterative search** 🌀 which suggests/estimates new values of candidate parameters to evaluate
+
+
+## Grid search
+
+A small grid of points trying to minimize the error via learning rate: 
+
+```{r}
+#| label: small-grid-demo
+#| echo: false
+#| fig-align: center
+#| out-width: 60%
+
+knitr::include_graphics("images/small_init.svg")
+```
+
+
+## Grid search
+
+In reality we would probably sample the space more densely: 
+
+```{r}
+#| label: grid-demo
+#| echo: false
+#| fig-align: center
+#| out-width: 60%
+
+knitr::include_graphics("images/grid_points.svg")
+```
+
+
+## Iterative Search
+
+We could start with a few points and search the space:
+
+```{r}
+#| label: seq-demo
+#| echo: false
+#| fig-align: center
+#| out-width: 60%
+
+knitr::include_graphics("animations/anime_seq.gif")
+```
+
+# Grid Search
+
+## Parameters
+
+-   The tidymodels framework provides pre-defined information on tuning parameters (such as their type, range, transformations, etc).
+
+-   The `extract_parameter_set_dials()` function extracts these tuning parameters and the info.
+
+::: fragment
+#### Grids
+
+-   Create your grid manually or automatically.
+
+-   The `grid_*()` functions can make a grid.
+:::
+
+::: notes
+Most basic (but very effective) way to tune models
+:::
+
+## Different types of grids `r hexes(c("dials"))`  {.annotation}
+
+
+```{r} 
+#| label: grid-types
+#| echo: false
+#| fig-width: 10
+#| fig-height: 2.7
+#| fig-align: 'center'
+#| out-width: 100%
+
+tree_param <- parameters(trees(), learn_rate())
+
+set.seed(114)
+reg_1 <- grid_regular(tree_param, levels = c(4, 4)) |> 
+  mutate(type = "Regular (balanced)")
+reg_2 <- grid_regular(tree_param, levels = c(3, 5)) |> 
+  mutate(type = "Regular (unbalanced)")
+
+irreg_1 <- grid_space_filling(tree_param, size = 16, type = "uniform") |> 
+  mutate(type = "SFD: Uniform")
+
+set.seed(21)
+irreg_2 <- grid_random(tree_param, size = 16) |> 
+  mutate(type = "Random")
+irreg_3 <- grid_space_filling(tree_param, size = 16, type = "latin_hypercube") |> 
+  mutate(type = "SFD: Latin Hypercube")
+
+lvls <- c("Regular (balanced)", "Regular (unbalanced)", "Random", 
+          "SFD: Latin Hypercube", "SFD: Uniform")
+
+grids <- 
+  bind_rows(reg_1, reg_2, irreg_1, irreg_2, irreg_3) |> 
+  mutate(type = factor(type, levels = lvls))
+
+grids |> 
+  ggplot(aes(trees, learn_rate)) + 
+  geom_point() + 
+  scale_y_log10() +
+  facet_wrap(~ type, nrow = 1) +
+  labs(x = trees()$label, y = learn_rate()$label)
+```
+
+
+Space-filling designs (SFD) attempt to cover the parameter space without redundant candidates. We recommend these the most.
+
+## Create a grid `r hexes(c("dials", "workflows"))`
+
+```{r get-param}
+#| tidy: false
+lgbm_wflow |> 
+  extract_parameter_set_dials()
+
+# Individual functions: 
+trees()
+learn_rate()
+```
+
+::: fragment
+A parameter set can be updated (e.g. to change the ranges).
+:::
+
+
+## Update parameter ranges `r hexes(c("dials", "workflows"))` {.annotation}
+
+
+## Running in parallel
+
+
+## Your turn {transition="slide-in"}
+
+
+## What's next
+
