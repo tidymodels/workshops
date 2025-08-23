@@ -28,6 +28,8 @@ knitr:
 #| label: user-startup
 
 library(tidymodels)
+library(probably)
+library(desirability2)
 
 tidymodels_prefer()
 theme_set(theme_bw())
@@ -88,7 +90,7 @@ library(brulee)
 
 ## Cost-sensitive learning
 
-One other option: `class_weights`: amount to upweight the minority class (`class_1`) when computing the objective function (cross-entropy).
+One other option: `class_weights`: amount to upweight the minority class (`A`) when computing the objective function (cross-entropy).
 
 <br> 
 
@@ -117,7 +119,7 @@ rec <-
 nnet_ex_wflow <- workflow(rec, nnet_ex_spec)
 
 # Fit on first fold's 90% analysis set
-set.seed(684)
+set.seed(64)
 nnet_ex_fit <- fit(nnet_ex_wflow, data = analysis(sim_rs$splits[[1]]))
 ```
 
@@ -157,16 +159,25 @@ The vertical green line shows that early stopping occurred.
 ```{r}
 #| label: nnet-holdout
 assessment_data <- assessment(sim_rs$splits[[1]])
-cls_mtr <- metric_set(brier_class, roc_auc, sensitivity, specificity, 
-                      accuracy, mn_log_loss)
+cls_mtr <- metric_set(brier_class, roc_auc, sensitivity, specificity, mn_log_loss)
 holdout_pred <- augment(nnet_ex_fit, assessment_data) 
 
 # Performance metrics
-holdout_pred |> cls_mtr(class, estimate = .pred_class, .pred_class_1)
+holdout_pred |> cls_mtr(class, estimate = .pred_class, .pred_A)
 ```
 
 Kind of? If sensitivity is important, then the model failed. 
 
+## It it calibrated? `r emo::ji("scream")` `r hexes(c("probably"))`
+
+```{r}
+#| label: nnet-cal
+#| out-width: 40%
+#| fig-width: 6
+#| fig-height: 6
+#| fig-align: "center"
+holdout_pred |> cal_plot_windowed(class, .pred_A, window_size = 0.2, step_size = 0.025)
+```
 
 # Optimizing Models via Tuning Parameters
 
@@ -187,21 +198,21 @@ Sigmoidal functions, ReLu, etc.
 
 ::: fragment
 Yes, it is a tuning parameter.
-✅
+`r emo::ji("white_check_mark")`
 :::
 
 # Number of PCA columns to generate for feature extraction?
 
 ::: fragment
 Yes, it is a _preprocessing_ tuning parameter.
-✅
+`r emo::ji("white_check_mark")`
 :::
 
 # The validation set size?
 
 ::: fragment
 Nope!
-❌
+`r emo::ji("x")`
 :::
 
 
@@ -210,7 +221,7 @@ Nope!
 ::: fragment
 Hmmmm, probably not.
 These are based on prior belief.
-❌
+`r emo::ji("x")`
 :::
 
 # The class probability cutoff?
@@ -221,7 +232,7 @@ For two classes, the default is $C = 1/2$.
 
 ::: fragment
 Yes, it is a _postprocessing_ tuning parameter.
-✅
+`r emo::ji("white_check_mark")`
 :::
 
 
@@ -229,7 +240,7 @@ Yes, it is a _postprocessing_ tuning parameter.
 
 ::: fragment
 Nope. It is not. 
-❌
+`r emo::ji("x")`
 :::
 
 ## Optimize tuning parameters
@@ -275,7 +286,7 @@ For example...
 
 nnet_spec <- 
   mlp(hidden_units = tune(), penalty = tune(), learn_rate = tune(), 
-      epochs = 250, activation = tune()) |> 
+      epochs = 100, activation = tune()) |> 
   set_engine("brulee", class_weights = tune()) |> 
   set_mode("classification")
 
@@ -297,42 +308,22 @@ The main two strategies for optimization are:
 
 A small grid of points trying to minimize the error via learning rate: 
 
-```{r}
-#| label: small-grid-demo
-#| echo: false
-#| fig-align: center
-#| out-width: 60%
 
-knitr::include_graphics("images/small_init.svg")
-```
+![](images/small_init.svg){fig-align="center" width=60%}
 
 
 ## Grid search
 
 In reality we would probably sample the space more densely: 
 
-```{r}
-#| label: grid-demo
-#| echo: false
-#| fig-align: center
-#| out-width: 60%
-
-knitr::include_graphics("images/grid_points.svg")
-```
+![](images/grid_points.svg){fig-align="center" width=60%}
 
 
 ## Iterative Search
 
 We could start with a few points and search the space:
 
-```{r}
-#| label: seq-demo
-#| echo: false
-#| fig-align: center
-#| out-width: 60%
-
-knitr::include_graphics("animations/anime_seq.gif")
-```
+![](animations/anime_seq.gif){fig-align="center" width=60%}
 
 # Grid Search
 
@@ -363,20 +354,20 @@ nnet_param
 #| fig-align: 'center'
 #| out-width: 100%
 
-nnet_param <- parameters(class_weights(), learn_rate())
+nnet_plot_param <- parameters(class_weights(), learn_rate())
 
-reg_1 <- grid_regular(nnet_param, levels = c(4, 4)) |> 
+reg_1 <- grid_regular(nnet_plot_param, levels = c(4, 4)) |> 
   mutate(type = "Regular (balanced)")
-reg_2 <- grid_regular(nnet_param, levels = c(3, 5)) |> 
+reg_2 <- grid_regular(nnet_plot_param, levels = c(3, 5)) |> 
   mutate(type = "Regular (unbalanced)")
 
-irreg_1 <- grid_space_filling(nnet_param, size = 16, type = "uniform") |> 
+irreg_1 <- grid_space_filling(nnet_plot_param, size = 16, type = "uniform") |> 
   mutate(type = "SFD: Uniform")
 
 set.seed(431)
-irreg_2 <- grid_random(nnet_param, size = 16) |> 
+irreg_2 <- grid_random(nnet_plot_param, size = 16) |> 
   mutate(type = "Random")
-irreg_3 <- grid_space_filling(nnet_param, size = 16, type = "latin_hypercube") |> 
+irreg_3 <- grid_space_filling(nnet_plot_param, size = 16, type = "latin_hypercube") |> 
   mutate(type = "SFD: Latin Hypercube")
 
 lvls <- c("Regular (balanced)", "Regular (unbalanced)", "Random", 
@@ -403,9 +394,48 @@ Space-filling designs (SFD) attempt to cover the parameter space without redunda
 #| label: update-nnet-param
 nnet_param <- 
   nnet_param |> 
-  update(hidden_units = hidden_units(c(2, 25)))
+  update(
+  hidden_units = hidden_units(c(2, 20)),
+  class_weights = class_weights(c(1, 50)))
+
 nnet_param  
 ```  
+
+
+## Grid Search `r hexes(c("dials", "workflows", "tune"))` 
+
+```{r}
+#| label: start-parallel
+#| include: false
+library(future)
+plan("multisession")
+```
+
+```{r}
+#| label: nnet-grid-tune
+#| cache: true
+#| code-line-numbers: "2|"
+set.seed(9)
+ctrl <- control_grid(save_pred = TRUE)
+
+set.seed(949)
+nnet_res <-
+  nnet_wflow |>
+  tune_grid(
+    resamples = sim_rs,
+    grid = 25,
+    # The options below are not required by default
+    param_info = nnet_param, 
+    control = ctrl,
+    metrics = cls_mtr
+  )
+```
+
+::: notes
+-   `tune_grid()` is representative of tuning function syntax
+-   similar to `fit_resamples()`
+:::
+
 
 
 ## Running in parallel
@@ -448,6 +478,18 @@ daemons(cores)
 :::
 :::
 
+```{r}
+#| label: grid-seepdup
+#| include: false
+
+seq <- 109
+par <- 442
+par_text <- 
+  cli::format_inline(
+    "was reduced from {prettyunits::pretty_sec(seq)} to {prettyunits::pretty_sec(par)}), a speed-up of {round(par/seq, 1)}-fold")
+```
+
+Using 10 cores, time to execute the previous `tune_grid()` call `r par_text`.
 
 ## Distributing tasks
 
@@ -470,7 +512,6 @@ resamples_times |>
   scale_fill_brewer(palette = "Paired") +
   theme(legend.position = "top")
 ```
-
 
 ## Running in parallel
 
@@ -500,6 +541,158 @@ ggplot(times, aes(x = num_cores, y = speed_up, color = parallel_over, shape = pa
 :::notes
 Faceted on the expensiveness of preprocessing used.
 :::
+
+
+## Grid Search `r hexes(c("dials", "workflows", "tune"))` 
+
+```{r} 
+#| label: nnet-grid-tune-res
+nnet_res 
+```
+
+
+## Grid results `r hexes(c("tune"))`
+
+```{r autoplot}
+#| fig-width: 12
+#| fig-height: 5
+#| fig-align: center
+#| out-width: "100%"
+#| dev-args:
+#|   bg: "transparent"
+autoplot(nnet_res)
+```
+
+## Grid results
+
+ - Very large penalty: bad!
+ - Very large learning rate: good!
+ - As class weight `r emo::ji("up_arrow")`:
+    - sensitivity `r emo::ji("up_arrow")`
+    - specificity `r emo::ji("down_arrow")` 
+    - Brier and cross-entropy: `r emo::ji("down_arrow")` 
+
+## Tuning results `r hexes(c("tune"))`
+
+```{r}
+#| label: nnet-metrics
+collect_metrics(nnet_res) |> relocate(.metric, mean)
+```
+
+## Tuning results `r hexes(c("tune"))`
+
+```{r}
+#| label: nnet-metrics-raw
+collect_metrics(nnet_res, summarize = FALSE) |> relocate(.metric, .estimate)
+```
+
+## Choose a parameter combination `r hexes(c("tune"))`
+
+```{r}
+#| label: nnet-metrics-show
+show_best(nnet_res, metric = "brier_class") |> relocate(.metric, mean)
+```
+
+## Choose a parameter combination `r hexes(c("tune"))`
+
+Create your own tibble for final parameters or use one of the `tune::select_*()` functions:
+
+```{r}
+#| label: nnet-metrics-best
+nnet_best <- select_best(nnet_res, metric = "brier_class")
+nnet_best
+```
+
+## Choose a parameter combination `r hexes(c("tune"))`
+
+```{r}
+#| label: all-metrics
+collect_metrics(nnet_res) |> 
+  inner_join(nnet_best) |> 
+  select(.metric, mean)
+```
+
+## Checking Calibration `r hexes(c("tune", "probably"))`
+
+```{r}
+#| label: nnet-cal-plot
+#| output-location: column
+#| out-width: 90%
+#| fig-width: 5
+#| fig-height: 5
+
+nnet_holdout_pred <-
+  nnet_res |> 
+  collect_predictions(
+    parameters = nnet_best
+  )
+
+nnet_holdout_pred |>
+  cal_plot_windowed(
+    truth = class,
+    estimate = .pred_A,
+    window_size = 0.2,
+    step_size = 0.025,
+  )
+```
+
+## Multimetric optimization `r hexes(c("tune"))`
+
+
+```{r}
+#| label: nnet-metrics-desire-sens
+show_best_desirability(
+  nnet_res, 
+  maximize(sensitivity),
+  minimize(brier_class)
+) |> 
+  relocate(class_weights, sensitivity, specificity, brier_class)
+```
+
+
+## However... `r hexes(c("tune", "probably"))`
+
+```{r}
+#| label: nnet-cal-plot-sens
+#| output-location: column
+#| out-width: 90%
+#| fig-width: 5
+#| fig-height: 5
+
+more_sens <- 
+  select_best_desirability(
+    nnet_res, 
+    maximize(sensitivity),
+    minimize(brier_class)
+  ) 
+
+nnet_res |> 
+  collect_predictions(
+    parameters = more_sens
+  ) |> 
+  cal_plot_windowed(
+    truth = class,
+    estimate = .pred_A,
+    window_size = 0.2,
+    step_size = 0.025,
+  )
+```
+
+## Conflicting goals
+
+The problem here is that we are biasing the probability estimates so that we can predict more data to be the rare "A" class _using a default probability cutoff of 1/2_. 
+
+<br> 
+
+That is compromising the model fit overall. 
+
+<br> 
+
+If we don't use the class probability estimates, this is fine. 
+
+<br>
+
+We'll look at a different approach later that makes a different kinds of tradeoff. 
 
 
 ## Your turn {transition="slide-in"}
