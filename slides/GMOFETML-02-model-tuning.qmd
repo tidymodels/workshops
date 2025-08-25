@@ -98,7 +98,7 @@ We have a moderate class imbalance and we'll use this argument to deal with it.
 
 <br> 
 
-This will push the minority class probability estimates to be more accurate/calibrated. _Overall_ the model will be less effective; this assumes the minority class is the class of interest. 
+This will push the minority class probability estimates to be more accurate/[calibrated](https://aml4td.org/chapters/cls-metrics.html#sec-cls-calibration). _Overall_ the model will be less effective; this assumes the minority class is the class of interest. 
 
 
 ## A single model `r hexes(c("recipes", "parsnip", "workflows", "brulee"))`
@@ -108,8 +108,8 @@ This will push the minority class probability estimates to be more accurate/cali
 #| cache: true
 
 nnet_ex_spec <- 
-  mlp(hidden_units = 5, penalty = 0.001, learn_rate = 0.001, epochs = 200) |> 
-  set_engine("brulee", class_weights = 10) |> 
+  mlp(hidden_units = 20, penalty = 0.0001, learn_rate = 0.005, epochs = 200) |> 
+  set_engine("brulee", class_weights = 3, stop_iter = 10) |> 
   set_mode("classification")
 
 rec <- 
@@ -119,7 +119,7 @@ rec <-
 nnet_ex_wflow <- workflow(rec, nnet_ex_spec)
 
 # Fit on first fold's 90% analysis set
-set.seed(64)
+set.seed(147)
 nnet_ex_fit <- fit(nnet_ex_wflow, data = analysis(sim_rs$splits[[1]]))
 ```
 
@@ -166,7 +166,11 @@ holdout_pred <- augment(nnet_ex_fit, assessment_data)
 holdout_pred |> cls_mtr(class, estimate = .pred_class, .pred_A)
 ```
 
-Kind of? If sensitivity is important, then the model failed. 
+Kind of? If sensitivity is important, then the model is moderately successful.  
+
+## Calibration
+
+
 
 ## It it calibrated? `r emo::ji("scream")` `r hexes(c("probably"))`
 
@@ -285,9 +289,9 @@ For example...
 #| label: tunable-model
 
 nnet_spec <- 
-  mlp(hidden_units = tune(), penalty = tune(), learn_rate = tune(), 
+  mlp(hidden_units = 20, penalty = tune(), learn_rate = tune(), 
       epochs = 100, activation = tune()) |> 
-  set_engine("brulee", class_weights = tune()) |> 
+  set_engine("brulee", class_weights = tune(), stop_iter = 10) |> 
   set_mode("classification")
 
 nnet_wflow <- workflow(rec, nnet_spec)
@@ -386,7 +390,7 @@ grids |>
 ```
 
 
-Space-filling designs (SFD) attempt to cover the parameter space without redundant candidates. We recommend these the most and they are the default.
+[Space-filling designs](https://aml4td.org/chapters/grid-search.html#sec-irregular-grid) (SFD) attempt to cover the parameter space without redundant candidates. We recommend these the most and they are the default. 
 
 ## Extract and update parameters `r hexes(c("dials", "workflows"))`
 
@@ -394,9 +398,7 @@ Space-filling designs (SFD) attempt to cover the parameter space without redunda
 #| label: update-nnet-param
 nnet_param <- 
   nnet_param |> 
-  update(
-  hidden_units = hidden_units(c(2, 20)),
-  class_weights = class_weights(c(1, 50)))
+  update(class_weights = class_weights(c(1, 50)))
 
 nnet_param  
 ```  
@@ -418,6 +420,7 @@ plan("multisession")
 set.seed(9)
 ctrl <- control_grid(save_pred = TRUE)
 
+system.time({
 set.seed(949)
 nnet_res <-
   nnet_wflow |>
@@ -429,7 +432,14 @@ nnet_res <-
     control = ctrl,
     metrics = cls_mtr
   )
+})
 ```
+
+. . .
+
+<br>
+
+`r emo::ji("hand")` maybe don't run this just yet...
 
 ::: notes
 -   `tune_grid()` is representative of tuning function syntax
@@ -482,14 +492,12 @@ daemons(cores)
 #| label: grid-seepdup
 #| include: false
 
-seq <- 109
-par <- 442
+par <- 109
+seq <- 442
 par_text <- 
   cli::format_inline(
-    "was reduced from {prettyunits::pretty_sec(seq)} to {prettyunits::pretty_sec(par)}), a speed-up of {round(par/seq, 1)}-fold")
+    "was reduced from {prettyunits::pretty_sec(seq)} to {prettyunits::pretty_sec(par)}, a speed-up of {round(seq / par, 1)}-fold")
 ```
-
-Using 10 cores, time to execute the previous `tune_grid()` call `r par_text`.
 
 ## Distributing tasks
 
@@ -520,7 +528,7 @@ Speed-ups are fairly linear up to the number of physical cores (10 here).
 ```{r}
 #| label: parallel-speedup
 #| echo: false
-#| out-width: '90%'
+#| out-width: '80%'
 #| fig-width: 9
 #| fig-height: 4
 #| fig-align: 'center'
@@ -537,6 +545,8 @@ ggplot(times, aes(x = num_cores, y = speed_up, color = parallel_over, shape = pa
   labs(x = "Number of Workers", y = "Speed-up")  +
   theme(legend.position = "top")
 ```
+
+Using 10 cores, time to execute the previous `tune_grid()` call `r par_text`.
 
 :::notes
 Faceted on the expensiveness of preprocessing used.
@@ -576,21 +586,27 @@ autoplot(nnet_res)
 
 ```{r}
 #| label: nnet-metrics
-collect_metrics(nnet_res) |> relocate(.metric, mean)
+collect_metrics(nnet_res) |> 
+  relocate(.metric, mean) |> 
+  quarto_table() 
 ```
 
 ## Tuning results `r hexes(c("tune"))`
 
 ```{r}
 #| label: nnet-metrics-raw
-collect_metrics(nnet_res, summarize = FALSE) |> relocate(.metric, .estimate)
+collect_metrics(nnet_res, summarize = FALSE) |> 
+  relocate(.metric, .estimate) |> 
+  quarto_table() 
 ```
 
 ## Choose a parameter combination `r hexes(c("tune"))`
 
 ```{r}
 #| label: nnet-metrics-show
-show_best(nnet_res, metric = "brier_class") |> relocate(.metric, mean)
+show_best(nnet_res, metric = "brier_class") |> 
+  relocate(.metric, mean) |> 
+  quarto_table() 
 ```
 
 ## Choose a parameter combination `r hexes(c("tune"))`
@@ -636,6 +652,22 @@ nnet_holdout_pred |>
   )
 ```
 
+## Multiple goals
+
+Optimizing on the Brier score optimizes for accuracy and calibration of the class probabilities. 
+
+<br> 
+
+That's is counter-producitve to finding the rare class "A" events.
+
+<br>
+
+Can we find a way to optimize multiple metrics at once? 
+
+<br> 
+
+There are a few ways and we'll focus on [desirability functions](https://aml4td.org/chapters/cls-metrics.html#sec-cls-multi-objectives). 
+
 ## Multimetric optimization `r hexes(c("tune"))`
 
 
@@ -646,7 +678,8 @@ show_best_desirability(
   maximize(sensitivity),
   minimize(brier_class)
 ) |> 
-  relocate(class_weights, sensitivity, specificity, brier_class)
+  relocate(class_weights, sensitivity, specificity, brier_class) |> 
+  quarto_table() 
 ```
 
 
@@ -678,6 +711,14 @@ nnet_res |>
   )
 ```
 
+
+::: notes
+The curve hugging the bottom of the plot means that we are drastically _overestimating_ the probability of class "A" relative to how often it occurs "in the wild."
+
+That's the point of cost-sensitive learning but bad for calibration.
+
+:::
+
 ## Conflicting goals
 
 The problem here is that we are biasing the probability estimates so that we can predict more data to be the rare "A" class _using a default probability cutoff of 1/2_. 
@@ -692,7 +733,7 @@ If we don't use the class probability estimates, this is fine.
 
 <br>
 
-We'll look at a different approach later that makes a different kinds of tradeoff. 
+In the _postprocessing_ slides, we'll look at a alternative approach later that makes a different kinds of tradeoff. 
 
 
 ## Your turn {transition="slide-in"}

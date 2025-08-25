@@ -41,3 +41,19 @@ test_color  <- "#cd4173"
 data_color  <- "#767381"
 assess_color <- "#84cae1"
 splits_pal <- c(data_color, train_color, test_color)
+
+quarto_table <- function(x, show = 6, ...) {
+
+  is_num <- purrr::map_lgl(x, is.numeric)
+  num_cols <- names(is_num)[is_num]
+
+  show <- min(show, nrow(x))
+  DT::datatable(
+    x,
+    filter = "top",
+    rownames = FALSE,
+    options = list(pageLength = show)
+  ) |>
+    DT::formatSignif(columns = num_cols, digits = 2)
+}
+
