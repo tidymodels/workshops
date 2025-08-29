@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<link href="../../../favicon.ico" rel="icon">
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-html/tabby.min.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.6.42">
+
+  <title>Machine learning with tidymodels – 3 - What makes a model?</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="../../../site_libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="../../../site_libs/revealjs/dist/reveal.css">
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      { color: #003b4f; background-color: #f1f3f5; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #003b4f; } /* Normal */
+    code span.al { color: #ad0000; } /* Alert */
+    code span.an { color: #5e5e5e; } /* Annotation */
+    code span.at { color: #657422; } /* Attribute */
+    code span.bn { color: #ad0000; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #003b4f; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #20794d; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #5e5e5e; } /* Comment */
+    code span.cv { color: #5e5e5e; font-style: italic; } /* CommentVar */
+    code span.do { color: #5e5e5e; font-style: italic; } /* Documentation */
+    code span.dt { color: #ad0000; } /* DataType */
+    code span.dv { color: #ad0000; } /* DecVal */
+    code span.er { color: #ad0000; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #ad0000; } /* Float */
+    code span.fu { color: #4758ab; } /* Function */
+    code span.im { color: #00769e; } /* Import */
+    code span.in { color: #5e5e5e; } /* Information */
+    code span.kw { color: #003b4f; font-weight: bold; } /* Keyword */
+    code span.op { color: #5e5e5e; } /* Operator */
+    code span.ot { color: #003b4f; } /* Other */
+    code span.pp { color: #ad0000; } /* Preprocessor */
+    code span.sc { color: #5e5e5e; } /* SpecialChar */
+    code span.ss { color: #20794d; } /* SpecialString */
+    code span.st { color: #20794d; } /* String */
+    code span.va { color: #111111; } /* Variable */
+    code span.vs { color: #20794d; } /* VerbatimString */
+    code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="../../../site_libs/revealjs/dist/theme/quarto-f79e0dcaaf4ad43d19d833d4ab998db9.css">
+  <link href="../../../site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="../../../site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="../../../site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="../../../site_libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+  <link href="../../../site_libs/countdown-0.4.0/countdown.css" rel="stylesheet">
+  <script src="../../../site_libs/countdown-0.4.0/countdown.js"></script>
+<meta property="og:title" content="3 - What makes a model? – Machine learning with tidymodels">
+<meta property="og:description" content="Introduction to tidymodels">
+<meta property="og:site_name" content="Machine learning with tidymodels">
+<meta name="twitter:title" content="3 - What makes a model? – Machine learning with tidymodels">
+<meta name="twitter:description" content="Introduction to tidymodels">
+<meta name="twitter:card" content="summary">
+</head>
+<body class="quarto-light">
+<script src="https://use.fontawesome.com/5235085b15.js"></script>
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" class="quarto-title-block center">
+  <h1 class="title">3 - What makes a model?</h1>
+  <p class="subtitle">Introduction to tidymodels</p>
+
+<div class="quarto-title-authors">
+</div>
+
+</section>
+<section id="your-turn" class="slide level2" data-transition="slide-in">
+<h2>Your turn</h2>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
+<p><em>How do you fit a linear model in R?</em></p>
+<p><em>How many different ways can you think of?</em></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="how-to-fit-linear-model" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
+<code class="countdown-time"><span class="countdown-digits minutes">03</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
+<div class="fragment">
+<ul>
+<li><p><code>lm</code> for linear model</p></li>
+<li><p><code>glmnet</code> for regularized regression</p></li>
+<li><p><code>keras</code> for regression using TensorFlow</p></li>
+<li><p><code>stan</code> for Bayesian regression</p></li>
+<li><p><code>spark</code> for large data sets</p></li>
+<li><p><code>brulee</code> for regression using torch</p></li>
+</ul>
+</div>
+</section>
+<section id="to-specify-a-model" class="slide level2">
+<h2>To specify a model <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="fragment">
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li>Choose a <u>model</u></li>
+<li>Specify an engine</li>
+<li>Set the mode</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<p><br><br><br> <img data-src="images/forest_mountain.svg" class="absolute" style="height: 300px; "></p>
+</div></div>
+</div>
+</section>
+<section id="to-specify-a-model-1" class="slide level2">
+<h2>To specify a model <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">logistic_reg</span>()</span>
+<span id="cb1-2"><a></a><span class="co">#&gt; Logistic Regression Model Specification (classification)</span></span>
+<span id="cb1-3"><a></a><span class="co">#&gt; </span></span>
+<span id="cb1-4"><a></a><span class="co">#&gt; Computational engine: glm</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<aside class="notes">
+<p>Models have default engines</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="to-specify-a-model-2" class="slide level2">
+<h2>To specify a model <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li>Choose a model</li>
+<li>Specify an <u>engine</u></li>
+<li>Set the mode</li>
+</ul>
+</div><div class="column" style="width:40%;">
+<p><br><br><br> <img data-src="images/forest_mountain.svg" class="absolute" style="height: 300px; "></p>
+</div></div>
+</section>
+<section id="to-specify-a-model-3" class="slide level2">
+<h2>To specify a model <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="fu">logistic_reg</span>() <span class="sc">|&gt;</span></span>
+<span id="cb2-2"><a></a>  <span class="fu">set_engine</span>(<span class="st">"glmnet"</span>)</span>
+<span id="cb2-3"><a></a><span class="co">#&gt; Logistic Regression Model Specification (classification)</span></span>
+<span id="cb2-4"><a></a><span class="co">#&gt; </span></span>
+<span id="cb2-5"><a></a><span class="co">#&gt; Computational engine: glmnet</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="to-specify-a-model-4" class="slide level2">
+<h2>To specify a model <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a><span class="fu">logistic_reg</span>() <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a></a>  <span class="fu">set_engine</span>(<span class="st">"stan"</span>)</span>
+<span id="cb3-3"><a></a><span class="co">#&gt; Logistic Regression Model Specification (classification)</span></span>
+<span id="cb3-4"><a></a><span class="co">#&gt; </span></span>
+<span id="cb3-5"><a></a><span class="co">#&gt; Computational engine: stan</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="to-specify-a-model-5" class="slide level2">
+<h2>To specify a model <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li>Choose a model</li>
+<li>Specify an engine</li>
+<li>Set the <u>mode</u></li>
+</ul>
+</div><div class="column" style="width:40%;">
+<p><br><br><br> <img data-src="images/forest_mountain.svg" class="absolute" style="height: 300px; "></p>
+</div></div>
+</section>
+<section id="to-specify-a-model-6" class="slide level2">
+<h2>To specify a model <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a><span class="fu">decision_tree</span>()</span>
+<span id="cb4-2"><a></a><span class="co">#&gt; Decision Tree Model Specification (unknown mode)</span></span>
+<span id="cb4-3"><a></a><span class="co">#&gt; </span></span>
+<span id="cb4-4"><a></a><span class="co">#&gt; Computational engine: rpart</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<aside class="notes">
+<p>Some models have a default mode</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="to-specify-a-model-7" class="slide level2">
+<h2>To specify a model <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a><span class="fu">decision_tree</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb5-2"><a></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
+<span id="cb5-3"><a></a><span class="co">#&gt; Decision Tree Model Specification (classification)</span></span>
+<span id="cb5-4"><a></a><span class="co">#&gt; </span></span>
+<span id="cb5-5"><a></a><span class="co">#&gt; Computational engine: rpart</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="fragment">
+<p><br><br></p>
+<div class="r-fit-text">
+<p>All available models are listed at <a href="https://www.tidymodels.org/find/parsnip/" class="uri">https://www.tidymodels.org/find/parsnip/</a></p>
+</div>
+</div>
+</section>
+<section id="section" class="slide level2" data-background-iframe="https://www.tidymodels.org/find/parsnip/">
+<h2></h2>
+<div class="footer">
+
+</div>
+</section>
+<section id="to-specify-a-model-8" class="slide level2">
+<h2>To specify a model <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li>Choose a <u>model</u></li>
+<li>Specify an <u>engine</u></li>
+<li>Set the <u>mode</u></li>
+</ul>
+</div><div class="column" style="width:40%;">
+<p><br><br><br> <img data-src="images/forest_mountain.svg" class="absolute" style="height: 300px; "></p>
+</div></div>
+</section>
+<section id="your-turn-1" class="slide level2" data-transition="slide-in">
+<h2>Your turn</h2>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
+<p><em>Run the <code>tree_spec</code> chunk in your <code>.qmd</code>.</em></p>
+<p><em>Edit this code to use a logistic regression model.</em><br><br></p>
+<div class="r-fit-text">
+<p>All available models are listed at <a href="https://www.tidymodels.org/find/parsnip/" class="uri">https://www.tidymodels.org/find/parsnip/</a></p>
+</div>
+<p><br><br></p>
+<p><em>Extension/Challenge: Edit this code to use a different model. For example, try using a conditional inference tree as implemented in the partykit package by changing the engine - or try an entirely different model type!</em></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="explore-tree-spec" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
+<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
+</section>
+<section id="models-well-be-using-today" class="slide level2">
+<h2>Models we’ll be using today</h2>
+<ul>
+<li>Logistic regression</li>
+<li>Decision trees</li>
+</ul>
+</section>
+<section id="logistic-regression" class="slide level2">
+<h2>Logistic regression</h2>
+<div class="columns">
+<div class="column" style="width:60%;">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="figures/plot-rates-1.svg"></p>
+</figure>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:40%;">
+
+</div></div>
+</section>
+<section id="logistic-regression-1" class="slide level2">
+<h2>Logistic regression</h2>
+<div class="columns">
+<div class="column" style="width:60%;">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="figures/plot-logistic-reg-1.svg"></p>
+</figure>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:40%;">
+
+</div></div>
+</section>
+<section id="logistic-regression-2" class="slide level2">
+<h2>Logistic regression</h2>
+<div class="columns">
+<div class="column" style="width:60%;">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="figures/plot-logistic-reg-2-1.svg"></p>
+</figure>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:40%;">
+<ul>
+<li>Logit of outcome probability modeled as linear combination of predictors:</li>
+</ul>
+<p><span class="math inline">\(log(\frac{p}{1 - p}) = \beta_0 + \beta_1\cdot \text{A}\)</span></p>
+<ul>
+<li>Find a sigmoid line that separates the two classes</li>
+</ul>
+</div></div>
+</section>
+<section id="decision-trees" class="slide level2">
+<h2>Decision trees</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="figures/plot-tree-fit-1.svg" class="quarto-figure quarto-figure-center"></p>
+</figure>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:50%;">
+
+</div></div>
+</section>
+<section id="decision-trees-1" class="slide level2">
+<h2>Decision trees</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="figures/plot-tree-fit-2-1.svg" class="quarto-figure quarto-figure-center"></p>
+</figure>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:50%;">
+<ul>
+<li><p>Series of splits or if/then statements based on predictors</p></li>
+<li><p>First the tree <em>grows</em> until some condition is met (maximum depth, no more data)</p></li>
+<li><p>Then the tree is <em>pruned</em> to reduce its complexity</p></li>
+</ul>
+</div></div>
+</section>
+<section id="decision-trees-2" class="slide level2">
+<h2>Decision trees</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="figures/plot-tree-fit-3-1.svg" class="quarto-figure quarto-figure-center"></p>
+</figure>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:50%;">
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="figures/plot-tree-preds-1.svg"></p>
+</figure>
+</div>
+</div>
+</div>
+</div></div>
+</section>
+<section id="all-models-are-wrong-but-some-are-useful" class="slide level2">
+<h2>All models are wrong, but some are useful!</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<h3 id="logistic-regression-3">Logistic regression</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="figures/plot-logistic-reg-3-1.svg"></p>
+</figure>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:50%;">
+<h3 id="decision-trees-3">Decision trees</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="figures/plot-tree-preds-2-1.svg"></p>
+</figure>
+</div>
+</div>
+</div>
+</div></div>
+</section>
+<section>
+<section id="a-model-workflow" class="title-slide slide level1 center">
+<h1>A model workflow</h1>
+
+</section>
+<section id="workflows-bind-preprocessors-and-models" class="slide level2">
+<h2>Workflows bind preprocessors and models</h2>
+
+<img data-src="images/good_workflow.png" class="quarto-figure quarto-figure-center r-stretch" style="width:70.0%"><aside class="notes">
+<p>Explain that PCA that is a preprocessor / dimensionality reduction, used to decorrelate data</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="what-is-wrong-with-this" class="slide level2 annotation">
+<h2>What is wrong with this?</h2>
+
+<img data-src="images/bad_workflow.png" class="quarto-figure quarto-figure-center r-stretch" style="width:70.0%"></section>
+<section id="why-a-workflow" class="slide level2">
+<h2>Why a <code>workflow()</code>? <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="fragment">
+<ul>
+<li>Workflows handle new data better than base R tools in terms of new factor levels</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>You can use other preprocessors besides formulas (more on feature engineering in Advanced tidymodels!)</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>They can help organize your work when working with multiple models</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li><u>Most importantly</u>, a workflow captures the entire modeling process: <code>fit()</code> and <code>predict()</code> apply to the preprocessing steps in addition to the actual model fit</li>
+</ul>
+<aside class="notes">
+<p>Two ways workflows handle levels better than base R:</p>
+<ul>
+<li><p>Enforces that new levels are not allowed at prediction time (this is an optional check that can be turned off)</p></li>
+<li><p>Restores missing levels that were present at fit time, but happen to be missing at prediction time (like, if your “new” data just doesn’t have an instance of that level)</p></li>
+</ul>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</div>
+</section>
+<section id="a-model-workflow-1" class="slide level2">
+<h2>A model workflow <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a>tree_spec <span class="ot">&lt;-</span></span>
+<span id="cb6-2"><a></a>  <span class="fu">decision_tree</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb6-3"><a></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
+<span id="cb6-4"><a></a></span>
+<span id="cb6-5"><a></a>tree_spec <span class="sc">|&gt;</span> </span>
+<span id="cb6-6"><a></a>  <span class="fu">fit</span>(forested <span class="sc">~</span> ., <span class="at">data =</span> forested_train) </span>
+<span id="cb6-7"><a></a><span class="co">#&gt; parsnip model object</span></span>
+<span id="cb6-8"><a></a><span class="co">#&gt; </span></span>
+<span id="cb6-9"><a></a><span class="co">#&gt; n= 8749 </span></span>
+<span id="cb6-10"><a></a><span class="co">#&gt; </span></span>
+<span id="cb6-11"><a></a><span class="co">#&gt; node), split, n, loss, yval, (yprob)</span></span>
+<span id="cb6-12"><a></a><span class="co">#&gt;       * denotes terminal node</span></span>
+<span id="cb6-13"><a></a><span class="co">#&gt; </span></span>
+<span id="cb6-14"><a></a><span class="co">#&gt; 1) root 8749 2427 Yes (0.7225969 0.2774031)  </span></span>
+<span id="cb6-15"><a></a><span class="co">#&gt;   2) county=Appling,Atkinson,Bacon,Baldwin,Ben Hill,Brantley,Brooks,Bryan,Bulloch,Burke,Butts,Camden,Candler,Carroll,Charlton,Chattahoochee,Chattooga,Cherokee,Clinch,Coffee,Coweta,Crawford,Dade,Dawson,Dodge,Dougherty,Douglas,Echols,Effingham,Elbert,Emanuel,Evans,Fannin,Floyd,Gilmer,Glascock,Greene,Habersham,Hancock,Haralson,Harris,Heard,Jasper,Jeff Davis,Jefferson,Jenkins,Johnson,Jones,Lamar,Lanier,Laurens,Lee,Lincoln,Long,Lumpkin,Marion,McDuffie,Meriwether,Monroe,Montgomery,Morgan,Murray,Oconee,Oglethorpe,Paulding,Pickens,Pierce,Pike,Polk,Putnam,Quitman,Rabun,Randolph,Schley,Screven,Spalding,Stephens,Stewart,Talbot,Taliaferro,Tattnall,Taylor,Telfair,Terrell,Towns,Treutlen,Troup,Twiggs,Union,Upson,Walker,Ware,Warren,Washington,Wayne,Webster,Wheeler,White,Wilcox,Wilkes,Wilkinson 5598 1005 Yes (0.8204716 0.1795284) *</span></span>
+<span id="cb6-16"><a></a><span class="co">#&gt;   3) county=Baker,Banks,Barrow,Bartow,Berrien,Bibb,Bleckley,Calhoun,Catoosa,Chatham,Clarke,Clay,Clayton,Cobb,Colquitt,Columbia,Cook,Crisp,Decatur,DeKalb,Dooly,Early,Fayette,Forsyth,Franklin,Fulton,Glynn,Gordon,Grady,Gwinnett,Hall,Hart,Henry,Houston,Irwin,Jackson,Liberty,Lowndes,Macon,Madison,McIntosh,Miller,Mitchell,Muscogee,Newton,Peach,Pulaski,Richmond,Rockdale,Seminole,Sumter,Thomas,Tift,Toombs,Turner,Walton,Whitfield,Worth 3151 1422 Yes (0.5487147 0.4512853)  </span></span>
+<span id="cb6-17"><a></a><span class="co">#&gt;     6) canopy_cover&gt;=41.5 1773  603 Yes (0.6598985 0.3401015) *</span></span>
+<span id="cb6-18"><a></a><span class="co">#&gt;     7) canopy_cover&lt; 41.5 1378  559 No (0.4056604 0.5943396) *</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="a-model-workflow-2" class="slide level2">
+<h2>A model workflow <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a>tree_spec <span class="ot">&lt;-</span></span>
+<span id="cb7-2"><a></a>  <span class="fu">decision_tree</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb7-3"><a></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
+<span id="cb7-4"><a></a></span>
+<span id="cb7-5"><a></a><span class="fu">workflow</span>() <span class="sc">|&gt;</span></span>
+<span id="cb7-6"><a></a>  <span class="fu">add_formula</span>(forested <span class="sc">~</span> .) <span class="sc">|&gt;</span></span>
+<span id="cb7-7"><a></a>  <span class="fu">add_model</span>(tree_spec) <span class="sc">|&gt;</span></span>
+<span id="cb7-8"><a></a>  <span class="fu">fit</span>(<span class="at">data =</span> forested_train) </span>
+<span id="cb7-9"><a></a><span class="co">#&gt; ══ Workflow [trained] ════════════════════════════════════════════════</span></span>
+<span id="cb7-10"><a></a><span class="co">#&gt; Preprocessor: Formula</span></span>
+<span id="cb7-11"><a></a><span class="co">#&gt; Model: decision_tree()</span></span>
+<span id="cb7-12"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-13"><a></a><span class="co">#&gt; ── Preprocessor ──────────────────────────────────────────────────────</span></span>
+<span id="cb7-14"><a></a><span class="co">#&gt; forested ~ .</span></span>
+<span id="cb7-15"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-16"><a></a><span class="co">#&gt; ── Model ─────────────────────────────────────────────────────────────</span></span>
+<span id="cb7-17"><a></a><span class="co">#&gt; n= 8749 </span></span>
+<span id="cb7-18"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-19"><a></a><span class="co">#&gt; node), split, n, loss, yval, (yprob)</span></span>
+<span id="cb7-20"><a></a><span class="co">#&gt;       * denotes terminal node</span></span>
+<span id="cb7-21"><a></a><span class="co">#&gt; </span></span>
+<span id="cb7-22"><a></a><span class="co">#&gt; 1) root 8749 2427 Yes (0.7225969 0.2774031)  </span></span>
+<span id="cb7-23"><a></a><span class="co">#&gt;   2) county=Appling,Atkinson,Bacon,Baldwin,Ben Hill,Brantley,Brooks,Bryan,Bulloch,Burke,Butts,Camden,Candler,Carroll,Charlton,Chattahoochee,Chattooga,Cherokee,Clinch,Coffee,Coweta,Crawford,Dade,Dawson,Dodge,Dougherty,Douglas,Echols,Effingham,Elbert,Emanuel,Evans,Fannin,Floyd,Gilmer,Glascock,Greene,Habersham,Hancock,Haralson,Harris,Heard,Jasper,Jeff Davis,Jefferson,Jenkins,Johnson,Jones,Lamar,Lanier,Laurens,Lee,Lincoln,Long,Lumpkin,Marion,McDuffie,Meriwether,Monroe,Montgomery,Morgan,Murray,Oconee,Oglethorpe,Paulding,Pickens,Pierce,Pike,Polk,Putnam,Quitman,Rabun,Randolph,Schley,Screven,Spalding,Stephens,Stewart,Talbot,Taliaferro,Tattnall,Taylor,Telfair,Terrell,Towns,Treutlen,Troup,Twiggs,Union,Upson,Walker,Ware,Warren,Washington,Wayne,Webster,Wheeler,White,Wilcox,Wilkes,Wilkinson 5598 1005 Yes (0.8204716 0.1795284) *</span></span>
+<span id="cb7-24"><a></a><span class="co">#&gt;   3) county=Baker,Banks,Barrow,Bartow,Berrien,Bibb,Bleckley,Calhoun,Catoosa,Chatham,Clarke,Clay,Clayton,Cobb,Colquitt,Columbia,Cook,Crisp,Decatur,DeKalb,Dooly,Early,Fayette,Forsyth,Franklin,Fulton,Glynn,Gordon,Grady,Gwinnett,Hall,Hart,Henry,Houston,Irwin,Jackson,Liberty,Lowndes,Macon,Madison,McIntosh,Miller,Mitchell,Muscogee,Newton,Peach,Pulaski,Richmond,Rockdale,Seminole,Sumter,Thomas,Tift,Toombs,Turner,Walton,Whitfield,Worth 3151 1422 Yes (0.5487147 0.4512853)  </span></span>
+<span id="cb7-25"><a></a><span class="co">#&gt;     6) canopy_cover&gt;=41.5 1773  603 Yes (0.6598985 0.3401015) *</span></span>
+<span id="cb7-26"><a></a><span class="co">#&gt;     7) canopy_cover&lt; 41.5 1378  559 No (0.4056604 0.5943396) *</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="a-model-workflow-3" class="slide level2">
+<h2>A model workflow <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a>tree_spec <span class="ot">&lt;-</span></span>
+<span id="cb8-2"><a></a>  <span class="fu">decision_tree</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb8-3"><a></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
+<span id="cb8-4"><a></a></span>
+<span id="cb8-5"><a></a><span class="fu">workflow</span>(forested <span class="sc">~</span> ., tree_spec) <span class="sc">|&gt;</span> </span>
+<span id="cb8-6"><a></a>  <span class="fu">fit</span>(<span class="at">data =</span> forested_train) </span>
+<span id="cb8-7"><a></a><span class="co">#&gt; ══ Workflow [trained] ════════════════════════════════════════════════</span></span>
+<span id="cb8-8"><a></a><span class="co">#&gt; Preprocessor: Formula</span></span>
+<span id="cb8-9"><a></a><span class="co">#&gt; Model: decision_tree()</span></span>
+<span id="cb8-10"><a></a><span class="co">#&gt; </span></span>
+<span id="cb8-11"><a></a><span class="co">#&gt; ── Preprocessor ──────────────────────────────────────────────────────</span></span>
+<span id="cb8-12"><a></a><span class="co">#&gt; forested ~ .</span></span>
+<span id="cb8-13"><a></a><span class="co">#&gt; </span></span>
+<span id="cb8-14"><a></a><span class="co">#&gt; ── Model ─────────────────────────────────────────────────────────────</span></span>
+<span id="cb8-15"><a></a><span class="co">#&gt; n= 8749 </span></span>
+<span id="cb8-16"><a></a><span class="co">#&gt; </span></span>
+<span id="cb8-17"><a></a><span class="co">#&gt; node), split, n, loss, yval, (yprob)</span></span>
+<span id="cb8-18"><a></a><span class="co">#&gt;       * denotes terminal node</span></span>
+<span id="cb8-19"><a></a><span class="co">#&gt; </span></span>
+<span id="cb8-20"><a></a><span class="co">#&gt; 1) root 8749 2427 Yes (0.7225969 0.2774031)  </span></span>
+<span id="cb8-21"><a></a><span class="co">#&gt;   2) county=Appling,Atkinson,Bacon,Baldwin,Ben Hill,Brantley,Brooks,Bryan,Bulloch,Burke,Butts,Camden,Candler,Carroll,Charlton,Chattahoochee,Chattooga,Cherokee,Clinch,Coffee,Coweta,Crawford,Dade,Dawson,Dodge,Dougherty,Douglas,Echols,Effingham,Elbert,Emanuel,Evans,Fannin,Floyd,Gilmer,Glascock,Greene,Habersham,Hancock,Haralson,Harris,Heard,Jasper,Jeff Davis,Jefferson,Jenkins,Johnson,Jones,Lamar,Lanier,Laurens,Lee,Lincoln,Long,Lumpkin,Marion,McDuffie,Meriwether,Monroe,Montgomery,Morgan,Murray,Oconee,Oglethorpe,Paulding,Pickens,Pierce,Pike,Polk,Putnam,Quitman,Rabun,Randolph,Schley,Screven,Spalding,Stephens,Stewart,Talbot,Taliaferro,Tattnall,Taylor,Telfair,Terrell,Towns,Treutlen,Troup,Twiggs,Union,Upson,Walker,Ware,Warren,Washington,Wayne,Webster,Wheeler,White,Wilcox,Wilkes,Wilkinson 5598 1005 Yes (0.8204716 0.1795284) *</span></span>
+<span id="cb8-22"><a></a><span class="co">#&gt;   3) county=Baker,Banks,Barrow,Bartow,Berrien,Bibb,Bleckley,Calhoun,Catoosa,Chatham,Clarke,Clay,Clayton,Cobb,Colquitt,Columbia,Cook,Crisp,Decatur,DeKalb,Dooly,Early,Fayette,Forsyth,Franklin,Fulton,Glynn,Gordon,Grady,Gwinnett,Hall,Hart,Henry,Houston,Irwin,Jackson,Liberty,Lowndes,Macon,Madison,McIntosh,Miller,Mitchell,Muscogee,Newton,Peach,Pulaski,Richmond,Rockdale,Seminole,Sumter,Thomas,Tift,Toombs,Turner,Walton,Whitfield,Worth 3151 1422 Yes (0.5487147 0.4512853)  </span></span>
+<span id="cb8-23"><a></a><span class="co">#&gt;     6) canopy_cover&gt;=41.5 1773  603 Yes (0.6598985 0.3401015) *</span></span>
+<span id="cb8-24"><a></a><span class="co">#&gt;     7) canopy_cover&lt; 41.5 1378  559 No (0.4056604 0.5943396) *</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="your-turn-2" class="slide level2" data-transition="slide-in">
+<h2>Your turn</h2>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
+<p><em>Run the <code>tree_wflow</code> chunk in your <code>.qmd</code>.</em></p>
+<p><em>Edit this code to make a workflow with your own model of choice.</em></p>
+<p><br><br></p>
+<p><em>Extension/Challenge: Other than formulas, what kinds of preprocessors are supported?</em></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="explore-tree-workflow" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
+<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
+</section>
+<section id="predict-with-your-model" class="slide level2">
+<h2>Predict with your model <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<p>How do you use your new <code>tree_fit</code> model?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a>tree_spec <span class="ot">&lt;-</span></span>
+<span id="cb9-2"><a></a>  <span class="fu">decision_tree</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb9-3"><a></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
+<span id="cb9-4"><a></a></span>
+<span id="cb9-5"><a></a>tree_fit <span class="ot">&lt;-</span></span>
+<span id="cb9-6"><a></a>  <span class="fu">workflow</span>(forested <span class="sc">~</span> ., tree_spec) <span class="sc">|&gt;</span> </span>
+<span id="cb9-7"><a></a>  <span class="fu">fit</span>(<span class="at">data =</span> forested_train) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="your-turn-3" class="slide level2" data-transition="slide-in">
+<h2>Your turn</h2>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
+<p><em>Run:</em></p>
+<p><code>predict(tree_fit, new_data = forested_test)</code></p>
+<p><em>What do you notice about the structure of the result?</em></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="predict-tree-fit" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
+<code class="countdown-time"><span class="countdown-digits minutes">03</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
+</section>
+<section id="your-turn-4" class="slide level2">
+<h2>Your turn</h2>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
+<p><em>Run:</em></p>
+<p><code>augment(tree_fit, new_data = forested_test)</code></p>
+<p><em>How does the output compare to the output from <code>predict()</code>?</em></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="augment-tree-fit" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
+<code class="countdown-time"><span class="countdown-digits minutes">03</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
+</section></section>
+<section>
+<section id="the-tidymodels-prediction-guarantee" class="title-slide slide level1 center">
+<h1>The tidymodels prediction guarantee!</h1>
+<div class="fragment">
+<ul>
+<li>The predictions will always be inside a <strong>tibble</strong></li>
+<li>The column names and types are <strong>unsurprising</strong> and <strong>predictable</strong></li>
+<li>The number of rows in <code>new_data</code> and the output <strong>are the same</strong></li>
+</ul>
+</div>
+</section>
+<section id="understand-your-model" class="slide level2">
+<h2>Understand your model <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<p>How do you <strong>understand</strong> your new <code>tree_fit</code> model?</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="figures/plot-tree-fit-4-1.svg" class="quarto-figure quarto-figure-center"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="understand-your-model-1" class="slide level2">
+<h2>Understand your model <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<p>How do you <strong>understand</strong> your new <code>tree_fit</code> model?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a><span class="fu">library</span>(rpart.plot)</span>
+<span id="cb10-2"><a></a>tree_fit <span class="sc">|&gt;</span></span>
+<span id="cb10-3"><a></a>  <span class="fu">extract_fit_engine</span>() <span class="sc">|&gt;</span></span>
+<span id="cb10-4"><a></a>  <span class="fu">rpart.plot</span>(<span class="at">roundint =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>You can <code>extract_*()</code> several components of your fitted workflow.</p>
+<div class="fragment">
+<p>⚠️ <em>Never <code>predict()</code> with any extracted components!</em></p>
+<aside class="notes">
+<p><code>roundint = FALSE</code> is only to quiet a warning</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</div>
+</section>
+<section id="understand-your-model-2" class="slide level2">
+<h2>Understand your model <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<p>How do you <strong>understand</strong> your new <code>tree_fit</code> model?</p>
+<div class="fragment">
+<p>You can use your fitted workflow for model and/or prediction explanations:</p>
+</div>
+<div class="fragment">
+<ul>
+<li>overall variable importance, such as with the <a href="https://koalaverse.github.io/vip/">vip</a> package</li>
+</ul>
+</div>
+<div class="fragment">
+<ul>
+<li>flexible model explainers, such as with the <a href="https://dalex.drwhy.ai/">DALEXtra</a> package</li>
+</ul>
+</div>
+<div class="fragment">
+<p>Learn more at <a href="https://www.tmwr.org/explain.html" class="uri">https://www.tmwr.org/explain.html</a></p>
+</div>
+</section>
+<section id="section-1" class="slide level2" data-background-iframe="https://hardhat.tidymodels.org/reference/hardhat-extract.html">
+<h2></h2>
+<div class="footer">
+
+</div>
+</section>
+<section id="your-turn-5" class="slide level2" data-transition="slide-in">
+<h2>Your turn</h2>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
+<p><br></p>
+<p><em>Extract the model engine object from your fitted workflow and check it out.</em></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="extract-methods" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
+<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
+<aside class="notes">
+<p>Afterward, ask what kind of object people got from the extraction, and what they did with it (e.g.&nbsp;give it to <code>summary()</code>, <code>plot()</code>, <code>broom::tidy()</code> ). Live code along</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="the-whole-game---status-update" class="slide level2">
+<h2>The whole game - status update</h2>
+
+<img data-src="images/whole-game-transparent-model-1.jpg" class="quarto-figure quarto-figure-center r-stretch"><aside class="notes">
+<p>Stress that fitting a model on the entire training set was only for illustrating how to fit a model</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+
+
+</section></section>
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+<p><a href="https://workshops.tidymodels.org" class="uri">https://workshops.tidymodels.org</a></p>
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="../../../site_libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="../../../site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="../../../site_libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/search/search.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="../../../site_libs/revealjs/plugin/math/math.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': true,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1280,
+
+        height: 720,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.1,
+
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    <script>
+    Reveal.addEventListener( 'slidechanged', function( event ) {
+      console.log("hello")
+
+      slide_id = event.currentSlide.id
+      link = "annotations" + ".html#" + slide_id
+
+      var annotation_div = document.createElement('div')
+      annotation_div.setAttribute("class", "annotation-link")
+
+      var notes_link = document.createElement('a')
+      notes_link.setAttribute("href", link)
+      notes_link.setAttribute("target", "_blank")
+
+      var iii = document.createElement('i')
+      iii.setAttribute("class", "fa fa-info")
+      notes_link.appendChild(iii)
+
+      annotation_div.appendChild(notes_link)
+
+      var tmp = event.currentTarget.getElementsByClassName("annotation-link")
+      if (tmp.length === 1) {
+        tmp[0].remove()
+      }
+
+      if (event.currentSlide.classList.contains("annotation")) {
+        event.currentTarget.append(annotation_div)
+      }
+    } );
+
+    </script>
+    
+    <script>
+      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+      // slide changes (different for each slide format).
+      (function () {
+        // dispatch for htmlwidgets
+        function fireSlideEnter() {
+          const event = window.document.createEvent("Event");
+          event.initEvent("slideenter", true, true);
+          window.document.dispatchEvent(event);
+        }
+
+        function fireSlideChanged(previousSlide, currentSlide) {
+          fireSlideEnter();
+
+          // dispatch for shiny
+          if (window.jQuery) {
+            if (previousSlide) {
+              window.jQuery(previousSlide).trigger("hidden");
+            }
+            if (currentSlide) {
+              window.jQuery(currentSlide).trigger("shown");
+            }
+          }
+        }
+
+        // hookup for slidy
+        if (window.w3c_slidy) {
+          window.w3c_slidy.add_observer(function (slide_num) {
+            // slide_num starts at position 1
+            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+          });
+        }
+
+      })();
+    </script>
+
+    <script id="quarto-html-after-body" type="application/javascript">
+    window.document.addEventListener("DOMContentLoaded", function (event) {
+      const toggleBodyColorMode = (bsSheetEl) => {
+        const mode = bsSheetEl.getAttribute("data-mode");
+        const bodyEl = window.document.querySelector("body");
+        if (mode === "dark") {
+          bodyEl.classList.add("quarto-dark");
+          bodyEl.classList.remove("quarto-light");
+        } else {
+          bodyEl.classList.add("quarto-light");
+          bodyEl.classList.remove("quarto-dark");
+        }
+      }
+      const toggleBodyColorPrimary = () => {
+        const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+        if (bsSheetEl) {
+          toggleBodyColorMode(bsSheetEl);
+        }
+      }
+      toggleBodyColorPrimary();  
+      const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+      tabsets.forEach(function(tabset) {
+        const tabby = new Tabby('#' + tabset.id);
+      });
+      const isCodeAnnotation = (el) => {
+        for (const clz of el.classList) {
+          if (clz.startsWith('code-annotation-')) {                     
+            return true;
+          }
+        }
+        return false;
+      }
+      const onCopySuccess = function(e) {
+        // button target
+        const button = e.trigger;
+        // don't keep focus
+        button.blur();
+        // flash "checked"
+        button.classList.add('code-copy-button-checked');
+        var currentTitle = button.getAttribute("title");
+        button.setAttribute("title", "Copied!");
+        let tooltip;
+        if (window.bootstrap) {
+          button.setAttribute("data-bs-toggle", "tooltip");
+          button.setAttribute("data-bs-placement", "left");
+          button.setAttribute("data-bs-title", "Copied!");
+          tooltip = new bootstrap.Tooltip(button, 
+            { trigger: "manual", 
+              customClass: "code-copy-button-tooltip",
+              offset: [0, -8]});
+          tooltip.show();    
+        }
+        setTimeout(function() {
+          if (tooltip) {
+            tooltip.hide();
+            button.removeAttribute("data-bs-title");
+            button.removeAttribute("data-bs-toggle");
+            button.removeAttribute("data-bs-placement");
+          }
+          button.setAttribute("title", currentTitle);
+          button.classList.remove('code-copy-button-checked');
+        }, 1000);
+        // clear code selection
+        e.clearSelection();
+      }
+      const getTextToCopy = function(trigger) {
+          const codeEl = trigger.previousElementSibling.cloneNode(true);
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+      }
+      const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+        text: getTextToCopy
+      });
+      clipboard.on('success', onCopySuccess);
+      if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+        const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+          text: getTextToCopy,
+          container: window.document.getElementById('quarto-embedded-source-code-modal')
+        });
+        clipboardModal.on('success', onCopySuccess);
+      }
+        var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+        var mailtoRegex = new RegExp(/^mailto:/);
+          var filterRegex = new RegExp("https:\/\/workshops\.tidymodels\.org");
+        var isInternal = (href) => {
+            return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+        }
+        // Inspect non-navigation links and adorn them if external
+     	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+        for (var i=0; i<links.length; i++) {
+          const link = links[i];
+          if (!isInternal(link.href)) {
+            // undo the damage that might have been done by quarto-nav.js in the case of
+            // links that we want to consider external
+            if (link.dataset.originalHref !== undefined) {
+              link.href = link.dataset.originalHref;
+            }
+          }
+        }
+      function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+        const config = {
+          allowHTML: true,
+          maxWidth: 500,
+          delay: 100,
+          arrow: false,
+          appendTo: function(el) {
+              return el.closest('section.slide') || el.parentElement;
+          },
+          interactive: true,
+          interactiveBorder: 10,
+          theme: 'light-border',
+          placement: 'bottom-start',
+        };
+        if (contentFn) {
+          config.content = contentFn;
+        }
+        if (onTriggerFn) {
+          config.onTrigger = onTriggerFn;
+        }
+        if (onUntriggerFn) {
+          config.onUntrigger = onUntriggerFn;
+        }
+          config['offset'] = [0,0];
+          config['maxWidth'] = 700;
+        window.tippy(el, config); 
+      }
+      const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+      for (var i=0; i<noterefs.length; i++) {
+        const ref = noterefs[i];
+        tippyHover(ref, function() {
+          // use id or data attribute instead here
+          let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+          try { href = new URL(href).hash; } catch {}
+          const id = href.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note) {
+            return note.innerHTML;
+          } else {
+            return "";
+          }
+        });
+      }
+      const findCites = (el) => {
+        const parentEl = el.parentElement;
+        if (parentEl) {
+          const cites = parentEl.dataset.cites;
+          if (cites) {
+            return {
+              el,
+              cites: cites.split(' ')
+            };
+          } else {
+            return findCites(el.parentElement)
+          }
+        } else {
+          return undefined;
+        }
+      };
+      var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+      for (var i=0; i<bibliorefs.length; i++) {
+        const ref = bibliorefs[i];
+        const citeInfo = findCites(ref);
+        if (citeInfo) {
+          tippyHover(citeInfo.el, function() {
+            var popup = window.document.createElement('div');
+            citeInfo.cites.forEach(function(cite) {
+              var citeDiv = window.document.createElement('div');
+              citeDiv.classList.add('hanging-indent');
+              citeDiv.classList.add('csl-entry');
+              var biblioDiv = window.document.getElementById('ref-' + cite);
+              if (biblioDiv) {
+                citeDiv.innerHTML = biblioDiv.innerHTML;
+              }
+              popup.appendChild(citeDiv);
+            });
+            return popup.innerHTML;
+          });
+        }
+      }
+    });
+    </script>
+    
+
+</body></html>

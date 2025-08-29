@@ -117,7 +117,7 @@ forested_fit |>
 
 ## Your turn
 
-Use `augment()` and and a metric function to compute a classification metric like `brier_class()`.
+Use `augment()` and and a metric function to compute a classification metric like `roc_auc()`.
 
 Compute the metrics for both training and testing data to demonstrate overfitting!
 
@@ -185,7 +185,11 @@ If you want to analyze the assessment set (i.e. holdout) predictions, then you n
 # Save the assessment set results
 ctrl_forested <- control_resamples(save_pred = TRUE)
 
-forested_res <- fit_resamples(forested_wflow, forested_folds, control = ctrl_forested)
+forested_res <- fit_resamples(
+  forested_wflow,
+  forested_folds,
+  control = ctrl_forested
+)
 
 forested_preds <- collect_predictions(forested_res)
 forested_preds
@@ -245,7 +249,7 @@ Use `fit_resamples()` and `rf_wflow` to:
 
 ```{r}
 # `forested_split` has train + test info
-final_fit <- last_fit(rf_wflow, forested_split) 
+final_fit <- last_fit(rf_wflow, forested_split)
 
 final_fit
 ```
@@ -264,8 +268,8 @@ collect_predictions(final_fit)
 
 ```{r}
 collect_predictions(final_fit) |>
-  ggplot(aes(.pred_class, fill = forested)) + 
-  geom_bar() 
+  ggplot(aes(.pred_class, fill = forested)) +
+  geom_bar()
 ```
 
 ```{r}
