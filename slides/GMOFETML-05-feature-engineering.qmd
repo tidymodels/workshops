@@ -22,45 +22,475 @@ knitr:
 #| file: setup.R
 ```
 
-Data sets we will be using:
-- A less processed variant of https://modeldata.tidymodels.org/reference/leaf_id_flavia.html
-    - Why? It has natural multi-choice dummy variables
-    - very correlated
-    - easy for people to understand
-- modeldata::hotel_rates
-    - has some good likelihood encoding
-    - has some good non-linear effects (arrival_date_num, lead_time, stays_in_week_nights, stays_in_weekend_nights) 
-    - easy for people to understand
+## Getting set up `r hexes("embed", "recipes")`
+
+```{r}
+#| label: user-startup
+
+library(tidymodels)
+library(embed)
+
+tidymodels_prefer()
+theme_set(theme_bw())
+options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
+
+# Load our example data for this section
+"https://github.com/tidymodels/workshops/raw/refs/heads/2025-GMOFETML/slides/leaf_data.RData" |> 
+  url() |> 
+  load()
+```
 
 ## Leaf data set
 
-Show the data set itself, why it is interesting
+Slightly modified version of [modeldata::leaf_id_flavia](https://modeldata.tidymodels.org/reference/leaf_id_flavia.html).
 
-Some slides with pictures of leaves so we can understand what the features mean
+```{r}
+glimpse(leaf_data)
+```
 
-## Your turn: explore leaf data
+## Leaf data set
+
+![](images/Samples-from-Flavia-and-Swedish-datasets.png){fig-align="center"}
+
+::: footer
+Lakshika, J. P., & Talagala, T. S. (2021). Computer-aided interpretable features for leaf image classification. arXiv preprint arXiv:2106.08077.
+:::
+
+## Leaf data set
+
+![](images/image-processing-workflow.png){fig-align="center"}
+
+::: footer
+Lakshika, J. P., & Talagala, T. S. (2021). Computer-aided interpretable features for leaf image classification. arXiv preprint arXiv:2106.08077.
+:::
+
+## Leaf data set
+
+![](images/leaf-features.png){fig-align="center"}
+
+::: footer
+Lakshika, J. P., & Talagala, T. S. (2021). Computer-aided interpretable features for leaf image classification. arXiv preprint arXiv:2106.08077.
+:::
+
+## Your turn
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Load and explore the leaf data*
+
+*Make time to look at `edge` column and think about how one would encode it into numerics*
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "explore-leaves")
+```
 
 ## Leaf edges
 
-Pull out the edge predictor and explore it.
+::: {.columns}
+::: {.column}
 
-## Multi-choice dummies
+- Low number of unique levels
+- Some overlab
 
-Could we not just do normal dummies?
-Explore and contrast with other methods
-When does this break down?
-- high number of levels
-- ordering might matter
+:::
+::: {.column}
 
-Show both variants we have implemented.
+```{r}
+leaf_data |>
+  count(edge)
+```
 
-Talk about othering, as it can be an issue
+:::
+:::
 
-## Other examples of Multi-choice dummies
+## Leaf edges dummies
 
-a handful of other examples from other data sets
-little explanation of data sets,
-But enough that people get an idea of what to look out for
+(techincally one-hot encoding)
+
+```{r}
+#| echo: false
+recipe(~edge, data = leaf_data) |>
+  step_dummy(edge, one_hot = TRUE) |>
+  prep() |>
+  bake(new_data = NULL) |>
+  slice(100, 200, 300, 400, 500, 600) |>
+  rename_with(\(x) stringr::str_remove(x, "edge_")) |>
+  knitr::kable()
+```
+
+## Dummy variables
+
+::: {.columns}
+::: {.column}
+
+### Pros
+
+- Commonly used
+- Easy interpretation
+- Will rarely lead to a decrease in performance
+
+:::
+::: {.column}
+
+### Cons
+
+- Can create many columns
+- Needs clean levels
+- Not likely most efficient representation
+
+:::
+:::
+
+## Overlapping
+
+::: {.columns}
+::: {.column}
+
+Some of the labels
+
+- `lobed`
+- `smooth`
+- `toothed`
+- `lobed, smooth`
+- `lobed, toothed`
+
+:::
+::: {.column}
+
+If you want to find a "toothed" leaf, which level do you pick?
+
+- `toothed`
+- `lobed, toothed`
+- `toothed` and `lobed, toothed`
+
+
+::: fragment
+we can let `lobed, toothed` be counted for `lobed` and `toothed`
+:::
+
+:::
+:::
+
+## Advanced Dummies
+
+This is basically a poor-mans Natural Language Processing.
+
+<br>
+
+::: {style="text-align:center;"}
+`tokenization -> counting`
+:::
+
+<br>
+
+We think it is a frequent enough case that it is considered its own method.
+
+We have 2 variants: "extraction" and "multi choice"
+
+## Advanced Dummies - Extraction
+
+Works on a singular column, using regular expression to extract the items we want to count.
+
+Done using regular expressions, either by specifying `sep` to split the string by, or by using `pattern` to extract the items.
+
+Allows for 0 to many items in each string.
+
+Implemented as `step_dummy_extract()`.
+
+## Advanced Dummies - Extraction
+
+::: {.columns}
+::: {.column width="35%"}
+
+### Input
+
+```{r}
+#| echo: false
+#| comment: ""
+values <- leaf_data |>
+  count(edge) |>
+  pull(edge)
+values <-  paste0("\"", values, "\"")
+ 
+cat(values, sep = "\n")
+```
+
+<br>
+
+Using 
+
+`sep = ", "`
+
+:::
+::: {.column width="65%"}
+
+### Result
+
+```{r}
+#| echo: false
+leaf_data |>
+  count(edge) |>
+  select(-n) |>
+  recipe() |>
+  step_dummy_extract(edge, sep = ", ") |>
+  prep() |>
+  bake(NULL) |>
+  rename_with(\(x) stringr::str_remove(x, "edge_")) |>
+  select(-other) |>
+  knitr::kable()
+```
+
+:::
+:::
+
+## Advanced Dummies - Extraction
+
+::: {.columns}
+::: {.column width="50%"}
+
+### Input
+
+```{r}
+#| echo: false
+#| comment: ""
+medium_examples <- tibble(
+  medium = tate_text$medium[c(2, 5, 7, 9)]
+)
+
+medium_examples <- medium_examples |>
+  tibble::add_row(medium = "Oil paint, ink on canvas")
+
+values <- medium_examples |>
+  pull(medium)
+values <-  paste0("\"", values, "\"")
+ 
+cat(values, sep = "\n")
+```
+
+<br>
+
+Using
+
+`sep = ", "`
+
+:::
+::: {.column width="50%"}
+
+### Result
+
+```{r}
+#| echo: false
+medium_examples |>
+  recipe() |>
+  step_dummy_extract(medium, sep = ", ") |>
+  prep() |>
+  bake(NULL) |>
+  rename_with(\(x) stringr::str_remove(x, "medium_")) |>
+  select(-other) |>
+  knitr::kable()
+```
+
+:::
+:::
+
+## Advanced Dummies - Extraction
+
+::: {.columns}
+::: {.column width="50%"}
+
+### Input
+
+```{r}
+#| echo: false
+#| comment: ""
+medium_examples <- tibble(
+  medium = tate_text$medium[c(2, 5, 7, 9)]
+)
+
+medium_examples <- medium_examples |>
+  tibble::add_row(medium = "Oil paint, ink on canvas")
+
+values <- medium_examples |>
+  pull(medium)
+values <-  paste0("\"", values, "\"")
+ 
+cat(values, sep = "\n")
+```
+
+<br>
+
+Using
+
+`sep = "(, )|( and )|( on )"`
+
+:::
+::: {.column width="50%"}
+
+### Result
+
+```{r}
+#| echo: false
+medium_examples |>
+  recipe() |>
+  step_dummy_extract(medium, sep = "(, )|( and )|( on )") |>
+  prep() |>
+  bake(NULL) |>
+  rename_with(\(x) stringr::str_remove(x, "medium_")) |>
+  select(-other) |>
+  knitr::kable()
+```
+
+:::
+:::
+
+## Advanced Dummies - Extraction
+
+::: {.columns}
+::: {.column width="50%"}
+
+### Input
+
+```{r}
+#| echo: false
+#| comment: ""
+color_examples <- tibble(
+  colors = c(
+    "['red', 'blue']",
+    "['red', 'blue', 'white']",
+    "['blue', 'blue', 'blue']"
+  )
+)
+values <- color_examples |>
+  pull(colors)
+values <-  paste0("\"", values, "\"")
+ 
+cat(values, sep = "\n")
+```
+
+<br>
+
+Using
+
+`pattern = "(?<=')[^',]+(?=')"`
+
+:::
+::: {.column width="50%"}
+
+### Result
+
+```{r}
+#| echo: false
+color_examples |>
+  recipe() |>
+  step_dummy_extract(colors, pattern = "(?<=')[^',]+(?=')") |>
+  prep() |>
+  bake(NULL) |>
+  rename_with(\(x) stringr::str_remove(x, "colors_")) |>
+  select(-other) |>
+  knitr::kable()
+```
+
+:::
+:::
+
+## Advanced Dummies - Multi Choice
+
+Works on multiple columns, counting items across columns.
+
+Can be seen as joining multiple applications of dummy variables together.
+
+Allows for 0 to many items.
+
+Implemented as `step_dummy_multi_choice()`.
+
+## Advanced Dummies - Multi Choice
+
+::: {.columns}
+::: {.column width="45%"}
+
+### Input
+
+```{r}
+#| echo: false
+#| comment: ""
+values <- tribble(
+  ~lang_1,    ~lang_2,   ~lang_3,
+  "English",  "Italian", "French",
+  "Spanish",  "French",  NA,
+  "English",  NA,        NA,
+  NA,         NA,        NA
+)
+knitr::kable(values)
+```
+
+:::
+
+::: {.column width="55%"}
+
+### Result
+
+```{r}
+#| echo: false
+recipe(~., data = values) |>
+  step_dummy_multi_choice(starts_with("lang")) |>
+  prep() |>
+  bake(NULL) |>
+  rename_with(\(x) stringr::str_remove(x, "lang_1_")) |>
+  knitr::kable()
+```
+
+:::
+:::
+
+## Othering
+
+Both `step_dummy_extract()` and `step_dummy_multi_choice()` contains an argument `threshold`.
+
+This is used to combine infrequent levels together.
+
+We have a step `step_other()` that does this for nominal variables, but it doesn't work in these cases as it has to happen after the extraction/combination.
+
+## Othering
+
+`threshold = 0` produces 1217 columns
+
+```{r}
+#| echo: false
+recipe(~ medium, data = tate_text) |>
+  step_dummy_extract(medium, sep = "(, )|( and )|( on )", threshold = 0) |>
+  prep() |>
+  bake(NULL) |>
+  rename_with(\(x) stringr::str_remove(x, "medium_")) |>
+  slice(1:6) |>
+  knitr::kable()
+```
+
+## Othering
+
+`threshold = 0.05` produces 11 columns
+
+```{r}
+#| echo: false
+recipe(~ medium, data = tate_text) |>
+  step_dummy_extract(medium, sep = "(, )|( and )|( on )", threshold = 0.05) |>
+  prep() |>
+  bake(NULL) |>
+  rename_with(\(x) stringr::str_remove(x, "medium_")) |>
+  slice(1:6) |>
+  knitr::kable()
+```
+
+## Your turn
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Figure out whether `step_dummy_extract()` or `step_dummy_multi_choice()` is most appropiate on `edge` variable in `leaf_data` and apply it*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "dummy-leaves")
+```
 
 ## Embeddings
 
