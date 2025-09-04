@@ -21,12 +21,19 @@ knitr:
 #| include: false
 #| file: setup.R
 ```
+```{r}
+#| label: start-torch
+#| include: false
+
+# Start troch to bypass its effect on the RNGs
+torch::torch_is_installed()
+```
 
 ## Example data  `r hexes("tidymodels")`
 
+
 ```{r}
 #| label: user-startup
-
 library(tidymodels)
 library(probably)
 library(desirability2)
@@ -108,8 +115,8 @@ This will push the minority class probability estimates to be more accurate/[cal
 #| cache: true
 
 nnet_ex_spec <- 
-  mlp(hidden_units = 20, penalty = 0.0001, learn_rate = 0.005, epochs = 200) |> 
-  set_engine("brulee", class_weights = 3, stop_iter = 10) |> 
+  mlp(hidden_units = 20, penalty = 0.01, learn_rate = 0.005, epochs = 200) |> 
+  set_engine("brulee", class_weights = 3, stop_iter = 5) |> 
   set_mode("classification")
 
 rec <- 
@@ -159,7 +166,7 @@ The vertical green line shows that early stopping occurred.
 ```{r}
 #| label: nnet-holdout
 assessment_data <- assessment(sim_rs$splits[[1]])
-cls_mtr <- metric_set(brier_class, roc_auc, sensitivity, specificity, mn_log_loss)
+cls_mtr <- metric_set(brier_class, roc_auc, sensitivity, specificity)
 holdout_pred <- augment(nnet_ex_fit, assessment_data) 
 
 # Performance metrics
@@ -289,9 +296,9 @@ For example...
 #| label: tunable-model
 
 nnet_spec <- 
-  mlp(hidden_units = 20, penalty = tune(), learn_rate = tune(), 
-      epochs = 100, activation = tune()) |> 
-  set_engine("brulee", class_weights = tune(), stop_iter = 10) |> 
+  mlp(hidden_units = tune(), penalty = tune(), learn_rate = tune(), 
+      epochs = 200, activation = tune()) |> 
+  set_engine("brulee", class_weights = tune(), stop_iter = 5) |> 
   set_mode("classification")
 
 nnet_wflow <- workflow(rec, nnet_spec)
@@ -398,9 +405,11 @@ grids |>
 #| label: update-nnet-param
 nnet_param <- 
   nnet_param |> 
-  update(class_weights = class_weights(c(1, 50)))
-
-nnet_param  
+  update(
+  class_weights = class_weights(c(1, 50))
+  )
+  
+  nnet_param  
 ```  
 
 
@@ -417,7 +426,6 @@ plan("multisession")
 #| label: nnet-grid-tune
 #| cache: true
 #| code-line-numbers: "2|"
-set.seed(9)
 ctrl <- control_grid(save_pred = TRUE)
 
 system.time({
