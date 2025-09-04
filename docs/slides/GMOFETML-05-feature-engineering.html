@@ -213,15 +213,16 @@
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">library</span>(tidymodels)</span>
 <span id="cb1-2"><a></a><span class="fu">library</span>(embed)</span>
-<span id="cb1-3"><a></a></span>
-<span id="cb1-4"><a></a><span class="fu">tidymodels_prefer</span>()</span>
-<span id="cb1-5"><a></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
-<span id="cb1-6"><a></a><span class="fu">options</span>(<span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span>)</span>
-<span id="cb1-7"><a></a></span>
-<span id="cb1-8"><a></a><span class="co"># Load our example data for this section</span></span>
-<span id="cb1-9"><a></a><span class="st">"https://github.com/tidymodels/workshops/raw/refs/heads/2025-GMOFETML/slides/leaf_data.RData"</span> <span class="sc">|&gt;</span> </span>
-<span id="cb1-10"><a></a>  <span class="fu">url</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb1-11"><a></a>  <span class="fu">load</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-3"><a></a><span class="fu">library</span>(extrasteps)</span>
+<span id="cb1-4"><a></a></span>
+<span id="cb1-5"><a></a><span class="fu">tidymodels_prefer</span>()</span>
+<span id="cb1-6"><a></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
+<span id="cb1-7"><a></a><span class="fu">options</span>(<span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span>)</span>
+<span id="cb1-8"><a></a></span>
+<span id="cb1-9"><a></a><span class="co"># Load our example data for this section</span></span>
+<span id="cb1-10"><a></a><span class="st">"https://github.com/tidymodels/workshops/raw/refs/heads/2025-GMOFETML/slides/leaf_data.RData"</span> <span class="sc">|&gt;</span> </span>
+<span id="cb1-11"><a></a>  <span class="fu">url</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb1-12"><a></a>  <span class="fu">load</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="leaf-data-set" class="slide level2">
@@ -10794,10 +10795,57 @@
 </section>
 <section id="hotel-rates-data-set" class="slide level2">
 <h2>Hotel rates data set</h2>
-<p>Show the data set itself, why it is interesting</p>
+<p>Regression data set for predicting the average daily rate for a room, for “Resort Hotel”. The <code>agent</code> and <code>company</code> use random names.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a><span class="fu">glimpse</span>(hotel_rates)</span>
+<span id="cb8-2"><a></a><span class="co">#&gt; Rows: 15,402</span></span>
+<span id="cb8-3"><a></a><span class="co">#&gt; Columns: 28</span></span>
+<span id="cb8-4"><a></a><span class="co">#&gt; $ avg_price_per_room             &lt;dbl&gt; 110.00, 74.00, 81.90, 81.00, 112.20, 90…</span></span>
+<span id="cb8-5"><a></a><span class="co">#&gt; $ lead_time                      &lt;dbl&gt; 241, 273, 248, 236, 243, 267, 94, 10, 1…</span></span>
+<span id="cb8-6"><a></a><span class="co">#&gt; $ stays_in_weekend_nights        &lt;dbl&gt; 0, 2, 2, 2, 4, 2, 4, 0, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb8-7"><a></a><span class="co">#&gt; $ stays_in_week_nights           &lt;dbl&gt; 1, 5, 5, 5, 10, 5, 7, 1, 1, 1, 1, 1, 1,…</span></span>
+<span id="cb8-8"><a></a><span class="co">#&gt; $ adults                         &lt;dbl&gt; 2, 2, 2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, …</span></span>
+<span id="cb8-9"><a></a><span class="co">#&gt; $ children                       &lt;dbl&gt; 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, …</span></span>
+<span id="cb8-10"><a></a><span class="co">#&gt; $ babies                         &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb8-11"><a></a><span class="co">#&gt; $ meal                           &lt;fct&gt; bed_and_breakfast, bed_and_breakfast, b…</span></span>
+<span id="cb8-12"><a></a><span class="co">#&gt; $ country                        &lt;fct&gt; prt, aus, gbr, prt, gbr, null, prt, esp…</span></span>
+<span id="cb8-13"><a></a><span class="co">#&gt; $ market_segment                 &lt;fct&gt; online_travel_agent, offline_travel_age…</span></span>
+<span id="cb8-14"><a></a><span class="co">#&gt; $ distribution_channel           &lt;fct&gt; ta_to, ta_to, ta_to, ta_to, ta_to, ta_t…</span></span>
+<span id="cb8-15"><a></a><span class="co">#&gt; $ is_repeated_guest              &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb8-16"><a></a><span class="co">#&gt; $ previous_cancellations         &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb8-17"><a></a><span class="co">#&gt; $ previous_bookings_not_canceled &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb8-18"><a></a><span class="co">#&gt; $ reserved_room_type             &lt;fct&gt; a, a, a, a, a, a, f, e, h, a, a, g, a, …</span></span>
+<span id="cb8-19"><a></a><span class="co">#&gt; $ assigned_room_type             &lt;fct&gt; c, a, c, a, a, a, f, f, h, e, e, g, e, …</span></span>
+<span id="cb8-20"><a></a><span class="co">#&gt; $ booking_changes                &lt;dbl&gt; 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb8-21"><a></a><span class="co">#&gt; $ agent                          &lt;fct&gt; devin_rivera_borrego, lia_nauth, jawhar…</span></span>
+<span id="cb8-22"><a></a><span class="co">#&gt; $ company                        &lt;fct&gt; not_applicable, not_applicable, not_app…</span></span>
+<span id="cb8-23"><a></a><span class="co">#&gt; $ days_in_waiting_list           &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb8-24"><a></a><span class="co">#&gt; $ customer_type                  &lt;fct&gt; transient, transient_party, transient, …</span></span>
+<span id="cb8-25"><a></a><span class="co">#&gt; $ required_car_parking_spaces    &lt;dbl&gt; 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, …</span></span>
+<span id="cb8-26"><a></a><span class="co">#&gt; $ total_of_special_requests      &lt;dbl&gt; 1, 0, 0, 2, 0, 0, 1, 1, 0, 2, 2, 0, 2, …</span></span>
+<span id="cb8-27"><a></a><span class="co">#&gt; $ arrival_date                   &lt;date&gt; 2016-07-02, 2016-07-02, 2016-07-02, 20…</span></span>
+<span id="cb8-28"><a></a><span class="co">#&gt; $ arrival_date_num               &lt;dbl&gt; 2016.5, 2016.5, 2016.5, 2016.5, 2016.5,…</span></span>
+<span id="cb8-29"><a></a><span class="co">#&gt; $ near_christmas                 &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb8-30"><a></a><span class="co">#&gt; $ near_new_years                 &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb8-31"><a></a><span class="co">#&gt; $ historical_adr                 &lt;dbl&gt; 104.9811, 104.9811, 104.9811, 104.9811,…</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="footer">
+<p>Antonio, N., de Almeida, A., and Nunes, L. (2019). Hotel booking demand datasets. Data in Brief, 22, 41-49.</p>
+</div>
 </section>
-<section id="your-turn-hotel-rates-data" class="slide level2">
-<h2>Your turn: hotel rates data</h2>
+<section id="your-turn-2" class="slide level2">
+<h2>Your turn</h2>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
+<p><em>Load and explore the hotel_rates data</em></p>
+<p><em>Comes loaded with the modeldata package</em></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="explore-leaves" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
+<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
 </section>
 <section id="splines" class="slide level2">
 <h2>Splines</h2>
@@ -10824,9 +10872,349 @@
 </section>
 <section id="date-time-variables" class="slide level2">
 <h2>Date time variables</h2>
-<p>Basically what we have from previous workshops</p>
-<p>add “time before, time after”, work well with holidays https://feaz-book.com/datetime-advanced</p>
-<p>mention that periodic splines also would work here</p>
+<p>How can we represent the date column <code>arrival_date</code> for our model?</p>
+<div class="fragment">
+<p>When we use a date column in its native format, most models in R convert it to an integer.</p>
+</div>
+<div class="fragment">
+<p>We can re-engineer it as:</p>
+<ul>
+<li>Days since a reference date</li>
+<li>Day of the week</li>
+<li>Month</li>
+<li>Year</li>
+<li>Indicators for holidays</li>
+</ul>
+<aside class="notes">
+<p>The main point is that we try to maximize performance with different versions of the predictors.</p>
+<p>Mention that, for the Chicago data, the day or the week features are usually the most important ones in the model.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</div>
+</section>
+<section id="your-turn-3" class="slide level2">
+<h2>Your turn</h2>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
+<p><em>Explore the <code>arrival_date</code> variable and its relation to <code>avg_price_per_room</code></em></p>
+<p><em>The lubridate package might provide helpful</em></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="explore-arrival_date" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
+<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
+</section>
+<section id="arrival_date-date-features" class="slide level2">
+<h2><code>arrival_date</code> date features</h2>
+<p>using <code>step_date( features = c("year", "month", "dow", "decimal", "mday", "doy", "week", "semester", "quarter"))</code></p>
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top">
+<colgroup>
+<col style="width: 19%">
+<col style="width: 7%">
+<col style="width: 8%">
+<col style="width: 5%">
+<col style="width: 13%">
+<col style="width: 7%">
+<col style="width: 5%">
+<col style="width: 7%">
+<col style="width: 13%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">arrival_date</th>
+<th style="text-align: right;">year</th>
+<th style="text-align: left;">month</th>
+<th style="text-align: left;">dow</th>
+<th style="text-align: right;">decimal</th>
+<th style="text-align: right;">mday</th>
+<th style="text-align: right;">doy</th>
+<th style="text-align: right;">week</th>
+<th style="text-align: right;">semester</th>
+<th style="text-align: right;">quarter</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">2016-08-30</td>
+<td style="text-align: right;">2016</td>
+<td style="text-align: left;">Aug</td>
+<td style="text-align: left;">Tue</td>
+<td style="text-align: right;">2016.661</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">243</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2016-10-22</td>
+<td style="text-align: right;">2016</td>
+<td style="text-align: left;">Oct</td>
+<td style="text-align: left;">Sat</td>
+<td style="text-align: right;">2016.806</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">296</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">2016-12-17</td>
+<td style="text-align: right;">2016</td>
+<td style="text-align: left;">Dec</td>
+<td style="text-align: left;">Sat</td>
+<td style="text-align: right;">2016.959</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">352</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2017-02-13</td>
+<td style="text-align: right;">2017</td>
+<td style="text-align: left;">Feb</td>
+<td style="text-align: left;">Mon</td>
+<td style="text-align: right;">2017.118</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">2017-04-05</td>
+<td style="text-align: right;">2017</td>
+<td style="text-align: left;">Apr</td>
+<td style="text-align: left;">Wed</td>
+<td style="text-align: right;">2017.258</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="arrival_date-date-features-1" class="slide level2">
+<h2><code>arrival_date</code> date features</h2>
+<p>Adding <code>label = FALSE</code></p>
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top">
+<colgroup>
+<col style="width: 19%">
+<col style="width: 7%">
+<col style="width: 8%">
+<col style="width: 5%">
+<col style="width: 13%">
+<col style="width: 7%">
+<col style="width: 5%">
+<col style="width: 7%">
+<col style="width: 13%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">arrival_date</th>
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">month</th>
+<th style="text-align: right;">dow</th>
+<th style="text-align: right;">decimal</th>
+<th style="text-align: right;">mday</th>
+<th style="text-align: right;">doy</th>
+<th style="text-align: right;">week</th>
+<th style="text-align: right;">semester</th>
+<th style="text-align: right;">quarter</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">2016-08-30</td>
+<td style="text-align: right;">2016</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2016.661</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">243</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2016-10-22</td>
+<td style="text-align: right;">2016</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">2016.806</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">296</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">2016-12-17</td>
+<td style="text-align: right;">2016</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">2016.959</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">352</td>
+<td style="text-align: right;">51</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2017-02-13</td>
+<td style="text-align: right;">2017</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2017.118</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">2017-04-05</td>
+<td style="text-align: right;">2017</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2017.258</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">95</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="other-recipes-steps" class="slide level2">
+<h2>Other recipes steps</h2>
+<ul>
+<li><code>step_time()</code></li>
+</ul>
+<p>Works the same as <code>step_date()</code> but for smaller than day measurements: hour, hour12, am/pm, minute, second, decimal_day.</p>
+<ul>
+<li><code>step_holiday()</code></li>
+</ul>
+<p>Adds indicators for holidays. See <code>timeDate::listHolidays()</code> for supported holidays.</p>
+</section>
+<section id="your-turn-4" class="slide level2">
+<h2>Your turn</h2>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
+<p><em>Apply date steps to the <code>arrival_date</code> variable and try to see if we capture anything about <code>avg_price_per_room</code></em></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="step_date-step_holiday-arrival_date" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
+<code class="countdown-time"><span class="countdown-digits minutes">03</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
+</section>
+<section id="dates-as-numerics" class="slide level2">
+<h2>dates as numerics</h2>
+
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-24-1.svg" class="r-stretch"></section>
+<section id="holidays-as-numerics" class="slide level2">
+<h2>holidays as numerics</h2>
+
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-25-1.svg" class="r-stretch"></section>
+<section id="what-are-the-issues-with-these-features" class="slide level2">
+<h2>What are the issues with these features?</h2>
+<p>The numeric features makes it easy to capture the end or beginning, but harder anything more granular.</p>
+<p>The indicators mostly care about the day itself. No information about the lead up or aftermath</p>
+</section>
+<section id="time-events" class="slide level2">
+<h2>time events</h2>
+<p>Using <code>extrasteps::step_time_event()</code> and the <a href="https://davisvaughan.github.io/almanac/index.html">almanac</a> package, we can create useful time features.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a><span class="fu">library</span>(almanac)</span>
+<span id="cb9-2"><a></a></span>
+<span id="cb9-3"><a></a>rule_1 <span class="ot">&lt;-</span> <span class="fu">weekly</span>() <span class="sc">|&gt;</span></span>
+<span id="cb9-4"><a></a>  <span class="fu">recur_on_weekdays</span>() <span class="sc">|&gt;</span></span>
+<span id="cb9-5"><a></a>  <span class="fu">rsetdiff</span>(<span class="fu">hol_christmas</span>())</span>
+<span id="cb9-6"><a></a></span>
+<span id="cb9-7"><a></a>rule_2 <span class="ot">&lt;-</span> <span class="fu">monthly</span>(<span class="at">since =</span> <span class="st">"2000-01-01"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-8"><a></a>  <span class="fu">recur_on_interval</span>(<span class="dv">3</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-9"><a></a>  <span class="fu">recur_on_day_of_month</span>(<span class="dv">1</span>)</span>
+<span id="cb9-10"><a></a></span>
+<span id="cb9-11"><a></a>rule_3 <span class="ot">&lt;-</span> <span class="fu">yearly</span>(<span class="st">"1997-06-05"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-12"><a></a>  <span class="fu">recur_on_day_of_week</span>(<span class="st">"Thursday"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-13"><a></a>  <span class="fu">recur_on_month_of_year</span>(<span class="fu">c</span>(<span class="st">"Jun"</span>, <span class="st">"July"</span>, <span class="st">"Aug"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="step_time_event" class="slide level2">
+<h2><code>step_time_event()</code></h2>
+<p>Create a list of rules (last slide) and pass them to <code>rules</code> argument of <code>step_time_event()</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a>rules <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">rule_1 =</span> rule_1, <span class="at">rule_2 =</span> rule_2, <span class="at">rule_3 =</span> rule_3)</span>
+<span id="cb10-2"><a></a></span>
+<span id="cb10-3"><a></a><span class="fu">recipe</span>(<span class="sc">~</span> arrival_date, <span class="at">data =</span> hotel_rates) <span class="sc">|&gt;</span></span>
+<span id="cb10-4"><a></a>  <span class="fu">step_time_event</span>(arrival_date, <span class="at">rules =</span> rules)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="step_time_event-as-numerics" class="slide level2">
+<h2><code>step_time_event()</code> as numerics</h2>
+
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-28-1.svg" class="r-stretch"></section>
+<section id="non-indicator-time-events" class="slide level2">
+<h2>Non-indicator time events</h2>
+<p>These features still have the issue is that they only attach value to the date themselves.</p>
+<p>We can attach values based on how far we are away from those dates</p>
+<ul>
+<li><code>step_date_before()</code></li>
+<li><code>step_date_after()</code></li>
+<li><code>step_date_nearest()</code></li>
+</ul>
+</section>
+<section id="step_date_before" class="slide level2">
+<h2><code>step_date_before()</code></h2>
+
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-29-1.svg" class="r-stretch"></section>
+<section id="step_date_before---inverse" class="slide level2">
+<h2><code>step_date_before()</code> - inverse</h2>
+
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-30-1.svg" class="r-stretch"></section>
+<section id="step_date_after---inverse" class="slide level2">
+<h2><code>step_date_after()</code> - inverse</h2>
+
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-31-1.svg" class="r-stretch"></section>
+<section id="step_date_nearest---inverse" class="slide level2">
+<h2><code>step_date_nearest()</code> - inverse</h2>
+
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-32-1.svg" class="r-stretch"></section>
+<section id="datetime-features" class="slide level2">
+<h2>Datetime features</h2>
+<p>Avoid crafting datetime features by hand if at all possible.</p>
+<p>Dealing with un-even month lengths, leap days (leep seconds)</p>
+<p>Or tried to define any event that doesn’t land on the same day of the week or date each year</p>
+<blockquote>
+<p>The first Sunday after the first full moon on or after the vernal equinox</p>
+</blockquote>
 
 
 </section>

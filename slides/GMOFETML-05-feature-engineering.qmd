@@ -29,6 +29,7 @@ knitr:
 
 library(tidymodels)
 library(embed)
+library(extrasteps)
 
 tidymodels_prefer()
 theme_set(theme_bw())
@@ -572,14 +573,7 @@ mention how most categorical handling can be imagined as a left-join
 
 ## Date time variables
 
-Basically what we have from previous workshops
-
-add "time before, time after", work well with holidays
-https://feaz-book.com/datetime-advanced
-
-mention that periodic splines also would work here
-
-How can we represent date columns for our model?
+How can we represent the date column `arrival_date` for our model?
 
 . . .
 
@@ -601,3 +595,283 @@ The main point is that we try to maximize performance with different versions of
 Mention that, for the Chicago data, the day or the week features are usually the most important ones in the model.
 :::
 
+## Your turn
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Explore the `arrival_date` variable and its relation to `avg_price_per_room`*
+
+*The lubridate package might provide helpful*
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "explore-arrival_date")
+```
+
+## `arrival_date` date features
+
+using `step_date( features = c("year", "month", "dow", "decimal", "mday", "doy", "week", "semester", "quarter"))`
+
+```{r}
+#| echo: false
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_date(arrival_date, features = c(
+        "year",
+        "month",
+        "dow",
+        "decimal",
+        "mday",
+        "doy",
+        "week",
+        "semester",
+        "quarter"
+      )) |>
+  prep() |>
+  bake(NULL) |>
+  slice(c(2000, 4000, 6000, 8000, 10000)) |>
+  rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
+  knitr::kable()
+```
+
+## `arrival_date` date features
+
+Adding `label = FALSE`
+
+```{r}
+#| echo: false
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_date(arrival_date, label = FALSE,
+  features = c(
+        "year",
+        "month",
+        "dow",
+        "decimal",
+        "mday",
+        "doy",
+        "week",
+        "semester",
+        "quarter"
+      )) |>
+  prep() |>
+  bake(NULL) |>
+  slice(c(2000, 4000, 6000, 8000, 10000)) |>
+  rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
+  knitr::kable()
+```
+
+## Other recipes steps
+
+- `step_time()`
+
+Works the same as `step_date()` but for smaller than day measurements: hour, hour12, am/pm, minute, second, decimal_day.
+
+- `step_holiday()`
+
+Adds indicators for holidays. See `timeDate::listHolidays()` for supported holidays.
+
+## Your turn
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Apply date steps to the `arrival_date` variable and try to see if we capture anything about `avg_price_per_room`*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "step_date-step_holiday-arrival_date")
+```
+
+## dates as numerics
+
+```{r}
+#| echo: false
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_date(arrival_date, label = FALSE,
+  features = c(
+        "year",
+        "month",
+        "dow",
+        "decimal",
+        "mday",
+        "doy",
+        "week",
+        "semester",
+        "quarter"
+      )) |>
+  prep() |>
+  bake(NULL) |>
+rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
+  select(arrival_date, month, dow, mday) |>
+  distinct() |>
+  pivot_longer(-arrival_date) |>
+  ggplot(aes(arrival_date, value)) +
+  geom_col() +
+  facet_grid(name ~ ., scales = "free_y")
+```
+
+## holidays as numerics
+
+```{r}
+#| echo: false
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_holiday(arrival_date) |>
+  prep() |>
+  bake(NULL) |>
+rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
+  distinct() |>
+  pivot_longer(-arrival_date) |>
+  ggplot(aes(arrival_date, value)) +
+  geom_col() +
+  facet_grid(name ~ ., scales = "free_y")
+```
+
+## What are the issues with these features?
+
+The numeric features makes it easy to capture the end or beginning, but harder anything more granular.
+
+The indicators mostly care about the day itself. No information about the lead up or aftermath
+
+## time events
+
+Using `extrasteps::step_time_event()` and the [almanac](https://davisvaughan.github.io/almanac/index.html) package, we can create useful time features.
+
+```{r}
+library(almanac)
+
+rule_1 <- weekly() |>
+  recur_on_weekdays() |>
+  rsetdiff(hol_christmas())
+
+rule_2 <- monthly(since = "2000-01-01") %>%
+  recur_on_interval(3) %>%
+  recur_on_day_of_month(1)
+
+rule_3 <- yearly("1997-06-05") %>%
+  recur_on_day_of_week("Thursday") %>%
+  recur_on_month_of_year(c("Jun", "July", "Aug"))
+```
+
+## `step_time_event()`
+
+Create a list of rules (last slide) and pass them to `rules` argument of `step_time_event()`
+
+```{r}
+#| eval: false
+rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
+
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_time_event(arrival_date, rules = rules)
+```
+
+## `step_time_event()` as numerics
+
+```{r}
+#| echo: false
+rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
+
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_time_event(arrival_date, rules = rules, keep_original_cols = TRUE) |>
+  prep() |>
+  bake(NULL) |>
+  rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
+  distinct() |>
+  pivot_longer(-arrival_date) |>
+  ggplot(aes(arrival_date, value)) +
+  geom_col() +
+  facet_grid(name ~ ., scales = "free_y")
+```
+
+## Non-indicator time events
+
+These features still have the issue is that they only attach value to the date themselves.
+
+We can attach values based on how far we are away from those dates
+
+- `step_date_before()`
+- `step_date_after()`
+- `step_date_nearest()`
+
+## `step_date_before()`
+
+```{r}
+#| echo: false
+rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
+
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_mutate(arrival_date0 = arrival_date) |>
+  step_date_before(arrival_date0, rules = rules) |>
+  prep() |>
+  bake(NULL) |>
+  rename_with(\(x) stringr::str_remove(x, "arrival_date0_")) |>
+  distinct() |>
+  pivot_longer(-arrival_date) |>
+  ggplot(aes(arrival_date, value)) +
+  geom_col() +
+  facet_grid(name ~ ., scales = "free_y")
+```
+
+## `step_date_before()` - inverse
+
+```{r}
+#| echo: false
+rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
+
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_mutate(arrival_date0 = arrival_date) |>
+  step_date_before(arrival_date0, rules = rules, transform = "inverse") |>
+  prep() |>
+  bake(NULL) |>
+  rename_with(\(x) stringr::str_remove(x, "arrival_date0_")) |>
+  distinct() |>
+  pivot_longer(-arrival_date) |>
+  ggplot(aes(arrival_date, value)) +
+  geom_col() +
+  facet_grid(name ~ ., scales = "free_y")
+```
+
+## `step_date_after()` - inverse
+
+```{r}
+#| echo: false
+rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
+
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_mutate(arrival_date0 = arrival_date) |>
+  step_date_after(arrival_date0, rules = rules, transform = "inverse") |>
+  prep() |>
+  bake(NULL) |>
+  rename_with(\(x) stringr::str_remove(x, "arrival_date0_")) |>
+  distinct() |>
+  pivot_longer(-arrival_date) |>
+  ggplot(aes(arrival_date, value)) +
+  geom_col() +
+  facet_grid(name ~ ., scales = "free_y")
+```
+
+## `step_date_nearest()` - inverse
+
+```{r}
+#| echo: false
+rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
+
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_mutate(arrival_date0 = arrival_date) |>
+  step_date_nearest(arrival_date0, rules = rules, transform = "inverse") |>
+  prep() |>
+  bake(NULL) |>
+  rename_with(\(x) stringr::str_remove(x, "arrival_date0_")) |>
+  distinct() |>
+  pivot_longer(-arrival_date) |>
+  ggplot(aes(arrival_date, value)) +
+  geom_col() +
+  facet_grid(name ~ ., scales = "free_y")
+```
+
+## Datetime features
+
+Avoid crafting datetime features by hand if at all possible.
+
+Dealing with un-even month lengths, leap days (leep seconds)
+
+Or tried to define any event that doesn't land on the same day of the week or date each year
+
+> The first Sunday after the first full moon on or after the vernal equinox
