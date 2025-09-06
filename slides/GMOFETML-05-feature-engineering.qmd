@@ -173,6 +173,8 @@ we can let `lobed, toothed` be counted for `lobed` and `toothed`
 :::
 :::
 
+# Advanced Dummies
+
 ## Advanced Dummies
 
 This is basically a poor-mans Natural Language Processing.
@@ -493,26 +495,6 @@ recipe(~ medium, data = tate_text) |>
 countdown(minutes = 3, id = "dummy-leaves")
 ```
 
-## Embeddings
-
-Why would anyone wanna do embeddings?
-
-- redundant information (I like Alison Horst whale graphic)
-- ineffective representation
-- computational speed
-
-Methods (up for debate which to keep)
-
-- pca
-- pls
-- isomap
-- sparse pca
-
-Properly need a slide as to why t-SNE doesn't work, and why we are hesitant about UMAP
-
-Each method will show what it does (board terms),
-visualize how they affect our data set and how to use them with recipes
-
 ## Hotel rates data set
 
 Regression data set for predicting the average daily rate for a room, for "Resort Hotel". The `agent` and `company` use random names.
@@ -538,7 +520,431 @@ Antonio, N., de Almeida, A., and Nunes, L. (2019). Hotel booking demand datasets
 countdown(minutes = 5, id = "explore-leaves")
 ```
 
+# Dimensionality Reduction
+
+## Dimensionality Reduction
+
+### What is it?
+
+Techniques that remove or alter features in order to have fewer more informative features.
+
+### Why do we do it?
+
+- redundant information
+- ineffective representation
+- computational speed
+
+## Redundant Information
+
+A feature with no information could be included
+
+```{r}
+leaf_data |>
+  count(outlying_contour)
+```
+
+## Redundant Information
+
+Or duplicated or functionally equavilant features
+
+```{r}
+leaf_data |>
+  ggplot(aes(area, equivalent_diameter)) +
+  geom_point()
+```
+
+## Ineffective Representation
+
+While keeping our models in mind, we want to make sure the data is well suited
+
+- Correlated data
+  - hard for some models
+- lat/lon compared to distance/angle
+  - hard for most models
+
+## Ineffective Representation
+
+```{r}
+#| echo: false
+leaf_data |>
+  ggplot(aes(mean_red_val, mean_blue_val)) +
+  geom_point()
+```
+
+## Ineffective Representation
+
+```{r}
+#| echo: false
+leaf_data |>
+  ggplot(aes(physiological_length, diameter)) +
+  geom_point()
+```
+
+## Computational Speed
+
+Depending on what method we are using and how the data is affected by it, we could see a large reduction in features. Which in turn leads to a smaller model that is faster to train on.
+
+Only exploration and trial and errors can determine whether you should use dimensionality reduction techniques. Knowing which methods does what helps you determine what to try.
+
+## Dimensionality Reduction Method
+
+- Zero Variance removal
+- PCA
+  - Truncated PCA
+  - Sparse PCA
+- NNMF
+- UMAP
+- Isomap
+
+## Restrictions
+
+All the methods shown today will not be able to handle
+
+- missing data
+- Non-numeric data
+
+## Why not t-SNE?
+
+One of the main requirements for a feature engineering method is that you can reapply the trained transformation done on the training data set, to the testing data set.
+
+This is not possible with t-SNE as it is an itterative methods that shifts observations in the lower dimensional space based on their distances to points in the higher dimensional space.
+
+It doesn't create a mapping that can be reused.
+
+## PCA
+
+**P**rincipal **C**ompoment **A**nalysis is a linear combination of the original data such that most of the variation is captured in the first variable, then second, then third and so one.
+
+## PCA Algorithm
+
+The first principal component of a set of features $X_1, X_2, ..., X_p$ is the normalized linear combination of the features.
+
+$$
+Z_1 = \phi_{11} X_1 + \phi_{21} X_2 + ... + \phi_{p1}X_p
+$$
+
+that has the largest variance under the constraint that $\sum_{j=1}^p  \phi_{j1}^2 = 1$.
+
+we refer to $\phi_{11}, ..., \phi_{p1}$ as the loadings of the first principal component.
+
+And think of them as the loading vector $\phi_1$.
+
+## PCA Algorithm 
+
+since we have $z_{i1} = \phi_{11} x_{i1} + \phi_{21} x_{i2} + ... + \phi_{p1}x_{ip}$, then we can write
+
+$$
+\underset{\phi_{11}, ..., \phi_{p1}}{\text{maximize}} \left\{ \dfrac{1}{n} \sum^n_{i=j} z_{i1} ^2 \right\} \quad \text{subject to} \quad \sum_{j=1}^p  \phi_{j1}^2 = 1
+$$
+
+We are in essence maximizing the sample variance of the $n$ values of $z_{i1}$.
+
+We refer to $z_{11}, ..., z_{n1}$ as the scores of the first principal component.
+
+## PCA Algorithm
+
+Luckily this can be solved using techniques from Linear Algebra more specifically, it can be solved using a eigen decomposition.
+
+One of the main strengths of PCA is that you don't need to use optimization to get the results without approximations.
+
+## PCA Algorithm
+
+Once the first principal component is calculated, we can calculate the second principal component 
+
+We find the second principal component $Z_2$ as a linear combination of $X_1, ..., X_p$ that has the maximal variance out of the linear combinations that are uncorrelated with $Z_1$
+
+this is the same as saying that $\phi_2$ should be orthogonal to the direction $\phi_1$
+
+## How is that a dimensionality reduction method?
+
+By itself it itsn't as it rotates all the features in the feature space.
+
+It becomes a dimensionality reduction method if we only calculate some of the principal components.
+
+This is typically done by retaining a specific number of components or as a threshold on the variance explained.
+
+## 4 different percent variance plots
+
+```{r}
+#| label: pca-cumulative-percent-variance
+#| echo: false
+#| fig-alt: |
+#|   Faceted bar chart chart. 4 bar charts in a 2 by 2 grid. Each one represents
+#|   a different data set which has had PCA applied to it. 
+set.seed(1234)
+
+data_cumpervar <- function(data) {
+data |>
+  select(where(is.numeric)) |>
+  recipe(~.) |>
+  step_normalize(all_predictors()) |>
+  step_pca(all_predictors()) |>
+  prep() |> 
+  tidy(2, type = "variance") |>
+  filter(terms == "percent variance")
+}
+library(scales)
+
+bind_rows(
+data_cumpervar(mtcars),
+data_cumpervar(ames),
+data_cumpervar(Chicago),
+data_cumpervar(concrete)
+) |>
+  ggplot(aes(component, value)) +
+  geom_col() +
+  facet_wrap(~id, scales = "free_x") +
+  labs(
+    y = "Percent variance"
+  ) +
+  theme_minimal() +
+  scale_x_continuous(breaks = c(5, seq(0, 100, by = 10)))
+```
+
+## Applying PCA with recipes  `r hexes("recipes")`
+
+Either using `num_comp` argument
+
+```{r}
+rec <- recipe(mpg ~ ., data = mtcars) |>
+  step_pca(all_numeric_predictors(), num_comp = 5)
+```
+
+<br>
+
+or using `threshold` argument
+
+```{r}
+rec <- recipe(mpg ~ ., data = mtcars) |>
+  step_pca(all_numeric_predictors(), threshold = 0.8)
+```
+
+## Your turn
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Apply PCA using `step_pca()` to `leaf_data` data set.*
+
+*Experiment with different values of `num_comp` and or `threshold`.*
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "pca-leaf_data")
+```
+
+## PCA Pros and Cons
+
+::: {.columns}
+::: {.column}
+
+### Pros
+
+- Fast
+- Reliable
+- Exact results (up to sign changes)
+
+:::
+::: {.column}
+
+### Cons
+
+- Computational time is linear in number of columns
+- Can be quite hard to interpret
+
+:::
+:::
+
+## Truncated PCA
+
+> Computational time is linear in number of columns
+
+By default `step_pca()` calculates all the loading vectors. And then subsets them down to what you need.
+
+Instead we can use a different implementation that only calculates what you need. This is what we call truncated PCA.
+
+## Truncated PCA with recipes `r hexes("embed", "recipes")`
+
+Can only be done using `num_comp`
+
+```{r}
+library(embed)
+
+rec <- recipe(mpg ~ ., data = mtcars) |>
+  step_pca_truncated(all_numeric_predictors(), num_comp = 5)
+```
+
+## Sparse PCA
+
+> Can be quite hard to interpret
+
+Every component is a linear combination of **all predictors**.
+
+$$
+\begin{alignat}{4}
+PC1 &= cyl \cdot -0.021 &&+ disp \cdot -0.85 &&+ hp \cdot -0.52 &&+ drat \cdot -0.01\\
+ PC2 &= cyl \cdot 0.013 &&+ disp \cdot -0.52 &&+ hp \cdot 0.85 &&+ drat \cdot 0.02\\
+PC3 &= cyl \cdot -0.12 &&+ disp \cdot 0.016 &&+ hp \cdot 0.081 &&+ drat \cdot -0.19\\
+PC4 &= cyl \cdot -0.22 &&+ disp \cdot -0.0061 &&+ hp \cdot 0.033 &&+ drat \cdot -0.14\\
+PC5 &= cyl \cdot 0.73 &&+ disp \cdot -0.014 &&+ hp \cdot 0.0016 &&+ drat \cdot -0.33
+\end{alignat}
+$$
+
+If we could force some of the loadings to be 0 it would reduce things a lot.
+
+## Sparse PCA with recipes `r hexes("embed", "recipes")`
+
+Can only be done using `num_comp`.
+
+`predictor_prop` argument is used to determine how many zeroes in the loadings.
+
+```{r}
+library(embed)
+
+rec <- recipe(mpg ~ ., data = mtcars) |>
+  step_pca_sparse(all_numeric_predictors(), num_comp = 5, predictor_prop = 0.8)
+```
+
+## Sparse PCA with recipes `r hexes("embed", "recipes")`
+
+`predictor_prop = 0.8`
+
+```{r}
+recipe(mpg ~ ., data = mtcars) |>
+  step_pca_sparse(all_numeric_predictors(), num_comp = 4, predictor_prop = 0.8) |>
+  prep() |>
+  tidy(1) |>
+  pivot_wider(names_from = component, values_from = value) |>
+  select(-id)
+```
+
+## Sparse PCA with recipes `r hexes("embed", "recipes")`
+
+`predictor_prop = 0.2`
+
+```{r}
+recipe(mpg ~ ., data = mtcars) |>
+  step_pca_sparse(all_numeric_predictors(), num_comp = 4, predictor_prop = 0.2) |>
+  prep() |>
+  tidy(1) |>
+  pivot_wider(names_from = component, values_from = value) |>
+  select(-id)
+```
+
+## NNMF
+
+**N**on-**N**egative **M**atrix **F**actorization is conceptually similar to PCA, but it has different objectives. 
+
+PCA aims to generate uncorrelated components that maximizes the variances. One component at a time.
+
+NNMF on the other hand jointly optimizes all the components under the the constraint that all the loadings are non-negative. While the data is also non-negative.
+
+## NNMF restriction
+
+the data has to be non-negative, e.i. 0 or higher.
+
+This might feel like a pretty big restriction. And that is not wrong. But a lot of data sets ends up being naturally non-negative.
+
+Or could at least be turned into non-negative ones with transformations.
+
+It make for much easier interpretations as the loadings don't cancel each other out like they do for PCA.
+
+## NNMF Pros and Cons
+
+::: {.columns}
+::: {.column}
+
+- More interpretable results
+- Pulls out better structures
+
+:::
+::: {.column}
+
+- Data must be non-negative
+- Computationally expensive
+- Training depends on the seed
+
+:::
+:::
+
+## NNMF with recipes `r hexes("embed", "recipes")`
+
+`predictor_prop = 0.2`
+
+```{r}
+set.seed(1234)
+
+recipe(mpg ~ ., data = mtcars) |>
+  step_nnmf_sparse(all_numeric_predictors(), num_comp = 2) |>
+  prep() |>
+  tidy(1) |>
+  pivot_wider(names_from = component, values_from = value) |>
+  select(-id)
+```
+
+## UMAP
+
+We are hessitant
+
+##
+
+```{r}
+#| echo: false
+set.seed(2)
+data_random <- rnorm(1000 * 100) |>
+  matrix(ncol = 1000) |>
+  as_tibble()
+
+umap_2 <- recipe(~., data_random) |>
+  step_umap(all_predictors(), neighbors = 2) |>
+  prep() |>
+  bake(NULL)
+
+umap_3 <- recipe(~., data_random) |>
+  step_umap(all_predictors(), neighbors = 3) |>
+  prep() |>
+  bake(NULL)
+
+umap_5 <- recipe(~., data_random) |>
+  step_umap(all_predictors(), neighbors = 5) |>
+  prep() |>
+  bake(NULL)
+
+umap_10 <- recipe(~., data_random) |>
+  step_umap(all_predictors(), neighbors = 10) |>
+  prep() |>
+  bake(NULL)
+  
+umap_all <- bind_rows(
+  umap_2 |> mutate(type = "A", neighbors = 2),
+  umap_3 |> mutate(type = "B", neighbors = 3),
+  umap_5 |> mutate(type = "C", neighbors = 5),
+  umap_10 |> mutate(type = "D", neighbors = 10)
+)
+
+umap_all |>
+  ggplot(aes(UMAP1, UMAP2)) +
+  geom_point() +
+  facet_wrap(~type, scales = "free")
+```
+
+##
+
+```{r}
+#| echo: false
+umap_all |>
+  ggplot(aes(UMAP1, UMAP2)) +
+  geom_point() +
+  facet_wrap(~neighbors, scales = "free")
+```
+
+## Isomap
+
+Each method will show what it does (board terms),
+visualize how they affect our data set and how to use them with recipes
+
 ## Splines
+
+TODO
 
 A way to handle nonlinear effects,
 I think arrival_date_num, lead_time, stays_in_week_nights, stays_in_weekend_nights would be good candidates
@@ -557,6 +963,8 @@ benefits
 - semi-interpretable
 
 ## Likelihood encoding
+
+TODO
 
 Bring up country, agent, company, and ask learners what we could do with these?
 

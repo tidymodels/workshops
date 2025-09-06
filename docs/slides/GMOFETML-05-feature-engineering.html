@@ -469,7 +469,12 @@
 </div>
 </div></div>
 </section>
-<section id="advanced-dummies" class="slide level2">
+<section>
+<section id="advanced-dummies" class="title-slide slide level1 center">
+<h1>Advanced Dummies</h1>
+
+</section>
+<section id="advanced-dummies-1" class="slide level2">
 <h2>Advanced Dummies</h2>
 <p>This is basically a poor-mans Natural Language Processing.</p>
 <p><br></p>
@@ -10775,24 +10780,6 @@
 </div>
 </div>
 </section>
-<section id="embeddings" class="slide level2">
-<h2>Embeddings</h2>
-<p>Why would anyone wanna do embeddings?</p>
-<ul>
-<li>redundant information (I like Alison Horst whale graphic)</li>
-<li>ineffective representation</li>
-<li>computational speed</li>
-</ul>
-<p>Methods (up for debate which to keep)</p>
-<ul>
-<li>pca</li>
-<li>pls</li>
-<li>isomap</li>
-<li>sparse pca</li>
-</ul>
-<p>Properly need a slide as to why t-SNE doesn’t work, and why we are hesitant about UMAP</p>
-<p>Each method will show what it does (board terms), visualize how they affect our data set and how to use them with recipes</p>
-</section>
 <section id="hotel-rates-data-set" class="slide level2">
 <h2>Hotel rates data set</h2>
 <p>Regression data set for predicting the average daily rate for a room, for “Resort Hotel”. The <code>agent</code> and <code>company</code> use random names.</p>
@@ -10846,9 +10833,361 @@
 </div>
 </div>
 </div>
+</section></section>
+<section>
+<section id="dimensionality-reduction" class="title-slide slide level1 center">
+<h1>Dimensionality Reduction</h1>
+
+</section>
+<section id="dimensionality-reduction-1" class="slide level2">
+<h2>Dimensionality Reduction</h2>
+<h3 id="what-is-it">What is it?</h3>
+<p>Techniques that remove or alter features in order to have fewer more informative features.</p>
+<h3 id="why-do-we-do-it">Why do we do it?</h3>
+<ul>
+<li>redundant information</li>
+<li>ineffective representation</li>
+<li>computational speed</li>
+</ul>
+</section>
+<section id="redundant-information" class="slide level2">
+<h2>Redundant Information</h2>
+<p>A feature with no information could be included</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a>leaf_data <span class="sc">|&gt;</span></span>
+<span id="cb9-2"><a></a>  <span class="fu">count</span>(outlying_contour)</span>
+<span id="cb9-3"><a></a><span class="co">#&gt; # A tibble: 1 × 2</span></span>
+<span id="cb9-4"><a></a><span class="co">#&gt;   outlying_contour     n</span></span>
+<span id="cb9-5"><a></a><span class="co">#&gt;              &lt;dbl&gt; &lt;int&gt;</span></span>
+<span id="cb9-6"><a></a><span class="co">#&gt; 1                0  1907</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="redundant-information-1" class="slide level2">
+<h2>Redundant Information</h2>
+<p>Or duplicated or functionally equavilant features</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a>leaf_data <span class="sc">|&gt;</span></span>
+<span id="cb10-2"><a></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(area, equivalent_diameter)) <span class="sc">+</span></span>
+<span id="cb10-3"><a></a>  <span class="fu">geom_point</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+
+</div>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-21-1.svg" class="r-stretch"></section>
+<section id="ineffective-representation" class="slide level2">
+<h2>Ineffective Representation</h2>
+<p>While keeping our models in mind, we want to make sure the data is well suited</p>
+<ul>
+<li>Correlated data
+<ul>
+<li>hard for some models</li>
+</ul></li>
+<li>lat/lon compared to distance/angle
+<ul>
+<li>hard for most models</li>
+</ul></li>
+</ul>
+</section>
+<section id="ineffective-representation-1" class="slide level2">
+<h2>Ineffective Representation</h2>
+
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-22-1.svg" class="r-stretch"></section>
+<section id="ineffective-representation-2" class="slide level2">
+<h2>Ineffective Representation</h2>
+
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-23-1.svg" class="r-stretch"></section>
+<section id="computational-speed" class="slide level2">
+<h2>Computational Speed</h2>
+<p>Depending on what method we are using and how the data is affected by it, we could see a large reduction in features. Which in turn leads to a smaller model that is faster to train on.</p>
+<p>Only exploration and trial and errors can determine whether you should use dimensionality reduction techniques. Knowing which methods does what helps you determine what to try.</p>
+</section>
+<section id="dimensionality-reduction-method" class="slide level2">
+<h2>Dimensionality Reduction Method</h2>
+<ul>
+<li>Zero Variance removal</li>
+<li>PCA
+<ul>
+<li>Truncated PCA</li>
+<li>Sparse PCA</li>
+</ul></li>
+<li>NNMF</li>
+<li>UMAP</li>
+<li>Isomap</li>
+</ul>
+</section>
+<section id="restrictions" class="slide level2">
+<h2>Restrictions</h2>
+<p>All the methods shown today will not be able to handle</p>
+<ul>
+<li>missing data</li>
+<li>Non-numeric data</li>
+</ul>
+</section>
+<section id="why-not-t-sne" class="slide level2">
+<h2>Why not t-SNE?</h2>
+<p>One of the main requirements for a feature engineering method is that you can reapply the trained transformation done on the training data set, to the testing data set.</p>
+<p>This is not possible with t-SNE as it is an itterative methods that shifts observations in the lower dimensional space based on their distances to points in the higher dimensional space.</p>
+<p>It doesn’t create a mapping that can be reused.</p>
+</section>
+<section id="pca" class="slide level2">
+<h2>PCA</h2>
+<p><strong>P</strong>rincipal <strong>C</strong>ompoment <strong>A</strong>nalysis is a linear combination of the original data such that most of the variation is captured in the first variable, then second, then third and so one.</p>
+</section>
+<section id="pca-algorithm" class="slide level2">
+<h2>PCA Algorithm</h2>
+<p>The first principal component of a set of features <span class="math inline">\(X_1, X_2, ..., X_p\)</span> is the normalized linear combination of the features.</p>
+<p><span class="math display">\[
+Z_1 = \phi_{11} X_1 + \phi_{21} X_2 + ... + \phi_{p1}X_p
+\]</span></p>
+<p>that has the largest variance under the constraint that <span class="math inline">\(\sum_{j=1}^p  \phi_{j1}^2 = 1\)</span>.</p>
+<p>we refer to <span class="math inline">\(\phi_{11}, ..., \phi_{p1}\)</span> as the loadings of the first principal component.</p>
+<p>And think of them as the loading vector <span class="math inline">\(\phi_1\)</span>.</p>
+</section>
+<section id="pca-algorithm-1" class="slide level2">
+<h2>PCA Algorithm</h2>
+<p>since we have <span class="math inline">\(z_{i1} = \phi_{11} x_{i1} + \phi_{21} x_{i2} + ... + \phi_{p1}x_{ip}\)</span>, then we can write</p>
+<p><span class="math display">\[
+\underset{\phi_{11}, ..., \phi_{p1}}{\text{maximize}} \left\{ \dfrac{1}{n} \sum^n_{i=j} z_{i1} ^2 \right\} \quad \text{subject to} \quad \sum_{j=1}^p  \phi_{j1}^2 = 1
+\]</span></p>
+<p>We are in essence maximizing the sample variance of the <span class="math inline">\(n\)</span> values of <span class="math inline">\(z_{i1}\)</span>.</p>
+<p>We refer to <span class="math inline">\(z_{11}, ..., z_{n1}\)</span> as the scores of the first principal component.</p>
+</section>
+<section id="pca-algorithm-2" class="slide level2">
+<h2>PCA Algorithm</h2>
+<p>Luckily this can be solved using techniques from Linear Algebra more specifically, it can be solved using a eigen decomposition.</p>
+<p>One of the main strengths of PCA is that you don’t need to use optimization to get the results without approximations.</p>
+</section>
+<section id="pca-algorithm-3" class="slide level2">
+<h2>PCA Algorithm</h2>
+<p>Once the first principal component is calculated, we can calculate the second principal component</p>
+<p>We find the second principal component <span class="math inline">\(Z_2\)</span> as a linear combination of <span class="math inline">\(X_1, ..., X_p\)</span> that has the maximal variance out of the linear combinations that are uncorrelated with <span class="math inline">\(Z_1\)</span></p>
+<p>this is the same as saying that <span class="math inline">\(\phi_2\)</span> should be orthogonal to the direction <span class="math inline">\(\phi_1\)</span></p>
+</section>
+<section id="how-is-that-a-dimensionality-reduction-method" class="slide level2">
+<h2>How is that a dimensionality reduction method?</h2>
+<p>By itself it itsn’t as it rotates all the features in the feature space.</p>
+<p>It becomes a dimensionality reduction method if we only calculate some of the principal components.</p>
+<p>This is typically done by retaining a specific number of components or as a threshold on the variance explained.</p>
+</section>
+<section id="different-percent-variance-plots" class="slide level2">
+<h2>4 different percent variance plots</h2>
+
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/pca-cumulative-percent-variance-1.svg" alt="Faceted bar chart chart. 4 bar charts in a 2 by 2 grid. Each one represents a different data set which has had PCA applied to it. " class="r-stretch"></section>
+<section id="applying-pca-with-recipes" class="slide level2">
+<h2>Applying PCA with recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p>Either using <code>num_comp</code> argument</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a></a>rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb11-2"><a></a>  <span class="fu">step_pca</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><br></p>
+<p>or using <code>threshold</code> argument</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a></a>rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb12-2"><a></a>  <span class="fu">step_pca</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">threshold =</span> <span class="fl">0.8</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="your-turn-3" class="slide level2">
+<h2>Your turn</h2>
+<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
+<p><em>Apply PCA using <code>step_pca()</code> to <code>leaf_data</code> data set.</em></p>
+<p><em>Experiment with different values of <code>num_comp</code> and or <code>threshold</code>.</em></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="pca-leaf_data" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
+<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
+</section>
+<section id="pca-pros-and-cons" class="slide level2">
+<h2>PCA Pros and Cons</h2>
+<div class="columns">
+<div class="column">
+<h3 id="pros-1">Pros</h3>
+<ul>
+<li>Fast</li>
+<li>Reliable</li>
+<li>Exact results (up to sign changes)</li>
+</ul>
+</div><div class="column">
+<h3 id="cons-1">Cons</h3>
+<ul>
+<li>Computational time is linear in number of columns</li>
+<li>Can be quite hard to interpret</li>
+</ul>
+</div></div>
+</section>
+<section id="truncated-pca" class="slide level2">
+<h2>Truncated PCA</h2>
+<blockquote>
+<p>Computational time is linear in number of columns</p>
+</blockquote>
+<p>By default <code>step_pca()</code> calculates all the loading vectors. And then subsets them down to what you need.</p>
+<p>Instead we can use a different implementation that only calculates what you need. This is what we call truncated PCA.</p>
+</section>
+<section id="truncated-pca-with-recipes" class="slide level2">
+<h2>Truncated PCA with recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<p>Can only be done using <code>num_comp</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a></a><span class="fu">library</span>(embed)</span>
+<span id="cb13-2"><a></a></span>
+<span id="cb13-3"><a></a>rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb13-4"><a></a>  <span class="fu">step_pca_truncated</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="sparse-pca" class="slide level2">
+<h2>Sparse PCA</h2>
+<blockquote>
+<p>Can be quite hard to interpret</p>
+</blockquote>
+<p>Every component is a linear combination of <strong>all predictors</strong>.</p>
+<p><span class="math display">\[
+\begin{alignat}{4}
+PC1 &amp;= cyl \cdot -0.021 &amp;&amp;+ disp \cdot -0.85 &amp;&amp;+ hp \cdot -0.52 &amp;&amp;+ drat \cdot -0.01\\
+PC2 &amp;= cyl \cdot 0.013 &amp;&amp;+ disp \cdot -0.52 &amp;&amp;+ hp \cdot 0.85 &amp;&amp;+ drat \cdot 0.02\\
+PC3 &amp;= cyl \cdot -0.12 &amp;&amp;+ disp \cdot 0.016 &amp;&amp;+ hp \cdot 0.081 &amp;&amp;+ drat \cdot -0.19\\
+PC4 &amp;= cyl \cdot -0.22 &amp;&amp;+ disp \cdot -0.0061 &amp;&amp;+ hp \cdot 0.033 &amp;&amp;+ drat \cdot -0.14\\
+PC5 &amp;= cyl \cdot 0.73 &amp;&amp;+ disp \cdot -0.014 &amp;&amp;+ hp \cdot 0.0016 &amp;&amp;+ drat \cdot -0.33
+\end{alignat}
+\]</span></p>
+<p>If we could force some of the loadings to be 0 it would reduce things a lot.</p>
+</section>
+<section id="sparse-pca-with-recipes" class="slide level2">
+<h2>Sparse PCA with recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<p>Can only be done using <code>num_comp</code>.</p>
+<p><code>predictor_prop</code> argument is used to determine how many zeroes in the loadings.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a></a><span class="fu">library</span>(embed)</span>
+<span id="cb14-2"><a></a></span>
+<span id="cb14-3"><a></a>rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb14-4"><a></a>  <span class="fu">step_pca_sparse</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">5</span>, <span class="at">predictor_prop =</span> <span class="fl">0.8</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="sparse-pca-with-recipes-1" class="slide level2">
+<h2>Sparse PCA with recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<p><code>predictor_prop = 0.8</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a></a><span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb15-2"><a></a>  <span class="fu">step_pca_sparse</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">4</span>, <span class="at">predictor_prop =</span> <span class="fl">0.8</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-3"><a></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
+<span id="cb15-4"><a></a>  <span class="fu">tidy</span>(<span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-5"><a></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> component, <span class="at">values_from =</span> value) <span class="sc">|&gt;</span></span>
+<span id="cb15-6"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>id)</span>
+<span id="cb15-7"><a></a><span class="co">#&gt; # A tibble: 10 × 5</span></span>
+<span id="cb15-8"><a></a><span class="co">#&gt;    terms      PC1      PC2     PC3     PC4</span></span>
+<span id="cb15-9"><a></a><span class="co">#&gt;    &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span></span>
+<span id="cb15-10"><a></a><span class="co">#&gt;  1 cyl   -0.0198   0.00994 -0.111   0.204 </span></span>
+<span id="cb15-11"><a></a><span class="co">#&gt;  2 disp  -0.854   -0.520    0       0     </span></span>
+<span id="cb15-12"><a></a><span class="co">#&gt;  3 hp    -0.518    0.852    0.0667  0     </span></span>
+<span id="cb15-13"><a></a><span class="co">#&gt;  4 drat  -0.00928  0.0171  -0.178   0.118 </span></span>
+<span id="cb15-14"><a></a><span class="co">#&gt;  5 wt    -0.00987  0       -0.0650  0.144 </span></span>
+<span id="cb15-15"><a></a><span class="co">#&gt;  6 qsec  -0.0506   0.0497  -0.957  -0.109 </span></span>
+<span id="cb15-16"><a></a><span class="co">#&gt;  7 vs     0        0       -0.0446 -0.0974</span></span>
+<span id="cb15-17"><a></a><span class="co">#&gt;  8 am     0        0.00603 -0.0157  0.0624</span></span>
+<span id="cb15-18"><a></a><span class="co">#&gt;  9 gear  -0.00957  0.0239  -0.170   0.256 </span></span>
+<span id="cb15-19"><a></a><span class="co">#&gt; 10 carb  -0.00863  0.0257   0       0.913</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="sparse-pca-with-recipes-2" class="slide level2">
+<h2>Sparse PCA with recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<p><code>predictor_prop = 0.2</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a></a><span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb16-2"><a></a>  <span class="fu">step_pca_sparse</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">4</span>, <span class="at">predictor_prop =</span> <span class="fl">0.2</span>) <span class="sc">|&gt;</span></span>
+<span id="cb16-3"><a></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
+<span id="cb16-4"><a></a>  <span class="fu">tidy</span>(<span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb16-5"><a></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> component, <span class="at">values_from =</span> value) <span class="sc">|&gt;</span></span>
+<span id="cb16-6"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>id)</span>
+<span id="cb16-7"><a></a><span class="co">#&gt; # A tibble: 10 × 5</span></span>
+<span id="cb16-8"><a></a><span class="co">#&gt;    terms    PC1    PC2     PC3    PC4</span></span>
+<span id="cb16-9"><a></a><span class="co">#&gt;    &lt;chr&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;</span></span>
+<span id="cb16-10"><a></a><span class="co">#&gt;  1 cyl    0      0      0      0     </span></span>
+<span id="cb16-11"><a></a><span class="co">#&gt;  2 disp  -0.865  0.486  0      0     </span></span>
+<span id="cb16-12"><a></a><span class="co">#&gt;  3 hp    -0.502 -0.874  0      0     </span></span>
+<span id="cb16-13"><a></a><span class="co">#&gt;  4 drat   0      0     -0.0109 0     </span></span>
+<span id="cb16-14"><a></a><span class="co">#&gt;  5 wt     0      0      0      0     </span></span>
+<span id="cb16-15"><a></a><span class="co">#&gt;  6 qsec   0      0     -1.000  0     </span></span>
+<span id="cb16-16"><a></a><span class="co">#&gt;  7 vs     0      0      0      0     </span></span>
+<span id="cb16-17"><a></a><span class="co">#&gt;  8 am     0      0      0      0     </span></span>
+<span id="cb16-18"><a></a><span class="co">#&gt;  9 gear   0      0      0      0.0139</span></span>
+<span id="cb16-19"><a></a><span class="co">#&gt; 10 carb   0      0      0      1.000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="nnmf" class="slide level2">
+<h2>NNMF</h2>
+<p><strong>N</strong>on-<strong>N</strong>egative <strong>M</strong>atrix <strong>F</strong>actorization is conceptually similar to PCA, but it has different objectives.</p>
+<p>PCA aims to generate uncorrelated components that maximizes the variances. One component at a time.</p>
+<p>NNMF on the other hand jointly optimizes all the components under the the constraint that all the loadings are non-negative. While the data is also non-negative.</p>
+</section>
+<section id="nnmf-restriction" class="slide level2">
+<h2>NNMF restriction</h2>
+<p>the data has to be non-negative, e.i. 0 or higher.</p>
+<p>This might feel like a pretty big restriction. And that is not wrong. But a lot of data sets ends up being naturally non-negative.</p>
+<p>Or could at least be turned into non-negative ones with transformations.</p>
+<p>It make for much easier interpretations as the loadings don’t cancel each other out like they do for PCA.</p>
+</section>
+<section id="nnmf-pros-and-cons" class="slide level2">
+<h2>NNMF Pros and Cons</h2>
+<div class="columns">
+<div class="column">
+<ul>
+<li>More interpretable results</li>
+<li>Pulls out better structures</li>
+</ul>
+</div><div class="column">
+<ul>
+<li>Data must be non-negative</li>
+<li>Computationally expensive</li>
+<li>Training depends on the seed</li>
+</ul>
+</div></div>
+</section>
+<section id="nnmf-with-recipes" class="slide level2">
+<h2>NNMF with recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<p><code>predictor_prop = 0.2</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb17-2"><a></a></span>
+<span id="cb17-3"><a></a><span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb17-4"><a></a>  <span class="fu">step_nnmf_sparse</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span></span>
+<span id="cb17-5"><a></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
+<span id="cb17-6"><a></a>  <span class="fu">tidy</span>(<span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb17-7"><a></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> component, <span class="at">values_from =</span> value) <span class="sc">|&gt;</span></span>
+<span id="cb17-8"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>id)</span>
+<span id="cb17-9"><a></a><span class="co">#&gt; # A tibble: 10 × 3</span></span>
+<span id="cb17-10"><a></a><span class="co">#&gt;    terms    NNMF1   NNMF2</span></span>
+<span id="cb17-11"><a></a><span class="co">#&gt;    &lt;chr&gt;    &lt;dbl&gt;   &lt;dbl&gt;</span></span>
+<span id="cb17-12"><a></a><span class="co">#&gt;  1 am    0        0.00631</span></span>
+<span id="cb17-13"><a></a><span class="co">#&gt;  2 carb  0.00428  0.0249 </span></span>
+<span id="cb17-14"><a></a><span class="co">#&gt;  3 cyl   0.0134   0.0177 </span></span>
+<span id="cb17-15"><a></a><span class="co">#&gt;  4 disp  0.639    0      </span></span>
+<span id="cb17-16"><a></a><span class="co">#&gt;  5 drat  0.00545  0.0188 </span></span>
+<span id="cb17-17"><a></a><span class="co">#&gt;  6 gear  0.00509  0.0240 </span></span>
+<span id="cb17-18"><a></a><span class="co">#&gt;  7 hp    0.294    0.840  </span></span>
+<span id="cb17-19"><a></a><span class="co">#&gt;  8 qsec  0.0316   0.0606 </span></span>
+<span id="cb17-20"><a></a><span class="co">#&gt;  9 vs    0.000293 0.00247</span></span>
+<span id="cb17-21"><a></a><span class="co">#&gt; 10 wt    0.00742  0.00519</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="umap" class="slide level2">
+<h2>UMAP</h2>
+<p>We are hessitant</p>
+</section>
+<section id="section" class="slide level2">
+<h2></h2>
+
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-32-1.svg" class="r-stretch"></section>
+<section id="section-1" class="slide level2">
+<h2></h2>
+
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-33-1.svg" class="r-stretch"></section>
+<section id="isomap" class="slide level2">
+<h2>Isomap</h2>
+<p>Each method will show what it does (board terms), visualize how they affect our data set and how to use them with recipes</p>
 </section>
 <section id="splines" class="slide level2">
 <h2>Splines</h2>
+<p>TODO</p>
 <p>A way to handle nonlinear effects, I think arrival_date_num, lead_time, stays_in_week_nights, stays_in_weekend_nights would be good candidates</p>
 <p>Explanation of what a spline is and how it works</p>
 <p>Visualization of one in use</p>
@@ -10858,6 +11197,7 @@
 </section>
 <section id="likelihood-encoding" class="slide level2">
 <h2>Likelihood encoding</h2>
+<p>TODO</p>
 <p>Bring up country, agent, company, and ask learners what we could do with these?</p>
 <ul>
 <li>dummy variables etc etc
@@ -10901,7 +11241,7 @@
       }</style></aside>
 </div>
 </section>
-<section id="your-turn-3" class="slide level2">
+<section id="your-turn-4" class="slide level2">
 <h2>Your turn</h2>
 <p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
 <p><em>Explore the <code>arrival_date</code> variable and its relation to <code>avg_price_per_room</code></em></p>
@@ -11122,7 +11462,7 @@
 </ul>
 <p>Adds indicators for holidays. See <code>timeDate::listHolidays()</code> for supported holidays.</p>
 </section>
-<section id="your-turn-4" class="slide level2">
+<section id="your-turn-5" class="slide level2">
 <h2>Your turn</h2>
 <p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
 <p><em>Apply date steps to the <code>arrival_date</code> variable and try to see if we capture anything about <code>avg_price_per_room</code></em></p>
@@ -11138,11 +11478,11 @@
 <section id="dates-as-numerics" class="slide level2">
 <h2>dates as numerics</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-24-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-38-1.svg" class="r-stretch"></section>
 <section id="holidays-as-numerics" class="slide level2">
 <h2>holidays as numerics</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-25-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-39-1.svg" class="r-stretch"></section>
 <section id="what-are-the-issues-with-these-features" class="slide level2">
 <h2>What are the issues with these features?</h2>
 <p>The numeric features makes it easy to capture the end or beginning, but harder anything more granular.</p>
@@ -11152,35 +11492,35 @@
 <h2>time events</h2>
 <p>Using <code>extrasteps::step_time_event()</code> and the <a href="https://davisvaughan.github.io/almanac/index.html">almanac</a> package, we can create useful time features.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a><span class="fu">library</span>(almanac)</span>
-<span id="cb9-2"><a></a></span>
-<span id="cb9-3"><a></a>rule_1 <span class="ot">&lt;-</span> <span class="fu">weekly</span>() <span class="sc">|&gt;</span></span>
-<span id="cb9-4"><a></a>  <span class="fu">recur_on_weekdays</span>() <span class="sc">|&gt;</span></span>
-<span id="cb9-5"><a></a>  <span class="fu">rsetdiff</span>(<span class="fu">hol_christmas</span>())</span>
-<span id="cb9-6"><a></a></span>
-<span id="cb9-7"><a></a>rule_2 <span class="ot">&lt;-</span> <span class="fu">monthly</span>(<span class="at">since =</span> <span class="st">"2000-01-01"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb9-8"><a></a>  <span class="fu">recur_on_interval</span>(<span class="dv">3</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb9-9"><a></a>  <span class="fu">recur_on_day_of_month</span>(<span class="dv">1</span>)</span>
-<span id="cb9-10"><a></a></span>
-<span id="cb9-11"><a></a>rule_3 <span class="ot">&lt;-</span> <span class="fu">yearly</span>(<span class="st">"1997-06-05"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb9-12"><a></a>  <span class="fu">recur_on_day_of_week</span>(<span class="st">"Thursday"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb9-13"><a></a>  <span class="fu">recur_on_month_of_year</span>(<span class="fu">c</span>(<span class="st">"Jun"</span>, <span class="st">"July"</span>, <span class="st">"Aug"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a></a><span class="fu">library</span>(almanac)</span>
+<span id="cb18-2"><a></a></span>
+<span id="cb18-3"><a></a>rule_1 <span class="ot">&lt;-</span> <span class="fu">weekly</span>() <span class="sc">|&gt;</span></span>
+<span id="cb18-4"><a></a>  <span class="fu">recur_on_weekdays</span>() <span class="sc">|&gt;</span></span>
+<span id="cb18-5"><a></a>  <span class="fu">rsetdiff</span>(<span class="fu">hol_christmas</span>())</span>
+<span id="cb18-6"><a></a></span>
+<span id="cb18-7"><a></a>rule_2 <span class="ot">&lt;-</span> <span class="fu">monthly</span>(<span class="at">since =</span> <span class="st">"2000-01-01"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-8"><a></a>  <span class="fu">recur_on_interval</span>(<span class="dv">3</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-9"><a></a>  <span class="fu">recur_on_day_of_month</span>(<span class="dv">1</span>)</span>
+<span id="cb18-10"><a></a></span>
+<span id="cb18-11"><a></a>rule_3 <span class="ot">&lt;-</span> <span class="fu">yearly</span>(<span class="st">"1997-06-05"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-12"><a></a>  <span class="fu">recur_on_day_of_week</span>(<span class="st">"Thursday"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-13"><a></a>  <span class="fu">recur_on_month_of_year</span>(<span class="fu">c</span>(<span class="st">"Jun"</span>, <span class="st">"July"</span>, <span class="st">"Aug"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="step_time_event" class="slide level2">
 <h2><code>step_time_event()</code></h2>
 <p>Create a list of rules (last slide) and pass them to <code>rules</code> argument of <code>step_time_event()</code></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a>rules <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">rule_1 =</span> rule_1, <span class="at">rule_2 =</span> rule_2, <span class="at">rule_3 =</span> rule_3)</span>
-<span id="cb10-2"><a></a></span>
-<span id="cb10-3"><a></a><span class="fu">recipe</span>(<span class="sc">~</span> arrival_date, <span class="at">data =</span> hotel_rates) <span class="sc">|&gt;</span></span>
-<span id="cb10-4"><a></a>  <span class="fu">step_time_event</span>(arrival_date, <span class="at">rules =</span> rules)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a></a>rules <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">rule_1 =</span> rule_1, <span class="at">rule_2 =</span> rule_2, <span class="at">rule_3 =</span> rule_3)</span>
+<span id="cb19-2"><a></a></span>
+<span id="cb19-3"><a></a><span class="fu">recipe</span>(<span class="sc">~</span> arrival_date, <span class="at">data =</span> hotel_rates) <span class="sc">|&gt;</span></span>
+<span id="cb19-4"><a></a>  <span class="fu">step_time_event</span>(arrival_date, <span class="at">rules =</span> rules)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="step_time_event-as-numerics" class="slide level2">
 <h2><code>step_time_event()</code> as numerics</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-28-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-42-1.svg" class="r-stretch"></section>
 <section id="non-indicator-time-events" class="slide level2">
 <h2>Non-indicator time events</h2>
 <p>These features still have the issue is that they only attach value to the date themselves.</p>
@@ -11194,19 +11534,19 @@
 <section id="step_date_before" class="slide level2">
 <h2><code>step_date_before()</code></h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-29-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-43-1.svg" class="r-stretch"></section>
 <section id="step_date_before---inverse" class="slide level2">
 <h2><code>step_date_before()</code> - inverse</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-30-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-44-1.svg" class="r-stretch"></section>
 <section id="step_date_after---inverse" class="slide level2">
 <h2><code>step_date_after()</code> - inverse</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-31-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-45-1.svg" class="r-stretch"></section>
 <section id="step_date_nearest---inverse" class="slide level2">
 <h2><code>step_date_nearest()</code> - inverse</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-32-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-46-1.svg" class="r-stretch"></section>
 <section id="datetime-features" class="slide level2">
 <h2>Datetime features</h2>
 <p>Avoid crafting datetime features by hand if at all possible.</p>
@@ -11217,7 +11557,7 @@
 </blockquote>
 
 
-</section>
+</section></section>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">
