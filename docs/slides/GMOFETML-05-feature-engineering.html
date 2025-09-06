@@ -10929,7 +10929,7 @@
 </section>
 <section id="pca" class="slide level2">
 <h2>PCA</h2>
-<p>PCA is a linear combination of the original data such that most of the variation is captured in the first variable, then second, then third and so one.</p>
+<p><strong>P</strong>rincipal <strong>C</strong>ompoment <strong>A</strong>nalysis is a linear combination of the original data such that most of the variation is captured in the first variable, then second, then third and so one.</p>
 </section>
 <section id="pca-algorithm" class="slide level2">
 <h2>PCA Algorithm</h2>
@@ -11113,6 +11113,62 @@ PC5 &amp;= cyl \cdot 0.73 &amp;&amp;+ disp \cdot -0.014 &amp;&amp;+ hp \cdot 0.0
 <span id="cb16-19"><a></a><span class="co">#&gt; 10 carb   0      0      0      1.000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
+<section id="nnmf" class="slide level2">
+<h2>NNMF</h2>
+<p><strong>N</strong>on-<strong>N</strong>egative <strong>M</strong>atrix <strong>F</strong>actorization is conceptually similar to PCA, but it has different objectives.</p>
+<p>PCA aims to generate uncorrelated components that maximizes the variances. One component at a time.</p>
+<p>NNMF on the other hand jointly optimizes all the components under the the constraint that all the loadings are non-negative. While the data is also non-negative.</p>
+</section>
+<section id="nnmf-restriction" class="slide level2">
+<h2>NNMF restriction</h2>
+<p>the data has to be non-negative, e.i. 0 or higher.</p>
+<p>This might feel like a pretty big restriction. And that is not wrong. But a lot of data sets ends up being naturally non-negative.</p>
+<p>Or could at least be turned into non-negative ones with transformations.</p>
+<p>It make for much easier interpretations as the loadings don’t cancel each other out like they do for PCA.</p>
+</section>
+<section id="nnmf-pros-and-cons" class="slide level2">
+<h2>NNMF Pros and Cons</h2>
+<div class="columns">
+<div class="column">
+<ul>
+<li>More interpretable results</li>
+<li>Pulls out better structures</li>
+</ul>
+</div><div class="column">
+<ul>
+<li>Data must be non-negative</li>
+<li>Computationally expensive</li>
+<li>Training depends on the seed</li>
+</ul>
+</div></div>
+</section>
+<section id="nnmf-with-recipes" class="slide level2">
+<h2>NNMF with recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<p><code>predictor_prop = 0.2</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb17-2"><a></a></span>
+<span id="cb17-3"><a></a><span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb17-4"><a></a>  <span class="fu">step_nnmf_sparse</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span></span>
+<span id="cb17-5"><a></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
+<span id="cb17-6"><a></a>  <span class="fu">tidy</span>(<span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb17-7"><a></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> component, <span class="at">values_from =</span> value) <span class="sc">|&gt;</span></span>
+<span id="cb17-8"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>id)</span>
+<span id="cb17-9"><a></a><span class="co">#&gt; # A tibble: 10 × 3</span></span>
+<span id="cb17-10"><a></a><span class="co">#&gt;    terms    NNMF1   NNMF2</span></span>
+<span id="cb17-11"><a></a><span class="co">#&gt;    &lt;chr&gt;    &lt;dbl&gt;   &lt;dbl&gt;</span></span>
+<span id="cb17-12"><a></a><span class="co">#&gt;  1 am    0        0.00631</span></span>
+<span id="cb17-13"><a></a><span class="co">#&gt;  2 carb  0.00428  0.0249 </span></span>
+<span id="cb17-14"><a></a><span class="co">#&gt;  3 cyl   0.0134   0.0177 </span></span>
+<span id="cb17-15"><a></a><span class="co">#&gt;  4 disp  0.639    0      </span></span>
+<span id="cb17-16"><a></a><span class="co">#&gt;  5 drat  0.00545  0.0188 </span></span>
+<span id="cb17-17"><a></a><span class="co">#&gt;  6 gear  0.00509  0.0240 </span></span>
+<span id="cb17-18"><a></a><span class="co">#&gt;  7 hp    0.294    0.840  </span></span>
+<span id="cb17-19"><a></a><span class="co">#&gt;  8 qsec  0.0316   0.0606 </span></span>
+<span id="cb17-20"><a></a><span class="co">#&gt;  9 vs    0.000293 0.00247</span></span>
+<span id="cb17-21"><a></a><span class="co">#&gt; 10 wt    0.00742  0.00519</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
 <section id="umap" class="slide level2">
 <h2>UMAP</h2>
 <p>We are hessitant</p>
@@ -11120,11 +11176,11 @@ PC5 &amp;= cyl \cdot 0.73 &amp;&amp;+ disp \cdot -0.014 &amp;&amp;+ hp \cdot 0.0
 <section id="section" class="slide level2">
 <h2></h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-31-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-32-1.svg" class="r-stretch"></section>
 <section id="section-1" class="slide level2">
 <h2></h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-32-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-33-1.svg" class="r-stretch"></section>
 <section id="isomap" class="slide level2">
 <h2>Isomap</h2>
 <p>Each method will show what it does (board terms), visualize how they affect our data set and how to use them with recipes</p>
@@ -11422,11 +11478,11 @@ PC5 &amp;= cyl \cdot 0.73 &amp;&amp;+ disp \cdot -0.014 &amp;&amp;+ hp \cdot 0.0
 <section id="dates-as-numerics" class="slide level2">
 <h2>dates as numerics</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-37-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-38-1.svg" class="r-stretch"></section>
 <section id="holidays-as-numerics" class="slide level2">
 <h2>holidays as numerics</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-38-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-39-1.svg" class="r-stretch"></section>
 <section id="what-are-the-issues-with-these-features" class="slide level2">
 <h2>What are the issues with these features?</h2>
 <p>The numeric features makes it easy to capture the end or beginning, but harder anything more granular.</p>
@@ -11436,35 +11492,35 @@ PC5 &amp;= cyl \cdot 0.73 &amp;&amp;+ disp \cdot -0.014 &amp;&amp;+ hp \cdot 0.0
 <h2>time events</h2>
 <p>Using <code>extrasteps::step_time_event()</code> and the <a href="https://davisvaughan.github.io/almanac/index.html">almanac</a> package, we can create useful time features.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a></a><span class="fu">library</span>(almanac)</span>
-<span id="cb17-2"><a></a></span>
-<span id="cb17-3"><a></a>rule_1 <span class="ot">&lt;-</span> <span class="fu">weekly</span>() <span class="sc">|&gt;</span></span>
-<span id="cb17-4"><a></a>  <span class="fu">recur_on_weekdays</span>() <span class="sc">|&gt;</span></span>
-<span id="cb17-5"><a></a>  <span class="fu">rsetdiff</span>(<span class="fu">hol_christmas</span>())</span>
-<span id="cb17-6"><a></a></span>
-<span id="cb17-7"><a></a>rule_2 <span class="ot">&lt;-</span> <span class="fu">monthly</span>(<span class="at">since =</span> <span class="st">"2000-01-01"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb17-8"><a></a>  <span class="fu">recur_on_interval</span>(<span class="dv">3</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb17-9"><a></a>  <span class="fu">recur_on_day_of_month</span>(<span class="dv">1</span>)</span>
-<span id="cb17-10"><a></a></span>
-<span id="cb17-11"><a></a>rule_3 <span class="ot">&lt;-</span> <span class="fu">yearly</span>(<span class="st">"1997-06-05"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb17-12"><a></a>  <span class="fu">recur_on_day_of_week</span>(<span class="st">"Thursday"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb17-13"><a></a>  <span class="fu">recur_on_month_of_year</span>(<span class="fu">c</span>(<span class="st">"Jun"</span>, <span class="st">"July"</span>, <span class="st">"Aug"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a></a><span class="fu">library</span>(almanac)</span>
+<span id="cb18-2"><a></a></span>
+<span id="cb18-3"><a></a>rule_1 <span class="ot">&lt;-</span> <span class="fu">weekly</span>() <span class="sc">|&gt;</span></span>
+<span id="cb18-4"><a></a>  <span class="fu">recur_on_weekdays</span>() <span class="sc">|&gt;</span></span>
+<span id="cb18-5"><a></a>  <span class="fu">rsetdiff</span>(<span class="fu">hol_christmas</span>())</span>
+<span id="cb18-6"><a></a></span>
+<span id="cb18-7"><a></a>rule_2 <span class="ot">&lt;-</span> <span class="fu">monthly</span>(<span class="at">since =</span> <span class="st">"2000-01-01"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-8"><a></a>  <span class="fu">recur_on_interval</span>(<span class="dv">3</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-9"><a></a>  <span class="fu">recur_on_day_of_month</span>(<span class="dv">1</span>)</span>
+<span id="cb18-10"><a></a></span>
+<span id="cb18-11"><a></a>rule_3 <span class="ot">&lt;-</span> <span class="fu">yearly</span>(<span class="st">"1997-06-05"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-12"><a></a>  <span class="fu">recur_on_day_of_week</span>(<span class="st">"Thursday"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-13"><a></a>  <span class="fu">recur_on_month_of_year</span>(<span class="fu">c</span>(<span class="st">"Jun"</span>, <span class="st">"July"</span>, <span class="st">"Aug"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="step_time_event" class="slide level2">
 <h2><code>step_time_event()</code></h2>
 <p>Create a list of rules (last slide) and pass them to <code>rules</code> argument of <code>step_time_event()</code></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a></a>rules <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">rule_1 =</span> rule_1, <span class="at">rule_2 =</span> rule_2, <span class="at">rule_3 =</span> rule_3)</span>
-<span id="cb18-2"><a></a></span>
-<span id="cb18-3"><a></a><span class="fu">recipe</span>(<span class="sc">~</span> arrival_date, <span class="at">data =</span> hotel_rates) <span class="sc">|&gt;</span></span>
-<span id="cb18-4"><a></a>  <span class="fu">step_time_event</span>(arrival_date, <span class="at">rules =</span> rules)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a></a>rules <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">rule_1 =</span> rule_1, <span class="at">rule_2 =</span> rule_2, <span class="at">rule_3 =</span> rule_3)</span>
+<span id="cb19-2"><a></a></span>
+<span id="cb19-3"><a></a><span class="fu">recipe</span>(<span class="sc">~</span> arrival_date, <span class="at">data =</span> hotel_rates) <span class="sc">|&gt;</span></span>
+<span id="cb19-4"><a></a>  <span class="fu">step_time_event</span>(arrival_date, <span class="at">rules =</span> rules)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="step_time_event-as-numerics" class="slide level2">
 <h2><code>step_time_event()</code> as numerics</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-41-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-42-1.svg" class="r-stretch"></section>
 <section id="non-indicator-time-events" class="slide level2">
 <h2>Non-indicator time events</h2>
 <p>These features still have the issue is that they only attach value to the date themselves.</p>
@@ -11478,19 +11534,19 @@ PC5 &amp;= cyl \cdot 0.73 &amp;&amp;+ disp \cdot -0.014 &amp;&amp;+ hp \cdot 0.0
 <section id="step_date_before" class="slide level2">
 <h2><code>step_date_before()</code></h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-42-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-43-1.svg" class="r-stretch"></section>
 <section id="step_date_before---inverse" class="slide level2">
 <h2><code>step_date_before()</code> - inverse</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-43-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-44-1.svg" class="r-stretch"></section>
 <section id="step_date_after---inverse" class="slide level2">
 <h2><code>step_date_after()</code> - inverse</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-44-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-45-1.svg" class="r-stretch"></section>
 <section id="step_date_nearest---inverse" class="slide level2">
 <h2><code>step_date_nearest()</code> - inverse</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-45-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-46-1.svg" class="r-stretch"></section>
 <section id="datetime-features" class="slide level2">
 <h2>Datetime features</h2>
 <p>Avoid crafting datetime features by hand if at all possible.</p>

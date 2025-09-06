@@ -613,7 +613,7 @@ It doesn't create a mapping that can be reused.
 
 ## PCA
 
-PCA is a linear combination of the original data such that most of the variation is captured in the first variable, then second, then third and so one.
+**P**rincipal **C**ompoment **A**nalysis is a linear combination of the original data such that most of the variation is captured in the first variable, then second, then third and so one.
 
 ## PCA Algorithm
 
@@ -824,6 +824,57 @@ recipe(mpg ~ ., data = mtcars) |>
 ```{r}
 recipe(mpg ~ ., data = mtcars) |>
   step_pca_sparse(all_numeric_predictors(), num_comp = 4, predictor_prop = 0.2) |>
+  prep() |>
+  tidy(1) |>
+  pivot_wider(names_from = component, values_from = value) |>
+  select(-id)
+```
+
+## NNMF
+
+**N**on-**N**egative **M**atrix **F**actorization is conceptually similar to PCA, but it has different objectives. 
+
+PCA aims to generate uncorrelated components that maximizes the variances. One component at a time.
+
+NNMF on the other hand jointly optimizes all the components under the the constraint that all the loadings are non-negative. While the data is also non-negative.
+
+## NNMF restriction
+
+the data has to be non-negative, e.i. 0 or higher.
+
+This might feel like a pretty big restriction. And that is not wrong. But a lot of data sets ends up being naturally non-negative.
+
+Or could at least be turned into non-negative ones with transformations.
+
+It make for much easier interpretations as the loadings don't cancel each other out like they do for PCA.
+
+## NNMF Pros and Cons
+
+::: {.columns}
+::: {.column}
+
+- More interpretable results
+- Pulls out better structures
+
+:::
+::: {.column}
+
+- Data must be non-negative
+- Computationally expensive
+- Training depends on the seed
+
+:::
+:::
+
+## NNMF with recipes `r hexes("embed", "recipes")`
+
+`predictor_prop = 0.2`
+
+```{r}
+set.seed(1234)
+
+recipe(mpg ~ ., data = mtcars) |>
+  step_nnmf_sparse(all_numeric_predictors(), num_comp = 2) |>
   prep() |>
   tidy(1) |>
   pivot_wider(names_from = component, values_from = value) |>
