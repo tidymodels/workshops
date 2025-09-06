@@ -22,14 +22,16 @@ knitr:
 #| file: setup.R
 ```
 ```{r}
-#| label: start-torch
+#| label: other-startups
 #| include: false
 
-# Start troch to bypass its effect on the RNGs
+library(patchwork)
+
+# Start torch to bypass its effect on the RNGs
 torch::torch_is_installed()
 ```
 
-## Example data  `r hexes("tidymodels")`
+## Startup!  `r hexes("tidymodels")`
 
 
 ```{r}
@@ -42,29 +44,34 @@ tidymodels_prefer()
 theme_set(theme_bw())
 options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
 
+# check torch:
+if (torch::torch_is_installed()) {
+  library(torch)
+}
+
 # Load our example data for this section
 "https://github.com/tidymodels/workshops/raw/refs/heads/2025-GMOFETML/slides/class_data.RData" |> 
   url() |> 
   load()
 ```
 
-## Data Spending `r hexes("rsample")`
+## Where we are `r hexes("rsample")`
 
 
 ```{r}
 #| label: spend-class-data
-set.seed(719)
-sim_split <- initial_split(class_data, strata = class, prop = 0.8)
-sim_split
-
+set.seed(429)
+sim_split <- initial_split(class_data, prop = 0.75, strata = class)
 sim_train <- training(sim_split)
-sim_test <- testing(sim_split)
+sim_test  <- testing(sim_split)
 
+set.seed(523)
 sim_rs <- vfold_cv(sim_train, v = 10, strata = class)
-sim_rs
 ```
 
-## Neural networks using brulee `r hexes("brulee")`
+# Neural networks {background-color="#BDE9C9FF"}
+
+## The brulee package `r hexes("brulee")`
 
 Several packages exist for this, but we’ll use the brulee package, which relies on the torch deep learning framework. 
 
@@ -84,20 +91,41 @@ library(brulee)
 
 ([HTML docs](https://brulee.tidymodels.org/reference/brulee_mlp.html) are nice too)
 
-## Notable arguments
+## Notable arguments Part 1 `r hexes("brulee")`
+
+Model Structure: 
 
 - `hidden_units`: the primary way to specify model complexity.
 - `activation`: the name of the nonlinear function used to connect the predictors to the hidden layer. 
+
+. . . 
+
+Loss Function:
+
 - `penalty`: amount of regularization used to prevent overfitting. 
-- `mixture`: proportion of penalty that is L1 (=Lasso) or L2 (=weight decay = ridge regression)
+- `mixture`: the proportion of L1 and L2 penalties. 
 - `validation`: proportion of data to leave out to assess early stopping.
+
+
+## Notable arguments Part 2 `r hexes("brulee")`
+
+Optimization:
+
+- `optimizer`: the type of gradient-based optimization
+- `epochs`: how many passes through the entire data set (i.e. iterations).
 - `stop_iter`: number of bad iterations before stopping.
 - `learn_rate`: how fast does gradient descent move? 
+- `rate_schedule`: should the learning rate change over epochs?
+- `batch_size`: for stochastic gradient descent
+
+<br> 
+
+That's a lot `r emo::ji("weary")`
 
 
-## Cost-sensitive learning
+## Cost-sensitive learning `r hexes("brulee")`
 
-One other option: `class_weights`: amount to upweight the minority class (`A`) when computing the objective function (cross-entropy).
+One other option: `class_weights`: amount to upweight the minority class (`event`) when computing the objective function (cross-entropy).
 
 <br> 
 
@@ -113,10 +141,10 @@ This will push the minority class probability estimates to be more accurate/[cal
 ```{r}
 #| label: one-model
 #| cache: true
-
+#| code-line-numbers: "|2|3|4|6-8|10|12-14|"
 nnet_ex_spec <- 
-  mlp(hidden_units = 20, penalty = 0.01, learn_rate = 0.005, epochs = 200) |> 
-  set_engine("brulee", class_weights = 3, stop_iter = 5) |> 
+  mlp(hidden_units = 20, penalty = 0.01, learn_rate = 0.005, epochs = 100) |> 
+  set_engine("brulee", class_weights = 3, stop_iter = 10) |> 
   set_mode("classification")
 
 rec <- 
@@ -142,9 +170,10 @@ nnet_ex_fit <- fit(nnet_ex_wflow, data = analysis(sim_rs$splits[[1]]))
 #| fig-width: 6.25
 #| fig-height: 4
 #| fig-align: "center"
-
-nnet_ex_fit |> 
-  extract_fit_engine() |> 
+#| code-line-numbers: "|2-3|4|"
+nnet_ex_fit |>
+  # pull out the brulee fit:
+  extract_fit_engine() |>
   autoplot()
 ```
 :::
@@ -165,32 +194,62 @@ The vertical green line shows that early stopping occurred.
 
 ```{r}
 #| label: nnet-holdout
+#| code-line-numbers: "|1|2|3|5-6|"
 assessment_data <- assessment(sim_rs$splits[[1]])
 cls_mtr <- metric_set(brier_class, roc_auc, sensitivity, specificity)
 holdout_pred <- augment(nnet_ex_fit, assessment_data) 
 
 # Performance metrics
-holdout_pred |> cls_mtr(class, estimate = .pred_class, .pred_A)
+holdout_pred |> cls_mtr(class, estimate = .pred_class, .pred_event)
 ```
 
-Kind of? If sensitivity is important, then the model is moderately successful.  
+Kind of? 
+
+If sensitivity is important, then the model is moderately successful.  
 
 ## Calibration
 
 
 
-## It it calibrated? `r emo::ji("scream")` `r hexes(c("probably"))`
+## Is it calibrated? `r hexes(c("probably"))`
 
+:::: {.columns}
+
+::: {.column width="50%"}
+```{r}
+#| label: nnet-cal-code
+#| eval: false
+#| code-line-numbers: "|2|3|4|5-6|"
+holdout_pred |>
+  cal_plot_windowed(
+    truth = class,
+    estimate = .pred_event,
+    window_size = 0.2,
+    step_size = 0.025
+  )
+```
+
+<br><br>
+
+`r emo::ji("scream")` 
+:::
+
+::: {.column width="50%"}
 ```{r}
 #| label: nnet-cal
-#| out-width: 40%
+#| echo: false
+#| out-width: 100%
 #| fig-width: 6
 #| fig-height: 6
 #| fig-align: "center"
-holdout_pred |> cal_plot_windowed(class, .pred_A, window_size = 0.2, step_size = 0.025)
+holdout_pred |> cal_plot_windowed(class, .pred_event, window_size = 0.2, step_size = 0.025)
 ```
+:::
 
-# Optimizing Models via Tuning Parameters
+::::
+
+
+# Optimizing Models via Tuning Parameters {background-color="#D04E59FF"}
 
 ## Tuning parameters
 
@@ -294,11 +353,11 @@ For example...
 
 ```{r}
 #| label: tunable-model
-
+#| code-line-numbers: "|2-3|4|"
 nnet_spec <- 
   mlp(hidden_units = tune(), penalty = tune(), learn_rate = tune(), 
-      epochs = 200, activation = tune()) |> 
-  set_engine("brulee", class_weights = tune(), stop_iter = 5) |> 
+      epochs = 100, activation = tune()) |> 
+  set_engine("brulee", class_weights = tune(), stop_iter = 10) |> 
   set_mode("classification")
 
 nnet_wflow <- workflow(rec, nnet_spec)
@@ -336,7 +395,7 @@ We could start with a few points and search the space:
 
 ![](animations/anime_seq.gif){fig-align="center" width=60%}
 
-# Grid Search
+# Grid Search {background-color="#FAE093FF"}
 
 ## Parameters
 
@@ -418,18 +477,18 @@ nnet_param <-
 ```{r}
 #| label: start-parallel
 #| include: false
-library(future)
-plan("multisession")
+library(mirai)
+daemons(0) # reset to sequential if re-running
+daemons(parallel::detectCores())
 ```
 
 ```{r}
 #| label: nnet-grid-tune
 #| cache: true
 #| code-line-numbers: "2|"
-ctrl <- control_grid(save_pred = TRUE)
+ctrl <- control_grid(save_pred = TRUE, save_workflow = TRUE)
 
-system.time({
-set.seed(949)
+set.seed(12)
 nnet_res <-
   nnet_wflow |>
   tune_grid(
@@ -440,7 +499,6 @@ nnet_res <-
     control = ctrl,
     metrics = cls_mtr
   )
-})
 ```
 
 . . .
@@ -454,7 +512,7 @@ nnet_res <-
 -   similar to `fit_resamples()`
 :::
 
-
+TODO make an annotation about "Early stopping occurred at epoch 3 due to numerical overflow of the loss function."
 
 ## Running in parallel
 
@@ -499,12 +557,12 @@ daemons(cores)
 ```{r}
 #| label: grid-seepdup
 #| include: false
-
-par <- 109
-seq <- 442
+# mirai using cores 10
+par <- 44.860
+seq <- 255.965
 par_text <- 
   cli::format_inline(
-    "was reduced from {prettyunits::pretty_sec(seq)} to {prettyunits::pretty_sec(par)}, a speed-up of {round(seq / par, 1)}-fold")
+    "was reduced from {ceiling(seq)}s to {ceiling(par)}s, a speed-up of {round(seq / par, 1)}-fold")
 ```
 
 ## Distributing tasks
@@ -554,7 +612,7 @@ ggplot(times, aes(x = num_cores, y = speed_up, color = parallel_over, shape = pa
   theme(legend.position = "top")
 ```
 
-Using 10 cores, time to execute the previous `tune_grid()` call `r par_text`.
+Using 10 cores with mirai, time to execute the previous `tune_grid()` call `r par_text`.
 
 :::notes
 Faceted on the expensiveness of preprocessing used.
@@ -571,7 +629,8 @@ nnet_res
 
 ## Grid results `r hexes(c("tune"))`
 
-```{r autoplot}
+```{r}
+#| label: sim-nnet-all
 #| fig-width: 12
 #| fig-height: 5
 #| fig-align: center
@@ -581,22 +640,68 @@ nnet_res
 autoplot(nnet_res)
 ```
 
+## Brier results `r hexes(c("tune"))`
+
+```{r}
+#| label: sim-nnet-brier
+#| fig-width: 12
+#| fig-height: 3
+#| fig-align: center
+#| out-width: "100%"
+#| dev-args:
+#|   bg: "transparent"
+autoplot(nnet_res, metric = "brier_class") + 
+  facet_grid(. ~ name, scale = "free_x") + 
+  lims(y = c(0.04, 0.22)) # no tanh
+```
+
+## ROC curve results `r hexes(c("tune"))`
+
+```{r}
+#| label: sim-nnet-roc
+#| fig-width: 12
+#| fig-height: 3
+#| fig-align: center
+#| out-width: "100%"
+#| dev-args:
+#|   bg: "transparent"
+autoplot(nnet_res, metric = "roc_auc") + 
+  facet_grid(. ~ name, scale = "free_x") + 
+  lims(y = c(0.83, 0.97)) # no tanh
+```
+
+## Sensitivity/Specificity results `r hexes(c("tune"))`
+
+```{r}
+#| label: sim-nnet-two-class
+#| fig-width: 12
+#| fig-height: 4.5
+#| fig-align: center
+#| out-width: "100%"
+#| dev-args:
+#|   bg: "transparent"
+autoplot(nnet_res, metric = c("sensitivity", "specificity"))
+```
+
+
 ## Grid results
 
- - Very large penalty: bad!
- - Very large learning rate: good!
+ - tanh activation `r emo::ji("-1")``r emo::ji("-1")`
  - As class weight `r emo::ji("up_arrow")`:
     - sensitivity `r emo::ji("up_arrow")`
-    - specificity `r emo::ji("down_arrow")` 
-    - Brier and cross-entropy: `r emo::ji("down_arrow")` 
+    - specificity `r emo::ji("down_arrow")``r emo::ji("down_arrow")` 
+    - Brier: `r emo::ji("up_arrow")` 
+    - ROC AUC: `r emo::ji("shrug")`
+
+# Optimizing Models via Tuning Parameters {background-color="#D04E59FF"}
 
 ## Tuning results `r hexes(c("tune"))`
 
 ```{r}
-#| label: nnet-metrics
+#| label: nnet-metrics2
+#| code-line-numbers: "|1|6-9|10-13|"
 collect_metrics(nnet_res) |> 
-  relocate(.metric, mean) |> 
-  quarto_table() 
+  relocate(.metric, mean) 
 ```
 
 ## Tuning results `r hexes(c("tune"))`
@@ -604,17 +709,16 @@ collect_metrics(nnet_res) |>
 ```{r}
 #| label: nnet-metrics-raw
 collect_metrics(nnet_res, summarize = FALSE) |> 
-  relocate(.metric, .estimate) |> 
-  quarto_table() 
+  relocate(.metric, .estimate)
 ```
 
 ## Choose a parameter combination `r hexes(c("tune"))`
 
 ```{r}
 #| label: nnet-metrics-show
+#| code-line-numbers: "|1|6|"
 show_best(nnet_res, metric = "brier_class") |> 
-  relocate(.metric, mean) |> 
-  quarto_table() 
+  relocate(.metric, mean) 
 ```
 
 ## Choose a parameter combination `r hexes(c("tune"))`
@@ -623,20 +727,16 @@ Create your own tibble for final parameters or use one of the `tune::select_*()`
 
 ```{r}
 #| label: nnet-metrics-best
+#| code-line-numbers: "|1|6|8-10|14-17|"
 nnet_best <- select_best(nnet_res, metric = "brier_class")
 nnet_best
-```
 
-## Choose a parameter combination `r hexes(c("tune"))`
-
-```{r}
-#| label: all-metrics
 collect_metrics(nnet_res) |> 
   inner_join(nnet_best) |> 
   select(.metric, mean)
 ```
 
-## Checking Calibration `r hexes(c("tune", "probably"))`
+## Checking (Approximate) Calibration `r hexes(c("tune", "probably"))`
 
 ```{r}
 #| label: nnet-cal-plot
@@ -654,11 +754,19 @@ nnet_holdout_pred <-
 nnet_holdout_pred |>
   cal_plot_windowed(
     truth = class,
-    estimate = .pred_A,
+    estimate = .pred_event,
     window_size = 0.2,
     step_size = 0.025,
   )
 ```
+
+
+::: notes
+This plot _pools_ the out-of-sample predictions. Our Brier estimate is the mean of 10 data sets.
+
+The curve is approximate for that reason. 
+:::
+
 
 ## Multiple goals
 
@@ -666,7 +774,7 @@ Optimizing on the Brier score optimizes for accuracy and calibration of the clas
 
 <br> 
 
-That's is counter-producitve to finding the rare class "A" events.
+That's is counter-productive to finding the rare class "event" events.
 
 <br>
 
@@ -676,18 +784,63 @@ Can we find a way to optimize multiple metrics at once?
 
 There are a few ways and we'll focus on [desirability functions](https://aml4td.org/chapters/cls-metrics.html#sec-cls-multi-objectives). 
 
+## Desirability functions
+
+We create simple functions to translate our variable to [0, 1]; 1.0 is most desirable.
+
+
+```{r}
+#| label: three-desirability-examples
+#| echo: false
+#| out-width: 70%
+#| fig-width: 10
+#| fig-height: 3
+library(desirability2)
+
+p_roc <-
+  tibble(AUC = seq(0.3, 1.05, length.out = 1000)) |>
+  mutate(d_ROC = d_max(AUC, low = 1 / 2, high = 1)) |>
+  ggplot(aes(AUC, d_ROC)) +
+  geom_line() +
+  geom_vline(xintercept = 1 / 2, col = "red", lty = 2) +
+  geom_vline(xintercept = 1, col = "green", lty = 2) +
+  labs(x = "ROC AUC", y = "Desirability", title = "Goal: Maximize")
+
+p_brier <- 
+  tibble(brier = seq(-0.05, 0.30, length.out = 1000)) |>
+  mutate(d_brier = d_min(brier, low = 0, high = 0.25)) |>
+  ggplot(aes(brier, d_brier)) +
+  geom_line() +
+  geom_vline(xintercept = 1 / 4, col = "red", lty = 2) +
+  geom_vline(xintercept = 0, col = "green", lty = 2) +
+  labs(x = "Brier Score", y = NULL, title = "Goal: Minimize")
+
+p_spec <- 
+  tibble(spec = seq(-0.05, 1.05, length.out = 1000)) |>
+  mutate(d_spec = d_box(spec, low = 0.8, high = 1)) |>
+  ggplot(aes(spec, d_spec)) +
+  geom_line() +
+  labs(x = "Specificity", y = NULL, title = "Goal: Constrain")
+
+p_roc + p_brier + p_spec
+```
+
+We can combine them with a geometric mean. 
+
+
 ## Multimetric optimization `r hexes(c("tune"))`
 
 
 ```{r}
 #| label: nnet-metrics-desire-sens
+#| code-line-numbers: "|1|3|4|5|11|"
 show_best_desirability(
   nnet_res, 
   maximize(sensitivity),
-  minimize(brier_class)
+  minimize(brier_class),
+  constrain(specificity, low = 0.8, high = 1.0)
 ) |> 
-  relocate(class_weights, sensitivity, specificity, brier_class) |> 
-  quarto_table() 
+  relocate(class_weights, sensitivity, specificity, brier_class) 
 ```
 
 
@@ -700,20 +853,21 @@ show_best_desirability(
 #| fig-width: 5
 #| fig-height: 5
 
-more_sens <- 
+more_sens <-
   select_best_desirability(
-    nnet_res, 
+    nnet_res,
     maximize(sensitivity),
-    minimize(brier_class)
-  ) 
+    minimize(brier_class),
+    constrain(specificity, low = 0.8, high = 1.0)
+  )
 
-nnet_res |> 
+nnet_res |>
   collect_predictions(
     parameters = more_sens
-  ) |> 
+  ) |>
   cal_plot_windowed(
     truth = class,
-    estimate = .pred_A,
+    estimate = .pred_event,
     window_size = 0.2,
     step_size = 0.025,
   )
@@ -721,7 +875,7 @@ nnet_res |>
 
 
 ::: notes
-The curve hugging the bottom of the plot means that we are drastically _overestimating_ the probability of class "A" relative to how often it occurs "in the wild."
+The curve hugging the bottom of the plot means that we are drastically _overestimating_ the probability of class "event" relative to how often it occurs "in the wild."
 
 That's the point of cost-sensitive learning but bad for calibration.
 
@@ -729,23 +883,98 @@ That's the point of cost-sensitive learning but bad for calibration.
 
 ## Conflicting goals
 
-The problem here is that we are biasing the probability estimates so that we can predict more data to be the rare "A" class _using a default probability cutoff of 1/2_. 
+The problem here is that we are biasing the probability estimates so that we can predict more data to be the rare "event" class _using a default probability cutoff of 1/2_. 
 
 <br> 
 
-That is compromising the model fit overall. 
+That is compromising the overall model fit; our probabilities are not accurate.
 
-<br> 
-
-If we don't use the class probability estimates, this is fine. 
+- If we don't use the class probability estimates, this is fine. 
 
 <br>
 
 In the _postprocessing_ slides, we'll look at a alternative approach later that makes a different kinds of tradeoff. 
 
 
+## Fitting a workflow `r hexes(c("tune", "workflows"))`
+
+Let's say that we want to train the model on the "best" parameter estimates.
+
+We can use a tibble of tuning parameters and _splice_ them into the workflow in place of `tune()`: 
+
+:::: {.columns}
+
+::: {.column width="45%"}
+```{r}
+#| label: sim-sens-fit
+#| code-line-numbers: "|4|"
+set.seed(398)
+nnet_sens_fit <-
+  nnet_wflow |>
+  finalize_workflow(more_sens) |>
+  fit(sim_train)
+```
+:::
+
+::: {.column width="55%"}
+```{r}
+#| label: sim-sens-fit-print
+#| code-line-numbers: false
+nnet_sens_fit |> extract_fit_engine()
+```
+:::
+
+::::
+
+
+## Ordering off of the menu `r hexes(c("tune", "workflows"))`
+
+If we want to choose from the numerically best for an existing metric, there is a simpler function: 
+
+
+:::: {.columns}
+
+::: {.column width="45%"}
+```{r}
+#| label: sim-fit-to-train
+#| code-line-numbers: "|4|"
+set.seed(398)
+mlp_brier_fit <-
+  nnet_res |>
+  fit_best(metric = "brier_class")
+```
+:::
+
+::: {.column width="55%"}
+```{r}
+#| label: sim-fit-to-train-print
+#| code-line-numbers: false
+mlp_brier_fit |> extract_fit_engine()
+```
+:::
+
+::::
+
+
 ## Your turn {transition="slide-in"}
+
+pick an activation function and fix; try tuning using a rate scheduler
+
+or 
+
+show how extract works
+
 
 
 ## What's next
 
+Let's look at _racing_: an old variation of grid search that adaptively processes the grid. 
+
+<br> 
+
+If we are
+
+ - initially screening _many_ models/preprocessors/postprocessors and/or
+ - have a large grid
+ 
+this can lead to remarkable speed-ups. 
