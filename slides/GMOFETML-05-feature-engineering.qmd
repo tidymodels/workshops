@@ -970,10 +970,72 @@ umap_all |>
   facet_wrap(~neighbors, scales = "free")
 ```
 
+## umap with recipes `r hexes("embed", "recipes")`
+
+`predictor_prop = 0.2`
+
+```{r}
+library(embed)
+set.seed(1234)
+
+recipe(mpg ~ ., data = mtcars) |>
+  step_umap(all_numeric_predictors()) |>
+  prep() |>
+  bake(NULL)
+```
+
 ## Isomap
 
-Each method will show what it does (board terms),
-visualize how they affect our data set and how to use them with recipes
+Isometric mapping is a non-linear dimensionality reduction method. 
+
+This is another method that uses distances between points to produce graphs of neighboring points. Where this method is different than other methods is that is uses geodesic distances as opposed straight-line distances.
+
+The geodesic distance is the sum of edge weights along the shortest path between two points.
+
+The eigenvectors of the deodesic distance metric is then used to represent the new coordinates.
+
+## Isomap Algorithm
+
+A very high-level description of Isomap algorithm is given below.
+
+1. Find the neighbors for each point
+2. Construct the neighborhood graph, using euclidean distance as edge length
+3. Calculate shorted path between each pair of points
+4. Use Multidimensional scaling to compute lower dimensional embedding
+
+## Isomap Pros and Cons
+
+::: {.columns}
+::: {.column}
+
+### Pros
+
+- Captures non-linear effects
+- Caputres long-range structure not just local structure
+- No parameters to set other than neighbors
+
+:::
+::: {.column}
+
+### Cons
+
+- Computationally expensive
+- Assumes a single connected manifold
+
+:::
+:::
+
+## isomap with recipes `r hexes("recipes")`
+
+```{r}
+library(embed)
+set.seed(1234)
+
+recipe(mpg ~ ., data = mtcars) |>
+  step_isomap(all_numeric_predictors(), neighbors = 10) |>
+  prep() |>
+  bake(NULL)
+```
 
 ## Splines
 

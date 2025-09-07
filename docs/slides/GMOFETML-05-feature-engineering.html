@@ -11214,9 +11214,93 @@ PC5 &amp;= cyl \cdot 0.73 &amp;&amp;+ disp \cdot -0.014 &amp;&amp;+ hp \cdot 0.0
 <h2>All of them! Different <code>n_neighbors</code></h2>
 
 <img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-33-1.svg" class="r-stretch"></section>
+<section id="umap-with-recipes" class="slide level2">
+<h2>umap with recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<p><code>predictor_prop = 0.2</code></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a></a><span class="fu">library</span>(embed)</span>
+<span id="cb18-2"><a></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb18-3"><a></a></span>
+<span id="cb18-4"><a></a><span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb18-5"><a></a>  <span class="fu">step_umap</span>(<span class="fu">all_numeric_predictors</span>()) <span class="sc">|&gt;</span></span>
+<span id="cb18-6"><a></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
+<span id="cb18-7"><a></a>  <span class="fu">bake</span>(<span class="cn">NULL</span>)</span>
+<span id="cb18-8"><a></a><span class="co">#&gt; # A tibble: 32 × 3</span></span>
+<span id="cb18-9"><a></a><span class="co">#&gt;      mpg  UMAP1 UMAP2</span></span>
+<span id="cb18-10"><a></a><span class="co">#&gt;    &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb18-11"><a></a><span class="co">#&gt;  1  21    1.50   2.26</span></span>
+<span id="cb18-12"><a></a><span class="co">#&gt;  2  21    1.26   2.02</span></span>
+<span id="cb18-13"><a></a><span class="co">#&gt;  3  22.8  2.17   4.19</span></span>
+<span id="cb18-14"><a></a><span class="co">#&gt;  4  21.4 -1.38  -1.67</span></span>
+<span id="cb18-15"><a></a><span class="co">#&gt;  5  18.7 -2.67  -2.66</span></span>
+<span id="cb18-16"><a></a><span class="co">#&gt;  6  18.1 -0.759 -1.57</span></span>
+<span id="cb18-17"><a></a><span class="co">#&gt;  7  14.3 -3.19  -3.37</span></span>
+<span id="cb18-18"><a></a><span class="co">#&gt;  8  24.4  1.31   3.91</span></span>
+<span id="cb18-19"><a></a><span class="co">#&gt;  9  22.8  2.06   2.46</span></span>
+<span id="cb18-20"><a></a><span class="co">#&gt; 10  19.2  0.876  2.31</span></span>
+<span id="cb18-21"><a></a><span class="co">#&gt; # ℹ 22 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
 <section id="isomap" class="slide level2">
 <h2>Isomap</h2>
-<p>Each method will show what it does (board terms), visualize how they affect our data set and how to use them with recipes</p>
+<p>Isometric mapping is a non-linear dimensionality reduction method.</p>
+<p>This is another method that uses distances between points to produce graphs of neighboring points. Where this method is different than other methods is that is uses geodesic distances as opposed straight-line distances.</p>
+<p>The geodesic distance is the sum of edge weights along the shortest path between two points.</p>
+<p>The eigenvectors of the deodesic distance metric is then used to represent the new coordinates.</p>
+</section>
+<section id="isomap-algorithm" class="slide level2">
+<h2>Isomap Algorithm</h2>
+<p>A very high-level description of Isomap algorithm is given below.</p>
+<ol type="1">
+<li>Find the neighbors for each point</li>
+<li>Construct the neighborhood graph, using euclidean distance as edge length</li>
+<li>Calculate shorted path between each pair of points</li>
+<li>Use Multidimensional scaling to compute lower dimensional embedding</li>
+</ol>
+</section>
+<section id="isomap-pros-and-cons" class="slide level2">
+<h2>Isomap Pros and Cons</h2>
+<div class="columns">
+<div class="column">
+<h3 id="pros-2">Pros</h3>
+<ul>
+<li>Captures non-linear effects</li>
+<li>Caputres long-range structure not just local structure</li>
+<li>No parameters to set other than neighbors</li>
+</ul>
+</div><div class="column">
+<h3 id="cons-2">Cons</h3>
+<ul>
+<li>Computationally expensive</li>
+<li>Assumes a single connected manifold</li>
+</ul>
+</div></div>
+</section>
+<section id="isomap-with-recipes" class="slide level2">
+<h2>isomap with recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a></a><span class="fu">library</span>(embed)</span>
+<span id="cb19-2"><a></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb19-3"><a></a></span>
+<span id="cb19-4"><a></a><span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb19-5"><a></a>  <span class="fu">step_isomap</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">neighbors =</span> <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
+<span id="cb19-6"><a></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
+<span id="cb19-7"><a></a>  <span class="fu">bake</span>(<span class="cn">NULL</span>)</span>
+<span id="cb19-8"><a></a><span class="co">#&gt; # A tibble: 32 × 6</span></span>
+<span id="cb19-9"><a></a><span class="co">#&gt;      mpg Isomap1 Isomap2 Isomap3 Isomap4 Isomap5</span></span>
+<span id="cb19-10"><a></a><span class="co">#&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span></span>
+<span id="cb19-11"><a></a><span class="co">#&gt;  1  21    -98.5     35.6    35.3   137.    105. </span></span>
+<span id="cb19-12"><a></a><span class="co">#&gt;  2  21    -98.5     35.6    35.1   137.    104. </span></span>
+<span id="cb19-13"><a></a><span class="co">#&gt;  3  22.8 -161.      48.1    20.4   160.    129. </span></span>
+<span id="cb19-14"><a></a><span class="co">#&gt;  4  21.4    8.55    14.6    37.2    86.8   125. </span></span>
+<span id="cb19-15"><a></a><span class="co">#&gt;  5  18.7  136.      28.5    35.7   -30.8   102. </span></span>
+<span id="cb19-16"><a></a><span class="co">#&gt;  6  18.1  -27.7     21.7    38.3   104.    116. </span></span>
+<span id="cb19-17"><a></a><span class="co">#&gt;  7  14.3  207.     -16.5    34.6   -55.5   158. </span></span>
+<span id="cb19-18"><a></a><span class="co">#&gt;  8  24.4 -147.      44.2    23.7   182.     88.4</span></span>
+<span id="cb19-19"><a></a><span class="co">#&gt;  9  22.8 -125.      41.1    18.1   151.    118. </span></span>
+<span id="cb19-20"><a></a><span class="co">#&gt; 10  19.2  -91.6     33.7    48.6   135.    101. </span></span>
+<span id="cb19-21"><a></a><span class="co">#&gt; # ℹ 22 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 </section>
 <section id="splines" class="slide level2">
 <h2>Splines</h2>
@@ -11511,11 +11595,11 @@ PC5 &amp;= cyl \cdot 0.73 &amp;&amp;+ disp \cdot -0.014 &amp;&amp;+ hp \cdot 0.0
 <section id="dates-as-numerics" class="slide level2">
 <h2>dates as numerics</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-38-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-40-1.svg" class="r-stretch"></section>
 <section id="holidays-as-numerics" class="slide level2">
 <h2>holidays as numerics</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-39-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-41-1.svg" class="r-stretch"></section>
 <section id="what-are-the-issues-with-these-features" class="slide level2">
 <h2>What are the issues with these features?</h2>
 <p>The numeric features makes it easy to capture the end or beginning, but harder anything more granular.</p>
@@ -11525,35 +11609,35 @@ PC5 &amp;= cyl \cdot 0.73 &amp;&amp;+ disp \cdot -0.014 &amp;&amp;+ hp \cdot 0.0
 <h2>time events</h2>
 <p>Using <code>extrasteps::step_time_event()</code> and the <a href="https://davisvaughan.github.io/almanac/index.html">almanac</a> package, we can create useful time features.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a></a><span class="fu">library</span>(almanac)</span>
-<span id="cb18-2"><a></a></span>
-<span id="cb18-3"><a></a>rule_1 <span class="ot">&lt;-</span> <span class="fu">weekly</span>() <span class="sc">|&gt;</span></span>
-<span id="cb18-4"><a></a>  <span class="fu">recur_on_weekdays</span>() <span class="sc">|&gt;</span></span>
-<span id="cb18-5"><a></a>  <span class="fu">rsetdiff</span>(<span class="fu">hol_christmas</span>())</span>
-<span id="cb18-6"><a></a></span>
-<span id="cb18-7"><a></a>rule_2 <span class="ot">&lt;-</span> <span class="fu">monthly</span>(<span class="at">since =</span> <span class="st">"2000-01-01"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb18-8"><a></a>  <span class="fu">recur_on_interval</span>(<span class="dv">3</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb18-9"><a></a>  <span class="fu">recur_on_day_of_month</span>(<span class="dv">1</span>)</span>
-<span id="cb18-10"><a></a></span>
-<span id="cb18-11"><a></a>rule_3 <span class="ot">&lt;-</span> <span class="fu">yearly</span>(<span class="st">"1997-06-05"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb18-12"><a></a>  <span class="fu">recur_on_day_of_week</span>(<span class="st">"Thursday"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb18-13"><a></a>  <span class="fu">recur_on_month_of_year</span>(<span class="fu">c</span>(<span class="st">"Jun"</span>, <span class="st">"July"</span>, <span class="st">"Aug"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a></a><span class="fu">library</span>(almanac)</span>
+<span id="cb20-2"><a></a></span>
+<span id="cb20-3"><a></a>rule_1 <span class="ot">&lt;-</span> <span class="fu">weekly</span>() <span class="sc">|&gt;</span></span>
+<span id="cb20-4"><a></a>  <span class="fu">recur_on_weekdays</span>() <span class="sc">|&gt;</span></span>
+<span id="cb20-5"><a></a>  <span class="fu">rsetdiff</span>(<span class="fu">hol_christmas</span>())</span>
+<span id="cb20-6"><a></a></span>
+<span id="cb20-7"><a></a>rule_2 <span class="ot">&lt;-</span> <span class="fu">monthly</span>(<span class="at">since =</span> <span class="st">"2000-01-01"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb20-8"><a></a>  <span class="fu">recur_on_interval</span>(<span class="dv">3</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb20-9"><a></a>  <span class="fu">recur_on_day_of_month</span>(<span class="dv">1</span>)</span>
+<span id="cb20-10"><a></a></span>
+<span id="cb20-11"><a></a>rule_3 <span class="ot">&lt;-</span> <span class="fu">yearly</span>(<span class="st">"1997-06-05"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb20-12"><a></a>  <span class="fu">recur_on_day_of_week</span>(<span class="st">"Thursday"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb20-13"><a></a>  <span class="fu">recur_on_month_of_year</span>(<span class="fu">c</span>(<span class="st">"Jun"</span>, <span class="st">"July"</span>, <span class="st">"Aug"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="step_time_event" class="slide level2">
 <h2><code>step_time_event()</code></h2>
 <p>Create a list of rules (last slide) and pass them to <code>rules</code> argument of <code>step_time_event()</code></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a></a>rules <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">rule_1 =</span> rule_1, <span class="at">rule_2 =</span> rule_2, <span class="at">rule_3 =</span> rule_3)</span>
-<span id="cb19-2"><a></a></span>
-<span id="cb19-3"><a></a><span class="fu">recipe</span>(<span class="sc">~</span> arrival_date, <span class="at">data =</span> hotel_rates) <span class="sc">|&gt;</span></span>
-<span id="cb19-4"><a></a>  <span class="fu">step_time_event</span>(arrival_date, <span class="at">rules =</span> rules)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a></a>rules <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">rule_1 =</span> rule_1, <span class="at">rule_2 =</span> rule_2, <span class="at">rule_3 =</span> rule_3)</span>
+<span id="cb21-2"><a></a></span>
+<span id="cb21-3"><a></a><span class="fu">recipe</span>(<span class="sc">~</span> arrival_date, <span class="at">data =</span> hotel_rates) <span class="sc">|&gt;</span></span>
+<span id="cb21-4"><a></a>  <span class="fu">step_time_event</span>(arrival_date, <span class="at">rules =</span> rules)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="step_time_event-as-numerics" class="slide level2">
 <h2><code>step_time_event()</code> as numerics</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-42-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-44-1.svg" class="r-stretch"></section>
 <section id="non-indicator-time-events" class="slide level2">
 <h2>Non-indicator time events</h2>
 <p>These features still have the issue is that they only attach value to the date themselves.</p>
@@ -11567,19 +11651,19 @@ PC5 &amp;= cyl \cdot 0.73 &amp;&amp;+ disp \cdot -0.014 &amp;&amp;+ hp \cdot 0.0
 <section id="step_date_before" class="slide level2">
 <h2><code>step_date_before()</code></h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-43-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-45-1.svg" class="r-stretch"></section>
 <section id="step_date_before---inverse" class="slide level2">
 <h2><code>step_date_before()</code> - inverse</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-44-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-46-1.svg" class="r-stretch"></section>
 <section id="step_date_after---inverse" class="slide level2">
 <h2><code>step_date_after()</code> - inverse</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-45-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-47-1.svg" class="r-stretch"></section>
 <section id="step_date_nearest---inverse" class="slide level2">
 <h2><code>step_date_nearest()</code> - inverse</h2>
 
-<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-46-1.svg" class="r-stretch"></section>
+<img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/unnamed-chunk-48-1.svg" class="r-stretch"></section>
 <section id="datetime-features" class="slide level2">
 <h2>Datetime features</h2>
 <p>Avoid crafting datetime features by hand if at all possible.</p>
