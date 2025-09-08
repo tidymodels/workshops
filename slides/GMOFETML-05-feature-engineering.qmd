@@ -92,7 +92,7 @@ countdown(minutes = 5, id = "explore-leaves")
 ::: {.column}
 
 - Low number of unique levels
-- Some overlab
+- Some overlap
 
 :::
 ::: {.column}
@@ -138,7 +138,7 @@ recipe(~edge, data = leaf_data) |>
 
 - Can create many columns
 - Needs clean levels
-- Not likely most efficient representation
+- Not likely the most efficient representation
 
 :::
 :::
@@ -167,7 +167,7 @@ If you want to find a "toothed" leaf, which level do you pick?
 
 
 ::: fragment
-we can let `lobed, toothed` be counted for `lobed` and `toothed`
+We can let `lobed, toothed` be counted for `lobed` and `toothed`
 :::
 
 :::
@@ -177,7 +177,7 @@ we can let `lobed, toothed` be counted for `lobed` and `toothed`
 
 ## Advanced Dummies
 
-This is basically a poor-mans Natural Language Processing.
+This is basically a poor man's Natural Language Processing.
 
 <br>
 
@@ -193,7 +193,7 @@ We have 2 variants: "extraction" and "multi choice"
 
 ## Advanced Dummies - Extraction
 
-Works on a singular column, using regular expression to extract the items we want to count.
+Works on a singular column, using a regular expression to extract the items we want to count.
 
 Done using regular expressions, either by specifying `sep` to split the string by, or by using `pattern` to extract the items.
 
@@ -448,7 +448,7 @@ recipe(~., data = values) |>
 
 ## Othering
 
-Both `step_dummy_extract()` and `step_dummy_multi_choice()` contains an argument `threshold`.
+Both `step_dummy_extract()` and `step_dummy_multi_choice()` contain a `threshold` argument.
 
 This is used to combine infrequent levels together.
 
@@ -488,7 +488,7 @@ recipe(~ medium, data = tate_text) |>
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Figure out whether `step_dummy_extract()` or `step_dummy_multi_choice()` is most appropiate on `edge` variable in `leaf_data` and apply it*
+*Figure out whether `step_dummy_extract()` or `step_dummy_multi_choice()` is most appropriate on `edge` variable in `leaf_data` and apply it*
 
 ```{r}
 #| echo: false
@@ -501,7 +501,7 @@ countdown(minutes = 3, id = "dummy-leaves")
 
 ### What is it?
 
-Techniques that remove or alter features in order to have fewer more informative features.
+Techniques that remove or alter features in order to have fewer but more informative features.
 
 ### Why do we do it?
 
@@ -520,7 +520,7 @@ leaf_data |>
 
 ## Redundant Information
 
-Or duplicated or functionally equavilant features
+Or duplicated or functionally equivalent features
 
 ```{r}
 leaf_data |>
@@ -530,7 +530,7 @@ leaf_data |>
 
 ## Ineffective Representation
 
-While keeping our models in mind, we want to make sure the data is well suited
+While keeping our models in mind, we want to make sure the data is well-suited
 
 - Correlated data
   - hard for some models
@@ -559,7 +559,7 @@ leaf_data |>
 
 Depending on what method we are using and how the data is affected by it, we could see a large reduction in features. Which in turn leads to a smaller model that is faster to train on.
 
-Only exploration and trial and errors can determine whether you should use dimensionality reduction techniques. Knowing which methods does what helps you determine what to try.
+Only exploration and trial and error can determine whether you should use dimensionality reduction techniques. Knowing which methods do what helps you determine what to try.
 
 ## Dimensionality Reduction Method
 
@@ -582,13 +582,13 @@ All the methods shown today will not be able to handle
 
 One of the main requirements for a feature engineering method is that you can reapply the trained transformation done on the training data set, to the testing data set.
 
-This is not possible with t-SNE as it is an itterative methods that shifts observations in the lower dimensional space based on their distances to points in the higher dimensional space.
+This is not possible with t-SNE as it is an iterative method that shifts observations in the lower-dimensional space based on their distances to points in the higher-dimensional space.
 
 It doesn't create a mapping that can be reused.
 
 ## PCA
 
-**P**rincipal **C**ompoment **A**nalysis is a linear combination of the original data such that most of the variation is captured in the first variable, then second, then third and so one.
+**P**rincipal **C**ompoment **A**nalysis is a linear combination of the original data such that most of the variation is captured in the first variable, then second, then third, and so one.
 
 ## PCA Algorithm
 
@@ -618,7 +618,7 @@ We refer to $z_{11}, ..., z_{n1}$ as the scores of the first principal component
 
 ## PCA Algorithm
 
-Luckily this can be solved using techniques from Linear Algebra more specifically, it can be solved using a eigen decomposition.
+Luckily this can be solved using techniques from Linear Algebra more specifically, it can be solved using an eigen decomposition.
 
 One of the main strengths of PCA is that you don't need to use optimization to get the results without approximations.
 
@@ -723,7 +723,7 @@ countdown(minutes = 5, id = "pca-leaf_data")
 
 ### Cons
 
-- Computational time is linear in number of columns
+- Computational time is linear in the number of columns
 - Can be quite hard to interpret
 
 :::
@@ -731,7 +731,7 @@ countdown(minutes = 5, id = "pca-leaf_data")
 
 ## Truncated PCA
 
-> Computational time is linear in number of columns
+> Computational time is linear in the number of columns
 
 By default `step_pca()` calculates all the loading vectors. And then subsets them down to what you need.
 
@@ -809,19 +809,19 @@ recipe(mpg ~ ., data = mtcars) |>
 
 **N**on-**N**egative **M**atrix **F**actorization is conceptually similar to PCA, but it has different objectives. 
 
-PCA aims to generate uncorrelated components that maximizes the variances. One component at a time.
+PCA aims to generate uncorrelated components that maximize the variances. One component at a time.
 
 NNMF on the other hand jointly optimizes all the components under the the constraint that all the loadings are non-negative. While the data is also non-negative.
 
 ## NNMF restriction
 
-the data has to be non-negative, e.i. 0 or higher.
+The data has to be non-negative, i.e., 0 or higher.
 
-This might feel like a pretty big restriction. And that is not wrong. But a lot of data sets ends up being naturally non-negative.
+This might feel like a pretty big restriction. And that is not wrong. But a lot of data sets end up being naturally non-negative.
 
 Or could at least be turned into non-negative ones with transformations.
 
-It make for much easier interpretations as the loadings don't cancel each other out like they do for PCA.
+It makes for much easier interpretations as the loadings don't cancel each other out like they do for PCA.
 
 ## NNMF Pros and Cons
 
@@ -1595,7 +1595,7 @@ recipe(~ arrival_date, data = hotel_rates) |>
 
 Avoid crafting datetime features by hand if at all possible.
 
-Dealing with un-even month lengths, leap days (leep seconds)
+Dealing with uneven month lengths, leap days (leap seconds)
 
 Or tried to define any event that doesn't land on the same day of the week or date each year
 
