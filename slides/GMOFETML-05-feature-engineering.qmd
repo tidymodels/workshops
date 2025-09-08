@@ -79,12 +79,308 @@ Lakshika, J. P., & Talagala, T. S. (2021). Computer-aided interpretable features
 
 *Load and explore the leaf data*
 
-*Make time to look at `edge` column and think about how one would encode it into numerics*
+*Make time to look at the `edge` column and think about how one would encode it into numerics*
 
 ```{r}
 #| echo: false
 countdown(minutes = 5, id = "explore-leaves")
 ```
+
+## Working with other models
+
+Some models can't handle non-numeric data.
+
+- Linear Regression
+- K Nearest Neighbors
+
+<br>
+
+::: fragment
+Some models struggle if numeric predictors aren't scaled
+
+- K Nearest Neighbors
+- Anything using gradient descent
+:::
+
+## Types of needed preprocessing
+
+- Do qualitative predictors require a numeric encoding?
+
+- Should columns with a single unique value be removed?
+
+- Does the model struggle with missing data?
+
+- Does the model struggle with correlated predictors?
+
+- Should predictors be centered and scaled?
+
+- Is it helpful to transform predictors to be more symmetric?
+
+::: footer
+<https://www.tmwr.org/pre-proc-table.html>
+:::
+
+## Two types of preprocessing
+
+![](images/fe_venn.svg){fig-align="center"}
+
+## Two types of preprocessing
+
+![](images/fe_venn_info.svg){fig-align="center"}
+
+## General definitions
+
+* _Data preprocessing_ is what you do to make your model **successful**.
+* _Feature engineering_ is what you do to the original predictors to make the model do the **least work** to perform great.
+
+## Two types of transformations
+
+<br>
+
+::: columns
+::: {.column width="50%"}
+
+### Static
+
+- Square root, log, inverse
+- Dummies for known levels
+- Date time extractions
+
+:::
+
+::: {.column width="50%"}
+
+### Trained
+
+- Centering & scaling
+- Imputation
+- PCA
+- Anything for unknown factor levels
+
+:::
+
+:::
+
+::: fragment
+Trained methods need to calculate **sufficient information** to be applied again.
+:::
+
+## The recipes package
+
+::: {.incremental .highlight-last}
+- Modular + extensible
+- Works well with pipes ,`|>` and `%>%`
+- Deferred evaluation
+- Isolates test data from training data
+- Can do things formulas can't
+:::
+
+## How to write a recipe
+
+:::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
+leaf_rec <- recipe(species ~ ., data = leaf_data) |>  
+\ \ step_dummy(all_nominal_predictors()) |>  
+\ \ step_zv(all_predictors()) |>  
+\ \ step_log(compactness, offset = 0.5) |>  
+\ \ step_normalize(all_numeric_predictors())
+:::
+
+## How to write a recipe
+
+:::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
+leaf_rec <- [recipe(species ~ ., data = leaf_data)]{style="color: #CA225E;"} |>  
+\ \ step_dummy(all_nominal_predictors()) |>  
+\ \ step_zv(all_predictors()) |>  
+\ \ step_log(compactness, offset = 0.5) |>  
+\ \ step_normalize(all_numeric_predictors())
+:::
+
+<br>
+
+Start by calling `recipe()` to denote the data source and variables used.
+
+## How to write a recipe
+
+:::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
+leaf_rec <- recipe(species ~ ., data = leaf_data) |>  
+\ \ [step_dummy]{style="color: #CA225E;"}(all_nominal_predictors()) |>  
+\ \ [step_zv]{style="color: #CA225E;"}(all_predictors()) |>  
+\ \ [step_log]{style="color: #CA225E;"}(compactness, offset = 0.5) |>  
+\ \ [step_normalize]{style="color: #CA225E;"}(all_numeric_predictors())
+:::
+
+<br>
+
+Specify what actions to take by adding `step_*()`s.
+
+## How to write a recipe
+
+:::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
+leaf_rec <- recipe(species ~ ., data = leaf_data) |>  
+\ \ step_dummy([all_nominal_predictors()]{style="color: #CA225E;"}) |>  
+\ \ step_zv([all_predictors()]{style="color: #CA225E;"}) |>  
+\ \ step_log([compactness]{style="color: #CA225E;"}, offset = 0.5) |> 
+\ \ step_normalize([all_numeric_predictors()]{style="color: #CA225E;"})
+:::
+<br>
+
+Use {tidyselect} and recipes-specific selectors to denote affected variables.
+
+## Using a recipe
+
+:::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
+leaf_rec <- recipe(species ~ ., data = leaf_data) |>  
+\ \ step_dummy(all_nominal_predictors()) |>  
+\ \ step_zv(all_predictors()) |>  
+\ \ step_log(compactness, offset = 0.5) |> 
+\ \ step_normalize(all_numeric_predictors())
+:::
+
+<br>
+
+Save the recipe we like so that we can use it in various places, e.g., with different models.
+
+<br>
+
+## Using a recipe with workflows
+
+Recipes are typically combined with a model in a `workflow()` object:
+
+<br>
+
+:::{style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;"}
+leaf_wflow <- workflow() |>  
+\ \ [add_recipe(leaf_rec)]{style="color: #CA225E;"} |>  
+\ \ add_model(linear_reg())
+:::
+
+## Recipes are estimated
+
+Every preprocessing step in a recipe that involves calculations uses the *training* set. For example:
+
+- Levels of a factor
+- Determination of zero-variance
+- Normalization
+- Feature extraction
+
+Once a recipe is added to a workflow, this occurs when `fit()` is called.
+
+
+## Debugging a recipe
+
+- Typically, you will want to use a workflow to estimate and apply a recipe.
+
+. . .
+
+- If you have an error and need to debug your recipe, the original recipe object (e.g., `leaf_rec`) can be estimated manually with a function called `prep()`. It is analogous to `fit()`. See [TMwR section 16.4](https://www.tmwr.org/dimensionality.html#recipe-functions).
+
+. . .
+
+- Another function, `bake()`, is analogous to `predict()`, and gives you the processed data back.
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+<br>
+
+*Take the recipe and `prep()` then `bake()` it to see what the resulting data set looks like.*
+
+*Try removing steps to see how the result changes.*
+
+<br>
+
+```{r}
+#| label: recipes-prep-exercise
+#| echo: false
+countdown::countdown(minutes = 5, id = "recipes-prep")
+```
+
+## Printing a recipe
+
+```{r}
+#| label: leaf_rec
+#| echo: false
+leaf_rec <- recipe(species ~ ., data = leaf_data) |>  
+  step_dummy(all_nominal_predictors()) |>  
+  step_zv(all_predictors()) |>  
+  step_log(compactness, offset = 0.5) |> 
+  step_normalize(all_numeric_predictors())
+```
+
+```{r}
+#| label: leaf_rec-printing
+#| message: true
+leaf_rec
+```
+
+## Prepping a recipe
+
+```{r}
+#| label: leaf_rec-prep-printing
+#| message: true
+prep(leaf_rec)
+```
+
+## Baking a recipe
+
+```{r}
+#| label: leaf_rec-prep-bake-printing
+prep(leaf_rec) |>
+  bake(new_data = leaf_data)
+```
+
+## Tidying a recipe
+
+Once a recipe has been estimated, there are various bits of information saved in it.
+
+- The `tidy()` function can be used to get specific results from the recipe.
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Take a prepped recipe and use the `tidy()` function on it.*
+
+*Use the `number` argument to inspect different steps.*
+
+<br>
+
+```{r}
+#| label: recipes-tidy-exercise
+#| echo: false
+countdown::countdown(minutes = 5, id = "recipes-tidy")
+```
+
+## Tidying a recipe
+
+```{r}
+#| label: leaf_rec-tidy
+prep(leaf_rec) |>
+  tidy()
+```
+
+## Tidying a recipe
+
+```{r}
+#| label: leaf_rec-tidy-2
+prep(leaf_rec) |>
+  tidy(number = 1)
+```
+
+
+## Using a recipe in tidymodels
+
+The recommended way to use a recipe in tidymodels is to use it as part of a `workflow()`.
+
+```{r}
+#| label: recipes-and-workflows
+leaf_wflow <- workflow() |>  
+  add_recipe(leaf_rec) |>  
+  add_model(logistic_reg())
+```
+
+When used in this way, you don't need to worry about `prep()` and `bake()` as it is handled for you.
 
 ## Leaf edges
 
@@ -107,7 +403,7 @@ leaf_data |>
 
 ## Leaf edges dummies
 
-(techincally one-hot encoding)
+(technically one-hot encoding)
 
 ```{r}
 #| echo: false
@@ -117,7 +413,7 @@ recipe(~edge, data = leaf_data) |>
   bake(new_data = NULL) |>
   slice(100, 200, 300, 400, 500, 600) |>
   rename_with(\(x) stringr::str_remove(x, "edge_")) |>
-  knitr::kable()
+ knitr::kable()
 ```
 
 ## Dummy variables
@@ -241,7 +537,7 @@ leaf_data |>
   bake(NULL) |>
   rename_with(\(x) stringr::str_remove(x, "edge_")) |>
   select(-other) |>
-  knitr::kable()
+ knitr::kable()
 ```
 
 :::
@@ -258,11 +554,11 @@ leaf_data |>
 #| echo: false
 #| comment: ""
 medium_examples <- tibble(
-  medium = tate_text$medium[c(2, 5, 7, 9)]
+ medium = tate_text$medium[c(2, 5, 7, 9)]
 )
 
 medium_examples <- medium_examples |>
-  tibble::add_row(medium = "Oil paint, ink on canvas")
+ tibble::add_row(medium = "Oil paint, ink on canvas")
 
 values <- medium_examples |>
   pull(medium)
@@ -291,7 +587,7 @@ medium_examples |>
   bake(NULL) |>
   rename_with(\(x) stringr::str_remove(x, "medium_")) |>
   select(-other) |>
-  knitr::kable()
+ knitr::kable()
 ```
 
 :::
@@ -308,11 +604,11 @@ medium_examples |>
 #| echo: false
 #| comment: ""
 medium_examples <- tibble(
-  medium = tate_text$medium[c(2, 5, 7, 9)]
+ medium = tate_text$medium[c(2, 5, 7, 9)]
 )
 
 medium_examples <- medium_examples |>
-  tibble::add_row(medium = "Oil paint, ink on canvas")
+ tibble::add_row(medium = "Oil paint, ink on canvas")
 
 values <- medium_examples |>
   pull(medium)
@@ -341,7 +637,7 @@ medium_examples |>
   bake(NULL) |>
   rename_with(\(x) stringr::str_remove(x, "medium_")) |>
   select(-other) |>
-  knitr::kable()
+ knitr::kable()
 ```
 
 :::
@@ -358,11 +654,11 @@ medium_examples |>
 #| echo: false
 #| comment: ""
 color_examples <- tibble(
-  colors = c(
+ colors = c(
     "['red', 'blue']",
     "['red', 'blue', 'white']",
     "['blue', 'blue', 'blue']"
-  )
+ )
 )
 values <- color_examples |>
   pull(colors)
@@ -391,7 +687,7 @@ color_examples |>
   bake(NULL) |>
   rename_with(\(x) stringr::str_remove(x, "colors_")) |>
   select(-other) |>
-  knitr::kable()
+ knitr::kable()
 ```
 
 :::
@@ -401,7 +697,7 @@ color_examples |>
 
 Works on multiple columns, counting items across columns.
 
-Can be seen as joining multiple applications of dummy variables together.
+It can be seen as joining multiple applications of dummy variables together.
 
 Allows for 0 to many items.
 
@@ -440,7 +736,7 @@ recipe(~., data = values) |>
   prep() |>
   bake(NULL) |>
   rename_with(\(x) stringr::str_remove(x, "lang_1_")) |>
-  knitr::kable()
+ knitr::kable()
 ```
 
 :::
@@ -452,11 +748,11 @@ Both `step_dummy_extract()` and `step_dummy_multi_choice()` contain a `threshold
 
 This is used to combine infrequent levels together.
 
-We have a step `step_other()` that does this for nominal variables, but it doesn't work in these cases as it has to happen after the extraction/combination.
+We have a step `step_other()` that does this for nominal variables, but it doesn't work in these cases, as it has to happen after the extraction/combination.
 
 ## Othering
 
-`threshold = 0` produces 1217 columns
+`threshold = 0` produces 1217 columns.
 
 ```{r}
 #| echo: false
@@ -466,12 +762,12 @@ recipe(~ medium, data = tate_text) |>
   bake(NULL) |>
   rename_with(\(x) stringr::str_remove(x, "medium_")) |>
   slice(1:6) |>
-  knitr::kable()
+ knitr::kable()
 ```
 
 ## Othering
 
-`threshold = 0.05` produces 11 columns
+`threshold = 0.05` produces 11 columns.
 
 ```{r}
 #| echo: false
@@ -481,14 +777,14 @@ recipe(~ medium, data = tate_text) |>
   bake(NULL) |>
   rename_with(\(x) stringr::str_remove(x, "medium_")) |>
   slice(1:6) |>
-  knitr::kable()
+ knitr::kable()
 ```
 
 ## Your turn
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Figure out whether `step_dummy_extract()` or `step_dummy_multi_choice()` is most appropriate on `edge` variable in `leaf_data` and apply it*
+*Figure out whether `step_dummy_extract()` or `step_dummy_multi_choice()` is most appropriate on the `edge` variable in `leaf_data` and apply it*
 
 ```{r}
 #| echo: false
@@ -511,7 +807,7 @@ Techniques that remove or alter features in order to have fewer but more informa
 
 ## Redundant Information
 
-A feature with no information could be included
+A feature with no information could be included.
 
 ```{r}
 leaf_data |>
@@ -557,7 +853,7 @@ leaf_data |>
 
 ## Computational Speed
 
-Depending on what method we are using and how the data is affected by it, we could see a large reduction in features. Which in turn leads to a smaller model that is faster to train on.
+Depending on what method we are using and how the data is affected by it, we could see a large reduction in features. This, in turn, leads to a smaller model that is faster to train on.
 
 Only exploration and trial and error can determine whether you should use dimensionality reduction techniques. Knowing which methods do what helps you determine what to try.
 
@@ -580,7 +876,7 @@ All the methods shown today will not be able to handle
 
 ## Why not t-SNE?
 
-One of the main requirements for a feature engineering method is that you can reapply the trained transformation done on the training data set, to the testing data set.
+One of the main requirements for a feature engineering method is that you can reapply the trained transformation done on the training data set to the testing data set.
 
 This is not possible with t-SNE as it is an iterative method that shifts observations in the lower-dimensional space based on their distances to points in the higher-dimensional space.
 
@@ -588,7 +884,7 @@ It doesn't create a mapping that can be reused.
 
 ## PCA
 
-**P**rincipal **C**ompoment **A**nalysis is a linear combination of the original data such that most of the variation is captured in the first variable, then second, then third, and so one.
+**P**rincipal **C**ompoment **A**nalysis is a linear combination of the original data such that most of the variation is captured in the first variable, then the second, then the third, and so on.
 
 ## PCA Algorithm
 
@@ -612,19 +908,19 @@ $$
 \underset{\phi_{11}, ..., \phi_{p1}}{\text{maximize}} \left\{ \dfrac{1}{n} \sum^n_{i=j} z_{i1} ^2 \right\} \quad \text{subject to} \quad \sum_{j=1}^p  \phi_{j1}^2 = 1
 $$
 
-We are in essence maximizing the sample variance of the $n$ values of $z_{i1}$.
+We are, in essence, maximizing the sample variance of the $n$ values of $z_{i1}$.
 
 We refer to $z_{11}, ..., z_{n1}$ as the scores of the first principal component.
 
 ## PCA Algorithm
 
-Luckily this can be solved using techniques from Linear Algebra more specifically, it can be solved using an eigen decomposition.
+Luckily, this can be solved using techniques from Linear Algebra, more specifically, it can be solved using an eigen decomposition.
 
 One of the main strengths of PCA is that you don't need to use optimization to get the results without approximations.
 
 ## PCA Algorithm
 
-Once the first principal component is calculated, we can calculate the second principal component 
+Once the first principal component is calculated, we can calculate the second principal component. 
 
 We find the second principal component $Z_2$ as a linear combination of $X_1, ..., X_p$ that has the maximal variance out of the linear combinations that are uncorrelated with $Z_1$
 
@@ -632,7 +928,7 @@ this is the same as saying that $\phi_2$ should be orthogonal to the direction $
 
 ## How is that a dimensionality reduction method?
 
-By itself it itsn't as it rotates all the features in the feature space.
+By itself, it isn't, as it rotates all the features in the feature space.
 
 It becomes a dimensionality reduction method if we only calculate some of the principal components.
 
@@ -644,7 +940,7 @@ This is typically done by retaining a specific number of components or as a thre
 #| label: pca-cumulative-percent-variance
 #| echo: false
 #| fig-alt: |
-#|   Faceted bar chart chart. 4 bar charts in a 2 by 2 grid. Each one represents
+#|   Faceted bar chart. 4 bar charts in a 2 by 2 grid. Each one represents
 #|   a different data set which has had PCA applied to it. 
 set.seed(1234)
 
@@ -670,15 +966,15 @@ data_cumpervar(concrete)
   geom_col() +
   facet_wrap(~id, scales = "free_x") +
   labs(
-    y = "Percent variance"
-  ) +
+ y = "Percent variance"
+ ) +
   theme_minimal() +
   scale_x_continuous(breaks = c(5, seq(0, 100, by = 10)))
 ```
 
 ## Applying PCA with recipes  `r hexes("recipes")`
 
-Either using `num_comp` argument
+Either use the `num_comp` argument.
 
 ```{r}
 rec <- recipe(mpg ~ ., data = mtcars) |>
@@ -687,7 +983,7 @@ rec <- recipe(mpg ~ ., data = mtcars) |>
 
 <br>
 
-or using `threshold` argument
+or using the `threshold` argument
 
 ```{r}
 rec <- recipe(mpg ~ ., data = mtcars) |>
@@ -733,9 +1029,9 @@ countdown(minutes = 5, id = "pca-leaf_data")
 
 > Computational time is linear in the number of columns
 
-By default `step_pca()` calculates all the loading vectors. And then subsets them down to what you need.
+By default, `step_pca()` calculates all the loading vectors. And then subset them down to what you need.
 
-Instead we can use a different implementation that only calculates what you need. This is what we call truncated PCA.
+Instead, we can use a different implementation that only calculates what you need. This is what we call truncated PCA.
 
 ## Truncated PCA with recipes `r hexes("embed", "recipes")`
 
@@ -764,13 +1060,13 @@ PC5 &= cyl \cdot 0.73 &&+ disp \cdot -0.014 &&+ hp \cdot 0.0016 &&+ drat \cdot -
 \end{alignat}
 $$
 
-If we could force some of the loadings to be 0 it would reduce things a lot.
+If we could force some of the loadings to be 0, it would reduce things a lot.
 
 ## Sparse PCA with recipes `r hexes("embed", "recipes")`
 
 Can only be done using `num_comp`.
 
-`predictor_prop` argument is used to determine how many zeroes in the loadings.
+The `predictor_prop` argument is used to determine how many zeroes in the loadings.
 
 ```{r}
 library(embed)
@@ -811,7 +1107,7 @@ recipe(mpg ~ ., data = mtcars) |>
 
 PCA aims to generate uncorrelated components that maximize the variances. One component at a time.
 
-NNMF on the other hand jointly optimizes all the components under the the constraint that all the loadings are non-negative. While the data is also non-negative.
+NNMF, on the other hand, jointly optimizes all the components under the constraint that all the loadings are non-negative. While the data is also non-negative.
 
 ## NNMF restriction
 
@@ -858,18 +1154,18 @@ recipe(mpg ~ ., data = mtcars) |>
 
 ## UMAP
 
-**U**niform **M**anifold **A**pproximation and **P**rojection is another method that takes high dimensional data and transform it into a lower dimensional space.
+**U**niform **M**anifold **A**pproximation and **P**rojection is another method that takes high-dimensional data and transforms it into a lower-dimensional space.
 
-Runs relatively fast and is  popular in visualizations.
+Runs relatively fast and is popular in visualizations.
 
 ## UMAP Algorithm
 
 Rough algorithm
 
-1. Use spectral embedding to embed points in low dimensional space
-2. Calculate similarity scores between points based on original data set
-3. Randomly samples pair of points based on their similarity scores
-4. Flips a coin to decide which of the pair of points to the other one
+1. Use spectral embedding to embed points in a low-dimensional space
+2. Calculate similarity scores between points based on the original data set
+3. Randomly samples a pair of points based on their similarity scores
+4. Flips a coin to decide which of the pair of points to give to the other one
 5. Randomly picks a non-neighbor point to move away from
 6. Moves the selected point towards its neighbor and away from its non-neighbor
 7. Repeat 3-6
@@ -879,19 +1175,19 @@ Rough algorithm
 - `n_neighbors`
 
 Determines how many points are considered neighbors. A point counts as its own neighbor.
-Lower values lead to local view.
+Lower values lead to a local view.
 
 - `min_dist`
 
-Determines how close points are allowed to be to each other in the low dimentional space.
+Determines how close points are allowed to be to each other in the low-dimensional space.
 
 - `metric`
 
-How distances are calculated in the input data. `euclidean`, `manhattan`, `jaccard` etc etc
+How distances are calculated in the input data: `euclidean`, `manhattan`, `jaccard`, etc.
 
 ## UMAP hesitancy 
 
-Due to the flexibility of how this method work, it is almost always possible to generate graphs that appear to have insights in them.
+Due to the flexibility of how this method works, it is almost always possible to generate graphs that appear to have insights in them.
 
 ## Which was created with random data?
 
@@ -923,10 +1219,10 @@ umap_10 <- recipe(~., data_random) |>
   bake(NULL)
   
 umap_all <- bind_rows(
-  umap_2 |> mutate(type = "A", neighbors = 2),
-  umap_3 |> mutate(type = "B", neighbors = 3),
-  umap_5 |> mutate(type = "C", neighbors = 5),
-  umap_10 |> mutate(type = "D", neighbors = 10)
+ umap_2 |> mutate(type = "A", neighbors = 2),
+ umap_3 |> mutate(type = "B", neighbors = 3),
+ umap_5 |> mutate(type = "C", neighbors = 5),
+ umap_10 |> mutate(type = "D", neighbors = 10)
 )
 
 umap_all |>
@@ -963,20 +1259,20 @@ recipe(mpg ~ ., data = mtcars) |>
 
 Isometric mapping is a non-linear dimensionality reduction method. 
 
-This is another method that uses distances between points to produce graphs of neighboring points. Where this method is different than other methods is that is uses geodesic distances as opposed straight-line distances.
+This is another method that uses distances between points to produce graphs of neighboring points. Where this method is different than other methods is that it uses geodesic distances as opposed to straight-line distances.
 
 The geodesic distance is the sum of edge weights along the shortest path between two points.
 
-The eigenvectors of the deodesic distance metric is then used to represent the new coordinates.
+The eigenvectors of the deodesic distance metric are then used to represent the new coordinates.
 
 ## Isomap Algorithm
 
-A very high-level description of Isomap algorithm is given below.
+A very high-level description of the Isomap algorithm is given below.
 
 1. Find the neighbors for each point
-2. Construct the neighborhood graph, using euclidean distance as edge length
-3. Calculate shorted path between each pair of points
-4. Use Multidimensional scaling to compute lower dimensional embedding
+2. Construct the neighborhood graph, using Euclidean distance as edge length
+3. Calculate the shortest path between each pair of points
+4. Use Multidimensional scaling to compute a lower-dimensional embedding
 
 ## Isomap Pros and Cons
 
@@ -986,7 +1282,7 @@ A very high-level description of Isomap algorithm is given below.
 ### Pros
 
 - Captures non-linear effects
-- Caputres long-range structure not just local structure
+- Captures long-range structure, not just local structure
 - No parameters to set other than neighbors
 
 :::
@@ -1026,7 +1322,7 @@ Antonio, N., de Almeida, A., and Nunes, L. (2019). Hotel booking demand datasets
 
 ## Hotel data splitting
 
-Genrally you should always do data splitting. We are doing it here explicitly because some artifacts of splitting data becomes useful later on.
+Generally, you should always do data splitting. We are doing it here explicitly because some artifacts of splitting data become useful later on.
 
 ```{r}
 set.seed(1234)
@@ -1048,25 +1344,212 @@ hotel_test <- testing(hotel_split)
 countdown(minutes = 5, id = "explore-hotels")
 ```
 
+## Nonlinear predictors
+
+```{r}
+#| echo: false
+hotel_train |>
+  ggplot(aes(arrival_date_num, avg_price_per_room)) +
+  geom_point(alpha = 0.1)
+```
+
 ## Splines
 
-TODO
+It is a way to transform a single numeric predictor into multiple numeric predictors, with the hope that the new numeric predictors are more linearly related to the outcome.
 
-A way to handle nonlinear effects,
-I think arrival_date_num, lead_time, stays_in_week_nights, stays_in_weekend_nights would be good candidates
+Mostly needed with linear models, but it should rarely hurt to use it.
 
-Explanation of what a spline is and how it works
+## Splines explained
 
-Visualization of one in use
+A B-spline is a piecewise polynomial function.
 
-Showing how there are different kinds of splines
+We have 2 main parameters to worry about. Number of knots and the polynomial degree.
 
-periodic splines
+The domain of the predictor is split into `k` regions, with a knot between each, and a polynomial function is fit within each region, under the constraint that they touch each other at the knot.
 
-benefits
+## knots: 1, degree: 1
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 1, deg_free = 2),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+## knots: 2, degree: 1
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 1, deg_free = 3),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+
+## knots: 5, degree: 1
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 1, deg_free = 5),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+## knots: 5, degree: 2
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 2, deg_free = 5),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+## knots: 5, degree: 3
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 3, deg_free = 5),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+## knots: 9, degree: 3
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 3, deg_free = 10),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+## B-Spline features visualized - degree: 3
+
+```{r}
+#| label: data-splines
+#| echo: false
+#| message: false
+rec_splines <- recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |>
+  step_spline_b(arrival_date_num, keep_original_cols = TRUE, degree = 3, deg_free = 6) |>
+  prep()
+
+data_splines <- rec_splines |>
+  bake(new_data = hotel_train) |>
+  rename_all(\(x) {stringr::str_replace(x, "arrival_date_num_", "Spline Feature ")})
+
+data_splines |>
+  select(-avg_price_per_room) |>
+ tidyr::pivot_longer(cols = -arrival_date_num) |>
+  ggplot(aes(arrival_date_num, value)) +
+  geom_line() +
+  facet_wrap(~name) +
+  theme_minimal()
+```
+
+## Splines as numbers
+
+```{r}
+#| echo: false
+set.seed(1234)
+data_splines |>
+  select(-avg_price_per_room) |>
+  mutate(across(contains("Spline"), \(x) round(x, 2))) |>
+  slice_sample(n = 7) |>
+ knitr::kable() 
+```
+
+## Splines pros and cons
+
+::: {.columns}
+::: {.column}
+
+### Pros
+
 - fast
 - easy to use
 - semi-interpretable
+
+:::
+::: {.column}
+
+### Cons
+
+- adds more columns
+- will need to select the number of columns
+- can be messy outside the range
+
+:::
+:::
+
+## Your turn
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Apply B-splines to some variables using `step_spline_b()`*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "explore-step_spline_b")
+```
 
 ## Factors with many categories
 
@@ -1103,25 +1586,25 @@ hotel_train |>
 
 We could:
 
--   Make the full set of indicator variables 😳
+- Make the full set of indicator variables 😳
 
--   Lump agents and companies that rarely occur into an "other" group
+- Lump agents and companies that rarely occur into an "other" group
 
--   Use [feature hashing](https://www.tmwr.org/categorical.html#feature-hashing) to create a smaller set of indicator variables
+- Use [feature hashing](https://www.tmwr.org/categorical.html#feature-hashing) to create a smaller set of indicator variables
 
--   Use target encoding to replace the `county`, `agent`, and `company` columns with the estimated effect of that predictor
+- Use target encoding to replace the `county`, `agent`, and `company` columns with the estimated effect of that predictor
 
 ## Target encoding
 
-**Target encoding** (also called **mean encoding**, **likelihood encoding**, **impact encoding**, or **effect encoding**) is a supervised trained method that turn a single categorical predictor into a single numeric predictor.
+**Target encoding** (also called **mean encoding**, **likelihood encoding**, **impact encoding**, or **effect encoding**) is a supervised trained method that turns a single categorical predictor into a single numeric predictor.
 
-It is often used to deal with categorical predictors with many levels, altough it works regardless.
+It is often used to deal with categorical predictors with many levels, although it works regardless.
 
-Since it uses the outcome to train it, you need to make sure to use cross validation to avoid overfitting.
+Since it uses the outcome to train it, you need to make sure to use cross-validation to avoid overfitting.
 
 ## Target encoding motivation
 
-You have a numeric outcome, and a categorical predictor. And you want to transform each value of the categorical predictor into a value that best represents the outcome?
+You have a numeric outcome and a categorical predictor. And you want to transform each value of the categorical predictor into a value that best represents the outcome?
 
 . . .
 
@@ -1136,9 +1619,9 @@ We calculate the mean of the outcome within each level of the predictor, and use
 ```{r}
 hotel_train |>
   summarise(
-    mean = mean(avg_price_per_room),
-    .by = agent
-  )
+ mean = mean(avg_price_per_room),
+ .by = agent
+ )
 ```
 
 :::
@@ -1147,7 +1630,7 @@ hotel_train |>
 ## Target encoding handling unseen levels
 
 ::: {.callout-caution}
-Don't look at testing data set. This is done for education purposes.
+Don't look at the testing data set. This is done for educational purposes.
 :::
 
 ::: {.columns}
@@ -1188,9 +1671,9 @@ mean(hotel_train$avg_price_per_room)
 ```{r}
 hotel_train |>
   summarise(
-    mean = mean(avg_price_per_room),
-    .by = agent
-  )
+ mean = mean(avg_price_per_room),
+ .by = agent
+ )
 ```
 
 :::
@@ -1201,9 +1684,9 @@ hotel_train |>
 ::: {.columns}
 ::: {.column}
 
-Some of the levels have very low counts. we can't have the same confidence in those means than the means calcuated on high counts.
+Some of the levels have very low counts. We can't have the same confidence in those means as the means calculated on high counts.
 
-We use the global mean to account for 0 occurances. Let us adjust the calculated mean by the global mean depending on the counts.
+We use the global mean to account for 0 occurrences. Let us adjust the calculated mean by the global mean depending on the counts.
 
 :::
 ::: {.column}
@@ -1211,10 +1694,10 @@ We use the global mean to account for 0 occurances. Let us adjust the calculated
 ```{r}
 hotel_train |>
   summarise(
-    mean = mean(avg_price_per_room),
-    n = n(),
-    .by = agent
-  ) |>
+ mean = mean(avg_price_per_room),
+ n = n(),
+ .by = agent
+ ) |>
   arrange(agent)
 ```
 
@@ -1223,7 +1706,7 @@ hotel_train |>
 
 ## Partial pooling
 
-Partial pooling somewhat lowers the risk of overfitting since it tends to correct for agents with small sample sizes. It can’t correct for improper data usage or data leakage though. 
+Partial pooling somewhat lowers the risk of overfitting since it tends to correct for agents with small sample sizes. It can’t correct for improper data usage or data leakage, though. 
 
 ## Partial pooling results
 
@@ -1241,26 +1724,26 @@ rec_smooth <- recipe(avg_price_per_room ~ agent, data = hotel_train) |>
   tidy(1)
 
 bind_rows(
-  rec_no_smooth,
-  rec_smooth
+ rec_no_smooth,
+ rec_smooth
 ) |>
   pivot_wider(values_from = value, names_from = id) |>
   left_join(
     count(hotel_train, agent), by = c("level" = "agent")
-  ) |>
+ ) |>
   ggplot(aes(no_smooth, smooth, size = n)) +
   geom_abline(slope = 1, intercept = 0, color = "red") +
   geom_abline(slope = 0, intercept = mean(hotel_train$avg_price_per_room), color = "blue") +
   geom_point(alpha = 0.5) +
   labs(
-    x = "mean",
-    y = "partial pooled mean"
-  )
+ x = "mean",
+ y = "partial pooled mean"
+ )
 ```
 
 ## Implentations
 
-We have described this method solely based on analytical calculations (`step_lencode()`) but you could arrive at similar numbers using a model based approach by fitting a no-intercept generalized linear model. An hierarchical version would induce the partial pooling.
+We have described this method solely based on analytical calculations (`step_lencode()`), but you could arrive at similar numbers using a model-based approach by fitting a no-intercept generalized linear model. A hierarchical version would induce partial pooling.
 
 - `step_lencode_glm()`
 - `step_lencode_bayes()`
@@ -1271,10 +1754,10 @@ We have described this method solely based on analytical calculations (`step_len
 ```{r}
 recipe(avg_price_per_room ~ ., data = hotel_train) |>
   step_lencode(
-    agent, country, company, 
-    outcome = vars("avg_price_per_room"),
-    smooth = TRUE,
-  ) |>
+ agent, country, company, 
+ outcome = vars("avg_price_per_room"),
+ smooth = TRUE,
+ ) |>
   prep() |>
   bake(NULL) |>
   select(agent, country, company)
@@ -1308,11 +1791,11 @@ When we use a date column in its native format, most models in R convert it to a
 
 We can re-engineer it as:
 
--   Days since a reference date
--   Day of the week
--   Month
--   Year
--   Indicators for holidays
+- Days since a reference date
+- Day of the week
+- Month
+- Year
+- Indicators for holidays
 
 ::: notes
 The main point is that we try to maximize performance with different versions of the predictors. 
@@ -1350,12 +1833,12 @@ recipe(~ arrival_date, data = hotel_rates) |>
         "week",
         "semester",
         "quarter"
-      )) |>
+ )) |>
   prep() |>
   bake(NULL) |>
   slice(c(2000, 4000, 6000, 8000, 10000)) |>
   rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
-  knitr::kable()
+ knitr::kable()
 ```
 
 ## `arrival_date` date features
@@ -1366,7 +1849,7 @@ Adding `label = FALSE`
 #| echo: false
 recipe(~ arrival_date, data = hotel_rates) |>
   step_date(arrival_date, label = FALSE,
-  features = c(
+ features = c(
         "year",
         "month",
         "dow",
@@ -1376,19 +1859,19 @@ recipe(~ arrival_date, data = hotel_rates) |>
         "week",
         "semester",
         "quarter"
-      )) |>
+ )) |>
   prep() |>
   bake(NULL) |>
   slice(c(2000, 4000, 6000, 8000, 10000)) |>
   rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
-  knitr::kable()
+ knitr::kable()
 ```
 
 ## Other recipes steps
 
 - `step_time()`
 
-Works the same as `step_date()` but for smaller than day measurements: hour, hour12, am/pm, minute, second, decimal_day.
+Works the same as `step_date()` but for measurements smaller than day: hour, hour12, am/pm, minute, second, decimal_day.
 
 - `step_holiday()`
 
@@ -1411,7 +1894,7 @@ countdown(minutes = 3, id = "step_date-step_holiday-arrival_date")
 #| echo: false
 recipe(~ arrival_date, data = hotel_rates) |>
   step_date(arrival_date, label = FALSE,
-  features = c(
+ features = c(
         "year",
         "month",
         "dow",
@@ -1421,7 +1904,7 @@ recipe(~ arrival_date, data = hotel_rates) |>
         "week",
         "semester",
         "quarter"
-      )) |>
+ )) |>
   prep() |>
   bake(NULL) |>
 rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
@@ -1451,9 +1934,9 @@ rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
 
 ## What are the issues with these features?
 
-The numeric features makes it easy to capture the end or beginning, but harder anything more granular.
+The numeric features make it easy to capture the end or beginning, but harder to do anything more granular.
 
-The indicators mostly care about the day itself. No information about the lead up or aftermath
+The indicators mostly care about the day itself. No information about the lead-up or aftermath
 
 ## time events
 
@@ -1477,7 +1960,7 @@ rule_3 <- yearly("1997-06-05") %>%
 
 ## `step_time_event()`
 
-Create a list of rules (last slide) and pass them to `rules` argument of `step_time_event()`
+Create a list of rules (last slide) and pass them to the `rules` argument of `step_time_event()`
 
 ```{r}
 #| eval: false
@@ -1507,9 +1990,9 @@ recipe(~ arrival_date, data = hotel_rates) |>
 
 ## Non-indicator time events
 
-These features still have the issue is that they only attach value to the date themselves.
+These features still have the issue that they only attach value to the date itself.
 
-We can attach values based on how far we are away from those dates
+We can attach values based on how far we are away from those dates.
 
 - `step_date_before()`
 - `step_date_after()`
@@ -1597,6 +2080,6 @@ Avoid crafting datetime features by hand if at all possible.
 
 Dealing with uneven month lengths, leap days (leap seconds)
 
-Or tried to define any event that doesn't land on the same day of the week or date each year
+Or tried to define any event that doesn't land on the same day of the week or date each year.
 
 > The first Sunday after the first full moon on or after the vernal equinox
