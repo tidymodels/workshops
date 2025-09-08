@@ -21,3 +21,177 @@ knitr:
 #| include: false
 #| file: setup.R
 ```
+
+
+```{r}
+#| label: start-quiet
+#| include: false
+library(mirai)
+daemons(0) # reset to sequential if re-running
+daemons(parallel::detectCores())
+```
+
+## Startup!  `r hexes(c("tidymodels"))`
+
+```{r}
+#| label: user-startup
+library(tidymodels)
+library(important)
+
+tidymodels_prefer()
+theme_set(theme_bw())
+options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
+```
+
+## More startup! 
+
+```{r}
+#| label: user-startup-2
+# Load our example data for this section
+"https://github.com/tidymodels/workshops/raw/refs/heads/2025-GMOFETML/slides/class_data.RData" |> 
+  url() |> 
+  load()
+
+set.seed(429)
+sim_split <- initial_split(class_data, prop = 0.75, strata = class)
+sim_train <- training(sim_split)
+sim_test  <- testing(sim_split)
+
+set.seed(523)
+sim_rs <- vfold_cv(sim_train, v = 10, strata = class)
+```
+
+# Why remove features/predictors?  {background-color="#E0D890FF"}
+
+## Models and feature selection
+
+Some models _automatically_ remove predictors by never using them in the model: 
+
+ - tree- and rule-based models
+ - some regularized models (e.g., `glmnet`)
+ - multivariate adaptive regression splines
+ - RuleFit
+ - _not really_ ensembles though
+ 
+Sometimes using irrelevant predictors *hurt* model performance
+
+## Effects of extra predictors
+
+![](images/fig-irrelevant-predictors-1.svg){fig-align='center' width=60%}
+
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/feature-selection.html#sec-irrelevant-predictors)
+:::
+
+## General selection methods
+
+-  **wrappers**: a sequential algorithm proposes feature subsets, fits the model with these subsets, and then determines a better subset from the results
+
+-  **filters**: screen predictors before adding them to the model. 
+
+tidymodels doesn't have any wrappers (but see the [caret documentation for them](https://topepo.github.io/caret/recursive-feature-elimination.html))
+
+<br> 
+
+The new important package does have filters via recipes. 
+
+
+## K-nearest neighbors
+
+```{r}
+#| label: knn-spec
+rec <- 
+  recipe(class ~ ., data = sim_train) |> 
+  step_predictor_best(all_predictors(), score = "imp_rf", prop_terms = tune()) |> 
+  step_normalize(all_numeric_predictors())
+  
+knn_spec <- 
+  nearest_neighbor(neighbors = tune(), weight_func = tune()) |> 
+  set_mode("classification")
+  
+thrsh_tlr <-
+  tailor() |>
+  adjust_probability_threshold(threshold = tune()) 
+  
+knn_wflow <- workflow(rec, knn_spec, thrsh_tlr)
+
+knn_param <- 
+  knn_wflow |> 
+  extract_parameter_set_dials()
+```
+
+## Tuning results
+
+```{r}
+#| label: knn-tune
+#| cache: true
+cls_mtr <- metric_set(brier_class, roc_auc, sensitivity, specificity)
+ctrl <- control_grid(save_pred = TRUE, save_workflow = TRUE)
+
+set.seed(12)
+knn_res <-
+  knn_wflow |>
+  tune_grid(
+    resamples = sim_rs,
+    grid = 50,
+    control = ctrl,
+    metrics = cls_mtr
+  )
+```
+
+## Grid results `r hexes(c("tune"))`
+
+```{r}
+#| label: sim-knn-all
+#| fig-width: 12
+#| fig-height: 5
+#| fig-align: center
+#| out-width: "100%"
+#| dev-args:
+#|   bg: "transparent"
+autoplot(knn_res)
+```
+
+## Brier results `r hexes(c("tune"))`
+
+```{r}
+#| label: sim-knn-brier
+#| fig-width: 12
+#| fig-height: 3
+#| fig-align: center
+#| out-width: "100%"
+#| dev-args:
+#|   bg: "transparent"
+autoplot(knn_res, metric = "brier_class") + 
+  facet_grid(. ~ name, scale = "free_x") 
+```
+
+## ROC curve results `r hexes(c("tune"))`
+
+```{r}
+#| label: sim-knn-roc
+#| fig-width: 12
+#| fig-height: 3
+#| fig-align: center
+#| out-width: "100%"
+#| dev-args:
+#|   bg: "transparent"
+autoplot(knn_res, metric = "roc_auc") + 
+  facet_grid(. ~ name, scale = "free_x") 
+```
+
+## Sensitivity/Specificity results `r hexes(c("tune"))`
+
+```{r}
+#| label: sim-knn-two-class
+#| fig-width: 12
+#| fig-height: 4.5
+#| fig-align: center
+#| out-width: "100%"
+#| dev-args:
+#|   bg: "transparent"
+autoplot(knn_res, metric = c("sensitivity", "specificity"))
+```
+
+
+
