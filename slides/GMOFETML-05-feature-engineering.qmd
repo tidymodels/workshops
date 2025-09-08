@@ -495,31 +495,6 @@ recipe(~ medium, data = tate_text) |>
 countdown(minutes = 3, id = "dummy-leaves")
 ```
 
-## Hotel rates data set
-
-Regression data set for predicting the average daily rate for a room, for "Resort Hotel". The `agent` and `company` use random names.
-
-```{r}
-glimpse(hotel_rates)
-```
-
-::: footer
-Antonio, N., de Almeida, A., and Nunes, L. (2019). Hotel booking demand datasets. Data in Brief, 22, 41-49.
-:::
-
-## Your turn
-
-![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
-
-*Load and explore the hotel_rates data*
-
-*Comes loaded with the modeldata package*
-
-```{r}
-#| echo: false
-countdown(minutes = 5, id = "explore-leaves")
-```
-
 # Dimensionality Reduction
 
 ## Dimensionality Reduction
@@ -1037,6 +1012,42 @@ recipe(mpg ~ ., data = mtcars) |>
   bake(NULL)
 ```
 
+## Hotel rates data set
+
+Regression data set for predicting the average daily rate for a room, for "Resort Hotel". The `agent` and `company` use random names.
+
+```{r}
+glimpse(hotel_rates)
+```
+
+::: footer
+Antonio, N., de Almeida, A., and Nunes, L. (2019). Hotel booking demand datasets. Data in Brief, 22, 41-49.
+:::
+
+## Hotel data splitting
+
+Genrally you should always do data splitting. We are doing it here explicitly because some artifacts of splitting data becomes useful later on.
+
+```{r}
+set.seed(1234)
+hotel_split <- initial_split(hotel_rates)
+hotel_train <- training(hotel_split)
+hotel_test <- testing(hotel_split)
+```
+
+## Your turn
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Load and explore the hotel_train data*
+
+*Comes loaded with the modeldata package*
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "explore-hotels")
+```
+
 ## Splines
 
 TODO
@@ -1057,22 +1068,233 @@ benefits
 - easy to use
 - semi-interpretable
 
-## Likelihood encoding
+## Factors with many categories
 
-TODO
+::: {.columns}
+::: {.column width=30%}
 
-Bring up country, agent, company, and ask learners what we could do with these?
+```{r}
+hotel_train |>
+  count(country)
+```
 
-- dummy variables etc etc
-    - why will this be a bad idea?
+:::
+::: {.column width=35%}
 
-explain it terms of group_by summarize
+```{r}
+hotel_train |>
+  count(company)
+```
 
-talk about how we handle low count groups
+:::
+::: {.column width=35%}
 
-at the end show that this can almost-equivalently do this through glm/stan
+```{r}
+hotel_train |>
+  count(agent)
+```
 
-mention how most categorical handling can be imagined as a left-join
+:::
+:::
+
+## How do we handle them?
+
+. . .
+
+We could:
+
+-   Make the full set of indicator variables 😳
+
+-   Lump agents and companies that rarely occur into an "other" group
+
+-   Use [feature hashing](https://www.tmwr.org/categorical.html#feature-hashing) to create a smaller set of indicator variables
+
+-   Use target encoding to replace the `county`, `agent`, and `company` columns with the estimated effect of that predictor
+
+## Target encoding
+
+**Target encoding** (also called **mean encoding**, **likelihood encoding**, **impact encoding**, or **effect encoding**) is a supervised trained method that turn a single categorical predictor into a single numeric predictor.
+
+It is often used to deal with categorical predictors with many levels, altough it works regardless.
+
+Since it uses the outcome to train it, you need to make sure to use cross validation to avoid overfitting.
+
+## Target encoding motivation
+
+You have a numeric outcome, and a categorical predictor. And you want to transform each value of the categorical predictor into a value that best represents the outcome?
+
+. . .
+
+::: {.columns}
+::: {.column}
+
+We calculate the mean of the outcome within each level of the predictor, and use that as the new value.
+
+:::
+::: {.column}
+
+```{r}
+hotel_train |>
+  summarise(
+    mean = mean(avg_price_per_room),
+    .by = agent
+  )
+```
+
+:::
+:::
+
+## Target encoding handling unseen levels
+
+::: {.callout-caution}
+Don't look at testing data set. This is done for education purposes.
+:::
+
+::: {.columns}
+::: {.column}
+
+```{r}
+hotel_train |>
+  count(agent, .drop = FALSE)
+```
+
+:::
+::: {.column}
+
+```{r}
+hotel_test |>
+  count(agent, .drop = FALSE)
+```
+
+:::
+:::
+
+## Target encoding handling unseen levels
+
+::: {.columns}
+::: {.column}
+
+Calculate the global mean of the outcome and use it for cases that aren't seen in the training data set.
+
+<br>
+
+```{r}
+mean(hotel_train$avg_price_per_room)
+```
+
+:::
+::: {.column}
+
+```{r}
+hotel_train |>
+  summarise(
+    mean = mean(avg_price_per_room),
+    .by = agent
+  )
+```
+
+:::
+:::
+
+## How do we handle low counts?
+
+::: {.columns}
+::: {.column}
+
+Some of the levels have very low counts. we can't have the same confidence in those means than the means calcuated on high counts.
+
+We use the global mean to account for 0 occurances. Let us adjust the calculated mean by the global mean depending on the counts.
+
+:::
+::: {.column}
+
+```{r}
+hotel_train |>
+  summarise(
+    mean = mean(avg_price_per_room),
+    n = n(),
+    .by = agent
+  ) |>
+  arrange(agent)
+```
+
+:::
+:::
+
+## Partial pooling
+
+Partial pooling somewhat lowers the risk of overfitting since it tends to correct for agents with small sample sizes. It can’t correct for improper data usage or data leakage though. 
+
+## Partial pooling results
+
+```{r}
+#| warning: false
+#| echo: false
+rec_no_smooth <- recipe(avg_price_per_room ~ agent, data = hotel_train) |>
+  step_lencode(agent, outcome = vars(avg_price_per_room), smooth = FALSE, id = "no_smooth") |>
+  prep() |>
+  tidy(1)
+
+rec_smooth <- recipe(avg_price_per_room ~ agent, data = hotel_train) |>
+  step_lencode(agent, outcome = vars(avg_price_per_room), smooth = TRUE, id = "smooth") |>
+  prep() |>
+  tidy(1)
+
+bind_rows(
+  rec_no_smooth,
+  rec_smooth
+) |>
+  pivot_wider(values_from = value, names_from = id) |>
+  left_join(
+    count(hotel_train, agent), by = c("level" = "agent")
+  ) |>
+  ggplot(aes(no_smooth, smooth, size = n)) +
+  geom_abline(slope = 1, intercept = 0, color = "red") +
+  geom_abline(slope = 0, intercept = mean(hotel_train$avg_price_per_room), color = "blue") +
+  geom_point(alpha = 0.5) +
+  labs(
+    x = "mean",
+    y = "partial pooled mean"
+  )
+```
+
+## Implentations
+
+We have described this method solely based on analytical calculations (`step_lencode()`) but you could arrive at similar numbers using a model based approach by fitting a no-intercept generalized linear model. An hierarchical version would induce the partial pooling.
+
+- `step_lencode_glm()`
+- `step_lencode_bayes()`
+- `step_lencode_mixed()`
+
+## Target encoding in recipes `r hexes("embed", "recipes")`
+
+```{r}
+recipe(avg_price_per_room ~ ., data = hotel_train) |>
+  step_lencode(
+    agent, country, company, 
+    outcome = vars("avg_price_per_room"),
+    smooth = TRUE,
+  ) |>
+  prep() |>
+  bake(NULL) |>
+  select(agent, country, company)
+```
+
+## Your turn
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Apply target encoding to the data set, see how it affects different predictors, not just the ones we listed here.*
+
+- `step_lencode()`
+- `step_lencode_glm()`
+- `step_lencode_bayes()`
+- `step_lencode_mixed()`
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "explore-lencode")
+```
 
 ## Date time variables
 
