@@ -41,6 +41,10 @@ options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
   load()
 ```
 
+##
+
+TODO what is recipes
+
 ## Leaf data set
 
 Slightly modified version of [modeldata::leaf_id_flavia](https://modeldata.tidymodels.org/reference/leaf_id_flavia.html).
@@ -1048,25 +1052,212 @@ hotel_test <- testing(hotel_split)
 countdown(minutes = 5, id = "explore-hotels")
 ```
 
+## Nonlinear predictors
+
+```{r}
+#| echo: false
+hotel_train |>
+  ggplot(aes(arrival_date_num, avg_price_per_room)) +
+  geom_point(alpha = 0.1)
+```
+
 ## Splines
 
-TODO
+Is a way to transform a single numeric predictor into multiple numeric predictors, with the hope that the new numeric predictors are more linearily related to the outcome.
 
-A way to handle nonlinear effects,
-I think arrival_date_num, lead_time, stays_in_week_nights, stays_in_weekend_nights would be good candidates
+Mostly needed with linear models, but should rarely hurt to use.
 
-Explanation of what a spline is and how it works
+## Splines explained
 
-Visualization of one in use
+A B-spline is a piece-wise polynomial function.
 
-Showing how there are different kinds of splines
+We have 2 main parameters to worry about. number of knots and the polynomial degree.
 
-periodic splines
+The domain of the predictor is split into `k` regions, with knot between each, and a polynomial function is fit within each region, under the constraint that they touch each other at the knot.
 
-benefits
+## knots: 1, degree: 1
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 1, deg_free = 2),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+## knots: 2, degree: 1
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 1, deg_free = 3),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+
+## knots: 5, degree: 1
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 1, deg_free = 5),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+## knots: 5, degree: 2
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 2, deg_free = 5),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+## knots: 5, degree: 3
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 3, deg_free = 5),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+## knots: 9, degree: 3
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 3, deg_free = 10),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+## B-Spline features visualized - degree: 3
+
+```{r}
+#| label: data-splines
+#| echo: false
+#| message: false
+rec_splines <- recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |>
+  step_spline_b(arrival_date_num, keep_original_cols = TRUE, degree = 3, deg_free = 6) |>
+  prep()
+
+data_splines <- rec_splines |>
+  bake(new_data = hotel_train) |>
+  rename_all(\(x) {stringr::str_replace(x, "arrival_date_num_", "Spline Feature ")})
+
+data_splines |>
+  select(-avg_price_per_room) |>
+  tidyr::pivot_longer(cols = -arrival_date_num) |>
+  ggplot(aes(arrival_date_num, value)) +
+  geom_line() +
+  facet_wrap(~name) +
+  theme_minimal()
+```
+
+## Splines as numbers
+
+```{r}
+#| echo: false
+set.seed(1234)
+data_splines |>
+  select(-avg_price_per_room) |>
+  mutate(across(contains("Spline"), \(x) round(x, 2))) |>
+  slice_sample(n = 7) |>
+  knitr::kable() 
+```
+
+## Splines pros and cons
+
+::: {.columns}
+::: {.column}
+
+### Pros
+
 - fast
 - easy to use
 - semi-interpretable
+
+:::
+::: {.column}
+
+### Cons
+
+- adds more columns
+- will need to select number of columns
+- can be messy outside range
+
+:::
+:::
+
+## Your turn
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Apply B-splines to some variables using `step_spline_b()`*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "explore-step_spline_b")
+```
 
 ## Factors with many categories
 
