@@ -30,13 +30,12 @@ daemons(0) # reset to sequential if re-running
 daemons(parallel::detectCores())
 ```
 
-## Startup!  `r hexes(c("tidymodels"))`
+## Startup!  `r hexes(c("tidymodels", "probably"))`
 
 ```{r}
 #| label: user-startup
 library(tidymodels)
 library(important)
-library(tailor)
 library(probably)
 
 tidymodels_prefer()
@@ -44,7 +43,7 @@ theme_set(theme_bw())
 options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
 ```
 
-## More startup! 
+## More startup! `r hexes(c("rsample"))`
 
 ```{r}
 #| label: user-startup-2
@@ -109,13 +108,42 @@ tidymodels doesn't have any wrappers (but see the [caret documentation for them]
 
 The new important package does have filters via recipes. 
 
+## Be careful!!!
+
+tidymodels has always contained some "hidden guardrails" that should prevent practitioners from making subtle (but consequential) methodological mistakes. 
+
+<br>
+
+Feature selection is a good example. Based on the literature, it is _easily done wrong_.
+
+<br>
+
+The selection process should take place _inside_ a resampling loop so that the workflow does not overfit the predictors. 
+
+::: {.absolute bottom=0 right=0}
+[A&M (2002)](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C7&q=Selection+bias+in+gene+extraction+on+the+basis+of+microarray+gene+expression+data&as_ylo=2002&as_yhi=2002&btnG=), [AML4TD](https://aml4td.org/chapters/feature-selection.html#sec-selection-overfitting), [FES](https://bookdown.org/max/FES/selection-overfitting.html)
+:::
+
 # Imbalanced example (again) {background-color="#EDD6D5FF"}
 
-## K-nearest neighbors
+## IMPORTANT `r hexes(c("filtro"))`
+
+We released two packages this year that enable supervised feature selection: 
+
+- filtro: low-level _scoring_ methods for predictors (e.g., importance).
+- important: tools for permutation importance and recipes steps for supervised feature selection. 
+
+<br>
+
+Let's look at the help page for [`important::step_predictor_best()`](https://important.tidymodels.org/reference/step_predictor_best.html).
+
+
+
+## K-nearest neighbors `r hexes(c("parsnip", "recipes", "filtro", "tune", "tailor"))`
 
 ```{r}
 #| label: knn-spec
-#| code-line-numbers: "|3-8|5|6|7|"
+#| code-line-numbers: "|3-8|5|6|7|17|"
 rec <-
   recipe(class ~ ., data = sim_train) |>
   step_predictor_best(
@@ -135,13 +163,27 @@ thrsh_tlr <-
   adjust_probability_threshold(threshold = tune()) 
 ```
 
-## Tuning results
+## Setup the workflow  `r hexes(c("dials", "workflows"))`
+
+```{r}
+#| label: knn-wflow
+#| code-line-numbers: "|7|8|17|"
+knn_wflow <- workflow(rec, knn_spec, thrsh_tlr)
+
+knn_param <-
+  knn_wflow |>
+  extract_parameter_set_dials() |>
+  update(
+    threshold = threshold(c(0.001, 0.1)),
+    neighbors = neighbors(c(1, 50))
+  )
+```
+
+## Tuning results  `r hexes(c("yardstick", "tune"))`
 
 ```{r}
 #| label: knn-tune
 #| cache: true
-knn_wflow <- workflow(rec, knn_spec, thrsh_tlr)
-
 cls_mtr <- metric_set(brier_class, roc_auc, sensitivity, specificity)
 ctrl <- control_grid(save_pred = TRUE, save_workflow = TRUE)
 
@@ -152,7 +194,8 @@ knn_res <-
     resamples = sim_rs,
     grid = 50,
     control = ctrl,
-    metrics = cls_mtr
+    metrics = cls_mtr,
+    param_info = knn_param
   )
 ```
 
@@ -210,10 +253,11 @@ autoplot(knn_res, metric = "roc_auc") +
 autoplot(knn_res, metric = c("sensitivity", "specificity"))
 ```
 
-## Fit the model and get filter information
+## Fit the model and get filter information  `r hexes(c("tune", "broom"))`
 
 ```{r}
 #| label: knn-best
+#| code-line-numbers: "|1|5|"
 
 knn_fit <- fit_best(knn_res, metric = "brier_class")
 filter_info <-
@@ -264,8 +308,6 @@ It was good at removing noise but not keeping the real predictors.
 
 ::::
 
-
-
 ## Random forest importance scores
 
 ```{r}
@@ -294,18 +336,42 @@ filter_info |>
   scale_fill_brewer(palette = "Set2")
 ```
 
-# Check our test set {background-color="#417839FF"}
+## Other steps
 
-## Manual approach
+The important package has two other feature selection steps that can be used with multiple scores: 
+
+. . .
+
+ - [`step_predictor_retain()`](https://important.tidymodels.org/reference/step_predictor_retain.html): choose predictors based on a logical statement. Example: 
+ 
+```r
+  imp_rf > 2 & cor_pearson >= 0.75
+```
+
+. . .
+
+ - [`step_predictor_desirability()`](https://important.tidymodels.org/reference/step_predictor_desirability.html): choose multiple scores to compute then use desirability functions to rank them: 
+ 
+```r
+  desirability(
+    maximize(correlation),
+    maximize(imp_rf)
+  )
+```    
+
+# Proceed to the test set {background-color="#417839FF"}
+
+## Manual approach  `r hexes(c("broom", "yardstick"))`
 
 We already have our fitted model and, if we are happy with it:  
 
 ```{r}
 #| label: test-manual
-#| code-line-numbers: "|1|2|3-9|"
+#| code-line-numbers: "|1|2|6-9|"
 test_pred <- augment(knn_fit, sim_test)
 test_pred |> cls_mtr(class, estimate = .pred_class, .pred_event)
 ```
+
 
 ## Checking (Approximate) Calibration `r hexes(c("tune", "probably"))`
 
@@ -327,8 +393,7 @@ test_pred|>
 
 <br>
 
-
-Not great but given the small _effective_ sample size (`r sum(test_pred$class == "event")` events), I trust the Brier score more. 
+Looks alright. The small _effective_ sample size (`r sum(test_pred$class == "event")` events) makes it pretty noisy.
 :::
 
 ::: {.column width="50%"}
@@ -353,11 +418,13 @@ test_pred|>
 
 
 
-## Automated approach
+## Automated approach   `r hexes(c("tune"))`
 
 Similar to `fit_best()`, there is a convenience function that can be used to get the final model and the test set results
 
 We have to start with a finalized workflow (i.e., no `tune()` values). 
+
+. . .
 
 We can see that: 
 
@@ -368,17 +435,7 @@ show_best(knn_res, metric = "brier_class", n = 3) |>
   select(neighbors, weight_func,  prop_terms, threshold, .config)
 ```
 
-## Choosing final parameters
-
-However: 
-
-```{r}
-#| label: knn-brier-sens
-#| code-line-numbers: "|3|9|"
-knn_res |> 
-  collect_metrics() |> 
-  filter(.config == "pre03_mod30_post42")
-```
+. . .
 
 Let's finalize the model with a much smaller threshold to get better sensitivity
 
@@ -388,10 +445,8 @@ Let's finalize the model with a much smaller threshold to get better sensitivity
 
 ```{r}
 #| label: knn-final
-#| code-line-numbers: "|3|8|"
-knn_best <- 
-  select_best(knn_res, metric = "brier_class") |> 
-  mutate(threshold = 0.02)
+#| code-line-numbers: "|2|5-6|"
+knn_best <- select_best(knn_res, metric = "brier_class")
 knn_last_wflow <- finalize_workflow(knn_wflow, knn_best)
   
 knn_test_res <- 
