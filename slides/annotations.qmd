@@ -186,9 +186,9 @@ Consider the agent data. Cross-validation may not group all of an agent’s data
 
 More on space-filling designs in Chapters [4](https://bookdown.org/rbg/surrogates/chap4.html)  and [5](https://bookdown.org/rbg/surrogates/chap5.html) of _Surrogates: Gaussian process modeling, design, and optimization for the applied sciences_.
 
-In the next version of tune (version 1.3.0) an improved set of space-filling designs will be the first choice if you ask for an automated grid. 
+These designs also scale well as the number of tuning parameters grows. They are designed to fill the predictor space efficiently.  
 
-## Update parameter ranges
+## Extract and update parameters
 
 In about 90% of the cases, the dials function that you use to update the parameter range has the same name as the argument. For example, if you were to update the `mtry` parameter in a random forests model, the code would look like
 
@@ -220,6 +220,31 @@ ns_tunable
 ns_tunable$call_info
 ```
 
+## Grid Search
+
+There might be some warnings that 
+
+> "Early stopping occurred at epoch 3 due to numerical overflow of the loss function."
+
+torch can be very aggressive about moving in the direction of the gradient. In some cases, it moves to a space where the gradient is not well-behaved (e.g., flat in multiple directions, saddle point, etc). 
+
+This can cause abnormally large parameter values with magnitudes larger than double precision variables can hold. 
+
+In this case, brulee stops the optimization and returns the parameters from the last best iteration. 
+
+## Running in parallel
+
+We usually leave one or two cores available to work with when we run in parallel. 
+
+If you are using an HPC system, be careful to use only the cores allocated to you. 
+
+Also, memory is duplicated _for each worker_. If your main R session is using 1GB of memory, using 10 workers requires 11GB. 
+
+Comparing these methods: 
+
+ - They usually perform about the same. 
+ - future is more mature and is geared towards users and developers. 
+ - mirai contains its own queuing system and can be more efficient in allocating work. 
 
 ## Early stopping for boosted trees
 
