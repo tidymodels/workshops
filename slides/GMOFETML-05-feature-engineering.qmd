@@ -48,6 +48,7 @@ options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
 Slightly modified version of [modeldata::leaf_id_flavia](https://modeldata.tidymodels.org/reference/leaf_id_flavia.html).
 
 ```{r}
+#| label: glimse-leaf-data
 glimpse(leaf_data)
 ```
 
@@ -84,6 +85,7 @@ Lakshika, J. P., & Talagala, T. S. (2021). Computer-aided interpretable features
 *Make time to look at the `edge` column and think about how one would encode it into numerics*
 
 ```{r}
+#| label: countdown-explore-leaves
 #| echo: false
 countdown(minutes = 5, id = "explore-leaves")
 ```
@@ -396,6 +398,7 @@ When used in this way, you don't need to worry about `prep()` and `bake()` as it
 ::: {.column}
 
 ```{r}
+#| label: leaf-count-edge
 leaf_data |>
   count(edge)
 ```
@@ -410,6 +413,7 @@ leaf_data |>
 (technically one-hot encoding)
 
 ```{r}
+#| label: tbl-leaf-edges-dummies
 #| echo: false
 recipe(~edge, data = leaf_data) |>
   step_dummy(edge, one_hot = TRUE) |>
@@ -507,6 +511,7 @@ Implemented as `step_dummy_extract()`.
 ### Input
 
 ```{r}
+#| label: unique-leaf-edge-values
 #| echo: false
 #| comment: ""
 values <- leaf_data |>
@@ -529,6 +534,7 @@ Using
 ### Result
 
 ```{r}
+#| label: tbl-leaf-dummy-extract
 #| echo: false
 leaf_data |>
   count(edge) |>
@@ -553,6 +559,7 @@ leaf_data |>
 ### Input
 
 ```{r}
+#| label: tate-medium-sample
 #| echo: false
 #| comment: ""
 medium_examples <- tibble(
@@ -581,6 +588,7 @@ Using
 ### Result
 
 ```{r}
+#| label: tbl-tate-medium-dummy-extract
 #| echo: false
 medium_examples |>
   recipe() |>
@@ -603,6 +611,7 @@ medium_examples |>
 ### Input
 
 ```{r}
+#| label: tate-medium-sample-2
 #| echo: false
 #| comment: ""
 medium_examples <- tibble(
@@ -631,6 +640,7 @@ Using
 ### Result
 
 ```{r}
+#| label: tbl-better-tate-medium-dummy-extract
 #| echo: false
 medium_examples |>
   recipe() |>
@@ -681,6 +691,7 @@ Using
 ### Result
 
 ```{r}
+#| label: tbl-colors-dummy-extract
 #| echo: false
 color_examples |>
   recipe() |>
@@ -713,6 +724,7 @@ Implemented as `step_dummy_multi_choice()`.
 ### Input
 
 ```{r}
+#| label: tbl-lang-sample
 #| echo: false
 #| comment: ""
 values <- tribble(
@@ -732,6 +744,7 @@ knitr::kable(values)
 ### Result
 
 ```{r}
+#| label: tbl-lang-dummy-multi-choice
 #| echo: false
 recipe(~., data = values) |>
   step_dummy_multi_choice(starts_with("lang")) |>
@@ -757,6 +770,7 @@ We have a step `step_other()` that does this for nominal variables, but it doesn
 `threshold = 0` produces 1217 columns.
 
 ```{r}
+#| label: tbl-medium-dummy-extract-threshold-0
 #| echo: false
 recipe(~ medium, data = tate_text) |>
   step_dummy_extract(medium, sep = "(, )|( and )|( on )", threshold = 0) |>
@@ -772,6 +786,7 @@ recipe(~ medium, data = tate_text) |>
 `threshold = 0.05` produces 11 columns.
 
 ```{r}
+#| label: tbl-medium-dummy-extract-threshold-0.05
 #| echo: false
 recipe(~ medium, data = tate_text) |>
   step_dummy_extract(medium, sep = "(, )|( and )|( on )", threshold = 0.05) |>
@@ -789,6 +804,7 @@ recipe(~ medium, data = tate_text) |>
 *Figure out whether `step_dummy_extract()` or `step_dummy_multi_choice()` is most appropriate on the `edge` variable in `leaf_data` and apply it*
 
 ```{r}
+#| label: countdown-dummy-leaves
 #| echo: false
 countdown(minutes = 3, id = "dummy-leaves")
 ```
@@ -812,6 +828,7 @@ Techniques that remove or alter features in order to have fewer but more informa
 A feature with no information could be included.
 
 ```{r}
+#| label: count-leaf-outlying-contour
 leaf_data |>
   count(outlying_contour)
 ```
@@ -821,6 +838,7 @@ leaf_data |>
 Or duplicated or functionally equivalent features
 
 ```{r}
+#| label: fig-area-vs-equivalent-diameter
 leaf_data |>
   ggplot(aes(area, equivalent_diameter)) +
   geom_point()
@@ -838,6 +856,7 @@ While keeping our models in mind, we want to make sure the data is well-suited
 ## Ineffective Representation
 
 ```{r}
+#| label: fig-mean-red-val-vs-mean-blue-val
 #| echo: false
 leaf_data |>
   ggplot(aes(mean_red_val, mean_blue_val)) +
@@ -847,6 +866,7 @@ leaf_data |>
 ## Ineffective Representation
 
 ```{r}
+#| label: fig-physiological-length-vs-diameter
 #| echo: false
 leaf_data |>
   ggplot(aes(physiological_length, diameter)) +
@@ -979,6 +999,7 @@ data_cumpervar(concrete)
 Either use the `num_comp` argument.
 
 ```{r}
+#| label: step-pca-num-comp
 rec <- recipe(mpg ~ ., data = mtcars) |>
   step_pca(all_numeric_predictors(), num_comp = 5)
 ```
@@ -988,6 +1009,7 @@ rec <- recipe(mpg ~ ., data = mtcars) |>
 or using the `threshold` argument
 
 ```{r}
+#| label: step-pca-threshold
 rec <- recipe(mpg ~ ., data = mtcars) |>
   step_pca(all_numeric_predictors(), threshold = 0.8)
 ```
@@ -1001,6 +1023,7 @@ rec <- recipe(mpg ~ ., data = mtcars) |>
 *Experiment with different values of `num_comp` and or `threshold`.*
 
 ```{r}
+#| label: countdown-pca-leaf-data
 #| echo: false
 countdown(minutes = 5, id = "pca-leaf_data")
 ```
@@ -1040,6 +1063,7 @@ Instead, we can use a different implementation that only calculates what you nee
 Can only be done using `num_comp`
 
 ```{r}
+#| label: step-pca-truncated
 library(embed)
 
 rec <- recipe(mpg ~ ., data = mtcars) |>
@@ -1071,6 +1095,7 @@ Can only be done using `num_comp`.
 The `predictor_prop` argument is used to determine how many zeroes in the loadings.
 
 ```{r}
+#| label: step-pca-sparse
 library(embed)
 
 rec <- recipe(mpg ~ ., data = mtcars) |>
@@ -1082,6 +1107,7 @@ rec <- recipe(mpg ~ ., data = mtcars) |>
 `predictor_prop = 0.8`
 
 ```{r}
+#| label: step-pca-sparse-predictor-prop-0.8
 recipe(mpg ~ ., data = mtcars) |>
   step_pca_sparse(all_numeric_predictors(), num_comp = 4, predictor_prop = 0.8) |>
   prep() |>
@@ -1095,6 +1121,7 @@ recipe(mpg ~ ., data = mtcars) |>
 `predictor_prop = 0.2`
 
 ```{r}
+#| label: step-pca-sparse-predictor-prop-0.2
 recipe(mpg ~ ., data = mtcars) |>
   step_pca_sparse(all_numeric_predictors(), num_comp = 4, predictor_prop = 0.2) |>
   prep() |>
@@ -1141,9 +1168,8 @@ It makes for much easier interpretations as the loadings don't cancel each other
 
 ## NNMF with recipes `r hexes("embed", "recipes")`
 
-`predictor_prop = 0.2`
-
 ```{r}
+#| label: step-nnmf-sparse
 set.seed(1234)
 
 recipe(mpg ~ ., data = mtcars) |>
@@ -1194,6 +1220,7 @@ Due to the flexibility of how this method works, it is almost always possible to
 ## Which was created with random data?
 
 ```{r}
+#| label: fig-umap-unknown
 #| echo: false
 set.seed(2)
 data_random <- rnorm(1000 * 100) |>
@@ -1236,6 +1263,7 @@ umap_all |>
 ## All of them! Different `n_neighbors`
 
 ```{r}
+#| label: fig-umap-known
 #| echo: false
 umap_all |>
   ggplot(aes(UMAP1, UMAP2)) +
@@ -1248,6 +1276,7 @@ umap_all |>
 `predictor_prop = 0.2`
 
 ```{r}
+#| label: step-umap
 library(embed)
 set.seed(1234)
 
@@ -1301,6 +1330,7 @@ A very high-level description of the Isomap algorithm is given below.
 ## isomap with recipes `r hexes("recipes")`
 
 ```{r}
+#| label: step-isomap
 library(embed)
 set.seed(1234)
 

@@ -43,6 +43,7 @@ options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
 Regression data set for predicting the average daily rate for a room, for "Resort Hotel". The `agent` and `company` use random names.
 
 ```{r}
+#| label: glimpse-hotel-rates
 glimpse(hotel_rates)
 ```
 
@@ -55,6 +56,7 @@ Antonio, N., de Almeida, A., and Nunes, L. (2019). Hotel booking demand datasets
 Generally, you should always do data splitting. We are doing it here explicitly because some artifacts of splitting data become useful later on.
 
 ```{r}
+#| label: hotel-split
 set.seed(1234)
 hotel_split <- initial_split(hotel_rates)
 hotel_train <- training(hotel_split)
@@ -70,6 +72,7 @@ hotel_test <- testing(hotel_split)
 *Comes loaded with the modeldata package*
 
 ```{r}
+#| label: countdown-explore-hotels
 #| echo: false
 countdown(minutes = 5, id = "explore-hotels")
 ```
@@ -77,6 +80,7 @@ countdown(minutes = 5, id = "explore-hotels")
 ## Nonlinear predictors
 
 ```{r}
+#| label: fig-arrival-date-num-vs-avg-price-per-room
 #| echo: false
 hotel_train |>
   ggplot(aes(arrival_date_num, avg_price_per_room)) +
@@ -102,11 +106,12 @@ The domain of the predictor is split into `k` regions, with a knot between each,
 ## knots: 1, degree: 1
 
 ```{r}
+#| label: fig-spline-knots-1-degree-1
 #| echo: false
 workflow(
   recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
     step_spline_b(arrival_date_num, degree = 1, deg_free = 2),
-    linear_reg()
+  linear_reg()
 ) |>
   fit(data = hotel_train) |>
   augment(new_data = arrange(hotel_train, arrival_date_num)) |>
@@ -121,11 +126,12 @@ workflow(
 ## knots: 2, degree: 1
 
 ```{r}
+#| label: fig-spline-knots-2-degree-1
 #| echo: false
 workflow(
   recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
     step_spline_b(arrival_date_num, degree = 1, deg_free = 3),
-    linear_reg()
+  linear_reg()
 ) |>
   fit(data = hotel_train) |>
   augment(new_data = arrange(hotel_train, arrival_date_num)) |>
@@ -141,11 +147,12 @@ workflow(
 ## knots: 5, degree: 1
 
 ```{r}
+#| label: fig-spline-knots-5-degree-1
 #| echo: false
 workflow(
   recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
     step_spline_b(arrival_date_num, degree = 1, deg_free = 5),
-    linear_reg()
+  linear_reg()
 ) |>
   fit(data = hotel_train) |>
   augment(new_data = arrange(hotel_train, arrival_date_num)) |>
@@ -160,11 +167,12 @@ workflow(
 ## knots: 5, degree: 2
 
 ```{r}
+#| label: fig-spline-knots-5-degree-2
 #| echo: false
 workflow(
   recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
     step_spline_b(arrival_date_num, degree = 2, deg_free = 5),
-    linear_reg()
+  linear_reg()
 ) |>
   fit(data = hotel_train) |>
   augment(new_data = arrange(hotel_train, arrival_date_num)) |>
@@ -179,11 +187,12 @@ workflow(
 ## knots: 5, degree: 3
 
 ```{r}
+#| label: fig-spline-knots-5-degree-3
 #| echo: false
 workflow(
   recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
     step_spline_b(arrival_date_num, degree = 3, deg_free = 5),
-    linear_reg()
+  linear_reg()
 ) |>
   fit(data = hotel_train) |>
   augment(new_data = arrange(hotel_train, arrival_date_num)) |>
@@ -198,6 +207,7 @@ workflow(
 ## knots: 9, degree: 3
 
 ```{r}
+#| label: fig-spline-knots-9-degree-3
 #| echo: false
 workflow(
   recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
@@ -240,6 +250,7 @@ data_splines |>
 ## Splines as numbers
 
 ```{r}
+#| label: tbl-spline-numbers
 #| echo: false
 set.seed(1234)
 data_splines |>
@@ -279,6 +290,7 @@ data_splines |>
 *Apply B-splines to some variables using `step_spline_b()`*
 
 ```{r}
+#| label: countdown-explore-step-spline-b
 #| echo: false
 countdown(minutes = 3, id = "explore-step_spline_b")
 ```
@@ -289,6 +301,7 @@ countdown(minutes = 3, id = "explore-step_spline_b")
 ::: {.column width=30%}
 
 ```{r}
+#| label: count-hotel-country
 hotel_train |>
   count(country)
 ```
@@ -297,6 +310,7 @@ hotel_train |>
 ::: {.column width=35%}
 
 ```{r}
+#| label: count-hotel-company
 hotel_train |>
   count(company)
 ```
@@ -305,6 +319,7 @@ hotel_train |>
 ::: {.column width=35%}
 
 ```{r}
+#| label: count-hotel-agent
 hotel_train |>
   count(agent)
 ```
@@ -351,6 +366,7 @@ We calculate the mean of the outcome within each level of the predictor, and use
 ::: {.column}
 
 ```{r}
+#| label: hotel-mean-by-avg-price-per-room
 hotel_train |>
   summarise(
  mean = mean(avg_price_per_room),
@@ -371,6 +387,7 @@ Don't look at the testing data set. This is done for educational purposes.
 ::: {.column}
 
 ```{r}
+#| label: count-hotel-train-agent-drop-false
 hotel_train |>
   count(agent, .drop = FALSE)
 ```
@@ -379,6 +396,7 @@ hotel_train |>
 ::: {.column}
 
 ```{r}
+#| label: count-hotel-test-agent-drop-false
 hotel_test |>
   count(agent, .drop = FALSE)
 ```
@@ -396,6 +414,7 @@ Calculate the global mean of the outcome and use it for cases that aren't seen i
 <br>
 
 ```{r}
+#| label: hotel-mean-avg-price-per-room
 mean(hotel_train$avg_price_per_room)
 ```
 
@@ -403,6 +422,7 @@ mean(hotel_train$avg_price_per_room)
 ::: {.column}
 
 ```{r}
+#| label: hotel-mean-by-agent
 hotel_train |>
   summarise(
  mean = mean(avg_price_per_room),
@@ -426,6 +446,7 @@ We use the global mean to account for 0 occurrences. Let us adjust the calculate
 ::: {.column}
 
 ```{r}
+#| label: hotel-mean-by-agent-and-n
 hotel_train |>
   summarise(
  mean = mean(avg_price_per_room),
@@ -445,6 +466,7 @@ Partial pooling somewhat lowers the risk of overfitting since it tends to correc
 ## Partial pooling results
 
 ```{r}
+#| label: fig-partial-pooling
 #| warning: false
 #| echo: false
 rec_no_smooth <- recipe(avg_price_per_room ~ agent, data = hotel_train) |>
@@ -486,6 +508,7 @@ We have described this method solely based on analytical calculations (`step_len
 ## Target encoding in recipes `r hexes("embed", "recipes")`
 
 ```{r}
+#| label: step-lencode
 recipe(avg_price_per_room ~ ., data = hotel_train) |>
   step_lencode(
  agent, country, company, 
@@ -509,6 +532,7 @@ recipe(avg_price_per_room ~ ., data = hotel_train) |>
 - `step_lencode_mixed()`
 
 ```{r}
+#| label: countdown-explore-lencode
 #| echo: false
 countdown(minutes = 3, id = "explore-lencode")
 ```
@@ -548,6 +572,7 @@ Mention that, for the Chicago data, the day or the week features are usually the
 *The lubridate package might provide helpful*
 
 ```{r}
+#| label: countdown-explore-arrival-date
 #| echo: false
 countdown(minutes = 5, id = "explore-arrival_date")
 ```
@@ -557,6 +582,7 @@ countdown(minutes = 5, id = "explore-arrival_date")
 using `step_date( features = c("year", "month", "dow", "decimal", "mday", "doy", "week", "semester", "quarter"))`
 
 ```{r}
+#| label: tbl-step-date
 #| echo: false
 recipe(~ arrival_date, data = hotel_rates) |>
   step_date(arrival_date, features = c(
@@ -582,6 +608,7 @@ recipe(~ arrival_date, data = hotel_rates) |>
 Adding `label = FALSE`
 
 ```{r}
+#| label: tbl-step-date-label-false
 #| echo: false
 recipe(~ arrival_date, data = hotel_rates) |>
   step_date(arrival_date, label = FALSE,
@@ -620,6 +647,7 @@ Adds indicators for holidays. See `timeDate::listHolidays()` for supported holid
 *Apply date steps to the `arrival_date` variable and try to see if we capture anything about `avg_price_per_room`*
 
 ```{r}
+#| label: downdown-step-date-step-holiday-arrival-date
 #| echo: false
 countdown(minutes = 3, id = "step_date-step_holiday-arrival_date")
 ```
@@ -627,6 +655,7 @@ countdown(minutes = 3, id = "step_date-step_holiday-arrival_date")
 ## dates as numerics
 
 ```{r}
+#| label: fig-step-date
 #| echo: false
 recipe(~ arrival_date, data = hotel_rates) |>
   step_date(arrival_date, label = FALSE,
@@ -655,6 +684,7 @@ rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
 ## holidays as numerics
 
 ```{r}
+#| label: fig-step-holiday
 #| echo: false
 recipe(~ arrival_date, data = hotel_rates) |>
   step_holiday(arrival_date) |>
@@ -679,6 +709,7 @@ The indicators mostly care about the day itself. No information about the lead-u
 Using `extrasteps::step_time_event()` and the [almanac](https://davisvaughan.github.io/almanac/index.html) package, we can create useful time features.
 
 ```{r}
+#| label: almanac
 library(almanac)
 
 rule_1 <- weekly() |>
@@ -699,6 +730,7 @@ rule_3 <- yearly("1997-06-05") %>%
 Create a list of rules (last slide) and pass them to the `rules` argument of `step_time_event()`
 
 ```{r}
+#| label: step-time-event
 #| eval: false
 rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
 
@@ -709,6 +741,7 @@ recipe(~ arrival_date, data = hotel_rates) |>
 ## `step_time_event()` as numerics
 
 ```{r}
+#| label: fig-step-time-event
 #| echo: false
 rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
 
@@ -737,6 +770,7 @@ We can attach values based on how far we are away from those dates.
 ## `step_date_before()`
 
 ```{r}
+#| label: fig-step-date-before
 #| echo: false
 rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
 
@@ -756,6 +790,7 @@ recipe(~ arrival_date, data = hotel_rates) |>
 ## `step_date_before()` - inverse
 
 ```{r}
+#| label: fig-step-date-before-inverse
 #| echo: false
 rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
 
@@ -775,6 +810,7 @@ recipe(~ arrival_date, data = hotel_rates) |>
 ## `step_date_after()` - inverse
 
 ```{r}
+#| label: fig-step-date-after-inverse
 #| echo: false
 rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
 
@@ -794,6 +830,7 @@ recipe(~ arrival_date, data = hotel_rates) |>
 ## `step_date_nearest()` - inverse
 
 ```{r}
+#| label: fig-step-date-nearest-inverse
 #| echo: false
 rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
 
