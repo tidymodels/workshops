@@ -112,12 +112,12 @@ Loss Function:
 
 Optimization:
 
-- `optimizer`: the type of gradient-based optimization
+- `optimizer`: the type of gradient-based optimization.
 - `epochs`: how many passes through the entire data set (i.e. iterations).
 - `stop_iter`: number of bad iterations before stopping.
 - `learn_rate`: how fast does gradient descent move? 
 - `rate_schedule`: should the learning rate change over epochs?
-- `batch_size`: for stochastic gradient descent
+- `batch_size`: for stochastic gradient descent.
 
 <br> 
 
@@ -210,9 +210,24 @@ If sensitivity is important, then the model is moderately successful.
 
 ## Calibration
 
+Calibration is a property of individual predictions.
+
+- A well-calibrated probability occurs _in the wild_ at the same rate as the estimate. 
+
+The Brier score is the closest we can come to estimating it:
+
+$$
+Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
+$$
+
+Zero is best but, for two classes, values above 0.25 are bad. 
+
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/cls-metrics.html#sec-brier)
+:::
 
 
-## Is it calibrated? `r hexes(c("probably"))`
+## Calibration Plots`r hexes(c("probably"))`
 
 :::: {.columns}
 
@@ -232,22 +247,30 @@ holdout_pred |>
 
 <br><br>
 
+
 `r emo::ji("scream")` 
+
+This is partly due to the small sample size. 
 :::
 
 ::: {.column width="50%"}
 ```{r}
 #| label: nnet-cal
 #| echo: false
-#| out-width: 100%
-#| fig-width: 6
-#| fig-height: 6
+#| out-width: 90%
+#| fig-width: 5
+#| fig-height: 5
 #| fig-align: "center"
 holdout_pred |> cal_plot_windowed(class, .pred_event, window_size = 0.2, step_size = 0.025)
 ```
 :::
 
 ::::
+
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/cls-metrics.html#sec-cls-calibration)
+:::
+
 
 
 # Optimizing Models via Tuning Parameters {background-color="#D04E59FF"}
@@ -375,6 +398,10 @@ The main two strategies for optimization are:
 - **Iterative search** which suggests/estimates new values of candidate parameters to evaluate
 
 
+. . .
+
+We won't be discussing iterative search methods today. 
+
 ## Grid search
 
 A small grid of points trying to minimize the error via learning rate: 
@@ -486,7 +513,7 @@ daemons(parallel::detectCores())
 ```{r}
 #| label: nnet-grid-tune
 #| cache: true
-#| code-line-numbers: "2|"
+#| code-line-numbers: "|1|5|8|10|11|12|"
 ctrl <- control_grid(save_pred = TRUE, save_workflow = TRUE)
 
 set.seed(12)
@@ -512,8 +539,6 @@ nnet_res <-
 -   `tune_grid()` is representative of tuning function syntax
 -   similar to `fit_resamples()`
 :::
-
-TODO make an annotation about "Early stopping occurred at epoch 3 due to numerical overflow of the loss function."
 
 ## Running in parallel
 
@@ -566,13 +591,15 @@ par_text <-
     "was reduced from {ceiling(seq)}s to {ceiling(par)}s, a speed-up of {round(seq / par, 1)}-fold")
 ```
 
-## Distributing tasks
+## Distributing tasks 
+
+When only tuning the model:
 
 
 ```{r}
 #| label: resample-times
 #| echo: false
-#| out-width: '50%'
+#| out-width: '40%'
 #| fig-width: 6
 #| fig-height: 6
 #| fig-align: 'center'
