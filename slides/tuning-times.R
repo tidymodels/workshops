@@ -3,7 +3,8 @@ library(finetune)
 library(bonsai)
 
 # Load our example data for this section
-"https://github.com/tidymodels/workshops/raw/refs/heads/2025-GMOFETML/slides/class_data.RData" |>
+"https://raw.githubusercontent.com/tidymodels/" |>
+  paste0("workshops/main/slides/class_data.RData") |>
   url() |>
   load()
 
