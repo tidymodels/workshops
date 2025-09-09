@@ -132,22 +132,24 @@ If you are using your own laptop instead of Posit Cloud:
 #| eval: false
 
 # Install the packages for the workshop
-pkgs <- 
-  c("bonsai", "C5.0", "Cubist", "doParallel", "earth", "embed", "finetune", 
-    "forested", "lightgbm", "lme4", "pak", "parallelly", "plumber", "probably", 
-    "ranger", "rpart", "rpart.plot", "rules", "splines2", "stacks", 
-    "text2vec", "textrecipes", "tidymodels", "vetiver")
+pkgs <- c("almanac", "betacal", "bonsai", "C5.0", "Cubist", "dimRed", 
+          "doParallel", "earth", "embed", "extrasteps", "finetune", "forested", 
+          "igraph", "irlba", "kknn", "lightgbm", "lme4", "mirai", "parallelly", 
+          "plumber", "probably", "ranger", "RANN", "rpart", "rpart.plot", 
+          "RSpectra", "rules", "splines2", "stacks", "text2vec", "textrecipes", 
+          "tidymodels", "uwot", "vetiver")
 
 install.packages(pkgs)
 ```
 
-Also, you should make sure that you have installed the newest version of the tidymodels package (version 1.4.1). To check this, you can run: 
+Also, you should make sure that you have installed the newest version of a few packages. To check this, you can run: 
 
 ```{r}
 #| label: check-dials
 #| eval: false
 #| echo: true
 rlang::check_installed("tidymodels", version = "1.4.1")
+rlang::check_installed("embed", version = "	1.2.0")
 ```
 
 # Let's get started!  {background-color="#B00000FF"}
@@ -358,7 +360,7 @@ tree_pred
 
 ## Performance metrics `r hexes("yardstick")`
 
-There are _many_ yardstick metrics for [class predictions](https://yardstick.tidymodels.org/reference/index.html#classification-metrics) and [probability estimates](https://yardstick.tidymodels.org/reference/index.html#class-probability-metrics). 
+There are _many_ yardstick metrics<sup>*</sup> for [class predictions](https://yardstick.tidymodels.org/reference/index.html#classification-metrics) and [probability estimates](https://yardstick.tidymodels.org/reference/index.html#class-probability-metrics). 
 
 Let's make a collection of metrics and then evaluate our model.
 
@@ -367,6 +369,10 @@ Let's make a collection of metrics and then evaluate our model.
 cls_metrics <- metric_set(brier_class, roc_auc, sensitivity, specificity)
 tree_pred |> cls_metrics(truth = class, estimate = .pred_class, .pred_event)
 ```
+::: {.absolute bottom=0 left=0}
+<sup>*</sup> ... and metrics for [regression](https://yardstick.tidymodels.org/reference/index.html#regression-metrics) and others. 
+:::
+
 ::: {.absolute bottom=0 right=0}
 [AML4TD](https://aml4td.org/chapters/cls-metrics.html)
 :::
@@ -394,12 +400,13 @@ countdown::countdown(minutes = 5, id = "change-engine")
 ## Our versions
 
 ```{r pkg-list, echo = FALSE}
-deps <- 
-  c("bonsai", "Cubist", "doParallel", "earth", "embed", "finetune", 
-    "lightgbm", "lme4", "parallelly", "plumber", "probably", "rules", "splines2", 
-    "stacks", "text2vec", "textrecipes", "tidymodels", "vetiver")
-
-loaded <- purrr::map(deps, ~ library(.x, character.only = TRUE))
+pkgs <- c("almanac", "betacal", "bonsai", "C50", "Cubist", "dimRed", 
+          "doParallel", "earth", "embed", "extrasteps", "finetune", "forested", 
+          "igraph", "irlba", "kknn", "lightgbm", "lme4", "mirai", "parallelly", 
+          "plumber", "probably", "ranger", "RANN", "rpart", "rpart.plot", 
+          "RSpectra", "rules", "splines2", "stacks", "text2vec", "textrecipes", 
+          "tidymodels", "uwot", "vetiver")
+loaded <- purrr::map(pkgs, ~ library(.x, character.only = TRUE))
 excl <- c("iterators", "emo", "countdown", "stats", "graphics", 
           "grDevices", "utils", "datasets", "methods", "base", "forcats", 
           "infer", "foreach", "Matrix", "R6", "parallel", "devtools", "usethis")
@@ -409,7 +416,7 @@ pkgs <-
   sessioninfo::package_info(loaded, dependencies = FALSE) |> 
   select(-date)
 df <- tibble::tibble(
-  package = pkgs$package,
+  package = paste0("`", pkgs$package, "`"),
   version = pkgs$ondiskversion
 )
 
@@ -435,7 +442,7 @@ quarto_info <- paste0("Quarto (", system("quarto --version", intern = TRUE), ")"
 
 `r R.version.string`, `r quarto_info`
 
-::: {.columns style="font-size:0.7em;"}
+::: {.columns style="font-size:0.5em;"}
 ::: {.column width="25%"}
 ```{r}
 #| echo: false
