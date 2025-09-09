@@ -64,7 +64,7 @@ Wi-Fi password
 
 -   You have exposure to basic statistical concepts
 
--   You do **not** need intermediate or expert familiarity with modeling or ML
+-   You do need intermediate familiarity with modeling or ML
 
 -   You have used some tidymodels packages
  
@@ -190,6 +190,8 @@ For illustration, we'll use a few different data sets today:
  - `hotel_data`: a real data set for predicting the average cost per night. Numeric outcome, 27 predictors, and 15,402 data points. 
 :::
 
+. . .
+
 <br> 
 
 Let's get warmed up with the first data set. 
@@ -217,7 +219,7 @@ The outcome column is `class` with levels `"event"` and `"no_event"`. Predictors
 
 ## Your turn {transition="slide-in"}
 
-Let's warm uo by taking 10 minutes to explore the data. 
+Let's warm up by taking 8 minutes to explore the data. 
 
 <br>
 
@@ -225,7 +227,7 @@ We'll ask you to tell us something about these data that might be interesting fo
 
 ```{r ex-class-data}
 #| echo: false
-countdown::countdown(minutes = 10, id = "class-data")
+countdown::countdown(minutes = 8, id = "class-data")
 ```
 
 # A quick review of tidymodels {background-color="#D04E59FF"}
@@ -239,7 +241,7 @@ Let's create a 3:1 split of the simulated data and use a stratfied random sample
 
 ```{r}
 #| label: sim-split
-#| code-line-numbers: "1|2-3|7-8|"
+#| code-line-numbers: "|1|2-3|7-8|"
 set.seed(429)
 sim_split <- initial_split(class_data, prop = 0.75, strata = class)
 sim_split
@@ -309,6 +311,7 @@ For large amounts of data, a validation set is also a good alternative.
 
 ```{r}
 #| label: sim-folds
+#| code-line-numbers: "1|2|"
 set.seed(523)
 sim_rs <- vfold_cv(sim_train, v = 10, strata = class)
 sim_rs
@@ -333,10 +336,12 @@ Let's fit a simple decision tree to the data:
 
 ```{r}
 #| label: sim-tree-fit
-tree_fit <- 
-  decision_tree(mode = "classification") |> 
-  fit(class ~ ., data = model_data_1)
-  
+#| code-line-numbers: "|1-2|5|"
+# Specify what you want
+tree_spec <- decision_tree(mode = "classification")
+
+# Then train:
+tree_fit <- tree_spec |> fit(class ~ ., data = model_data_1)  
 tree_fit
 ```  
 
@@ -355,7 +360,7 @@ predict(tree_fit, new_data = head(perf_data_1, 4), type = "prob")
 ```{r}
 #| label: sim-tree-aug
 tree_pred <- augment(tree_fit, new_data = perf_data_1)
-tree_pred
+tree_pred |> slice(1:5)
 ```  
 
 ## Performance metrics `r hexes("yardstick")`
@@ -366,9 +371,11 @@ Let's make a collection of metrics and then evaluate our model.
 
 ```{r}
 #| label: sim-metrics
+#| code-line-numbers: "|1|2|"
 cls_metrics <- metric_set(brier_class, roc_auc, sensitivity, specificity)
 tree_pred |> cls_metrics(truth = class, estimate = .pred_class, .pred_event)
 ```
+
 ::: {.absolute bottom=0 left=0}
 <sup>*</sup> ... and metrics for [regression](https://yardstick.tidymodels.org/reference/index.html#regression-metrics) and others. 
 :::
@@ -377,11 +384,43 @@ tree_pred |> cls_metrics(truth = class, estimate = .pred_class, .pred_event)
 [AML4TD](https://aml4td.org/chapters/cls-metrics.html)
 :::
 
+
+## Recipes and workflows `r hexes(c("recipes", "workflow"))`
+
+Recipes are preprocessors that perform sequential operations on the preductors. 
+
+. . .
+
+<br> 
+
+For example, to center and scale our predictors: 
+
+```{r}
+#| label: sim-recipes
+#| code-line-numbers: "|2|3|"
+
+rec <- 
+  recipe(class ~ ., data = sim_train) |> 
+  step_normalize(all_numeric_predictors())
+```
+
+. . .
+
+<br> 
+
+A model, a recipe, and other objects can be added to a _workflow_ to have a single object for the whole modeling sequence: 
+
+```{r}
+#| label: sim-wflow
+tree_wflow <- workflow(rec, tree_spec)
+```
+
+
 ## Your turn {transition="slide-in"}
 
 Fit a type different decision tree, this time:
 
-- Using the C5.0 package
+- Using the C5.0 package.
 - Change the minimum number of samples required for splitting to 10. 
 
 <br>
