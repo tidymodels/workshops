@@ -1,0 +1,813 @@
+---
+title: "6 - Feature engineering: splines, target encoding and dates"
+subtitle: "Getting More Out of Feature Engineering and Tuning for Machine Learning"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+
+## Getting set up `r hexes("embed", "recipes")`
+
+```{r}
+#| label: user-startup
+
+library(tidymodels)
+library(embed)
+library(extrasteps)
+
+tidymodels_prefer()
+theme_set(theme_bw())
+options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
+```
+
+## Hotel rates data set
+
+Regression data set for predicting the average daily rate for a room, for "Resort Hotel". The `agent` and `company` use random names.
+
+```{r}
+glimpse(hotel_rates)
+```
+
+::: footer
+Antonio, N., de Almeida, A., and Nunes, L. (2019). Hotel booking demand datasets. Data in Brief, 22, 41-49.
+:::
+
+## Hotel data splitting
+
+Generally, you should always do data splitting. We are doing it here explicitly because some artifacts of splitting data become useful later on.
+
+```{r}
+set.seed(1234)
+hotel_split <- initial_split(hotel_rates)
+hotel_train <- training(hotel_split)
+hotel_test <- testing(hotel_split)
+```
+
+## Your turn
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Load and explore the hotel_train data*
+
+*Comes loaded with the modeldata package*
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "explore-hotels")
+```
+
+## Nonlinear predictors
+
+```{r}
+#| echo: false
+hotel_train |>
+  ggplot(aes(arrival_date_num, avg_price_per_room)) +
+  geom_point(alpha = 0.1)
+```
+
+## Splines
+
+It is a way to transform a single numeric predictor into multiple numeric predictors, with the hope that the new numeric predictors are more linearly related to the outcome.
+
+Mostly needed with linear models, but it should rarely hurt to use it.
+
+## Splines explained
+
+A B-spline is a piecewise polynomial function.
+
+We have 2 main parameters to worry about. Number of knots and the polynomial degree.
+
+The domain of the predictor is split into `k` regions, with a knot between each, and a polynomial function is fit within each region, under the constraint that they touch each other at the knot.
+
+## knots: 1, degree: 1
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 1, deg_free = 2),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+## knots: 2, degree: 1
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 1, deg_free = 3),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+
+## knots: 5, degree: 1
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 1, deg_free = 5),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+## knots: 5, degree: 2
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 2, deg_free = 5),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+## knots: 5, degree: 3
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 3, deg_free = 5),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+## knots: 9, degree: 3
+
+```{r}
+#| echo: false
+workflow(
+  recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |> 
+    step_spline_b(arrival_date_num, degree = 3, deg_free = 10),
+    linear_reg()
+) |>
+  fit(data = hotel_train) |>
+  augment(new_data = arrange(hotel_train, arrival_date_num)) |>
+  ggplot(aes(arrival_date_num, .pred)) +
+  geom_point(aes(arrival_date_num, avg_price_per_room), data = hotel_train, alpha = 0.01) +
+  geom_line() +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  labs(y = "outcome", color = "deg_free")
+```
+
+## B-Spline features visualized - degree: 3
+
+```{r}
+#| label: data-splines
+#| echo: false
+#| message: false
+rec_splines <- recipe(avg_price_per_room ~ arrival_date_num, data = hotel_train) |>
+  step_spline_b(arrival_date_num, keep_original_cols = TRUE, degree = 3, deg_free = 6) |>
+  prep()
+
+data_splines <- rec_splines |>
+  bake(new_data = hotel_train) |>
+  rename_all(\(x) {stringr::str_replace(x, "arrival_date_num_", "Spline Feature ")})
+
+data_splines |>
+  select(-avg_price_per_room) |>
+ tidyr::pivot_longer(cols = -arrival_date_num) |>
+  ggplot(aes(arrival_date_num, value)) +
+  geom_line() +
+  facet_wrap(~name) +
+  theme_minimal()
+```
+
+## Splines as numbers
+
+```{r}
+#| echo: false
+set.seed(1234)
+data_splines |>
+  select(-avg_price_per_room) |>
+  mutate(across(contains("Spline"), \(x) round(x, 2))) |>
+  slice_sample(n = 7) |>
+ knitr::kable() 
+```
+
+## Splines pros and cons
+
+::: {.columns}
+::: {.column}
+
+### Pros
+
+- fast
+- easy to use
+- semi-interpretable
+
+:::
+::: {.column}
+
+### Cons
+
+- adds more columns
+- will need to select the number of columns
+- can be messy outside the range
+
+:::
+:::
+
+## Your turn
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Apply B-splines to some variables using `step_spline_b()`*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "explore-step_spline_b")
+```
+
+## Factors with many categories
+
+::: {.columns}
+::: {.column width=30%}
+
+```{r}
+hotel_train |>
+  count(country)
+```
+
+:::
+::: {.column width=35%}
+
+```{r}
+hotel_train |>
+  count(company)
+```
+
+:::
+::: {.column width=35%}
+
+```{r}
+hotel_train |>
+  count(agent)
+```
+
+:::
+:::
+
+## How do we handle them?
+
+. . .
+
+We could:
+
+- Make the full set of indicator variables 😳
+
+- Lump agents and companies that rarely occur into an "other" group
+
+- Use [feature hashing](https://www.tmwr.org/categorical.html#feature-hashing) to create a smaller set of indicator variables
+
+- Use target encoding to replace the `county`, `agent`, and `company` columns with the estimated effect of that predictor
+
+## Target encoding
+
+**Target encoding** (also called **mean encoding**, **likelihood encoding**, **impact encoding**, or **effect encoding**) is a supervised trained method that turns a single categorical predictor into a single numeric predictor.
+
+It is often used to deal with categorical predictors with many levels, although it works regardless.
+
+Since it uses the outcome to train it, you need to make sure to use cross-validation to avoid overfitting.
+
+## Target encoding motivation
+
+You have a numeric outcome and a categorical predictor. And you want to transform each value of the categorical predictor into a value that best represents the outcome?
+
+. . .
+
+::: {.columns}
+::: {.column}
+
+We calculate the mean of the outcome within each level of the predictor, and use that as the new value.
+
+:::
+::: {.column}
+
+```{r}
+hotel_train |>
+  summarise(
+ mean = mean(avg_price_per_room),
+ .by = agent
+ )
+```
+
+:::
+:::
+
+## Target encoding handling unseen levels
+
+::: {.callout-caution}
+Don't look at the testing data set. This is done for educational purposes.
+:::
+
+::: {.columns}
+::: {.column}
+
+```{r}
+hotel_train |>
+  count(agent, .drop = FALSE)
+```
+
+:::
+::: {.column}
+
+```{r}
+hotel_test |>
+  count(agent, .drop = FALSE)
+```
+
+:::
+:::
+
+## Target encoding handling unseen levels
+
+::: {.columns}
+::: {.column}
+
+Calculate the global mean of the outcome and use it for cases that aren't seen in the training data set.
+
+<br>
+
+```{r}
+mean(hotel_train$avg_price_per_room)
+```
+
+:::
+::: {.column}
+
+```{r}
+hotel_train |>
+  summarise(
+ mean = mean(avg_price_per_room),
+ .by = agent
+ )
+```
+
+:::
+:::
+
+## How do we handle low counts?
+
+::: {.columns}
+::: {.column}
+
+Some of the levels have very low counts. We can't have the same confidence in those means as the means calculated on high counts.
+
+We use the global mean to account for 0 occurrences. Let us adjust the calculated mean by the global mean depending on the counts.
+
+:::
+::: {.column}
+
+```{r}
+hotel_train |>
+  summarise(
+ mean = mean(avg_price_per_room),
+ n = n(),
+ .by = agent
+ ) |>
+  arrange(agent)
+```
+
+:::
+:::
+
+## Partial pooling
+
+Partial pooling somewhat lowers the risk of overfitting since it tends to correct for agents with small sample sizes. It can’t correct for improper data usage or data leakage, though. 
+
+## Partial pooling results
+
+```{r}
+#| warning: false
+#| echo: false
+rec_no_smooth <- recipe(avg_price_per_room ~ agent, data = hotel_train) |>
+  step_lencode(agent, outcome = vars(avg_price_per_room), smooth = FALSE, id = "no_smooth") |>
+  prep() |>
+  tidy(1)
+
+rec_smooth <- recipe(avg_price_per_room ~ agent, data = hotel_train) |>
+  step_lencode(agent, outcome = vars(avg_price_per_room), smooth = TRUE, id = "smooth") |>
+  prep() |>
+  tidy(1)
+
+bind_rows(
+ rec_no_smooth,
+ rec_smooth
+) |>
+  pivot_wider(values_from = value, names_from = id) |>
+  left_join(
+    count(hotel_train, agent), by = c("level" = "agent")
+ ) |>
+  ggplot(aes(no_smooth, smooth, size = n)) +
+  geom_abline(slope = 1, intercept = 0, color = "red") +
+  geom_abline(slope = 0, intercept = mean(hotel_train$avg_price_per_room), color = "blue") +
+  geom_point(alpha = 0.5) +
+  labs(
+ x = "mean",
+ y = "partial pooled mean"
+ )
+```
+
+## Implentations
+
+We have described this method solely based on analytical calculations (`step_lencode()`), but you could arrive at similar numbers using a model-based approach by fitting a no-intercept generalized linear model. A hierarchical version would induce partial pooling.
+
+- `step_lencode_glm()`
+- `step_lencode_bayes()`
+- `step_lencode_mixed()`
+
+## Target encoding in recipes `r hexes("embed", "recipes")`
+
+```{r}
+recipe(avg_price_per_room ~ ., data = hotel_train) |>
+  step_lencode(
+ agent, country, company, 
+ outcome = vars("avg_price_per_room"),
+ smooth = TRUE,
+ ) |>
+  prep() |>
+  bake(NULL) |>
+  select(agent, country, company)
+```
+
+## Your turn
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Apply target encoding to the data set, see how it affects different predictors, not just the ones we listed here.*
+
+- `step_lencode()`
+- `step_lencode_glm()`
+- `step_lencode_bayes()`
+- `step_lencode_mixed()`
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "explore-lencode")
+```
+
+## Date time variables
+
+How can we represent the date column `arrival_date` for our model?
+
+. . .
+
+When we use a date column in its native format, most models in R convert it to an integer.
+
+. . .
+
+We can re-engineer it as:
+
+- Days since a reference date
+- Day of the week
+- Month
+- Year
+- Indicators for holidays
+
+::: notes
+The main point is that we try to maximize performance with different versions of the predictors. 
+
+Mention that, for the Chicago data, the day or the week features are usually the most important ones in the model.
+:::
+
+## Your turn
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Explore the `arrival_date` variable and its relation to `avg_price_per_room`*
+
+*The lubridate package might provide helpful*
+
+```{r}
+#| echo: false
+countdown(minutes = 5, id = "explore-arrival_date")
+```
+
+## `arrival_date` date features
+
+using `step_date( features = c("year", "month", "dow", "decimal", "mday", "doy", "week", "semester", "quarter"))`
+
+```{r}
+#| echo: false
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_date(arrival_date, features = c(
+        "year",
+        "month",
+        "dow",
+        "decimal",
+        "mday",
+        "doy",
+        "week",
+        "semester",
+        "quarter"
+ )) |>
+  prep() |>
+  bake(NULL) |>
+  slice(c(2000, 4000, 6000, 8000, 10000)) |>
+  rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
+ knitr::kable()
+```
+
+## `arrival_date` date features
+
+Adding `label = FALSE`
+
+```{r}
+#| echo: false
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_date(arrival_date, label = FALSE,
+ features = c(
+        "year",
+        "month",
+        "dow",
+        "decimal",
+        "mday",
+        "doy",
+        "week",
+        "semester",
+        "quarter"
+ )) |>
+  prep() |>
+  bake(NULL) |>
+  slice(c(2000, 4000, 6000, 8000, 10000)) |>
+  rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
+ knitr::kable()
+```
+
+## Other recipes steps
+
+- `step_time()`
+
+Works the same as `step_date()` but for measurements smaller than day: hour, hour12, am/pm, minute, second, decimal_day.
+
+- `step_holiday()`
+
+Adds indicators for holidays. See `timeDate::listHolidays()` for supported holidays.
+
+## Your turn
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Apply date steps to the `arrival_date` variable and try to see if we capture anything about `avg_price_per_room`*
+
+```{r}
+#| echo: false
+countdown(minutes = 3, id = "step_date-step_holiday-arrival_date")
+```
+
+## dates as numerics
+
+```{r}
+#| echo: false
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_date(arrival_date, label = FALSE,
+ features = c(
+        "year",
+        "month",
+        "dow",
+        "decimal",
+        "mday",
+        "doy",
+        "week",
+        "semester",
+        "quarter"
+ )) |>
+  prep() |>
+  bake(NULL) |>
+rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
+  select(arrival_date, month, dow, mday) |>
+  distinct() |>
+  pivot_longer(-arrival_date) |>
+  ggplot(aes(arrival_date, value)) +
+  geom_col() +
+  facet_grid(name ~ ., scales = "free_y")
+```
+
+## holidays as numerics
+
+```{r}
+#| echo: false
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_holiday(arrival_date) |>
+  prep() |>
+  bake(NULL) |>
+rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
+  distinct() |>
+  pivot_longer(-arrival_date) |>
+  ggplot(aes(arrival_date, value)) +
+  geom_col() +
+  facet_grid(name ~ ., scales = "free_y")
+```
+
+## What are the issues with these features?
+
+The numeric features make it easy to capture the end or beginning, but harder to do anything more granular.
+
+The indicators mostly care about the day itself. No information about the lead-up or aftermath
+
+## time events
+
+Using `extrasteps::step_time_event()` and the [almanac](https://davisvaughan.github.io/almanac/index.html) package, we can create useful time features.
+
+```{r}
+library(almanac)
+
+rule_1 <- weekly() |>
+  recur_on_weekdays() |>
+  rsetdiff(hol_christmas())
+
+rule_2 <- monthly(since = "2000-01-01") %>%
+  recur_on_interval(3) %>%
+  recur_on_day_of_month(1)
+
+rule_3 <- yearly("1997-06-05") %>%
+  recur_on_day_of_week("Thursday") %>%
+  recur_on_month_of_year(c("Jun", "July", "Aug"))
+```
+
+## `step_time_event()`
+
+Create a list of rules (last slide) and pass them to the `rules` argument of `step_time_event()`
+
+```{r}
+#| eval: false
+rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
+
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_time_event(arrival_date, rules = rules)
+```
+
+## `step_time_event()` as numerics
+
+```{r}
+#| echo: false
+rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
+
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_time_event(arrival_date, rules = rules, keep_original_cols = TRUE) |>
+  prep() |>
+  bake(NULL) |>
+  rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
+  distinct() |>
+  pivot_longer(-arrival_date) |>
+  ggplot(aes(arrival_date, value)) +
+  geom_col() +
+  facet_grid(name ~ ., scales = "free_y")
+```
+
+## Non-indicator time events
+
+These features still have the issue that they only attach value to the date itself.
+
+We can attach values based on how far we are away from those dates.
+
+- `step_date_before()`
+- `step_date_after()`
+- `step_date_nearest()`
+
+## `step_date_before()`
+
+```{r}
+#| echo: false
+rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
+
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_mutate(arrival_date0 = arrival_date) |>
+  step_date_before(arrival_date0, rules = rules) |>
+  prep() |>
+  bake(NULL) |>
+  rename_with(\(x) stringr::str_remove(x, "arrival_date0_")) |>
+  distinct() |>
+  pivot_longer(-arrival_date) |>
+  ggplot(aes(arrival_date, value)) +
+  geom_col() +
+  facet_grid(name ~ ., scales = "free_y")
+```
+
+## `step_date_before()` - inverse
+
+```{r}
+#| echo: false
+rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
+
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_mutate(arrival_date0 = arrival_date) |>
+  step_date_before(arrival_date0, rules = rules, transform = "inverse") |>
+  prep() |>
+  bake(NULL) |>
+  rename_with(\(x) stringr::str_remove(x, "arrival_date0_")) |>
+  distinct() |>
+  pivot_longer(-arrival_date) |>
+  ggplot(aes(arrival_date, value)) +
+  geom_col() +
+  facet_grid(name ~ ., scales = "free_y")
+```
+
+## `step_date_after()` - inverse
+
+```{r}
+#| echo: false
+rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
+
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_mutate(arrival_date0 = arrival_date) |>
+  step_date_after(arrival_date0, rules = rules, transform = "inverse") |>
+  prep() |>
+  bake(NULL) |>
+  rename_with(\(x) stringr::str_remove(x, "arrival_date0_")) |>
+  distinct() |>
+  pivot_longer(-arrival_date) |>
+  ggplot(aes(arrival_date, value)) +
+  geom_col() +
+  facet_grid(name ~ ., scales = "free_y")
+```
+
+## `step_date_nearest()` - inverse
+
+```{r}
+#| echo: false
+rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
+
+recipe(~ arrival_date, data = hotel_rates) |>
+  step_mutate(arrival_date0 = arrival_date) |>
+  step_date_nearest(arrival_date0, rules = rules, transform = "inverse") |>
+  prep() |>
+  bake(NULL) |>
+  rename_with(\(x) stringr::str_remove(x, "arrival_date0_")) |>
+  distinct() |>
+  pivot_longer(-arrival_date) |>
+  ggplot(aes(arrival_date, value)) +
+  geom_col() +
+  facet_grid(name ~ ., scales = "free_y")
+```
+
+## Datetime features
+
+Avoid crafting datetime features by hand if at all possible.
+
+Dealing with uneven month lengths, leap days (leap seconds)
+
+Or tried to define any event that doesn't land on the same day of the week or date each year.
+
+> The first Sunday after the first full moon on or after the vernal equinox
