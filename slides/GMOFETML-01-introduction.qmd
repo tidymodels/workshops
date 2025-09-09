@@ -81,6 +81,23 @@ Wi-Fi password
 
 Many thanks to Davis Vaughan, Julia Silge, David Robinson, Julie Jung, Alison Hill, and Desirée De Leon for their role in creating these materials!
 
+## Asking for help
+
+. . .
+
+🟪 "I'm stuck and need help!"
+
+. . .
+
+🟩 "I finished the exercise"
+
+
+## Discord `r fontawesome::fa("discord")`
+
+-   [pos.it/conf-event-portal](http://pos.it/conf-event-portal) (login)
+-   Click on "Join Discord, the virtual networking platform!"
+-   Browse Channels -> `#workshop-feat-eng-tune`
+
 ## `r emo::ji("eyes")` {.annotation}
 
 ![](images/pointing.svg){.absolute top="0" right="0"}
@@ -99,8 +116,8 @@ Many thanks to Davis Vaughan, Julia Silge, David Robinson, Julie Jung, Alison Hi
 - Model optimization by tuning
   - Grid search
   - Racing
-- Postprocessing  
 - Feature engineering with recipes
+- Postprocessing  
 - Feature selection
 
 ##  {.center}
@@ -117,37 +134,67 @@ If you are using your own laptop instead of Posit Cloud:
 # Install the packages for the workshop
 pkgs <- 
   c("bonsai", "C5.0", "Cubist", "doParallel", "earth", "embed", "finetune", 
-    "lightgbm", "lme4", "pak", "parallelly", "plumber", "probably", 
+    "forested", "lightgbm", "lme4", "pak", "parallelly", "plumber", "probably", 
     "ranger", "rpart", "rpart.plot", "rules", "splines2", "stacks", 
     "text2vec", "textrecipes", "tidymodels", "vetiver")
 
 install.packages(pkgs)
-
-pak::pak("simonpcouch/forested")
 ```
 
-Also, you should install the newest version of the dials package (version 1.3.0). To check this, you can run: 
+Also, you should make sure that you have installed the newest version of the tidymodels package (version 1.4.1). To check this, you can run: 
 
 ```{r}
 #| label: check-dials
 #| eval: false
 #| echo: true
-rlang::check_installed("dials", version = "1.3.0")
+rlang::check_installed("tidymodels", version = "1.4.1")
 ```
 
-## MORE SLIDES HERE
+# Let's get started!  {background-color="#B00000FF"}
 
 ## Load tidymodels `r hexes("tidymodels")`
+
+We're here to learn more about how to use the more advanced bits of tidymodels for supervised learning. 
+
+<br>
+
+. . .
+
+First, let's load the meta-package: 
 
 ```{r}
 #| label: load-tm
 library(tidymodels)
 ```
 
+. . .
 
-## Example data
+<br>
 
-One of the data sets that we'll use is a simulated classification example. The outcome has two classes and there are 25 numeric predictors. 
+Second: you might want to run this function to avoid function name conflicts: 
+
+```{r}
+#| label: tm-conflicts
+tidymodels_prefer()
+```
+
+## Data sets
+
+For illustration, we'll use a few different data sets today: 
+
+::: incremental
+ - `class_data`: a simulated set of data with a 1:10 class imbalance. Two classes, 20 predictors, and 2,000 samples. 
+ - `leaf_data`: a real data set to identify plant species from their leaves. Thirty-two levels, 53 predictors, and 1,907 data points. 
+ - `hotel_data`: a real data set for predicting the average cost per night. Numeric outcome, 27 predictors, and 15,402 data points. 
+:::
+
+<br> 
+
+Let's get warmed up with the first data set. 
+
+## Imbalanced data
+
+These data can be loaded from the GutHub repo: 
 
 <br>
 
@@ -157,9 +204,13 @@ One of the data sets that we'll use is a simulated classification example. The o
 "https://github.com/tidymodels/workshops/raw/refs/heads/2025-GMOFETML/slides/class_data.RData" |> 
   url() |> 
   load()
-
-names(class_data)
 ```
+
+<br> 
+
+The outcome column is `class` with levels `"event"` and `"no_event"`. Predictors are `"predictor_01"` to `"predictor_30"`.
+
+
 
 ## Your turn {transition="slide-in"}
 
@@ -313,7 +364,7 @@ Let's make a collection of metrics and then evaluate our model.
 ```{r}
 #| label: sim-metrics
 cls_metrics <- metric_set(brier_class, roc_auc, sensitivity, specificity)
-tree_pred |> cls_metrics(truth = class, estimate = .pred_class, .pred_A)
+tree_pred |> cls_metrics(truth = class, estimate = .pred_class, .pred_event)
 ```
 ::: {.absolute bottom=0 right=0}
 [AML4TD](https://aml4td.org/chapters/cls-metrics.html)
