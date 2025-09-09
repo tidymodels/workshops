@@ -1,5 +1,3 @@
-
-
 # ------------------------------------------------------------------------------
 # Explore the forested_train data on your own!
 
@@ -14,12 +12,12 @@ forested_train |>
 forested_train |>
   ggplot(aes(precip_annual)) +
   geom_histogram(col = "white") +
-  facet_wrap(~ forested)
+  facet_wrap(~forested)
 
 forested_train |>
   ggplot(aes(elevation)) +
   geom_histogram(col = "white") +
-  facet_wrap(~ forested, ncol = 1)
+  facet_wrap(~forested, ncol = 1)
 
 forested_train |>
   ggplot(aes(temp_annual_max, precip_annual)) +
@@ -39,11 +37,10 @@ forested_train |>
   ) |>
   ggplot(aes(rate, county)) +
   geom_point() +
-  geom_errorbar(aes(xmin = lower, xmax = upper), alpha = 1/5)
+  geom_errorbar(aes(xmin = lower, xmax = upper), alpha = 1 / 5)
 
 # ------------------------------------------------------------------------------
 # Run the tree_spec chunk in your .qmd.
-
 
 logistic_spec <-
   logistic_reg() |>
@@ -183,7 +180,7 @@ library(textrecipes)
 hash_rec <-
   recipe(avg_price_per_room ~ ., data = hotel_train) |>
   step_YeoJohnson(lead_time) |>
-  step_dummy_hash(agent,   num_terms = tune("agent hash")) |>
+  step_dummy_hash(agent, num_terms = tune("agent hash")) |>
   step_dummy_hash(company, num_terms = tune("company hash")) |>
   step_zv(all_predictors())
 

@@ -85,6 +85,37 @@ cat(paste0("set.seed(", sample.int(10000, 5), ")", collapse = "\n"))
 
 <hr size="5">
 
+## Understand your model
+
+We've abbreviated the code necessary to make the exact plot on the previous slide. The full code is:
+
+```r
+library(rpart.plot)
+split_fun <- function(x, labs, digits, varlen, faclen) {
+  for (i in 1:length(labs)) {
+    if (grepl(",", labs[i])) {
+      parts <- strsplit(labs[i], ",")[[1]]
+      parts <- trimws(parts)
+      if (length(parts) > 5) {
+        parts <- c(parts[1:5], "...")
+      }
+      labs[i] <- paste(parts, collapse = ", ")
+    }
+    labs[i] <- paste(strwrap(labs[i], width = 15), collapse = "\n")
+  }
+  labs
+}
+
+tree_fit |>
+  extract_fit_engine() |>
+  rpart.plot(
+    roundint = FALSE,
+    type = 3,
+    clip.right.labs = FALSE,
+    split.fun = split_fun
+  )
+```
+
 # Introduction 3 - What Makes A Model?
 
 ## What is wrong with this? 

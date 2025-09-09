@@ -44,3 +44,27 @@ execute:
 -   If you are adding slides other than English, update the navbar link in `_quarto.yml`.
 
 Once the above changes are merged to `main`, make a GitHub Release noting the big-picture changes since the previous iteration of the workshop.
+
+## Posit Cloud setup
+
+- [ ] Log into https://posit.cloud/
+- [ ] Find the right Space in the left-hand sidebar and enter it
+- [ ] Create project
+	- [ ] From git repo: https://github.com/tidymodels/workshops.git
+	- [ ] Open settings of the project
+	- [ ] Info
+		- [ ] Name: conf-YEAR
+	- [ ] Access
+		- [ ] General Access: Space members
+		- [ ] Special Access: Make this project an assignment
+	- [ ] Resources: 
+		- [ ] try 16 GB RAM, 4 CPU, 2h background execution limit
+- [ ] Install packages
+	- [ ] `install.packages("pak")`
+	- [ ] Packages listed in `index.qmd`
+	- [ ] Install rmarkdown (can click on the banner RStudio pops up when opening `index.qmd`)
+	- [ ] Packages listed as `dev_pkgs` in `slides/setup.R` to be able to render the slides
+- [ ] Check by rendering the slides
+	- [ ] Are any packages missing?
+	- [ ] Do we need more resources?
+- [ ] Discard all changes from rendering

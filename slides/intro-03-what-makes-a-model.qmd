@@ -1,6 +1,6 @@
 ---
 title: "3 - What makes a model?"
-subtitle: "Introduction to tidymodels"
+subtitle: "Introduction to Machine Learning in R with tidymodels"
 format:
   revealjs: 
     slide-number: true
@@ -56,7 +56,7 @@ countdown::countdown(minutes = 3, id = "how-to-fit-linear-model")
 
 ::: columns
 ::: {.column width="60%"}
--   Choose a [model]{.underline}
+-   Choose a [model type]{.underline}
 -   Specify an engine
 -   Set the mode
 :::
@@ -94,7 +94,7 @@ Models have default engines
 
 ::: columns
 ::: {.column width="60%"}
--   Choose a model
+-   Choose a model type
 -   Specify an [engine]{.underline}
 -   Set the mode
 :::
@@ -123,7 +123,7 @@ logistic_reg() |>
 
 ::: columns
 ::: {.column width="60%"}
--   Choose a model
+-   Choose a model type
 -   Specify an engine
 -   Set the [mode]{.underline}
 :::
@@ -169,7 +169,7 @@ All available models are listed at <https://www.tidymodels.org/find/parsnip/>
 
 ::: columns
 ::: {.column width="60%"}
--   Choose a [model]{.underline}
+-   Choose a [model type]{.underline}
 -   Specify an [engine]{.underline}
 -   Set the [mode]{.underline}
 :::
@@ -449,7 +449,7 @@ knitr::include_graphics("images/bad_workflow.png")
 
 . . .
 
--   You can use other preprocessors besides formulas (more on feature engineering in Advanced tidymodels!)
+-   You can use other preprocessors besides formulas (more on this in _Getting More Out of Feature Engineering and Tuning for Machine Learning_)
 
 . . .
 
@@ -506,11 +506,23 @@ workflow(forested ~ ., tree_spec) |>
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Run the `tree_wflow` chunk in your `.qmd`.*
+*Run the `tree_wflow` chunk in your `intro-03-classwork.qmd`.*
+
+```{r tree_wflow}
+#| eval: false
+tree_spec <- decision_tree() |> 
+  set_mode("classification")
+
+tree_wflow <- workflow() |>
+  add_formula(forested ~ .) |>
+  add_model(tree_spec)
+
+tree_wflow
+```
 
 *Edit this code to make a workflow with your own model of choice.*
 
-<br></br>
+<br>
 
 *Extension/Challenge: Other than formulas, what kinds of preprocessors are supported?*
 
@@ -579,12 +591,33 @@ How do you **understand** your new `tree_fit` model?
 #| echo: false
 #| fig-align: center
 library(rpart.plot)
+split_fun <- function(x, labs, digits, varlen, faclen) {
+  for (i in 1:length(labs)) {
+    if (grepl(",", labs[i])) {
+      parts <- strsplit(labs[i], ",")[[1]]
+      parts <- trimws(parts)
+
+      if (length(parts) > 5) {
+        parts <- c(parts[1:5], "...")
+      }
+
+      labs[i] <- paste(parts, collapse = ", ")
+    }
+    labs[i] <- paste(strwrap(labs[i], width = 15), collapse = "\n")
+  }
+  labs
+}
 tree_fit |>
   extract_fit_engine() |>
-  rpart.plot(roundint = FALSE)
+  rpart.plot(
+    roundint = FALSE,
+    type = 3,
+    clip.right.labs = FALSE,
+    split.fun = split_fun
+  )
 ```
 
-## Understand your model `r hexes("parsnip", "workflows")`
+## Understand your model `r hexes("parsnip", "workflows")` {.annotation}
 
 How do you **understand** your new `tree_fit` model?
 
@@ -593,7 +626,7 @@ How do you **understand** your new `tree_fit` model?
 library(rpart.plot)
 tree_fit |>
   extract_fit_engine() |>
-  rpart.plot(roundint = FALSE)
+  rpart.plot()
 ```
 
 You can `extract_*()` several components of your fitted workflow.
@@ -604,6 +637,11 @@ You can `extract_*()` several components of your fitted workflow.
 
 ::: notes
 `roundint = FALSE` is only to quiet a warning
+:::
+
+##  {background-iframe="https://hardhat.tidymodels.org/reference/hardhat-extract.html"}
+
+::: footer
 :::
 
 
@@ -626,11 +664,6 @@ You can use your fitted workflow for model and/or prediction explanations:
 . . .
 
 Learn more at <https://www.tmwr.org/explain.html>
-
-##  {background-iframe="https://hardhat.tidymodels.org/reference/hardhat-extract.html"}
-
-::: footer
-:::
 
 ## Your turn {transition="slide-in"}
 
