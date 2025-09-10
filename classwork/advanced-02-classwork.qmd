@@ -13,252 +13,266 @@ Setup from deck 1
 
 ```{r}
 library(tidymodels)
-library(textrecipes)
+library(probably)
+library(desirability2)
 
-# Max's usual settings: 
+# Max's usual settings:
 tidymodels_prefer()
 theme_set(theme_bw())
 options(
-  pillar.advice = FALSE, 
+  pillar.advice = FALSE,
   pillar.min_title_chars = Inf
 )
 
-reg_metrics <- metric_set(mae, rsq)
+# check torch:
+if (torch::torch_is_installed()) {
+  library(torch)
+}
 
-data(hotel_rates)
-set.seed(295)
-hotel_rates <- 
-  hotel_rates |> 
-  sample_n(5000) |> 
-  arrange(arrival_date) |> 
-  select(-arrival_date) |> 
-  mutate(
-    company = factor(as.character(company)),
-    country = factor(as.character(country)),
-    agent = factor(as.character(agent))
+# Load our example data for this section
+"https://raw.githubusercontent.com/tidymodels/" |>
+  paste0("workshops/main/slides/class_data.RData") |>
+  url() |>
+  load()
+
+set.seed(429)
+sim_split <- initial_split(class_data, prop = 0.75, strata = class)
+sim_train <- training(sim_split)
+sim_test <- testing(sim_split)
+
+set.seed(523)
+sim_rs <- vfold_cv(sim_train, v = 10, strata = class)
+```
+
+## A single model
+
+```{r}
+library(brulee)
+
+nnet_ex_spec <-
+  mlp(hidden_units = 20, penalty = 0.01, learn_rate = 0.005, epochs = 100) |>
+  set_engine("brulee", class_weights = 3, stop_iter = 10) |>
+  set_mode("classification")
+
+rec <-
+  recipe(class ~ ., data = sim_train) |>
+  step_normalize(all_numeric_predictors())
+
+nnet_ex_wflow <- workflow(rec, nnet_ex_spec)
+
+# Fit on the first fold's 90% analysis set
+set.seed(147)
+nnet_ex_fit <- fit(nnet_ex_wflow, data = analysis(sim_rs$splits[[1]]))
+```
+
+Did it converge?
+
+```{r}
+nnet_ex_fit |>
+  # pull out the brulee fit:
+  extract_fit_engine() |>
+  autoplot()
+```
+
+Did it work?
+
+```{r}
+assessment_data <- assessment(sim_rs$splits[[1]])
+cls_mtr <- metric_set(brier_class, roc_auc, sensitivity, specificity)
+holdout_pred <- augment(nnet_ex_fit, assessment_data)
+
+# Performance metrics
+holdout_pred |> cls_mtr(class, estimate = .pred_class, .pred_event)
+```
+
+## Calibration plots
+
+```{r}
+holdout_pred |>
+  cal_plot_windowed(
+    truth = class,
+    estimate = .pred_event,
+    window_size = 0.2,
+    step_size = 0.025
+  )
+```
+
+## Optimize tuning parameters
+
+Optimizing the neural network
+
+```{r}
+nnet_spec <-
+  mlp(
+    hidden_units = tune(),
+    penalty = tune(),
+    learn_rate = tune(),
+    epochs = 100,
+    activation = tune()
+  ) |>
+  set_engine("brulee", class_weights = tune(), stop_iter = 10) |>
+  set_mode("classification")
+
+nnet_wflow <- workflow(rec, nnet_spec)
+nnet_wflow
+
+nnet_param <-
+  nnet_param |>
+  update(class_weights = class_weights(c(1, 50)))
+nnet_param
+```
+
+Setting up parallel processing
+
+```{r}
+cores <- parallelly::availableCores(logical = FALSE)
+
+# either future or mirai
+library(mirai)
+daemons(cores)
+```
+
+```{r}
+ctrl <- control_grid(save_pred = TRUE, save_workflow = TRUE)
+
+set.seed(12)
+nnet_res <-
+  nnet_wflow |>
+  tune_grid(
+    resamples = sim_rs,
+    grid = 25,
+    # The options below are not required by default
+    param_info = nnet_param,
+    control = ctrl,
+    metrics = cls_mtr
   )
 
-set.seed(4028)
-hotel_split <-
-  initial_split(hotel_rates, strata = avg_price_per_room)
+nnet_res
 
-hotel_train <- training(hotel_split)
-hotel_test <- testing(hotel_split)
+# grid results
+autoplot(nnet_res)
+
+# Brier results
+autoplot(nnet_res, metric = "brier_class") +
+  facet_grid(. ~ name, scale = "free_x") +
+  lims(y = c(0.04, 0.22)) # no tanh
+
+# ROC curve results
+autoplot(nnet_res, metric = "roc_auc") +
+  facet_grid(. ~ name, scale = "free_x") +
+  lims(y = c(0.83, 0.97)) # no tanh
+
+# Sensitivity/Specificity results
+autoplot(nnet_res, metric = c("sensitivity", "specificity"))
 ```
 
-## Resampling Strategy
+## Choosing Tuning Parameters
 
 ```{r}
-set.seed(472)
-hotel_rs <- vfold_cv(hotel_train, strata = avg_price_per_room)
-hotel_rs
+collect_metrics(nnet_res) |>
+  relocate(.metric, mean)
+
+# or the results per fold
+collect_metrics(nnet_res, summarize = FALSE) |>
+  relocate(.metric, .estimate)
 ```
 
-## A first recipe
+Choose a parameter combination
 
 ```{r}
-hotel_rec <- 
-  recipe(avg_price_per_room ~ ., data = hotel_train)
+# _show_ best based on the Brier score
+show_best(nnet_res, metric = "brier_class") |>
+  relocate(.metric, mean)
 
-summary(hotel_rec)
+# then _select_ best parameter combination based on the Brier score
+nnet_best <- select_best(nnet_res, metric = "brier_class")
+nnet_best
 ```
 
-## Your turn
-
-What do you think are in the `type` vectors for the `lead_time` and `country` columns?
+Checking (approximate) calibration
 
 ```{r}
-# Your code here!
+nnet_holdout_pred <-
+  nnet_res |>
+  collect_predictions(
+    parameters = nnet_best
+  )
 
+nnet_holdout_pred |>
+  cal_plot_windowed(
+    truth = class,
+    estimate = .pred_event,
+    window_size = 0.2,
+    step_size = 0.025,
+  )
 ```
 
-## A base recipe
+## Multimetric optimization 
 
 ```{r}
-hotel_rec <- 
-  recipe(avg_price_per_room ~ ., data = hotel_train) |> 
-  # create indicator variables
-  step_dummy(all_nominal_predictors()) |> 
-  # filter out constant columns
-  step_zv(all_predictors()) |> 
-  # normalize
-  step_normalize(all_numeric_predictors())
+show_best_desirability(
+  nnet_res,
+  maximize(sensitivity),
+  minimize(brier_class),
+  constrain(specificity, low = 0.8, high = 1.0)
+) |>
+  relocate(class_weights, sensitivity, specificity, brier_class, .d_overall)
 ```
 
-## Different options to reduce correlation
+However...
 
 ```{r}
-hotel_rec <- 
-  recipe(avg_price_per_room ~ ., data = hotel_train) |> 
-  step_dummy(all_nominal_predictors()) |> 
-  step_zv(all_predictors()) |> 
-  step_normalize(all_numeric_predictors()) |> 
-  step_corr(all_numeric_predictors(), threshold = 0.9)
+more_sens <-
+  select_best_desirability(
+    nnet_res,
+    maximize(sensitivity),
+    minimize(brier_class),
+    constrain(specificity, low = 0.8, high = 1.0)
+  )
 
-hotel_rec <- 
-  recipe(avg_price_per_room ~ ., data = hotel_train) |> 
-  step_dummy(all_nominal_predictors()) |> 
-  step_zv(all_predictors()) |> 
-  step_normalize(all_numeric_predictors()) |> 
-  step_pca(all_numeric_predictors())
-
-hotel_rec <- 
-  recipe(avg_price_per_room ~ ., data = hotel_train) |> 
-  step_dummy(all_nominal_predictors()) |> 
-  step_zv(all_predictors()) |> 
-  step_normalize(all_numeric_predictors()) |> 
-  embed::step_umap(all_numeric_predictors(), outcome = vars(avg_price_per_room))
+nnet_res |>
+  collect_predictions(
+    parameters = more_sens
+  ) |>
+  cal_plot_windowed(
+    truth = class,
+    estimate = .pred_event,
+    window_size = 0.2,
+    step_size = 0.025,
+  )
 ```
 
-## Other possible steps
+## Extracting results
 
-For example, natural splines:
-
-```{r}
-hotel_rec <- 
-  recipe(avg_price_per_room ~ ., data = hotel_train) |> 
-  step_dummy(all_nominal_predictors()) |> 
-  step_zv(all_predictors()) |> 
-  step_normalize(all_numeric_predictors()) |> 
-  step_spline_natural(arrival_date_num, deg_free = 10)
-```
-
-## Your turn 
-
-Create a `recipe()` for the hotel data to:
-
-- use a Yeo-Johnson (YJ) transformation on `lead_time`
-- convert factors to indicator variables
-- remove zero-variance variables
+If we want to know about the resampled workflow, we can write a function that can return information from `tune_grid()`. For example, this one can save the optimization process results: 
 
 ```{r}
-# Your code here!
+extract_iter_hist <- function(wflow) {
+  require(tidymodels)
+  require(tibble)
+  wflow |>
+    extract_fit_engine() |>
+    pluck("loss") |>
+    as_tibble_col("loss") |>
+    mutate(epoch = row_number() - 1)
+}
 
-```
-
-## Minimal recipe for the hotel data
-
-```{r}
-hotel_indicators <-
-  recipe(avg_price_per_room ~ ., data = hotel_train) |> 
-  step_YeoJohnson(lead_time) |>
-  step_dummy(all_nominal_predictors()) |>
-  step_zv(all_predictors()) |> 
-  step_spline_natural(arrival_date_num, deg_free = 10)
-```
-
-
-## Measuring Performance
-
-We'll compute two measures, mean absolute error (MAE) and the coefficient of determination (a.k.a $R^2$), and focus on the MAE for parameter optimization. 
-
-```{r}
-reg_metrics <- metric_set(mae, rsq)
-```
-
-```{r}
-set.seed(9)
-
-hotel_lm_wflow <-
-  workflow() |>
-  add_recipe(hotel_indicators) |>
-  add_model(linear_reg())
- 
-ctrl <- control_resamples(save_pred = TRUE)
-hotel_lm_res <-
-  hotel_lm_wflow |>
-  fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
-
-collect_metrics(hotel_lm_res)
+mlp_brier_fit |>
+  extract_iter_hist() |>
+  slice(1:5)
 ```
 
 ## Your turn
 
-Use `fit_resamples()` to fit your workflow with a recipe.
+1. Read the docs for [`control_grid()`](https://tune.tidymodels.org/reference/control_grid.html), specifically the `extract` option.
+2. Create a control object that extracts the iteration history.
+3. Re-run `tune_grid()` with the same grid (or fewer grid points) and use the `control` option with the extraction function. 
+4. Afterward use [`collect_extracts()`](https://tune.tidymodels.org/reference/collect_predictions.html) to get the results. 
+5. Plot the iteration history for one or more grid points, coloring by the resample `id`. 
 
-Collect the predictions from the results.
+Parallel processing will make this go more quickly. 
 
 ```{r}
 # Your code here!
 
-```
-
-## Holdout predictions
-
-```{r}
-# Since we used `save_pred = TRUE`
-lm_cv_pred <- collect_predictions(hotel_lm_res)
-lm_cv_pred |> slice(1:7)
-```
-
-## Calibration Plot 
-
-```{r}
-library(probably)
-
-cal_plot_regression(hotel_lm_res, alpha = 1 / 5)
-```
-
-## What do we do with the agent and company data? 
-
-Collapsing factor levels: 
-
-```{r}
-hotel_other_rec <-
-  recipe(avg_price_per_room ~ ., data = hotel_train) |> 
-  step_YeoJohnson(lead_time) |>
-  step_other(agent, threshold = 0.001) |>
-  step_dummy(all_nominal_predictors()) |>
-  step_zv(all_predictors()) |> 
-  step_spline_natural(arrival_date_num, deg_free = 10)
-
-hotel_other_wflow <-
-  hotel_lm_wflow |>
-  update_recipe(hotel_other_rec)
-
-hotel_other_res <-
-  hotel_other_wflow |>
-  fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
-
-collect_metrics(hotel_other_res)
-```
-
-Feature Hashing:
-
-```{r}
-library(textrecipes)
-
-hash_rec <-
-  recipe(avg_price_per_room ~ ., data = hotel_train) |>
-  step_YeoJohnson(lead_time) |>
-  # Defaults to 32 signed indicator columns
-  step_dummy_hash(agent) |>
-  step_dummy_hash(company) |>
-  # Regular indicators for the others
-  step_dummy(all_nominal_predictors()) |> 
-  step_zv(all_predictors()) |> 
-  step_spline_natural(arrival_date_num, deg_free = 10)
-
-hotel_hash_wflow <-
-  hotel_lm_wflow |>
-  update_recipe(hash_rec)
-
-hotel_hash_res <-
-  hotel_hash_wflow |>
-  fit_resamples(hotel_rs, control = ctrl, metrics = reg_metrics)
-
-collect_metrics(hotel_hash_res)
-```
-
-## Debugging a recipe
-
-```{r}
-# Estimate the transformation coefficients
-hash_rec_fit <- prep(hash_rec)
-
-# Get the transformation coefficient
-tidy(hash_rec_fit, number = 1)
-
-# Get the processed data
-bake(hash_rec_fit, hotel_train |> slice(1:3), contains("_agent_"))
 ```
