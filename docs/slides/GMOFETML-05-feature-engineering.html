@@ -329,332 +329,6 @@
 </div>
 </div>
 </section>
-<section id="working-with-other-models" class="slide level2">
-<h2>Working with other models</h2>
-<p>Some models can’t handle non-numeric data.</p>
-<ul>
-<li>Linear Regression</li>
-<li>K Nearest Neighbors</li>
-</ul>
-<p><br></p>
-<div class="fragment">
-<p>Some models struggle if numeric predictors aren’t scaled</p>
-<ul>
-<li>K Nearest Neighbors</li>
-<li>Anything using gradient descent</li>
-</ul>
-</div>
-</section>
-<section id="types-of-needed-preprocessing" class="slide level2">
-<h2>Types of needed preprocessing</h2>
-<ul>
-<li><p>Do qualitative predictors require a numeric encoding?</p></li>
-<li><p>Should columns with a single unique value be removed?</p></li>
-<li><p>Does the model struggle with missing data?</p></li>
-<li><p>Does the model struggle with correlated predictors?</p></li>
-<li><p>Should predictors be centered and scaled?</p></li>
-<li><p>Is it helpful to transform predictors to be more symmetric?</p></li>
-</ul>
-<div class="footer">
-<p><a href="https://www.tmwr.org/pre-proc-table.html" class="uri">https://www.tmwr.org/pre-proc-table.html</a></p>
-</div>
-</section>
-<section id="two-types-of-preprocessing" class="slide level2">
-<h2>Two types of preprocessing</h2>
-
-<img data-src="images/fe_venn.svg" class="quarto-figure quarto-figure-center r-stretch"></section>
-<section id="two-types-of-preprocessing-1" class="slide level2">
-<h2>Two types of preprocessing</h2>
-
-<img data-src="images/fe_venn_info.svg" class="quarto-figure quarto-figure-center r-stretch"></section>
-<section id="general-definitions" class="slide level2">
-<h2>General definitions</h2>
-<ul>
-<li><em>Data preprocessing</em> is what you do to make your model <strong>successful</strong>.</li>
-<li><em>Feature engineering</em> is what you do to the original predictors to make the model do the <strong>least work</strong> to perform great.</li>
-</ul>
-</section>
-<section id="two-types-of-transformations" class="slide level2">
-<h2>Two types of transformations</h2>
-<p><br></p>
-<div class="columns">
-<div class="column" style="width:50%;">
-<h3 id="static">Static</h3>
-<ul>
-<li>Square root, log, inverse</li>
-<li>Dummies for known levels</li>
-<li>Date time extractions</li>
-</ul>
-</div><div class="column" style="width:50%;">
-<h3 id="trained">Trained</h3>
-<ul>
-<li>Centering &amp; scaling</li>
-<li>Imputation</li>
-<li>PCA</li>
-<li>Anything for unknown factor levels</li>
-</ul>
-</div></div>
-<div class="fragment">
-<p>Trained methods need to calculate <strong>sufficient information</strong> to be applied again.</p>
-</div>
-</section>
-<section id="the-recipes-package" class="slide level2">
-<h2>The recipes package</h2>
-<div class="highlight-last">
-<ul>
-<li class="fragment">Modular + extensible</li>
-<li class="fragment">Works well with pipes ,<code>|&gt;</code> and <code>%&gt;%</code></li>
-<li class="fragment">Deferred evaluation</li>
-<li class="fragment">Isolates test data from training data</li>
-<li class="fragment">Can do things formulas can’t</li>
-</ul>
-</div>
-</section>
-<section id="how-to-write-a-recipe" class="slide level2">
-<h2>How to write a recipe</h2>
-<div style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;">
-<p>leaf_rec &lt;- recipe(species ~ ., data = leaf_data) |&gt;<br>
-&nbsp;&nbsp;step_dummy(all_nominal_predictors()) |&gt;<br>
-&nbsp;&nbsp;step_zv(all_predictors()) |&gt;<br>
-&nbsp;&nbsp;step_log(compactness, offset = 0.5) |&gt;<br>
-&nbsp;&nbsp;step_normalize(all_numeric_predictors())</p>
-</div>
-</section>
-<section id="how-to-write-a-recipe-1" class="slide level2">
-<h2>How to write a recipe</h2>
-<div style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;">
-<p>leaf_rec &lt;- <span style="color: #CA225E;">recipe(species ~ ., data = leaf_data)</span> |&gt;<br>
-&nbsp;&nbsp;step_dummy(all_nominal_predictors()) |&gt;<br>
-&nbsp;&nbsp;step_zv(all_predictors()) |&gt;<br>
-&nbsp;&nbsp;step_log(compactness, offset = 0.5) |&gt;<br>
-&nbsp;&nbsp;step_normalize(all_numeric_predictors())</p>
-</div>
-<p><br></p>
-<p>Start by calling <code>recipe()</code> to denote the data source and variables used.</p>
-</section>
-<section id="how-to-write-a-recipe-2" class="slide level2">
-<h2>How to write a recipe</h2>
-<div style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;">
-<p>leaf_rec &lt;- recipe(species ~ ., data = leaf_data) |&gt;<br>
-&nbsp;&nbsp;<span style="color: #CA225E;">step_dummy</span>(all_nominal_predictors()) |&gt;<br>
-&nbsp;&nbsp;<span style="color: #CA225E;">step_zv</span>(all_predictors()) |&gt;<br>
-&nbsp;&nbsp;<span style="color: #CA225E;">step_log</span>(compactness, offset = 0.5) |&gt;<br>
-&nbsp;&nbsp;<span style="color: #CA225E;">step_normalize</span>(all_numeric_predictors())</p>
-</div>
-<p><br></p>
-<p>Specify what actions to take by adding <code>step_*()</code>s.</p>
-</section>
-<section id="how-to-write-a-recipe-3" class="slide level2">
-<h2>How to write a recipe</h2>
-<div style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;">
-<p>leaf_rec &lt;- recipe(species ~ ., data = leaf_data) |&gt;<br>
-&nbsp;&nbsp;step_dummy(<span style="color: #CA225E;">all_nominal_predictors()</span>) |&gt;<br>
-&nbsp;&nbsp;step_zv(<span style="color: #CA225E;">all_predictors()</span>) |&gt;<br>
-&nbsp;&nbsp;step_log(<span style="color: #CA225E;">compactness</span>, offset = 0.5) |&gt; &nbsp;&nbsp;step_normalize(<span style="color: #CA225E;">all_numeric_predictors()</span>)</p>
-</div>
-<p><br></p>
-<p>Use {tidyselect} and recipes-specific selectors to denote affected variables.</p>
-</section>
-<section id="using-a-recipe" class="slide level2">
-<h2>Using a recipe</h2>
-<div style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;">
-<p>leaf_rec &lt;- recipe(species ~ ., data = leaf_data) |&gt;<br>
-&nbsp;&nbsp;step_dummy(all_nominal_predictors()) |&gt;<br>
-&nbsp;&nbsp;step_zv(all_predictors()) |&gt;<br>
-&nbsp;&nbsp;step_log(compactness, offset = 0.5) |&gt; &nbsp;&nbsp;step_normalize(all_numeric_predictors())</p>
-</div>
-<p><br></p>
-<p>Save the recipe we like so that we can use it in various places, e.g., with different models.</p>
-<p><br></p>
-</section>
-<section id="using-a-recipe-with-workflows" class="slide level2">
-<h2>Using a recipe with workflows</h2>
-<p>Recipes are typically combined with a model in a <code>workflow()</code> object:</p>
-<p><br></p>
-<div style="font-family: 'Source Code Pro', monospace; font-size: 0.8em;">
-<p>leaf_wflow &lt;- workflow() |&gt;<br>
-&nbsp;&nbsp;<span style="color: #CA225E;">add_recipe(leaf_rec)</span> |&gt;<br>
-&nbsp;&nbsp;add_model(linear_reg())</p>
-</div>
-</section>
-<section id="recipes-are-estimated" class="slide level2">
-<h2>Recipes are estimated</h2>
-<p>Every preprocessing step in a recipe that involves calculations uses the <em>training</em> set. For example:</p>
-<ul>
-<li>Levels of a factor</li>
-<li>Determination of zero-variance</li>
-<li>Normalization</li>
-<li>Feature extraction</li>
-</ul>
-<p>Once a recipe is added to a workflow, this occurs when <code>fit()</code> is called.</p>
-</section>
-<section id="debugging-a-recipe" class="slide level2">
-<h2>Debugging a recipe</h2>
-<ul>
-<li>Typically, you will want to use a workflow to estimate and apply a recipe.</li>
-</ul>
-<div class="fragment">
-<ul>
-<li>If you have an error and need to debug your recipe, the original recipe object (e.g., <code>leaf_rec</code>) can be estimated manually with a function called <code>prep()</code>. It is analogous to <code>fit()</code>. See <a href="https://www.tmwr.org/dimensionality.html#recipe-functions">TMwR section 16.4</a>.</li>
-</ul>
-</div>
-<div class="fragment">
-<ul>
-<li>Another function, <code>bake()</code>, is analogous to <code>predict()</code>, and gives you the processed data back.</li>
-</ul>
-</div>
-</section>
-<section id="your-turn-1" class="slide level2" data-transition="slide-in">
-<h2>Your turn</h2>
-<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
-<p><br></p>
-<p><em>Take the recipe and <code>prep()</code> then <code>bake()</code> it to see what the resulting data set looks like.</em></p>
-<p><em>Try removing steps to see how the result changes.</em></p>
-<p><br></p>
-<div class="cell">
-<div class="cell-output-display">
-<div class="countdown" id="recipes-prep" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
-<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
-<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
-</div>
-</div>
-</div>
-</section>
-<section id="printing-a-recipe" class="slide level2">
-<h2>Printing a recipe</h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a>leaf_rec</span>
-<span id="cb3-2"><a></a><span class="co">#&gt; </span></span>
-<span id="cb3-3"><a></a><span class="co">#&gt; ── Recipe ────────────────────────────────────────────────────────────</span></span>
-<span id="cb3-4"><a></a><span class="co">#&gt; </span></span>
-<span id="cb3-5"><a></a><span class="co">#&gt; ── Inputs</span></span>
-<span id="cb3-6"><a></a><span class="co">#&gt; Number of variables by role</span></span>
-<span id="cb3-7"><a></a><span class="co">#&gt; outcome:    1</span></span>
-<span id="cb3-8"><a></a><span class="co">#&gt; predictor: 54</span></span>
-<span id="cb3-9"><a></a><span class="co">#&gt; </span></span>
-<span id="cb3-10"><a></a><span class="co">#&gt; ── Operations</span></span>
-<span id="cb3-11"><a></a><span class="co">#&gt; • Dummy variables from: all_nominal_predictors()</span></span>
-<span id="cb3-12"><a></a><span class="co">#&gt; • Zero variance filter on: all_predictors()</span></span>
-<span id="cb3-13"><a></a><span class="co">#&gt; • Log transformation on: compactness</span></span>
-<span id="cb3-14"><a></a><span class="co">#&gt; • Centering and scaling for: all_numeric_predictors()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="prepping-a-recipe" class="slide level2">
-<h2>Prepping a recipe</h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a><span class="fu">prep</span>(leaf_rec)</span>
-<span id="cb4-2"><a></a><span class="co">#&gt; </span></span>
-<span id="cb4-3"><a></a><span class="co">#&gt; ── Recipe ────────────────────────────────────────────────────────────</span></span>
-<span id="cb4-4"><a></a><span class="co">#&gt; </span></span>
-<span id="cb4-5"><a></a><span class="co">#&gt; ── Inputs</span></span>
-<span id="cb4-6"><a></a><span class="co">#&gt; Number of variables by role</span></span>
-<span id="cb4-7"><a></a><span class="co">#&gt; outcome:    1</span></span>
-<span id="cb4-8"><a></a><span class="co">#&gt; predictor: 54</span></span>
-<span id="cb4-9"><a></a><span class="co">#&gt; </span></span>
-<span id="cb4-10"><a></a><span class="co">#&gt; ── Training information</span></span>
-<span id="cb4-11"><a></a><span class="co">#&gt; Training data contained 1907 data points and no incomplete rows.</span></span>
-<span id="cb4-12"><a></a><span class="co">#&gt; </span></span>
-<span id="cb4-13"><a></a><span class="co">#&gt; ── Operations</span></span>
-<span id="cb4-14"><a></a><span class="co">#&gt; • Dummy variables from: apex, base, shape, edge | Trained</span></span>
-<span id="cb4-15"><a></a><span class="co">#&gt; • Zero variance filter removed: outlying_contour | Trained</span></span>
-<span id="cb4-16"><a></a><span class="co">#&gt; • Log transformation on: compactness | Trained</span></span>
-<span id="cb4-17"><a></a><span class="co">#&gt; • Centering and scaling for: outlying_polar, ... | Trained</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="baking-a-recipe" class="slide level2">
-<h2>Baking a recipe</h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a><span class="fu">prep</span>(leaf_rec) <span class="sc">|&gt;</span></span>
-<span id="cb5-2"><a></a>  <span class="fu">bake</span>(<span class="at">new_data =</span> leaf_data)</span>
-<span id="cb5-3"><a></a><span class="co">#&gt; # A tibble: 1,907 × 73</span></span>
-<span id="cb5-4"><a></a><span class="co">#&gt;    outlying_polar skewed_polar clumpy_polar sparse_polar striated_polar</span></span>
-<span id="cb5-5"><a></a><span class="co">#&gt;             &lt;dbl&gt;        &lt;dbl&gt;        &lt;dbl&gt;        &lt;dbl&gt;          &lt;dbl&gt;</span></span>
-<span id="cb5-6"><a></a><span class="co">#&gt;  1         -0.115       -1.09       -0.457        -0.257          0.622</span></span>
-<span id="cb5-7"><a></a><span class="co">#&gt;  2         -0.115       -0.718      -0.0384       -0.252          0.636</span></span>
-<span id="cb5-8"><a></a><span class="co">#&gt;  3         -0.115        0.937       0.525         4.29          -3.84 </span></span>
-<span id="cb5-9"><a></a><span class="co">#&gt;  4         -0.115       -0.655       0.158        -0.330          0.781</span></span>
-<span id="cb5-10"><a></a><span class="co">#&gt;  5         -0.115       -0.265      -0.0333       -0.362          0.485</span></span>
-<span id="cb5-11"><a></a><span class="co">#&gt;  6         -0.115       -0.475      -0.271        -0.256          0.779</span></span>
-<span id="cb5-12"><a></a><span class="co">#&gt;  7         -0.115       -0.728      -0.526        -0.259          0.402</span></span>
-<span id="cb5-13"><a></a><span class="co">#&gt;  8         -0.115        0.218      -0.761        -0.255          0.261</span></span>
-<span id="cb5-14"><a></a><span class="co">#&gt;  9         -0.115       -0.388       0.243        -0.259          0.775</span></span>
-<span id="cb5-15"><a></a><span class="co">#&gt; 10         -0.115       -0.135      -0.328        -0.274          0.413</span></span>
-<span id="cb5-16"><a></a><span class="co">#&gt; # ℹ 1,897 more rows</span></span>
-<span id="cb5-17"><a></a><span class="co">#&gt; # ℹ 68 more variables: convex_polar &lt;dbl&gt;, skinny_polar &lt;dbl&gt;,</span></span>
-<span id="cb5-18"><a></a><span class="co">#&gt; #   stringy_polar &lt;dbl&gt;, monotonic_polar &lt;dbl&gt;, skewed_contour &lt;dbl&gt;,</span></span>
-<span id="cb5-19"><a></a><span class="co">#&gt; #   clumpy_contour &lt;dbl&gt;, sparse_contour &lt;dbl&gt;, striated_contour &lt;dbl&gt;,</span></span>
-<span id="cb5-20"><a></a><span class="co">#&gt; #   convex_contour &lt;dbl&gt;, skinny_contour &lt;dbl&gt;, stringy_contour &lt;dbl&gt;,</span></span>
-<span id="cb5-21"><a></a><span class="co">#&gt; #   monotonic_contour &lt;dbl&gt;, num_max_points &lt;dbl&gt;, num_min_points &lt;dbl&gt;,</span></span>
-<span id="cb5-22"><a></a><span class="co">#&gt; #   diameter &lt;dbl&gt;, area &lt;dbl&gt;, perimeter &lt;dbl&gt;, physiological_length &lt;dbl&gt;, …</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="tidying-a-recipe" class="slide level2">
-<h2>Tidying a recipe</h2>
-<p>Once a recipe has been estimated, there are various bits of information saved in it.</p>
-<ul>
-<li>The <code>tidy()</code> function can be used to get specific results from the recipe.</li>
-</ul>
-</section>
-<section id="your-turn-2" class="slide level2" data-transition="slide-in">
-<h2>Your turn</h2>
-<p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
-<p><em>Take a prepped recipe and use the <code>tidy()</code> function on it.</em></p>
-<p><em>Use the <code>number</code> argument to inspect different steps.</em></p>
-<p><br></p>
-<div class="cell">
-<div class="cell-output-display">
-<div class="countdown" id="recipes-tidy" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
-<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
-<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
-</div>
-</div>
-</div>
-</section>
-<section id="tidying-a-recipe-1" class="slide level2">
-<h2>Tidying a recipe</h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a><span class="fu">prep</span>(leaf_rec) <span class="sc">|&gt;</span></span>
-<span id="cb6-2"><a></a>  <span class="fu">tidy</span>()</span>
-<span id="cb6-3"><a></a><span class="co">#&gt; # A tibble: 4 × 6</span></span>
-<span id="cb6-4"><a></a><span class="co">#&gt;   number operation type      trained skip  id             </span></span>
-<span id="cb6-5"><a></a><span class="co">#&gt;    &lt;int&gt; &lt;chr&gt;     &lt;chr&gt;     &lt;lgl&gt;   &lt;lgl&gt; &lt;chr&gt;          </span></span>
-<span id="cb6-6"><a></a><span class="co">#&gt; 1      1 step      dummy     TRUE    FALSE dummy_AkICe    </span></span>
-<span id="cb6-7"><a></a><span class="co">#&gt; 2      2 step      zv        TRUE    FALSE zv_ZcA3h       </span></span>
-<span id="cb6-8"><a></a><span class="co">#&gt; 3      3 step      log       TRUE    FALSE log_aaqm4      </span></span>
-<span id="cb6-9"><a></a><span class="co">#&gt; 4      4 step      normalize TRUE    FALSE normalize_dc9nY</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="tidying-a-recipe-2" class="slide level2">
-<h2>Tidying a recipe</h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a><span class="fu">prep</span>(leaf_rec) <span class="sc">|&gt;</span></span>
-<span id="cb7-2"><a></a>  <span class="fu">tidy</span>(<span class="at">number =</span> <span class="dv">1</span>)</span>
-<span id="cb7-3"><a></a><span class="co">#&gt; # A tibble: 23 × 3</span></span>
-<span id="cb7-4"><a></a><span class="co">#&gt;    terms columns   id         </span></span>
-<span id="cb7-5"><a></a><span class="co">#&gt;    &lt;chr&gt; &lt;chr&gt;     &lt;chr&gt;      </span></span>
-<span id="cb7-6"><a></a><span class="co">#&gt;  1 apex  acute     dummy_AkICe</span></span>
-<span id="cb7-7"><a></a><span class="co">#&gt;  2 apex  apiculate dummy_AkICe</span></span>
-<span id="cb7-8"><a></a><span class="co">#&gt;  3 apex  mucronate dummy_AkICe</span></span>
-<span id="cb7-9"><a></a><span class="co">#&gt;  4 apex  none      dummy_AkICe</span></span>
-<span id="cb7-10"><a></a><span class="co">#&gt;  5 apex  obcordate dummy_AkICe</span></span>
-<span id="cb7-11"><a></a><span class="co">#&gt;  6 apex  obtuse    dummy_AkICe</span></span>
-<span id="cb7-12"><a></a><span class="co">#&gt;  7 apex  round     dummy_AkICe</span></span>
-<span id="cb7-13"><a></a><span class="co">#&gt;  8 apex  truncate  dummy_AkICe</span></span>
-<span id="cb7-14"><a></a><span class="co">#&gt;  9 base  acute     dummy_AkICe</span></span>
-<span id="cb7-15"><a></a><span class="co">#&gt; 10 base  cordate   dummy_AkICe</span></span>
-<span id="cb7-16"><a></a><span class="co">#&gt; # ℹ 13 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="using-a-recipe-in-tidymodels" class="slide level2">
-<h2>Using a recipe in tidymodels</h2>
-<p>The recommended way to use a recipe in tidymodels is to use it as part of a <code>workflow()</code>.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a>leaf_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">|&gt;</span>  </span>
-<span id="cb8-2"><a></a>  <span class="fu">add_recipe</span>(leaf_rec) <span class="sc">|&gt;</span>  </span>
-<span id="cb8-3"><a></a>  <span class="fu">add_model</span>(<span class="fu">logistic_reg</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>When used in this way, you don’t need to worry about <code>prep()</code> and <code>bake()</code> as it is handled for you.</p>
-</section>
 <section id="leaf-edges" class="slide level2">
 <h2>Leaf edges</h2>
 <div class="columns">
@@ -665,18 +339,18 @@
 </ul>
 </div><div class="column">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a>leaf_data <span class="sc">|&gt;</span></span>
-<span id="cb9-2"><a></a>  <span class="fu">count</span>(edge)</span>
-<span id="cb9-3"><a></a><span class="co">#&gt; # A tibble: 7 × 2</span></span>
-<span id="cb9-4"><a></a><span class="co">#&gt;   edge                 n</span></span>
-<span id="cb9-5"><a></a><span class="co">#&gt;   &lt;chr&gt;            &lt;int&gt;</span></span>
-<span id="cb9-6"><a></a><span class="co">#&gt; 1 ""                  62</span></span>
-<span id="cb9-7"><a></a><span class="co">#&gt; 2 "denate"            65</span></span>
-<span id="cb9-8"><a></a><span class="co">#&gt; 3 "lobed"            109</span></span>
-<span id="cb9-9"><a></a><span class="co">#&gt; 4 "lobed, smooth"     52</span></span>
-<span id="cb9-10"><a></a><span class="co">#&gt; 5 "lobed, toothed"   109</span></span>
-<span id="cb9-11"><a></a><span class="co">#&gt; 6 "smooth"          1204</span></span>
-<span id="cb9-12"><a></a><span class="co">#&gt; 7 "toothed"          306</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a>leaf_data <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a></a>  <span class="fu">count</span>(edge)</span>
+<span id="cb3-3"><a></a><span class="co">#&gt; # A tibble: 7 × 2</span></span>
+<span id="cb3-4"><a></a><span class="co">#&gt;   edge                 n</span></span>
+<span id="cb3-5"><a></a><span class="co">#&gt;   &lt;chr&gt;            &lt;int&gt;</span></span>
+<span id="cb3-6"><a></a><span class="co">#&gt; 1 ""                  62</span></span>
+<span id="cb3-7"><a></a><span class="co">#&gt; 2 "denate"            65</span></span>
+<span id="cb3-8"><a></a><span class="co">#&gt; 3 "lobed"            109</span></span>
+<span id="cb3-9"><a></a><span class="co">#&gt; 4 "lobed, smooth"     52</span></span>
+<span id="cb3-10"><a></a><span class="co">#&gt; 5 "lobed, toothed"   109</span></span>
+<span id="cb3-11"><a></a><span class="co">#&gt; 6 "smooth"          1204</span></span>
+<span id="cb3-12"><a></a><span class="co">#&gt; 7 "toothed"          306</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div></div>
 </section></section>
@@ -11098,7 +10772,7 @@
 </div>
 </div>
 </section>
-<section id="your-turn-3" class="slide level2">
+<section id="your-turn-1" class="slide level2">
 <h2>Your turn</h2>
 <p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
 <p><em>Figure out whether <code>step_dummy_extract()</code> or <code>step_dummy_multi_choice()</code> is most appropriate on the <code>edge</code> variable in <code>leaf_data</code> and apply it</em></p>
@@ -11131,21 +10805,21 @@
 <h2>Redundant Information</h2>
 <p>A feature with no information could be included.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a></a>leaf_data <span class="sc">|&gt;</span></span>
-<span id="cb14-2"><a></a>  <span class="fu">count</span>(outlying_contour)</span>
-<span id="cb14-3"><a></a><span class="co">#&gt; # A tibble: 1 × 2</span></span>
-<span id="cb14-4"><a></a><span class="co">#&gt;   outlying_contour     n</span></span>
-<span id="cb14-5"><a></a><span class="co">#&gt;              &lt;dbl&gt; &lt;int&gt;</span></span>
-<span id="cb14-6"><a></a><span class="co">#&gt; 1                0  1907</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a>leaf_data <span class="sc">|&gt;</span></span>
+<span id="cb8-2"><a></a>  <span class="fu">count</span>(outlying_contour)</span>
+<span id="cb8-3"><a></a><span class="co">#&gt; # A tibble: 1 × 2</span></span>
+<span id="cb8-4"><a></a><span class="co">#&gt;   outlying_contour     n</span></span>
+<span id="cb8-5"><a></a><span class="co">#&gt;              &lt;dbl&gt; &lt;int&gt;</span></span>
+<span id="cb8-6"><a></a><span class="co">#&gt; 1                0  1907</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="redundant-information-1" class="slide level2">
 <h2>Redundant Information</h2>
 <p>Or duplicated or functionally equivalent features</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a></a>leaf_data <span class="sc">|&gt;</span></span>
-<span id="cb15-2"><a></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(area, equivalent_diameter)) <span class="sc">+</span></span>
-<span id="cb15-3"><a></a>  <span class="fu">geom_point</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a>leaf_data <span class="sc">|&gt;</span></span>
+<span id="cb9-2"><a></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(area, equivalent_diameter)) <span class="sc">+</span></span>
+<span id="cb9-3"><a></a>  <span class="fu">geom_point</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
 <img data-src="GMOFETML-05-feature-engineering_files/figure-revealjs/fig-area-vs-equivalent-diameter-1.svg" id="fig-area-vs-equivalent-diameter" class="r-stretch quarto-figure-center"><p class="caption">
@@ -11258,17 +10932,17 @@ Z_1 = \phi_{11} X_1 + \phi_{21} X_2 + ... + \phi_{p1}X_p
 <h2>Applying PCA with recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <p>Either use the <code>num_comp</code> argument.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a></a>rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
-<span id="cb16-2"><a></a>  <span class="fu">step_pca</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a>rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb10-2"><a></a>  <span class="fu">step_pca</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p><br></p>
 <p>or using the <code>threshold</code> argument</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a></a>rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
-<span id="cb17-2"><a></a>  <span class="fu">step_pca</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">threshold =</span> <span class="fl">0.8</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a></a>rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb11-2"><a></a>  <span class="fu">step_pca</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">threshold =</span> <span class="fl">0.8</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="your-turn-4" class="slide level2">
+<section id="your-turn-2" class="slide level2">
 <h2>Your turn</h2>
 <p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
 <p><em>Apply PCA using <code>step_pca()</code> to <code>leaf_data</code> data set.</em></p>
@@ -11312,10 +10986,10 @@ Z_1 = \phi_{11} X_1 + \phi_{21} X_2 + ... + \phi_{p1}X_p
 <h2>Truncated PCA with recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <p>Can only be done using <code>num_comp</code></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a></a><span class="fu">library</span>(embed)</span>
-<span id="cb18-2"><a></a></span>
-<span id="cb18-3"><a></a>rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
-<span id="cb18-4"><a></a>  <span class="fu">step_pca_truncated</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a></a><span class="fu">library</span>(embed)</span>
+<span id="cb12-2"><a></a></span>
+<span id="cb12-3"><a></a>rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb12-4"><a></a>  <span class="fu">step_pca_truncated</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="sparse-pca" class="slide level2">
@@ -11340,60 +11014,60 @@ PC5 &amp;= cyl \cdot 0.73 &amp;&amp;+ disp \cdot -0.014 &amp;&amp;+ hp \cdot 0.0
 <p>Can only be done using <code>num_comp</code>.</p>
 <p>The <code>predictor_prop</code> argument is used to determine how many zeroes in the loadings.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a></a><span class="fu">library</span>(embed)</span>
-<span id="cb19-2"><a></a></span>
-<span id="cb19-3"><a></a>rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
-<span id="cb19-4"><a></a>  <span class="fu">step_pca_sparse</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">5</span>, <span class="at">predictor_prop =</span> <span class="fl">0.8</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a></a><span class="fu">library</span>(embed)</span>
+<span id="cb13-2"><a></a></span>
+<span id="cb13-3"><a></a>rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb13-4"><a></a>  <span class="fu">step_pca_sparse</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">5</span>, <span class="at">predictor_prop =</span> <span class="fl">0.8</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="sparse-pca-with-recipes-1" class="slide level2">
 <h2>Sparse PCA with recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <p><code>predictor_prop = 0.8</code></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a></a><span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
-<span id="cb20-2"><a></a>  <span class="fu">step_pca_sparse</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">4</span>, <span class="at">predictor_prop =</span> <span class="fl">0.8</span>) <span class="sc">|&gt;</span></span>
-<span id="cb20-3"><a></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
-<span id="cb20-4"><a></a>  <span class="fu">tidy</span>(<span class="dv">1</span>) <span class="sc">|&gt;</span></span>
-<span id="cb20-5"><a></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> component, <span class="at">values_from =</span> value) <span class="sc">|&gt;</span></span>
-<span id="cb20-6"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>id)</span>
-<span id="cb20-7"><a></a><span class="co">#&gt; # A tibble: 10 × 5</span></span>
-<span id="cb20-8"><a></a><span class="co">#&gt;    terms      PC1      PC2     PC3     PC4</span></span>
-<span id="cb20-9"><a></a><span class="co">#&gt;    &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span></span>
-<span id="cb20-10"><a></a><span class="co">#&gt;  1 cyl   -0.0198   0.00994 -0.111   0.204 </span></span>
-<span id="cb20-11"><a></a><span class="co">#&gt;  2 disp  -0.854   -0.520    0       0     </span></span>
-<span id="cb20-12"><a></a><span class="co">#&gt;  3 hp    -0.518    0.852    0.0667  0     </span></span>
-<span id="cb20-13"><a></a><span class="co">#&gt;  4 drat  -0.00928  0.0171  -0.178   0.118 </span></span>
-<span id="cb20-14"><a></a><span class="co">#&gt;  5 wt    -0.00987  0       -0.0650  0.144 </span></span>
-<span id="cb20-15"><a></a><span class="co">#&gt;  6 qsec  -0.0506   0.0497  -0.957  -0.109 </span></span>
-<span id="cb20-16"><a></a><span class="co">#&gt;  7 vs     0        0       -0.0446 -0.0974</span></span>
-<span id="cb20-17"><a></a><span class="co">#&gt;  8 am     0        0.00603 -0.0157  0.0624</span></span>
-<span id="cb20-18"><a></a><span class="co">#&gt;  9 gear  -0.00957  0.0239  -0.170   0.256 </span></span>
-<span id="cb20-19"><a></a><span class="co">#&gt; 10 carb  -0.00863  0.0257   0       0.913</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a></a><span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb14-2"><a></a>  <span class="fu">step_pca_sparse</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">4</span>, <span class="at">predictor_prop =</span> <span class="fl">0.8</span>) <span class="sc">|&gt;</span></span>
+<span id="cb14-3"><a></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
+<span id="cb14-4"><a></a>  <span class="fu">tidy</span>(<span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb14-5"><a></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> component, <span class="at">values_from =</span> value) <span class="sc">|&gt;</span></span>
+<span id="cb14-6"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>id)</span>
+<span id="cb14-7"><a></a><span class="co">#&gt; # A tibble: 10 × 5</span></span>
+<span id="cb14-8"><a></a><span class="co">#&gt;    terms      PC1      PC2     PC3     PC4</span></span>
+<span id="cb14-9"><a></a><span class="co">#&gt;    &lt;chr&gt;    &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span></span>
+<span id="cb14-10"><a></a><span class="co">#&gt;  1 cyl   -0.0198   0.00994 -0.111   0.204 </span></span>
+<span id="cb14-11"><a></a><span class="co">#&gt;  2 disp  -0.854   -0.520    0       0     </span></span>
+<span id="cb14-12"><a></a><span class="co">#&gt;  3 hp    -0.518    0.852    0.0667  0     </span></span>
+<span id="cb14-13"><a></a><span class="co">#&gt;  4 drat  -0.00928  0.0171  -0.178   0.118 </span></span>
+<span id="cb14-14"><a></a><span class="co">#&gt;  5 wt    -0.00987  0       -0.0650  0.144 </span></span>
+<span id="cb14-15"><a></a><span class="co">#&gt;  6 qsec  -0.0506   0.0497  -0.957  -0.109 </span></span>
+<span id="cb14-16"><a></a><span class="co">#&gt;  7 vs     0        0       -0.0446 -0.0974</span></span>
+<span id="cb14-17"><a></a><span class="co">#&gt;  8 am     0        0.00603 -0.0157  0.0624</span></span>
+<span id="cb14-18"><a></a><span class="co">#&gt;  9 gear  -0.00957  0.0239  -0.170   0.256 </span></span>
+<span id="cb14-19"><a></a><span class="co">#&gt; 10 carb  -0.00863  0.0257   0       0.913</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="sparse-pca-with-recipes-2" class="slide level2">
 <h2>Sparse PCA with recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <p><code>predictor_prop = 0.2</code></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a></a><span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
-<span id="cb21-2"><a></a>  <span class="fu">step_pca_sparse</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">4</span>, <span class="at">predictor_prop =</span> <span class="fl">0.2</span>) <span class="sc">|&gt;</span></span>
-<span id="cb21-3"><a></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
-<span id="cb21-4"><a></a>  <span class="fu">tidy</span>(<span class="dv">1</span>) <span class="sc">|&gt;</span></span>
-<span id="cb21-5"><a></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> component, <span class="at">values_from =</span> value) <span class="sc">|&gt;</span></span>
-<span id="cb21-6"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>id)</span>
-<span id="cb21-7"><a></a><span class="co">#&gt; # A tibble: 10 × 5</span></span>
-<span id="cb21-8"><a></a><span class="co">#&gt;    terms    PC1    PC2     PC3    PC4</span></span>
-<span id="cb21-9"><a></a><span class="co">#&gt;    &lt;chr&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;</span></span>
-<span id="cb21-10"><a></a><span class="co">#&gt;  1 cyl    0      0      0      0     </span></span>
-<span id="cb21-11"><a></a><span class="co">#&gt;  2 disp  -0.865  0.486  0      0     </span></span>
-<span id="cb21-12"><a></a><span class="co">#&gt;  3 hp    -0.502 -0.874  0      0     </span></span>
-<span id="cb21-13"><a></a><span class="co">#&gt;  4 drat   0      0     -0.0109 0     </span></span>
-<span id="cb21-14"><a></a><span class="co">#&gt;  5 wt     0      0      0      0     </span></span>
-<span id="cb21-15"><a></a><span class="co">#&gt;  6 qsec   0      0     -1.000  0     </span></span>
-<span id="cb21-16"><a></a><span class="co">#&gt;  7 vs     0      0      0      0     </span></span>
-<span id="cb21-17"><a></a><span class="co">#&gt;  8 am     0      0      0      0     </span></span>
-<span id="cb21-18"><a></a><span class="co">#&gt;  9 gear   0      0      0      0.0139</span></span>
-<span id="cb21-19"><a></a><span class="co">#&gt; 10 carb   0      0      0      1.000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a></a><span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb15-2"><a></a>  <span class="fu">step_pca_sparse</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">4</span>, <span class="at">predictor_prop =</span> <span class="fl">0.2</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-3"><a></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
+<span id="cb15-4"><a></a>  <span class="fu">tidy</span>(<span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb15-5"><a></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> component, <span class="at">values_from =</span> value) <span class="sc">|&gt;</span></span>
+<span id="cb15-6"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>id)</span>
+<span id="cb15-7"><a></a><span class="co">#&gt; # A tibble: 10 × 5</span></span>
+<span id="cb15-8"><a></a><span class="co">#&gt;    terms    PC1    PC2     PC3    PC4</span></span>
+<span id="cb15-9"><a></a><span class="co">#&gt;    &lt;chr&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;</span></span>
+<span id="cb15-10"><a></a><span class="co">#&gt;  1 cyl    0      0      0      0     </span></span>
+<span id="cb15-11"><a></a><span class="co">#&gt;  2 disp  -0.865  0.486  0      0     </span></span>
+<span id="cb15-12"><a></a><span class="co">#&gt;  3 hp    -0.502 -0.874  0      0     </span></span>
+<span id="cb15-13"><a></a><span class="co">#&gt;  4 drat   0      0     -0.0109 0     </span></span>
+<span id="cb15-14"><a></a><span class="co">#&gt;  5 wt     0      0      0      0     </span></span>
+<span id="cb15-15"><a></a><span class="co">#&gt;  6 qsec   0      0     -1.000  0     </span></span>
+<span id="cb15-16"><a></a><span class="co">#&gt;  7 vs     0      0      0      0     </span></span>
+<span id="cb15-17"><a></a><span class="co">#&gt;  8 am     0      0      0      0     </span></span>
+<span id="cb15-18"><a></a><span class="co">#&gt;  9 gear   0      0      0      0.0139</span></span>
+<span id="cb15-19"><a></a><span class="co">#&gt; 10 carb   0      0      0      1.000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="nnmf" class="slide level2">
@@ -11428,27 +11102,27 @@ PC5 &amp;= cyl \cdot 0.73 &amp;&amp;+ disp \cdot -0.014 &amp;&amp;+ hp \cdot 0.0
 <section id="nnmf-with-recipes" class="slide level2">
 <h2>NNMF with recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
-<span id="cb22-2"><a></a></span>
-<span id="cb22-3"><a></a><span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
-<span id="cb22-4"><a></a>  <span class="fu">step_nnmf_sparse</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span></span>
-<span id="cb22-5"><a></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
-<span id="cb22-6"><a></a>  <span class="fu">tidy</span>(<span class="dv">1</span>) <span class="sc">|&gt;</span></span>
-<span id="cb22-7"><a></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> component, <span class="at">values_from =</span> value) <span class="sc">|&gt;</span></span>
-<span id="cb22-8"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>id)</span>
-<span id="cb22-9"><a></a><span class="co">#&gt; # A tibble: 10 × 3</span></span>
-<span id="cb22-10"><a></a><span class="co">#&gt;    terms    NNMF1   NNMF2</span></span>
-<span id="cb22-11"><a></a><span class="co">#&gt;    &lt;chr&gt;    &lt;dbl&gt;   &lt;dbl&gt;</span></span>
-<span id="cb22-12"><a></a><span class="co">#&gt;  1 am    0        0.00631</span></span>
-<span id="cb22-13"><a></a><span class="co">#&gt;  2 carb  0.00428  0.0249 </span></span>
-<span id="cb22-14"><a></a><span class="co">#&gt;  3 cyl   0.0134   0.0177 </span></span>
-<span id="cb22-15"><a></a><span class="co">#&gt;  4 disp  0.639    0      </span></span>
-<span id="cb22-16"><a></a><span class="co">#&gt;  5 drat  0.00545  0.0188 </span></span>
-<span id="cb22-17"><a></a><span class="co">#&gt;  6 gear  0.00509  0.0240 </span></span>
-<span id="cb22-18"><a></a><span class="co">#&gt;  7 hp    0.294    0.840  </span></span>
-<span id="cb22-19"><a></a><span class="co">#&gt;  8 qsec  0.0316   0.0606 </span></span>
-<span id="cb22-20"><a></a><span class="co">#&gt;  9 vs    0.000293 0.00247</span></span>
-<span id="cb22-21"><a></a><span class="co">#&gt; 10 wt    0.00742  0.00519</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb16-2"><a></a></span>
+<span id="cb16-3"><a></a><span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb16-4"><a></a>  <span class="fu">step_nnmf_sparse</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">num_comp =</span> <span class="dv">2</span>) <span class="sc">|&gt;</span></span>
+<span id="cb16-5"><a></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
+<span id="cb16-6"><a></a>  <span class="fu">tidy</span>(<span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb16-7"><a></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> component, <span class="at">values_from =</span> value) <span class="sc">|&gt;</span></span>
+<span id="cb16-8"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>id)</span>
+<span id="cb16-9"><a></a><span class="co">#&gt; # A tibble: 10 × 3</span></span>
+<span id="cb16-10"><a></a><span class="co">#&gt;    terms    NNMF1   NNMF2</span></span>
+<span id="cb16-11"><a></a><span class="co">#&gt;    &lt;chr&gt;    &lt;dbl&gt;   &lt;dbl&gt;</span></span>
+<span id="cb16-12"><a></a><span class="co">#&gt;  1 am    0        0.00631</span></span>
+<span id="cb16-13"><a></a><span class="co">#&gt;  2 carb  0.00428  0.0249 </span></span>
+<span id="cb16-14"><a></a><span class="co">#&gt;  3 cyl   0.0134   0.0177 </span></span>
+<span id="cb16-15"><a></a><span class="co">#&gt;  4 disp  0.639    0      </span></span>
+<span id="cb16-16"><a></a><span class="co">#&gt;  5 drat  0.00545  0.0188 </span></span>
+<span id="cb16-17"><a></a><span class="co">#&gt;  6 gear  0.00509  0.0240 </span></span>
+<span id="cb16-18"><a></a><span class="co">#&gt;  7 hp    0.294    0.840  </span></span>
+<span id="cb16-19"><a></a><span class="co">#&gt;  8 qsec  0.0316   0.0606 </span></span>
+<span id="cb16-20"><a></a><span class="co">#&gt;  9 vs    0.000293 0.00247</span></span>
+<span id="cb16-21"><a></a><span class="co">#&gt; 10 wt    0.00742  0.00519</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="umap" class="slide level2">
@@ -11504,27 +11178,27 @@ Figure&nbsp;5
 <h2>umap with recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <p><code>predictor_prop = 0.2</code></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a></a><span class="fu">library</span>(embed)</span>
-<span id="cb23-2"><a></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
-<span id="cb23-3"><a></a></span>
-<span id="cb23-4"><a></a><span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
-<span id="cb23-5"><a></a>  <span class="fu">step_umap</span>(<span class="fu">all_numeric_predictors</span>()) <span class="sc">|&gt;</span></span>
-<span id="cb23-6"><a></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
-<span id="cb23-7"><a></a>  <span class="fu">bake</span>(<span class="cn">NULL</span>)</span>
-<span id="cb23-8"><a></a><span class="co">#&gt; # A tibble: 32 × 3</span></span>
-<span id="cb23-9"><a></a><span class="co">#&gt;      mpg  UMAP1 UMAP2</span></span>
-<span id="cb23-10"><a></a><span class="co">#&gt;    &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;</span></span>
-<span id="cb23-11"><a></a><span class="co">#&gt;  1  21    1.50   2.26</span></span>
-<span id="cb23-12"><a></a><span class="co">#&gt;  2  21    1.26   2.02</span></span>
-<span id="cb23-13"><a></a><span class="co">#&gt;  3  22.8  2.17   4.19</span></span>
-<span id="cb23-14"><a></a><span class="co">#&gt;  4  21.4 -1.38  -1.67</span></span>
-<span id="cb23-15"><a></a><span class="co">#&gt;  5  18.7 -2.67  -2.66</span></span>
-<span id="cb23-16"><a></a><span class="co">#&gt;  6  18.1 -0.759 -1.57</span></span>
-<span id="cb23-17"><a></a><span class="co">#&gt;  7  14.3 -3.19  -3.37</span></span>
-<span id="cb23-18"><a></a><span class="co">#&gt;  8  24.4  1.31   3.91</span></span>
-<span id="cb23-19"><a></a><span class="co">#&gt;  9  22.8  2.06   2.46</span></span>
-<span id="cb23-20"><a></a><span class="co">#&gt; 10  19.2  0.876  2.31</span></span>
-<span id="cb23-21"><a></a><span class="co">#&gt; # ℹ 22 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a></a><span class="fu">library</span>(embed)</span>
+<span id="cb17-2"><a></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb17-3"><a></a></span>
+<span id="cb17-4"><a></a><span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb17-5"><a></a>  <span class="fu">step_umap</span>(<span class="fu">all_numeric_predictors</span>()) <span class="sc">|&gt;</span></span>
+<span id="cb17-6"><a></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
+<span id="cb17-7"><a></a>  <span class="fu">bake</span>(<span class="cn">NULL</span>)</span>
+<span id="cb17-8"><a></a><span class="co">#&gt; # A tibble: 32 × 3</span></span>
+<span id="cb17-9"><a></a><span class="co">#&gt;      mpg  UMAP1 UMAP2</span></span>
+<span id="cb17-10"><a></a><span class="co">#&gt;    &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span id="cb17-11"><a></a><span class="co">#&gt;  1  21    1.50   2.26</span></span>
+<span id="cb17-12"><a></a><span class="co">#&gt;  2  21    1.26   2.02</span></span>
+<span id="cb17-13"><a></a><span class="co">#&gt;  3  22.8  2.17   4.19</span></span>
+<span id="cb17-14"><a></a><span class="co">#&gt;  4  21.4 -1.38  -1.67</span></span>
+<span id="cb17-15"><a></a><span class="co">#&gt;  5  18.7 -2.67  -2.66</span></span>
+<span id="cb17-16"><a></a><span class="co">#&gt;  6  18.1 -0.759 -1.57</span></span>
+<span id="cb17-17"><a></a><span class="co">#&gt;  7  14.3 -3.19  -3.37</span></span>
+<span id="cb17-18"><a></a><span class="co">#&gt;  8  24.4  1.31   3.91</span></span>
+<span id="cb17-19"><a></a><span class="co">#&gt;  9  22.8  2.06   2.46</span></span>
+<span id="cb17-20"><a></a><span class="co">#&gt; 10  19.2  0.876  2.31</span></span>
+<span id="cb17-21"><a></a><span class="co">#&gt; # ℹ 22 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="isomap" class="slide level2">
@@ -11565,27 +11239,27 @@ Figure&nbsp;5
 <section id="isomap-with-recipes" class="slide level2">
 <h2>isomap with recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a></a><span class="fu">library</span>(embed)</span>
-<span id="cb24-2"><a></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
-<span id="cb24-3"><a></a></span>
-<span id="cb24-4"><a></a><span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
-<span id="cb24-5"><a></a>  <span class="fu">step_isomap</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">neighbors =</span> <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
-<span id="cb24-6"><a></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
-<span id="cb24-7"><a></a>  <span class="fu">bake</span>(<span class="cn">NULL</span>)</span>
-<span id="cb24-8"><a></a><span class="co">#&gt; # A tibble: 32 × 6</span></span>
-<span id="cb24-9"><a></a><span class="co">#&gt;      mpg Isomap1 Isomap2 Isomap3 Isomap4 Isomap5</span></span>
-<span id="cb24-10"><a></a><span class="co">#&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span></span>
-<span id="cb24-11"><a></a><span class="co">#&gt;  1  21    -98.5     35.6    35.3   137.    105. </span></span>
-<span id="cb24-12"><a></a><span class="co">#&gt;  2  21    -98.5     35.6    35.1   137.    104. </span></span>
-<span id="cb24-13"><a></a><span class="co">#&gt;  3  22.8 -161.      48.1    20.4   160.    129. </span></span>
-<span id="cb24-14"><a></a><span class="co">#&gt;  4  21.4    8.55    14.6    37.2    86.8   125. </span></span>
-<span id="cb24-15"><a></a><span class="co">#&gt;  5  18.7  136.      28.5    35.7   -30.8   102. </span></span>
-<span id="cb24-16"><a></a><span class="co">#&gt;  6  18.1  -27.7     21.7    38.3   104.    116. </span></span>
-<span id="cb24-17"><a></a><span class="co">#&gt;  7  14.3  207.     -16.5    34.6   -55.5   158. </span></span>
-<span id="cb24-18"><a></a><span class="co">#&gt;  8  24.4 -147.      44.2    23.7   182.     88.4</span></span>
-<span id="cb24-19"><a></a><span class="co">#&gt;  9  22.8 -125.      41.1    18.1   151.    118. </span></span>
-<span id="cb24-20"><a></a><span class="co">#&gt; 10  19.2  -91.6     33.7    48.6   135.    101. </span></span>
-<span id="cb24-21"><a></a><span class="co">#&gt; # ℹ 22 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a></a><span class="fu">library</span>(embed)</span>
+<span id="cb18-2"><a></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb18-3"><a></a></span>
+<span id="cb18-4"><a></a><span class="fu">recipe</span>(mpg <span class="sc">~</span> ., <span class="at">data =</span> mtcars) <span class="sc">|&gt;</span></span>
+<span id="cb18-5"><a></a>  <span class="fu">step_isomap</span>(<span class="fu">all_numeric_predictors</span>(), <span class="at">neighbors =</span> <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
+<span id="cb18-6"><a></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
+<span id="cb18-7"><a></a>  <span class="fu">bake</span>(<span class="cn">NULL</span>)</span>
+<span id="cb18-8"><a></a><span class="co">#&gt; # A tibble: 32 × 6</span></span>
+<span id="cb18-9"><a></a><span class="co">#&gt;      mpg Isomap1 Isomap2 Isomap3 Isomap4 Isomap5</span></span>
+<span id="cb18-10"><a></a><span class="co">#&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span></span>
+<span id="cb18-11"><a></a><span class="co">#&gt;  1  21    -98.5     35.6    35.3   137.    105. </span></span>
+<span id="cb18-12"><a></a><span class="co">#&gt;  2  21    -98.5     35.6    35.1   137.    104. </span></span>
+<span id="cb18-13"><a></a><span class="co">#&gt;  3  22.8 -161.      48.1    20.4   160.    129. </span></span>
+<span id="cb18-14"><a></a><span class="co">#&gt;  4  21.4    8.55    14.6    37.2    86.8   125. </span></span>
+<span id="cb18-15"><a></a><span class="co">#&gt;  5  18.7  136.      28.5    35.7   -30.8   102. </span></span>
+<span id="cb18-16"><a></a><span class="co">#&gt;  6  18.1  -27.7     21.7    38.3   104.    116. </span></span>
+<span id="cb18-17"><a></a><span class="co">#&gt;  7  14.3  207.     -16.5    34.6   -55.5   158. </span></span>
+<span id="cb18-18"><a></a><span class="co">#&gt;  8  24.4 -147.      44.2    23.7   182.     88.4</span></span>
+<span id="cb18-19"><a></a><span class="co">#&gt;  9  22.8 -125.      41.1    18.1   151.    118. </span></span>
+<span id="cb18-20"><a></a><span class="co">#&gt; 10  19.2  -91.6     33.7    48.6   135.    101. </span></span>
+<span id="cb18-21"><a></a><span class="co">#&gt; # ℹ 22 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 
