@@ -113,7 +113,7 @@ Loss Function:
 Optimization:
 
 - `optimizer`: the type of gradient-based optimization.
-- `epochs`: how many passes through the entire data set (i.e. iterations).
+- `epochs`: how many passes through the entire data set (i.e., iterations).
 - `stop_iter`: number of bad iterations before stopping.
 - `learn_rate`: how fast does gradient descent move? 
 - `rate_schedule`: should the learning rate change over epochs?
@@ -130,11 +130,11 @@ One other option: `class_weights`: amount to upweight the minority class (`event
 
 <br> 
 
-We have a moderate class imbalance and we'll use this argument to deal with it. 
+We have a moderate class imbalance, and we'll use this argument to deal with it. 
 
 <br> 
 
-This will push the minority class probability estimates to be more accurate/[calibrated](https://aml4td.org/chapters/cls-metrics.html#sec-cls-calibration). _Overall_ the model will be less effective; this assumes the minority class is the class of interest. 
+This will push the minority class probability estimates to be _less_ accurate/[calibrated](https://aml4td.org/chapters/cls-metrics.html#sec-cls-calibration). _Overall_ the model will be less effective; this assumes the minority class is the class of interest. 
 
 
 ## A single model `r hexes(c("recipes", "parsnip", "workflows", "brulee"))`
@@ -154,7 +154,7 @@ rec <-
 
 nnet_ex_wflow <- workflow(rec, nnet_ex_spec)
 
-# Fit on first fold's 90% analysis set
+# Fit on the first fold's 90% analysis set
 set.seed(147)
 nnet_ex_fit <- fit(nnet_ex_wflow, data = analysis(sim_rs$splits[[1]]))
 ```
@@ -391,16 +391,16 @@ nnet_wflow
 
 ## Optimize tuning parameters
 
-The main two strategies for optimization are:
+The two main strategies for optimization are:
 
-- **Grid search** which tests a pre-defined set of candidate values.
+- **Grid search**, which tests a pre-defined set of candidate values.
 
-- **Iterative search** which suggests/estimates new values of candidate parameters to evaluate.
+- **Iterative search**, which suggests/estimates new values of candidate parameters to evaluate.
 
 
 . . .
 
-We won't be discussing iterative search methods today. but you can learn more in [AML4TD](https://aml4td.org/chapters/iterative-search.html).
+We won't be discussing iterative search methods today. But you can learn more in [AML4TD](https://aml4td.org/chapters/iterative-search.html).
 
 ## Grid search
 
@@ -412,7 +412,7 @@ A small grid of points trying to minimize the error via learning rate:
 
 ## Grid search
 
-In reality we would probably sample the space more densely: 
+In reality, we would probably sample the space more densely: 
 
 ![](images/grid_points.svg){fig-align="center" width=60%}
 
@@ -427,7 +427,7 @@ We could start with a few points and search the space:
 
 ## Parameters
 
--   The tidymodels framework provides pre-defined information on tuning parameters (such as their type, range, transformations, etc).
+-   The tidymodels framework provides pre-defined information on tuning parameters (such as their type, range, transformations, etc.).
 
 -   The `extract_parameter_set_dials()` function extracts these tuning parameters and the info.
 
@@ -484,7 +484,7 @@ grids |>
 ```
 
 
-[Space-filling designs](https://aml4td.org/chapters/grid-search.html#sec-irregular-grid) (SFD) attempt to cover the parameter space without redundant candidates. We recommend these the most and they are the default. 
+[Space-filling designs](https://aml4td.org/chapters/grid-search.html#sec-irregular-grid) (SFD) attempt to cover the parameter space without redundant candidates. We recommend these the most, and they are the default. 
 
 ## Extract and update parameters `r hexes(c("dials", "workflows"))`
 
@@ -656,7 +656,7 @@ Using 10 cores with mirai, time to execute the previous `tune_grid()` call `r pa
 
 <br>
 
-In th enext slide deck (on racing), there are more examples of speed-ups for a different model. 
+The next slide deck (on racing) includes more examples of speed-ups for a different model. 
 
 
 ## Grid Search `r hexes(c("dials", "workflows", "tune"))` 
@@ -810,11 +810,11 @@ The curve is approximate for that reason.
 
 ## Multiple goals
 
-Optimizing on the Brier score optimizes for accuracy and calibration of the class probabilities. 
+Optimizing the Brier score optimizes for accuracy and calibration of the class probabilities. 
 
 <br> 
 
-That's is counter-productive to finding the rare class "event" events.
+That's counter-productive to finding the rare class "event" events.
 
 <br>
 
@@ -822,7 +822,7 @@ Can we find a way to optimize multiple metrics at once?
 
 <br> 
 
-There are a few ways and we'll focus on [desirability functions](https://aml4td.org/chapters/cls-metrics.html#sec-cls-multi-objectives). 
+There are a few ways, and we'll focus on [desirability functions](https://aml4td.org/chapters/cls-metrics.html#sec-cls-multi-objectives). 
 
 ## Desirability functions
 
@@ -915,9 +915,9 @@ nnet_res |>
 
 
 ::: notes
-The curve hugging the bottom of the plot means that we are drastically _overestimating_ the probability of class "event" relative to how often it occurs "in the wild."
+The curve hugging the bottom of the plot means that we are drastically _overestimating_ the probability of the "event" class relative to how often it occurs "in the wild."
 
-That's the point of cost-sensitive learning but bad for calibration.
+That's the point of cost-sensitive learning, but it's bad for calibration.
 
 :::
 
@@ -933,7 +933,7 @@ That is compromising the overall model fit; our probabilities are not accurate.
 
 <br>
 
-In the _postprocessing_ slides, we'll look at a alternative approach later that makes a different kinds of tradeoff. 
+In the _postprocessing_ slides, we'll examine an alternative approach that involves different kinds of tradeoffs. 
 
 
 ## Fitting a workflow `r hexes(c("tune", "workflows"))`
@@ -995,7 +995,7 @@ mlp_brier_fit |> extract_fit_engine()
 
 ::::
 
-## Extracting Results 
+## Extracting Results  `r hexes(c("tune", "workflows", "purrr", "dplyr", "tibble"))`
 
 If we want to know about the resampled workflow, we can write a function that can return information from `tune_grid()`. 
 
@@ -1032,9 +1032,6 @@ mlp_brier_fit |>
 
 ::::
 
-
-
-
 ## Your turn {transition="slide-in"}
 
 1. Read the docs for [`control_grid()`](https://tune.tidymodels.org/reference/control_grid.html), specifically the `extract` option.
@@ -1053,7 +1050,7 @@ countdown::countdown(minutes = 10, id = "racing-repeat")
 
 
 
-## What's next
+## What's next `r hexes(c("finetune"))`
 
 Let's look at _racing_: an old variation of grid search that adaptively processes the grid. 
 
@@ -1064,4 +1061,4 @@ If we are
  - initially screening _many_ models/preprocessors/postprocessors and/or
  - have a large grid
  
-this can lead to remarkable speed-ups. 
+This can lead to remarkable speed-ups. 
