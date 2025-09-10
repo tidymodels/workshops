@@ -1,0 +1,204 @@
+---
+title: "6 - Postprocessing - Classwork"
+subtitle: "Getting More Out of Feature Engineering and Tuning for Machine Learning"
+editor_options: 
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Setup
+
+```{r}
+library(tidymodels)
+library(desirability2)
+library(probably)
+library(mirai)
+
+# check torch:
+if (torch::torch_is_installed()) {
+  library(torch)
+}
+
+# Max's usual settings:
+tidymodels_prefer()
+theme_set(theme_bw())
+options(
+  pillar.advice = FALSE,
+  pillar.min_title_chars = Inf
+)
+daemons(parallel::detectCores())
+
+# Load our example data for this section
+"https://raw.githubusercontent.com/tidymodels/" |>
+  paste0("workshops/main/slides/class_data.RData") |>
+  url() |>
+  load()
+
+set.seed(429)
+sim_split <- initial_split(class_data, prop = 0.75, strata = class)
+sim_train <- training(sim_split)
+sim_test <- testing(sim_split)
+
+set.seed(523)
+sim_rs <- vfold_cv(sim_train, v = 10, strata = class)
+```
+
+## Our neural network model
+
+```{r}
+rec <-
+  recipe(class ~ ., data = sim_train) |>
+  step_normalize(all_numeric_predictors())
+
+nnet_spec <-
+  mlp(
+    hidden_units = tune(),
+    penalty = tune(),
+    learn_rate = tune(),
+    epochs = 100,
+    activation = tune()
+  ) |>
+  # Remove the class_weights argument
+  set_engine("brulee", stop_iter = 10) |>
+  set_mode("classification")
+
+nnet_wflow <- workflow(rec, nnet_spec)
+
+nnet_param <-
+  nnet_wflow |>
+  extract_parameter_set_dials()
+```  
+
+## Tailors 
+
+The tailor package is similar to recipes but specifies how to adjust predictions. 
+
+```{r}
+thrsh_tlr <-
+  tailor() |>
+  adjust_probability_threshold(threshold = 1 / 3)
+
+thrsh_tlr
+```
+
+## Manual use of a tailor
+
+```{r}
+# fmt: skip
+three_rows <- 
+  tribble(
+     ~ class, ~ .pred_class, ~.pred_event, ~.pred_nonevent,
+     "event",       "event",          0.6,             0.4,
+     "event",    "nonevent",          0.4,             0.6, 
+  "nonevent",    "nonevent",          0.1,             0.9  
+  ) |> 
+  mutate(across(where(is.character), factor))
+
+thrsh_fit <-
+  thrsh_tlr |>
+  fit(
+    three_rows,
+    outcome = class,
+    estimate = .pred_class,
+    .pred_event:.pred_nonevent # No argument name and order matches factor levels
+  )
+thrsh_fit
+
+predict(thrsh_fit, three_rows)
+```
+
+## tailors within workflows
+
+In practice, we would add the tailor to a workflow to make it easier to use: 
+
+```{r}
+nnet_wflow <- workflow(rec, nnet_spec, thrsh_tlr)
+```
+
+## Your turn
+
+Discuss with those around you what the "ordering rules" could be.
+
+## Tuning the probability threshold
+
+```{r}
+thrsh_tlr <-
+  tailor() |>
+  adjust_probability_threshold(threshold = tune())
+
+nnet_thrsh_wflow <- workflow(rec, nnet_spec, thrsh_tlr)
+
+nnet_thrsh_param <-
+  nnet_thrsh_wflow |>
+  extract_parameter_set_dials() |>
+  update(threshold = threshold(c(0.001, 0.5)))
+
+ctrl <- control_grid(save_pred = TRUE, save_workflow = TRUE)
+cls_mtr <- metric_set(brier_class, roc_auc, sensitivity, specificity)
+
+set.seed(12)
+nnet_thrsh_res <-
+  nnet_thrsh_wflow |>
+  tune_grid(
+    resamples = sim_rs,
+    grid = 25,
+    param_info = nnet_thrsh_param,
+    control = ctrl,
+    metrics = cls_mtr
+  )
+```
+
+## Grid results
+
+```{r}
+autoplot(nnet_thrsh_res)
+```
+
+## Multimetric optimization
+
+```{r}
+nnet_thrsh_res |>
+  show_best_desirability(
+    maximize(sensitivity),
+    minimize(brier_class),
+    constrain(specificity, low = 0.8, high = 1.0)
+  ) |>
+  relocate(threshold, sensitivity, specificity, brier_class, .d_overall)
+```
+
+## Calibration
+
+```{r}
+more_sens <-
+  nnet_thrsh_res |>
+  select_best_desirability(
+    maximize(sensitivity),
+    minimize(brier_class),
+    constrain(specificity, low = 0.8, high = 1.0)
+  )
+
+nnet_thrsh_res |>
+  collect_predictions(
+    parameters = more_sens
+  ) |>
+  cal_plot_windowed(
+    truth = class,
+    estimate = .pred_event,
+    window_size = 0.2,
+    step_size = 0.025,
+  )
+```
+
+## Your turn
+
+- Based on previous results, choose and fix a specific activation type (i.e., no `tune()`).
+- Add a calibrator to your tailor with a `method = tune()` value. 
+- Run another grid search
+
+Does it help with this data set?
+
+```{r}
+# Your code here!
+
+```
