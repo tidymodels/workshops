@@ -441,10 +441,10 @@ Implemented as `step_dummy_multi_choice()`.
 #| comment: ""
 values <- tribble(
   ~lang_1,    ~lang_2,   ~lang_3,
-  "English",  "Italian", "French",
-  "Spanish",  "French",  NA,
+  "English",  NA,        "Italian",
+  "Spanish",  "French",  "French",
+  NA,         NA,        NA,
   "English",  NA,        NA,
-  NA,         NA,        NA
 )
 knitr::kable(values)
 ```
@@ -616,6 +616,10 @@ This is not possible with t-SNE as it is an iterative method that shifts observa
 
 It doesn't create a mapping that can be reused.
 
+::: footer
+Visualizing Data using t-SNE, Laurens van der Maaten and Geoffrey Hinton, Journal of Machine Learning Research, 2008.
+:::
+
 ## PCA
 
 **P**rincipal **C**ompoment **A**nalysis is a linear combination of the original data such that most of the variation is captured in the first variable, then the second, then the third, and so on.
@@ -707,6 +711,7 @@ data_cumpervar(concrete)
  y = "Percent variance"
  ) +
   theme_minimal() +
+  theme(strip.text = element_blank()) +
   scale_x_continuous(breaks = c(5, seq(0, 100, by = 10)))
 ```
 
@@ -717,6 +722,7 @@ Either use the `num_comp` argument.
 ```{r}
 #| label: step-pca-num-comp
 rec <- recipe(mpg ~ ., data = mtcars) |>
+  step_normalize(all_predictors()) |>
   step_pca(all_numeric_predictors(), num_comp = 5)
 ```
 
@@ -727,6 +733,7 @@ or using the `threshold` argument
 ```{r}
 #| label: step-pca-threshold
 rec <- recipe(mpg ~ ., data = mtcars) |>
+  step_normalize(all_predictors()) |>
   step_pca(all_numeric_predictors(), threshold = 0.8)
 ```
 
@@ -787,6 +794,7 @@ Can only be done using `num_comp`
 library(embed)
 
 rec <- recipe(mpg ~ ., data = mtcars) |>
+  step_normalize(all_predictors()) |>
   step_pca_truncated(all_numeric_predictors(), num_comp = 5)
 ```
 
@@ -798,11 +806,11 @@ Every component is a linear combination of **all predictors**.
 
 $$
 \begin{alignat}{4}
-PC1 &= cyl \cdot -0.021 &&+ disp \cdot -0.85 &&+ hp \cdot -0.52 &&+ drat \cdot -0.01\\
-PC2 &= cyl \cdot 0.013 &&+ disp \cdot -0.52 &&+ hp \cdot 0.85 &&+ drat \cdot 0.02\\
-PC3 &= cyl \cdot -0.12 &&+ disp \cdot 0.016 &&+ hp \cdot 0.081 &&+ drat \cdot -0.19\\
-PC4 &= cyl \cdot -0.22 &&+ disp \cdot -0.0061 &&+ hp \cdot 0.033 &&+ drat \cdot -0.14\\
-PC5 &= cyl \cdot 0.73 &&+ disp \cdot -0.014 &&+ hp \cdot 0.0016 &&+ drat \cdot -0.33
+PC1 &= cyl \cdot -0.021 &&+ disp \cdot -0.85 &&+ hp \cdot -0.52\\
+PC2 &= cyl \cdot 0.013 &&+ disp \cdot -0.52 &&+ hp \cdot 0.85\\
+PC3 &= cyl \cdot -0.12 &&+ disp \cdot 0.016 &&+ hp \cdot 0.081\\
+PC4 &= cyl \cdot -0.22 &&+ disp \cdot -0.0061 &&+ hp \cdot 0.033\\
+PC5 &= cyl \cdot 0.73 &&+ disp \cdot -0.014 &&+ hp \cdot 0.0016
 \end{alignat}
 $$
 
@@ -823,6 +831,7 @@ The `predictor_prop` argument is used to determine how many zeroes in the loadin
 library(embed)
 
 rec <- recipe(mpg ~ ., data = mtcars) |>
+  step_normalize(all_predictors()) |>
   step_pca_sparse(all_numeric_predictors(), num_comp = 5, predictor_prop = 0.8)
 ```
 
@@ -833,9 +842,10 @@ rec <- recipe(mpg ~ ., data = mtcars) |>
 ```{r}
 #| label: step-pca-sparse-predictor-prop-0.8
 recipe(mpg ~ ., data = mtcars) |>
+  step_normalize(all_predictors()) |>
   step_pca_sparse(all_numeric_predictors(), num_comp = 4, predictor_prop = 0.8) |>
   prep() |>
-  tidy(1) |>
+  tidy(number = 2) |>
   pivot_wider(names_from = component, values_from = value) |>
   select(-id)
 ```
@@ -847,9 +857,10 @@ recipe(mpg ~ ., data = mtcars) |>
 ```{r}
 #| label: step-pca-sparse-predictor-prop-0.2
 recipe(mpg ~ ., data = mtcars) |>
+  step_normalize(all_predictors()) |>
   step_pca_sparse(all_numeric_predictors(), num_comp = 4, predictor_prop = 0.2) |>
   prep() |>
-  tidy(1) |>
+  tidy(number = 2) |>
   pivot_wider(names_from = component, values_from = value) |>
   select(-id)
 ```
@@ -860,7 +871,7 @@ recipe(mpg ~ ., data = mtcars) |>
 
 PCA aims to generate uncorrelated components that maximize the variances. One component at a time.
 
-NNMF, on the other hand, jointly optimizes all the components under the constraint that all the loadings are non-negative. While the data is also non-negative.
+NNMF, on the other hand, simultaneously optimizes all the components under the constraint that all the loadings are non-negative. While the data is also non-negative.
 
 ::: {.absolute bottom=0 right=0}
 [FEAZ](https://feaz-book.com/too-many-nmf) [FES](http://www.feat.engineering/numeric-many-to-many)
@@ -872,7 +883,7 @@ The data has to be non-negative, i.e., 0 or higher.
 
 This might feel like a pretty big restriction. And that is not wrong. But a lot of data sets end up being naturally non-negative.
 
-Or could at least be turned into non-negative ones with transformations.
+Or could at least be turned into non-negative ones with transformations. As long as you don't scale them below 0.
 
 It makes for much easier interpretations as the loadings don't cancel each other out like they do for PCA.
 
@@ -903,7 +914,7 @@ set.seed(1234)
 recipe(mpg ~ ., data = mtcars) |>
   step_nnmf_sparse(all_numeric_predictors(), num_comp = 2) |>
   prep() |>
-  tidy(1) |>
+  tidy(number = 1) |>
   pivot_wider(names_from = component, values_from = value) |>
   select(-id)
 ```
@@ -1000,8 +1011,6 @@ umap_all |>
 ```
 
 ## umap with recipes `r hexes("embed", "recipes")`
-
-`predictor_prop = 0.2`
 
 ```{r}
 #| label: step-umap
