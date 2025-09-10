@@ -220,7 +220,7 @@ $$
 Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 $$
 
-Zero is best but, for two classes, values above 0.25 are bad. 
+Zero is best and, for two classes, values above 0.25 are bad. 
 
 ::: {.absolute bottom=0 right=0}
 [AML4TD](https://aml4td.org/chapters/cls-metrics.html#sec-brier)
@@ -393,14 +393,14 @@ nnet_wflow
 
 The main two strategies for optimization are:
 
-- **Grid search** which tests a pre-defined set of candidate values
+- **Grid search** which tests a pre-defined set of candidate values.
 
-- **Iterative search** which suggests/estimates new values of candidate parameters to evaluate
+- **Iterative search** which suggests/estimates new values of candidate parameters to evaluate.
 
 
 . . .
 
-We won't be discussing iterative search methods today. 
+We won't be discussing iterative search methods today. but you can learn more in [AML4TD](https://aml4td.org/chapters/iterative-search.html).
 
 ## Grid search
 
@@ -623,8 +623,8 @@ Speed-ups are fairly linear up to the number of physical cores (10 here).
 #| label: parallel-speedup
 #| echo: false
 #| out-width: '80%'
-#| fig-width: 9
-#| fig-height: 4
+#| fig-width: 8
+#| fig-height: 3.25
 #| fig-align: 'center'
 #| dev-args:
 #|   bg: "transparent"
@@ -640,11 +640,23 @@ ggplot(times, aes(x = num_cores, y = speed_up, color = parallel_over, shape = pa
   theme(legend.position = "top")
 ```
 
-Using 10 cores with mirai, time to execute the previous `tune_grid()` call `r par_text`.
+
 
 :::notes
 Faceted on the expensiveness of preprocessing used.
 :::
+
+## Running in parallel
+
+We'll use mirai as our parallel backend for our notes. 
+
+<br>
+
+Using 10 cores with mirai, time to execute the previous `tune_grid()` call `r par_text`.
+
+<br>
+
+In th enext slide deck (on racing), there are more examples of speed-ups for a different model. 
 
 
 ## Grid Search `r hexes(c("dials", "workflows", "tune"))` 
@@ -721,7 +733,7 @@ autoplot(nnet_res, metric = c("sensitivity", "specificity"))
     - Brier: `r emo::ji("up_arrow")` 
     - ROC AUC: `r emo::ji("shrug")`
 
-# Optimizing Models via Tuning Parameters {background-color="#D04E59FF"}
+# Choosing Tuning Parameters {background-color="#D04E59FF"}
 
 ## Tuning results `r hexes(c("tune"))`
 
@@ -861,14 +873,14 @@ We can combine them with a geometric mean.
 
 ```{r}
 #| label: nnet-metrics-desire-sens
-#| code-line-numbers: "|1|3|4|5|11|"
+#| code-line-numbers: "|1|3|4|5|11|12-13|"
 show_best_desirability(
   nnet_res, 
   maximize(sensitivity),
   minimize(brier_class),
   constrain(specificity, low = 0.8, high = 1.0)
 ) |> 
-  relocate(class_weights, sensitivity, specificity, brier_class) 
+  relocate(class_weights, sensitivity, specificity, brier_class, .d_overall) 
 ```
 
 
@@ -983,14 +995,61 @@ mlp_brier_fit |> extract_fit_engine()
 
 ::::
 
+## Extracting Results 
+
+If we want to know about the resampled workflow, we can write a function that can return information from `tune_grid()`. 
+
+<br> 
+
+For example, this one can save the optimization process results: 
+
+:::: {.columns}
+
+::: {.column width="50%"}
+```{r}
+#| label: extract-hist
+#| code-line-numbers: "|2-3|8|"
+extract_iter_hist <- function(wflow) {
+  require(tidymodels)
+  require(tibble)
+  wflow |>
+    extract_fit_engine() |>
+    pluck("loss") |>
+    as_tibble_col("loss") |>
+    mutate(epoch = row_number() - 1)
+}
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: extract-hist-res
+mlp_brier_fit |> 
+  extract_iter_hist() |> 
+  slice(1:5)
+```
+:::
+
+::::
+
+
+
 
 ## Your turn {transition="slide-in"}
 
-pick an activation function and fix; try tuning using a rate scheduler
+1. Read the docs for [`control_grid()`](https://tune.tidymodels.org/reference/control_grid.html), specifically the `extract` option.
+2. Create a control object that extracts the iteration history.
+3. Re-run `tune_grid()` with the same grid (or fewer grid points) and use the `control` option with the extraction function. 
+4. Afterward use [`collect_extracts()`](https://tune.tidymodels.org/reference/collect_predictions.html) to get the results. 
+5. Plot the iteration history for one or more grid points, coloring by the resample `id`. 
 
-or 
+Parallel processing will make this go more quickly. 
 
-show how extract works
+```{r}
+#| label: extraction
+#| echo: false
+countdown::countdown(minutes = 10, id = "racing-repeat")
+```
 
 
 
