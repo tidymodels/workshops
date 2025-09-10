@@ -45,7 +45,7 @@ theme_set(theme_bw())
 options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
 ```
 
-## More startup! 
+## More startup!   `r hexes(c("rsample"))`
 
 ```{r}
 #| label: user-startup-2
@@ -78,28 +78,30 @@ knitr::include_graphics("images/finetune-toot.png")
 
 ## Making Grid Search More Efficient
 
-We evaluated 250 models (25 candidates times 10 resamples).
+Previously, we evaluated 250 models (25 candidates times 10 resamples).
 
 We can make this go faster using parallel processing. 
 
 <br> 
 
-Also, for some models, we can _fit_ far fewer models than the number that are being evaluated. 
+Also, for some models, we can _fit_ far fewer models than the number being evaluated. 
  
- * For boosting, a model with `X` trees can often predict on candidates with less than `X` trees. 
+ * For example, with boosted trees, a model with `X` trees can often predict on candidates with fewer than `X` trees (i.e., no retraining). 
  
-Both of these methods can lead to enormous speed-ups. 
+These strategies can lead to enormous speed-ups. 
 
 ## Model Racing 
 
 [_Racing_](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C7&q=+Hoeffding+racing) is an old tool that we can use to go even faster. 
 
-1. Evaluate all of the candidate models but only for a few resamples. 
+1. Evaluate all of the candidate models, but only for a few resamples. 
 1. Determine which candidates have a low probability of being selected (_cough_, _cough_, `tanh` activation, _cough_).
 1. Eliminate poor candidates.
-1. Repeat with next resample (until no more resamples remain) 
+1. Repeat with next resample (until no more resamples remain).
 
 This can result in fitting a small number of models. 
+
+It is *not* an iterative search; it is an adaptive grid search. 
 
 ::: {.absolute bottom=0 right=0}
 [TMwR](https://www.tmwr.org/grid-search#racing), [TMwR example](https://www.tmwr.org/workflow-sets#racing-example), [AML4TD](https://aml4td.org/chapters/grid-search.html#sec-racing)
@@ -112,7 +114,7 @@ How do we eliminate tuning parameter combinations?
 
 There are a few methods to do so. We'll use one based on analysis of variance (ANOVA). 
 
-_However_... there is typically a large resample effects in the results. 
+_However_... there is typically a large resampling effect in the results. 
 
 ## Resampling Results (Non-Racing)
 
@@ -204,14 +206,14 @@ One way to evaluate these models is to do a paired t-test
  
  - or a t-test on their differences matched by resamples
 
-With $n = 10$ resamples, the confidence interval for the difference in the model error is (`r signif(race_ci$lower[9], 2)`, `r signif(race_ci$upper[9], 2)`), indicating that candidate number 2 has smaller error. 
+With $n = 10$ resamples, the confidence interval for the difference in the model error is (`r signif(race_ci$lower[9], 2)`, `r signif(race_ci$upper[9], 2)`), indicating that candidate number 2 has a smaller error. 
 
 ## Evaluating Differences in Candidates
 
 :::: {.columns}
 
 ::: {.column width="40%"}
-What if we were to have compared the candidates while we seqeuntially evaluated each resample? 
+What if we were to have compared the candidates while we sequentially evaluated each resample? 
 
 `r emo::ji("point_right")`
 
@@ -229,7 +231,6 @@ One candidate shows superiority when `r which.max(race_ci$lower > 0) + 1` resamp
 #| fig-align: center
 #| fig-width: 6
 #| fig-height: 4.25
-
 
 race_ci |> 
   ggplot(aes(`number of resamples`, difference)) + 
@@ -271,7 +272,7 @@ Each tree uses the results of the previous tree to better predict samples, espec
 
 <br>
 
-Each tree in the ensemble is saved and new samples are predicted using a weighted average of the votes of each tree in the ensemble. 
+Each tree in the ensemble is saved, and new samples are predicted using a weighted average of its votes. 
 
 <br>
 
@@ -282,22 +283,35 @@ We'll focus on the popular lightgbm implementation.
 Some _possible_ parameters: 
 
 * `mtry`: The number of predictors randomly sampled at each split (in $[1, ncol(x)]$ or $(0, 1]$).
-* `trees`: The number of trees ($[1, \infty]$, but usually up to thousands)
+* `trees`: The number of trees ($[1, \infty]$, but usually up to thousands).
 * `min_n`: The number of samples needed to further split ($[1, n]$).
 * `learn_rate`: The rate that each tree adapts from previous iterations ($(0, \infty]$, usual maximum is 0.1).
-* `stop_iter`: The number of iterations of boosting where _no improvement_ was shown before stopping ($[1, trees]$)
+* `stop_iter`: The number of iterations of boosting where _no improvement_ was shown before stopping ($[1, trees]$).
 
 ## Boosted Tree Tuning Parameters
 
-TBH it is usually not difficult to optimize these models. 
+TBH, it is usually not difficult to optimize these models. 
 
 <br>
 
+:::: {.columns}
+
+::: {.column width="50%"}
 Often, there are multiple _candidate_ tuning parameter combinations that have very good results. 
+
+For example: `r emo::ji("point_right")`
 
 <br>
 
 To demonstrate, we'll look at optimizing five of the tuning parameters.
+:::
+
+::: {.column width="50%"}
+![](images/small_init.svg){fig-align="center" width=80%}
+:::
+
+::::
+
 
 ## Boosted Tree Tuning Parameters `r hexes(c("workflows", "parsnip", "bonsai"))`
 
@@ -305,7 +319,8 @@ We'll need to load the bonsai package. This has the information needed to use li
 
 ```{r}
 #| label: boost-spec
-#| code-line-numbers: "|3-7|10-12|14-15|"
+#| code-line-numbers: "|5-9|12-14|16-17|"
+library(bonsai)
 
 lgbm_spec <-
   boost_tree(
@@ -328,11 +343,11 @@ lgbm_wflow <- workflow(class ~ ., lgbm_spec)
 
 ## Racing `r hexes(c("tune", "bonsai", "finetune"))`
 
-
 ```{r } 
 #| label: lgb-grid-race
 #| cache: true
-#| code-line-numbers: "|1-2|4-5|10|12-13|"
+#| code-line-numbers: "|3-4|6-7|12|14-15|"
+library(finetune)
 
 # Set this to true to demo
 ctrl <- control_race(verbose_elim = FALSE)
@@ -343,7 +358,7 @@ cls_mtr <- metric_set(brier_class, roc_auc, sensitivity, specificity)
 set.seed(321)
 lgbm_res <-
   lgbm_wflow |>
-  tune_race_anova(
+  tune_race_anova(              # <- very similar syntax to tune_grid()
     resamples = sim_rs,
     # Let's use a larger grid
     grid = 50,
@@ -351,8 +366,6 @@ lgbm_res <-
     metrics = cls_mtr
   )
 ```
-
-The syntax and helper functions are extremely similar to those shown for `tune_grid()`. 
 
 ## Racing Results `r hexes("tune")`
 
@@ -372,7 +385,7 @@ Times using 10 cores: sequential: `r ceiling(lgbm_times["sequential"])`s, parall
 
 . . .
 
-Parallel was `r round(lgbm_times["sequential"]/lgbm_times["parallel"], 1)`-fold faster and racing in parallel was `r round(lgbm_times["sequential"]/lgbm_times["racing"], 1)`-fold faster.
+Parallel was `r round(lgbm_times["sequential"]/lgbm_times["parallel"], 1)`-fold faster, and racing in parallel was `r round(lgbm_times["sequential"]/lgbm_times["racing"], 1)`-fold faster.
 
 ## Racing Results `r hexes("finetune")`
 
@@ -414,6 +427,6 @@ plot_race(lgbm_res)
 ```{r}
 #| label: racing-repeat
 #| echo: false
-countdown::countdown(minutes = 10, id = "racing-repeat")
+countdown::countdown(minutes = 8, id = "racing-repeat")
 ```
 
