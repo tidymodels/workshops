@@ -25,10 +25,6 @@ knitr:
 ```{r}
 #| label: start-quiet
 #| include: false
-library(mirai)
-daemons(0) # reset to sequential if re-running
-daemons(parallel::detectCores())
-
 load("lgbm_times.RData")
 ```
 
@@ -354,6 +350,8 @@ ctrl <- control_race(verbose_elim = FALSE)
 
 # Optimizes on the first metric in the set
 cls_mtr <- metric_set(brier_class, roc_auc, sensitivity, specificity)
+
+mirai::daemons(parallel::detectCores() - 1)
 
 set.seed(321)
 lgbm_res <-
