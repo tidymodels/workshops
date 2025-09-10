@@ -257,7 +257,7 @@ data_splines |>
   select(-avg_price_per_room) |>
   mutate(across(contains("Spline"), \(x) round(x, 2))) |>
   slice_sample(n = 7) |>
- knitr::kable() 
+  knitr::kable() 
 ```
 
 ## Splines pros and cons
@@ -369,9 +369,9 @@ We calculate the mean of the outcome within each level of the predictor, and use
 #| label: hotel-mean-by-avg-price-per-room
 hotel_train |>
   summarise(
- mean = mean(avg_price_per_room),
- .by = agent
- )
+    mean = mean(avg_price_per_room),
+    .by = agent
+  )
 ```
 
 :::
@@ -425,9 +425,9 @@ mean(hotel_train$avg_price_per_room)
 #| label: hotel-mean-by-agent
 hotel_train |>
   summarise(
- mean = mean(avg_price_per_room),
- .by = agent
- )
+    mean = mean(avg_price_per_room),
+    .by = agent
+  )
 ```
 
 :::
@@ -449,10 +449,10 @@ We use the global mean to account for 0 occurrences. Let us adjust the calculate
 #| label: hotel-mean-by-agent-and-n
 hotel_train |>
   summarise(
- mean = mean(avg_price_per_room),
- n = n(),
- .by = agent
- ) |>
+    mean = mean(avg_price_per_room),
+    n = n(),
+    .by = agent
+  ) |>
   arrange(agent)
 ```
 
@@ -470,31 +470,46 @@ Partial pooling somewhat lowers the risk of overfitting since it tends to correc
 #| warning: false
 #| echo: false
 rec_no_smooth <- recipe(avg_price_per_room ~ agent, data = hotel_train) |>
-  step_lencode(agent, outcome = vars(avg_price_per_room), smooth = FALSE, id = "no_smooth") |>
+  step_lencode(
+    agent,
+    outcome = vars(avg_price_per_room),
+    smooth = FALSE,
+    id = "no_smooth"
+  ) |>
   prep() |>
   tidy(1)
 
 rec_smooth <- recipe(avg_price_per_room ~ agent, data = hotel_train) |>
-  step_lencode(agent, outcome = vars(avg_price_per_room), smooth = TRUE, id = "smooth") |>
+  step_lencode(
+    agent,
+    outcome = vars(avg_price_per_room),
+    smooth = TRUE,
+    id = "smooth"
+  ) |>
   prep() |>
   tidy(1)
 
 bind_rows(
- rec_no_smooth,
- rec_smooth
+  rec_no_smooth,
+  rec_smooth
 ) |>
   pivot_wider(values_from = value, names_from = id) |>
   left_join(
-    count(hotel_train, agent), by = c("level" = "agent")
- ) |>
+    count(hotel_train, agent),
+    by = c("level" = "agent")
+  ) |>
   ggplot(aes(no_smooth, smooth, size = n)) +
   geom_abline(slope = 1, intercept = 0, color = "red") +
-  geom_abline(slope = 0, intercept = mean(hotel_train$avg_price_per_room), color = "blue") +
+  geom_abline(
+    slope = 0,
+    intercept = mean(hotel_train$avg_price_per_room),
+    color = "blue"
+  ) +
   geom_point(alpha = 0.5) +
   labs(
- x = "mean",
- y = "partial pooled mean"
- )
+    x = "mean",
+    y = "partial pooled mean"
+  )
 ```
 
 ## Implentations
@@ -511,10 +526,9 @@ We have described this method solely based on analytical calculations (`step_len
 #| label: step-lencode
 recipe(avg_price_per_room ~ ., data = hotel_train) |>
   step_lencode(
- agent, country, company, 
- outcome = vars("avg_price_per_room"),
- smooth = TRUE,
- ) |>
+    agent, country, company,
+    outcome = vars("avg_price_per_room"), smooth = TRUE,
+  ) |>
   prep() |>
   bake(NULL) |>
   select(agent, country, company)
@@ -584,23 +598,26 @@ using `step_date( features = c("year", "month", "dow", "decimal", "mday", "doy",
 ```{r}
 #| label: tbl-step-date
 #| echo: false
-recipe(~ arrival_date, data = hotel_rates) |>
-  step_date(arrival_date, features = c(
-        "year",
-        "month",
-        "dow",
-        "decimal",
-        "mday",
-        "doy",
-        "week",
-        "semester",
-        "quarter"
- )) |>
+recipe(~arrival_date, data = hotel_rates) |>
+  step_date(
+    arrival_date,
+    features = c(
+      "year",
+      "month",
+      "dow",
+      "decimal",
+      "mday",
+      "doy",
+      "week",
+      "semester",
+      "quarter"
+    )
+  ) |>
   prep() |>
   bake(NULL) |>
   slice(c(2000, 4000, 6000, 8000, 10000)) |>
   rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
- knitr::kable()
+  knitr::kable()
 ```
 
 ## `arrival_date` date features
@@ -610,24 +627,27 @@ Adding `label = FALSE`
 ```{r}
 #| label: tbl-step-date-label-false
 #| echo: false
-recipe(~ arrival_date, data = hotel_rates) |>
-  step_date(arrival_date, label = FALSE,
- features = c(
-        "year",
-        "month",
-        "dow",
-        "decimal",
-        "mday",
-        "doy",
-        "week",
-        "semester",
-        "quarter"
- )) |>
+recipe(~arrival_date, data = hotel_rates) |>
+  step_date(
+    arrival_date,
+    label = FALSE,
+    features = c(
+      "year",
+      "month",
+      "dow",
+      "decimal",
+      "mday",
+      "doy",
+      "week",
+      "semester",
+      "quarter"
+    )
+  ) |>
   prep() |>
   bake(NULL) |>
   slice(c(2000, 4000, 6000, 8000, 10000)) |>
   rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
- knitr::kable()
+  knitr::kable()
 ```
 
 ## Other recipes steps
@@ -657,22 +677,25 @@ countdown(minutes = 3, id = "step_date-step_holiday-arrival_date")
 ```{r}
 #| label: fig-step-date
 #| echo: false
-recipe(~ arrival_date, data = hotel_rates) |>
-  step_date(arrival_date, label = FALSE,
- features = c(
-        "year",
-        "month",
-        "dow",
-        "decimal",
-        "mday",
-        "doy",
-        "week",
-        "semester",
-        "quarter"
- )) |>
+recipe(~arrival_date, data = hotel_rates) |>
+  step_date(
+    arrival_date,
+    label = FALSE,
+    features = c(
+      "year",
+      "month",
+      "dow",
+      "decimal",
+      "mday",
+      "doy",
+      "week",
+      "semester",
+      "quarter"
+    )
+  ) |>
   prep() |>
   bake(NULL) |>
-rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
+  rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
   select(arrival_date, month, dow, mday) |>
   distinct() |>
   pivot_longer(-arrival_date) |>
@@ -690,7 +713,7 @@ recipe(~ arrival_date, data = hotel_rates) |>
   step_holiday(arrival_date) |>
   prep() |>
   bake(NULL) |>
-rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
+  rename_with(\(x) stringr::str_remove(x, "arrival_date_")) |>
   distinct() |>
   pivot_longer(-arrival_date) |>
   ggplot(aes(arrival_date, value)) +
@@ -734,7 +757,7 @@ Create a list of rules (last slide) and pass them to the `rules` argument of `st
 #| eval: false
 rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
 
-recipe(~ arrival_date, data = hotel_rates) |>
+recipe(~arrival_date, data = hotel_rates) |>
   step_time_event(arrival_date, rules = rules)
 ```
 
@@ -745,7 +768,7 @@ recipe(~ arrival_date, data = hotel_rates) |>
 #| echo: false
 rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
 
-recipe(~ arrival_date, data = hotel_rates) |>
+recipe(~arrival_date, data = hotel_rates) |>
   step_time_event(arrival_date, rules = rules, keep_original_cols = TRUE) |>
   prep() |>
   bake(NULL) |>
@@ -774,7 +797,7 @@ We can attach values based on how far we are away from those dates.
 #| echo: false
 rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
 
-recipe(~ arrival_date, data = hotel_rates) |>
+recipe(~arrival_date, data = hotel_rates) |>
   step_mutate(arrival_date0 = arrival_date) |>
   step_date_before(arrival_date0, rules = rules) |>
   prep() |>
@@ -794,7 +817,7 @@ recipe(~ arrival_date, data = hotel_rates) |>
 #| echo: false
 rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
 
-recipe(~ arrival_date, data = hotel_rates) |>
+recipe(~arrival_date, data = hotel_rates) |>
   step_mutate(arrival_date0 = arrival_date) |>
   step_date_before(arrival_date0, rules = rules, transform = "inverse") |>
   prep() |>
@@ -814,7 +837,7 @@ recipe(~ arrival_date, data = hotel_rates) |>
 #| echo: false
 rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
 
-recipe(~ arrival_date, data = hotel_rates) |>
+recipe(~arrival_date, data = hotel_rates) |>
   step_mutate(arrival_date0 = arrival_date) |>
   step_date_after(arrival_date0, rules = rules, transform = "inverse") |>
   prep() |>
@@ -834,7 +857,7 @@ recipe(~ arrival_date, data = hotel_rates) |>
 #| echo: false
 rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
 
-recipe(~ arrival_date, data = hotel_rates) |>
+recipe(~arrival_date, data = hotel_rates) |>
   step_mutate(arrival_date0 = arrival_date) |>
   step_date_nearest(arrival_date0, rules = rules, transform = "inverse") |>
   prep() |>
