@@ -8,6 +8,7 @@ dev_pkgs <- c(
   "leaflet",
   "doMC"
 )
+
 # pak::pak(dev_pkgs)
 
 #   ----------------------------------------------------------------------
@@ -34,6 +35,8 @@ knitr::opts_chunk$set(
 
 # devtools::install_github("gadenbuie/countdown")
 library(countdown)
+library(emo)
+# devtools::install_github("hadley/emo")
 library(forested)
 library(ggplot2)
 theme_set(theme_bw())

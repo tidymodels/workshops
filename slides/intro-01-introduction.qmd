@@ -278,8 +278,10 @@ knitr::include_graphics("images/whole-game-final-performance.jpg")
 
 If you are using your own laptop instead of Posit Cloud:
 
-```{r load-pkgs}
+```{r}
+#| label: installs
 #| eval: false
+#| echo: true
 
 # Install the packages for the workshop
 pkgs <- 
@@ -291,6 +293,16 @@ pkgs <-
 install.packages(pkgs)
 ```
 
+Also, you should make sure that you have installed the newest version of a few packages. To check this, you can run: 
+
+```{r}
+#| label: check-dials
+#| eval: false
+#| echo: true
+rlang::check_installed("tidymodels", version = "1.4.1")
+rlang::check_installed("embed", version = "	1.2.0")
+```
+
 . . .
 
 <br></br>
@@ -298,57 +310,19 @@ install.packages(pkgs)
 ## Our versions
 
 ```{r pkg-list, echo = FALSE}
-deps <-
-  c(
-    "bonsai",
-    "Cubist",
-    "doParallel",
-    "earth",
-    "embed",
-    "finetune",
-    "forested",
-    "lightgbm",
-    "lme4",
-    "parallelly",
-    "plumber",
-    "probably",
-    "ranger",
-    "rpart",
-    "rpart.plot",
-    "rules",
-    "splines2",
-    "stacks",
-    "text2vec",
-    "textrecipes",
-    "tidymodels",
-    "vetiver"
-  )
-
-loaded <- purrr::map(deps, ~ library(.x, character.only = TRUE))
-excl <- c(
-  "iterators",
-  "emo",
-  "countdown",
-  "stats",
-  "graphics",
-  "grDevices",
-  "utils",
-  "datasets",
-  "methods",
-  "base",
-  "forcats",
-  "infer",
-  "foreach",
-  "Matrix",
-  "R6",
-  "parallel",
-  "devtools",
-  "usethis"
-)
+pkgs <- 
+  c("bonsai", "Cubist", "doParallel", "earth", "embed", "finetune", 
+    "lightgbm", "lme4", "parallelly", "plumber", "probably", 
+    "ranger", "rpart", "rpart.plot", "rules", "splines2", "stacks", 
+    "text2vec", "textrecipes", "tidymodels", "vetiver")
+loaded <- purrr::map(pkgs, ~ library(.x, character.only = TRUE))
+excl <- c("iterators", "emo", "countdown", "stats", "graphics", 
+          "grDevices", "utils", "datasets", "methods", "base", "forcats", 
+          "infer", "foreach", "Matrix", "R6", "parallel", "devtools", "usethis")
 loaded <- loaded[[length(loaded)]]
 loaded <- loaded[!(loaded %in% excl)]
-pkgs <-
-  sessioninfo::package_info(loaded, dependencies = FALSE) |>
+pkgs <- 
+  sessioninfo::package_info(loaded, dependencies = FALSE) |> 
   select(-date)
 df <- tibble::tibble(
   package = pkgs$package,
@@ -356,7 +330,7 @@ df <- tibble::tibble(
 )
 
 ids <- split(
-  seq_len(nrow(df)),
+  seq_len(nrow(df)), 
   ceiling(seq_len(nrow(df)) / ceiling(nrow(df) / 4))
 )
 
@@ -372,49 +346,42 @@ column3 <- df |>
 column4 <- df |>
   dplyr::slice(ids[[4]])
 
-quarto_info <- paste0(
-  "Quarto (",
-  system("quarto --version", intern = TRUE),
-  ")"
-)
+quarto_info <- paste0("Quarto (", system("quarto --version", intern = TRUE), ")")
 ```
 
 `r R.version.string`, `r quarto_info`
 
-::: {.columns style="font-size:0.7em;"}
+::: {.columns style="font-size:0.5em; font-family: monospace"}
 ::: {.column width="25%"}
-
 ```{r}
+#| label: column1
 #| echo: false
 knitr::kable(column1)
 ```
-
 :::
 
 ::: {.column width="25%"}
-
 ```{r}
+#| label: column2
 #| echo: false
 knitr::kable(column2)
 ```
-
 :::
 
 ::: {.column width="25%"}
-
 ```{r}
+#| label: column3
 #| echo: false
 knitr::kable(column3)
 ```
-
 :::
 
 ::: {.column width="25%"}
-
 ```{r}
+#| label: column4
 #| echo: false
 knitr::kable(column4)
 ```
+:::
+:::
 
-:::
-:::

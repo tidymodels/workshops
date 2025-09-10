@@ -1,0 +1,1061 @@
+---
+title: "2 - Model optimization by tuning"
+subtitle: "Getting More Out of Feature Engineering and Tuning for Machine Learning"
+format:
+  revealjs: 
+    slide-number: true
+    footer: <https://workshops.tidymodels.org>
+    include-before-body: header.html
+    include-after-body: footer-annotations.html
+    theme: [default, tidymodels.scss]
+    width: 1280
+    height: 720
+knitr:
+  opts_chunk: 
+    echo: true
+    collapse: true
+    comment: "#>"
+---
+
+```{r setup}
+#| include: false
+#| file: setup.R
+```
+```{r}
+#| label: other-startups
+#| include: false
+
+library(patchwork)
+
+# Start torch to bypass its effect on the RNGs
+torch::torch_is_installed()
+```
+
+## Startup!  `r hexes("tidymodels")`
+
+
+```{r}
+#| label: user-startup
+library(tidymodels)
+library(probably)
+library(desirability2)
+
+tidymodels_prefer()
+theme_set(theme_bw())
+options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
+
+# check torch:
+if (torch::torch_is_installed()) {
+  library(torch)
+}
+
+# Load our example data for this section
+"https://raw.githubusercontent.com/tidymodels/" |> 
+  paste0("workshops/main/slides/class_data.RData") |> 
+  url() |> 
+  load()
+```
+
+## Where we are `r hexes("rsample")`
+
+
+```{r}
+#| label: spend-class-data
+set.seed(429)
+sim_split <- initial_split(class_data, prop = 0.75, strata = class)
+sim_train <- training(sim_split)
+sim_test  <- testing(sim_split)
+
+set.seed(523)
+sim_rs <- vfold_cv(sim_train, v = 10, strata = class)
+```
+
+# Neural networks {background-color="#BDE9C9FF"}
+
+## The brulee package `r hexes("brulee")`
+
+Several packages exist for this, but we’ll use the brulee package, which relies on the torch deep learning framework. 
+
+<br> 
+
+Let's load the package and look at the documentation for the function that we will use: 
+
+<br> 
+
+```{r}
+#| label: start-brulee
+
+# This might trigger a torch install: 
+library(brulee)
+# ?brulee_mlp
+```
+
+([HTML docs](https://brulee.tidymodels.org/reference/brulee_mlp.html) are nice too)
+
+## Notable arguments Part 1 `r hexes("brulee")`
+
+Model Structure: 
+
+- `hidden_units`: the primary way to specify model complexity.
+- `activation`: the name of the nonlinear function used to connect the predictors to the hidden layer. 
+
+. . . 
+
+Loss Function:
+
+- `penalty`: amount of regularization used to prevent overfitting. 
+- `mixture`: the proportion of L1 and L2 penalties. 
+- `validation`: proportion of data to leave out to assess early stopping.
+
+
+## Notable arguments Part 2 `r hexes("brulee")`
+
+Optimization:
+
+- `optimizer`: the type of gradient-based optimization.
+- `epochs`: how many passes through the entire data set (i.e., iterations).
+- `stop_iter`: number of bad iterations before stopping.
+- `learn_rate`: how fast does gradient descent move? 
+- `rate_schedule`: should the learning rate change over epochs?
+- `batch_size`: for stochastic gradient descent.
+
+<br> 
+
+That's a lot `r emo::ji("weary")`
+
+
+## Cost-sensitive learning `r hexes("brulee")`
+
+One other option: `class_weights`: amount to upweight the minority class (`event`) when computing the objective function (cross-entropy).
+
+<br> 
+
+We have a moderate class imbalance, and we'll use this argument to deal with it. 
+
+<br> 
+
+This will push the minority class probability estimates to be _more_ accurate/[calibrated](https://aml4td.org/chapters/cls-metrics.html#sec-cls-calibration). _Overall_ the model will be less effective; this assumes the minority class is the class of interest. 
+
+
+## A single model `r hexes(c("recipes", "parsnip", "workflows", "brulee"))`
+
+```{r}
+#| label: one-model
+#| cache: true
+#| code-line-numbers: "|2|3|4|6-8|10|12-14|"
+nnet_ex_spec <- 
+  mlp(hidden_units = 20, penalty = 0.01, learn_rate = 0.005, epochs = 100) |> 
+  set_engine("brulee", class_weights = 3, stop_iter = 10) |> 
+  set_mode("classification")
+
+rec <- 
+  recipe(class ~ ., data = sim_train) |> 
+  step_normalize(all_numeric_predictors())
+
+nnet_ex_wflow <- workflow(rec, nnet_ex_spec)
+
+# Fit on the first fold's 90% analysis set
+set.seed(147)
+nnet_ex_fit <- fit(nnet_ex_wflow, data = analysis(sim_rs$splits[[1]]))
+```
+
+
+## Did it converge?  `r hexes(c("ggplot2", "brulee"))`
+
+:::: {.columns}
+
+::: {.column width="60%"}
+```{r}
+#| label: nnet-converge
+#| out-width: 100%
+#| fig-width: 6.25
+#| fig-height: 4
+#| fig-align: "center"
+#| code-line-numbers: "|2-3|4|"
+nnet_ex_fit |>
+  # pull out the brulee fit:
+  extract_fit_engine() |>
+  autoplot()
+```
+:::
+
+::: {.column width="10%"}
+
+:::
+
+::: {.column width="30%"}
+The y-axis statistics are computed on the held-out predictions at each iteration.
+
+The vertical green line shows that early stopping occurred. 
+:::
+
+::::
+
+## Did it work?   `r hexes(c("broom", "yardstick", "rsample", "brulee"))` {.annotation}
+
+```{r}
+#| label: nnet-holdout
+#| code-line-numbers: "|1|2|3|5-6|"
+assessment_data <- assessment(sim_rs$splits[[1]])
+cls_mtr <- metric_set(brier_class, roc_auc, sensitivity, specificity)
+holdout_pred <- augment(nnet_ex_fit, assessment_data) 
+
+# Performance metrics
+holdout_pred |> cls_mtr(class, estimate = .pred_class, .pred_event)
+```
+
+Kind of? 
+
+If sensitivity is important, then the model is moderately successful.  
+
+## Calibration
+
+Calibration is a property of individual predictions. A well-calibrated probability occurs _in the wild_ at the same rate as the estimate. 
+
+The Brier score is the closest we can come to estimating it:
+
+$$
+Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
+$$
+
+Zero is best and, for two classes, values above 0.25 are bad. 
+
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/cls-metrics.html#sec-brier)
+:::
+
+
+## Calibration Plots`r hexes(c("probably"))`
+
+:::: {.columns}
+
+::: {.column width="50%"}
+```{r}
+#| label: nnet-cal-code
+#| eval: false
+#| code-line-numbers: "|2|3|4|5-6|"
+holdout_pred |>
+  cal_plot_windowed(
+    truth = class,
+    estimate = .pred_event,
+    window_size = 0.2,
+    step_size = 0.025
+  )
+```
+
+<br><br>
+
+
+`r emo::ji("scream")` 
+
+This is partly due to the small sample size. 
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: nnet-cal
+#| echo: false
+#| out-width: 90%
+#| fig-width: 5
+#| fig-height: 5
+#| fig-align: "center"
+holdout_pred |> cal_plot_windowed(class, .pred_event, window_size = 0.2, step_size = 0.025)
+```
+:::
+
+::::
+
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/cls-metrics.html#sec-cls-calibration)
+:::
+
+
+
+# Optimizing Models via Tuning Parameters {background-color="#D04E59FF"}
+
+## Tuning parameters
+
+Some model or preprocessing parameters cannot be estimated directly from the data.
+
+. . .
+
+Some examples:
+
+- Tree depth in decision trees
+- Number of neighbors in a K-nearest neighbor model
+
+# Activation function in neural networks?
+
+Sigmoidal functions, ReLu, etc.
+
+::: fragment
+Yes, it is a tuning parameter.
+`r emo::ji("white_check_mark")`
+:::
+
+# Number of PCA columns to generate for feature extraction?
+
+::: fragment
+Yes, it is a _preprocessing_ tuning parameter.
+`r emo::ji("white_check_mark")`
+:::
+
+# The validation set size?
+
+::: fragment
+Nope!
+`r emo::ji("x")`
+:::
+
+
+# Bayesian priors for model parameters?
+
+::: fragment
+Hmmmm, probably not.
+These are based on prior belief.
+`r emo::ji("x")`
+:::
+
+# The class probability cutoff?
+
+This is a value $C$ used to threshold $Pr[Class = 1]  \ge C$. 
+
+For two classes, the default is $C = 1/2$. 
+
+::: fragment
+Yes, it is a _postprocessing_ tuning parameter.
+`r emo::ji("white_check_mark")`
+:::
+
+
+# The random seed?
+
+::: fragment
+Nope. It is not. 
+`r emo::ji("x")`
+:::
+
+## Optimize tuning parameters
+
+- Try different values and measure their performance.
+
+. . .
+
+- Find good values for these parameters.
+
+. . .
+
+- Once the value(s) of the parameter(s) are determined, a model can be finalized by fitting the model to the entire training set.
+
+
+## Tagging parameters for tuning  `r hexes("tune")`
+
+With tidymodels, you can mark the parameters that you want to optimize with a value of `tune()`. 
+
+<br>
+
+The function itself just returns... itself: 
+
+```{r}
+#| label: tune
+
+tune()
+str(tune())
+
+# optionally add a label
+tune("I hope that the workshop is going well")
+```
+
+. . . 
+
+For example...
+
+
+## Optimizing the neural network `r hexes("tune", "recipes")`
+
+```{r}
+#| label: tunable-model
+#| code-line-numbers: "|2-3|4|"
+nnet_spec <- 
+  mlp(hidden_units = tune(), penalty = tune(), learn_rate = tune(), 
+      epochs = 100, activation = tune()) |> 
+  set_engine("brulee", class_weights = tune(), stop_iter = 10) |> 
+  set_mode("classification")
+
+nnet_wflow <- workflow(rec, nnet_spec)
+nnet_wflow
+```
+
+
+## Optimize tuning parameters
+
+The two main strategies for optimization are:
+
+- **Grid search**, which tests a pre-defined set of candidate values.
+
+- **Iterative search**, which suggests/estimates new values of candidate parameters to evaluate.
+
+
+. . .
+
+We won't be discussing iterative search methods in depth today. But you can learn more in [AML4TD](https://aml4td.org/chapters/iterative-search.html).
+
+## Grid search
+
+A small grid of points trying to minimize the error via learning rate: 
+
+
+![](images/small_init.svg){fig-align="center" width=60%}
+
+
+## Grid search
+
+In reality, we would probably sample the space more densely: 
+
+![](images/grid_points.svg){fig-align="center" width=60%}
+
+
+## Iterative Search
+
+We could start with a few points and search the space:
+
+![](animations/anime_seq.gif){fig-align="center" width=60%}
+
+# Grid Search {background-color="#FAE093FF"}
+
+## Parameters
+
+-   The tidymodels framework provides pre-defined information on tuning parameters (such as their type, range, transformations, etc.).
+
+-   The `extract_parameter_set_dials()` function extracts these tuning parameters and the info.
+
+
+```{r}
+#| label: nnet-param
+#| message: true
+nnet_param <- 
+  nnet_wflow |> 
+  extract_parameter_set_dials() 
+nnet_param  
+```  
+
+## Different types of grids `r hexes(c("dials"))`  {.annotation}
+
+
+```{r} 
+#| label: grid-types
+#| echo: false
+#| fig-width: 10
+#| fig-height: 2.7
+#| fig-align: 'center'
+#| out-width: 100%
+
+nnet_plot_param <- parameters(class_weights(), learn_rate())
+
+reg_1 <- grid_regular(nnet_plot_param, levels = c(4, 4)) |> 
+  mutate(type = "Regular (balanced)")
+reg_2 <- grid_regular(nnet_plot_param, levels = c(3, 5)) |> 
+  mutate(type = "Regular (unbalanced)")
+
+irreg_1 <- grid_space_filling(nnet_plot_param, size = 16, type = "uniform") |> 
+  mutate(type = "SFD: Uniform")
+
+set.seed(431)
+irreg_2 <- grid_random(nnet_plot_param, size = 16) |> 
+  mutate(type = "Random")
+irreg_3 <- grid_space_filling(nnet_plot_param, size = 16, type = "latin_hypercube") |> 
+  mutate(type = "SFD: Latin Hypercube")
+
+lvls <- c("Regular (balanced)", "Regular (unbalanced)", "Random", 
+          "SFD: Latin Hypercube", "SFD: Uniform")
+
+grids <- 
+  bind_rows(reg_1, reg_2, irreg_1, irreg_2, irreg_3) |> 
+  mutate(type = factor(type, levels = lvls))
+
+grids |> 
+  ggplot(aes(class_weights, learn_rate)) + 
+  geom_point() + 
+  scale_y_log10() +
+  facet_wrap(~ type, nrow = 1) +
+  labs(x = class_weights()$label, y = learn_rate()$label)
+```
+
+
+[Space-filling designs](https://aml4td.org/chapters/grid-search.html#sec-irregular-grid) (SFD) attempt to cover the parameter space without redundant candidates. We recommend these the most, and they are the default. 
+
+## Extract and update parameters `r hexes(c("dials", "workflows"))`
+
+```{r}
+#| label: update-nnet-param
+#| message: true
+nnet_param <- 
+  nnet_param |> 
+  update(class_weights = class_weights(c(1, 50)))
+  
+  nnet_param  
+```  
+
+
+## Grid Search `r hexes(c("dials", "workflows", "tune"))` 
+
+```{r}
+#| label: start-parallel
+#| include: false
+library(mirai)
+daemons(0) # reset to sequential if re-running
+daemons(parallel::detectCores())
+```
+
+```{r}
+#| label: nnet-grid-tune
+#| cache: true
+#| code-line-numbers: "|1|5|8|10|11|12|"
+ctrl <- control_grid(save_pred = TRUE, save_workflow = TRUE)
+
+set.seed(12)
+nnet_res <-
+  nnet_wflow |>
+  tune_grid(
+    resamples = sim_rs,
+    grid = 25,
+    # The options below are not required by default
+    param_info = nnet_param, 
+    control = ctrl,
+    metrics = cls_mtr
+  )
+```
+
+. . .
+
+<br>
+
+`r emo::ji("hand")` maybe don't run this just yet...
+
+::: notes
+-   `tune_grid()` is representative of tuning function syntax
+-   similar to `fit_resamples()`
+:::
+
+## Running in parallel
+
+-   Grid search, combined with resampling, requires fitting a lot of models!
+
+-   These models don't depend on one another and can be run in parallel.
+
+We can use the future or mirai packages to do this:
+
+```{r}
+cores <- parallelly::availableCores(logical = FALSE)
+```
+
+<br>
+
+::: columns
+::: {.column width="50%"}
+
+```{r}
+#| eval: false
+#| label: parallel-future
+
+library(future)
+plan(multisession, workers = cores)
+
+# Now call `tune_grid()`!
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+#| eval: false
+#| label: mirai-methods
+library(mirai)
+daemons(cores)
+
+# Now call `tune_grid()`!
+```
+:::
+:::
+
+```{r}
+#| label: grid-seepdup
+#| include: false
+# mirai using cores 10
+par <- 44.860
+seq <- 255.965
+par_text <- 
+  cli::format_inline(
+    "was reduced from {ceiling(seq)}s to {ceiling(par)}s, a speed-up of {round(seq / par, 1)}-fold")
+```
+
+## Distributing tasks 
+
+When only tuning the model:
+
+
+```{r}
+#| label: resample-times
+#| echo: false
+#| out-width: '40%'
+#| fig-width: 6
+#| fig-height: 6
+#| fig-align: 'center'
+#| dev-args:
+#|   bg: "transparent"
+load("resamples_times.RData")
+resamples_times |>
+  dplyr::rename(operation = label) |> 
+  ggplot(aes(y = id_alt, x = duration, fill = operation)) +
+  geom_bar(stat = "identity", color = "black") +
+  labs(y = NULL, x = "Elapsed Time") + 
+  scale_fill_brewer(palette = "Paired") +
+  theme(legend.position = "top")
+```
+
+## Running in parallel
+
+Speed-ups are fairly linear up to the number of physical cores (10 here).
+
+```{r}
+#| label: parallel-speedup
+#| echo: false
+#| out-width: '80%'
+#| fig-width: 8
+#| fig-height: 3.25
+#| fig-align: 'center'
+#| dev-args:
+#|   bg: "transparent"
+load("xgb_times.RData")
+ggplot(times, aes(x = num_cores, y = speed_up, color = parallel_over, shape = parallel_over)) + 
+  geom_abline(lty = 1) + 
+  geom_point(size = 2) + 
+  geom_line() +
+  facet_wrap(~ preprocessing) + 
+  coord_obs_pred() + 
+  scale_color_manual(values = c("#7FC97F", "#386CB0")) +
+  labs(x = "Number of Workers", y = "Speed-up")  +
+  theme(legend.position = "top")
+```
+
+
+
+:::notes
+Faceted on the expensiveness of preprocessing used.
+:::
+
+## Running in parallel
+
+We'll use mirai as our parallel backend for our notes. 
+
+<br>
+
+Using 10 cores with mirai, time to execute the previous `tune_grid()` call `r par_text`.
+
+<br>
+
+The next slide deck (on racing) includes more examples of speed-ups for a different model. 
+
+
+## Grid Search `r hexes(c("dials", "workflows", "tune"))` 
+
+```{r} 
+#| label: nnet-grid-tune-res
+nnet_res 
+```
+
+
+## Grid results `r hexes(c("tune"))`
+
+```{r}
+#| label: sim-nnet-all
+#| fig-width: 12
+#| fig-height: 5
+#| fig-align: center
+#| out-width: "100%"
+#| dev-args:
+#|   bg: "transparent"
+autoplot(nnet_res)
+```
+
+## Brier results `r hexes(c("tune"))`
+
+```{r}
+#| label: sim-nnet-brier
+#| fig-width: 12
+#| fig-height: 3
+#| fig-align: center
+#| out-width: "100%"
+#| dev-args:
+#|   bg: "transparent"
+autoplot(nnet_res, metric = "brier_class") + 
+  facet_grid(. ~ name, scale = "free_x") + 
+  lims(y = c(0.04, 0.22)) # no tanh
+```
+
+## ROC curve results `r hexes(c("tune"))`
+
+```{r}
+#| label: sim-nnet-roc
+#| fig-width: 12
+#| fig-height: 3
+#| fig-align: center
+#| out-width: "100%"
+#| dev-args:
+#|   bg: "transparent"
+autoplot(nnet_res, metric = "roc_auc") + 
+  facet_grid(. ~ name, scale = "free_x") + 
+  lims(y = c(0.83, 0.97)) # no tanh
+```
+
+## Sensitivity/Specificity results `r hexes(c("tune"))`
+
+```{r}
+#| label: sim-nnet-two-class
+#| fig-width: 12
+#| fig-height: 4.5
+#| fig-align: center
+#| out-width: "100%"
+#| dev-args:
+#|   bg: "transparent"
+autoplot(nnet_res, metric = c("sensitivity", "specificity"))
+```
+
+
+## Grid results
+
+ - tanh activation `r emo::ji("-1")``r emo::ji("-1")`
+ - As class weight `r emo::ji("up_arrow")`:
+    - sensitivity `r emo::ji("up_arrow")`
+    - specificity `r emo::ji("down_arrow")``r emo::ji("down_arrow")` 
+    - Brier: `r emo::ji("up_arrow")` 
+    - ROC AUC: `r emo::ji("shrug")`
+
+# Choosing Tuning Parameters {background-color="#D04E59FF"}
+
+## Tuning results `r hexes(c("tune"))`
+
+```{r}
+#| label: nnet-metrics2
+#| code-line-numbers: "|1|6-9|10-13|"
+collect_metrics(nnet_res) |> 
+  relocate(.metric, mean) 
+```
+
+## Tuning results `r hexes(c("tune"))`
+
+```{r}
+#| label: nnet-metrics-raw
+collect_metrics(nnet_res, summarize = FALSE) |> 
+  relocate(.metric, .estimate)
+```
+
+## Choose a parameter combination `r hexes(c("tune"))`
+
+```{r}
+#| label: nnet-metrics-show
+#| code-line-numbers: "|1|6|"
+show_best(nnet_res, metric = "brier_class") |> 
+  relocate(.metric, mean) 
+```
+
+## Choose a parameter combination `r hexes(c("tune"))`
+
+Create your own tibble for final parameters or use one of the `tune::select_*()` functions:
+
+```{r}
+#| label: nnet-metrics-best
+#| code-line-numbers: "|1|6|8-10|14-17|"
+nnet_best <- select_best(nnet_res, metric = "brier_class")
+nnet_best
+
+collect_metrics(nnet_res) |> 
+  inner_join(nnet_best) |> 
+  select(.metric, mean)
+```
+
+## Checking (Approximate) Calibration `r hexes(c("tune", "probably"))`
+
+```{r}
+#| label: nnet-cal-plot
+#| output-location: column
+#| out-width: 90%
+#| fig-width: 5
+#| fig-height: 5
+
+nnet_holdout_pred <-
+  nnet_res |> 
+  collect_predictions(
+    parameters = nnet_best
+  )
+
+nnet_holdout_pred |>
+  cal_plot_windowed(
+    truth = class,
+    estimate = .pred_event,
+    window_size = 0.2,
+    step_size = 0.025,
+  )
+```
+
+
+::: notes
+This plot _pools_ the out-of-sample predictions. Our Brier estimate is the mean of 10 data sets.
+
+The curve is approximate for that reason. 
+:::
+
+
+## Multiple goals
+
+Optimizing the Brier score optimizes for accuracy and calibration of the class probabilities. 
+
+<br> 
+
+That's counter-productive to finding the rare class "event" events.
+
+<br>
+
+Can we find a way to optimize multiple metrics at once? 
+
+<br> 
+
+There are a few ways, and we'll focus on [desirability functions](https://aml4td.org/chapters/cls-metrics.html#sec-cls-multi-objectives). 
+
+## Desirability functions
+
+We create simple functions to translate our variable to [0, 1]; 1.0 is most desirable.
+
+
+```{r}
+#| label: three-desirability-examples
+#| echo: false
+#| out-width: 70%
+#| fig-width: 10
+#| fig-height: 3
+library(desirability2)
+
+p_roc <-
+  tibble(AUC = seq(0.3, 1.05, length.out = 1000)) |>
+  mutate(d_ROC = d_max(AUC, low = 1 / 2, high = 1)) |>
+  ggplot(aes(AUC, d_ROC)) +
+  geom_line() +
+  geom_vline(xintercept = 1 / 2, col = "red", lty = 2) +
+  geom_vline(xintercept = 1, col = "green", lty = 2) +
+  labs(x = "ROC AUC", y = "Desirability", title = "Goal: Maximize")
+
+p_brier <- 
+  tibble(brier = seq(-0.05, 0.30, length.out = 1000)) |>
+  mutate(d_brier = d_min(brier, low = 0, high = 0.25)) |>
+  ggplot(aes(brier, d_brier)) +
+  geom_line() +
+  geom_vline(xintercept = 1 / 4, col = "red", lty = 2) +
+  geom_vline(xintercept = 0, col = "green", lty = 2) +
+  labs(x = "Brier Score", y = NULL, title = "Goal: Minimize")
+
+p_spec <- 
+  tibble(spec = seq(-0.05, 1.05, length.out = 1000)) |>
+  mutate(d_spec = d_box(spec, low = 0.8, high = 1)) |>
+  ggplot(aes(spec, d_spec)) +
+  geom_line() +
+  labs(x = "Specificity", y = NULL, title = "Goal: Constrain")
+
+p_roc + p_brier + p_spec
+```
+
+We can combine them with a geometric mean. 
+
+
+## Multimetric optimization `r hexes(c("tune"))`
+
+
+```{r}
+#| label: nnet-metrics-desire-sens
+#| code-line-numbers: "|1|3|4|5|11|12-13|"
+show_best_desirability(
+  nnet_res, 
+  maximize(sensitivity),
+  minimize(brier_class),
+  constrain(specificity, low = 0.8, high = 1.0)
+) |> 
+  relocate(class_weights, sensitivity, specificity, brier_class, .d_overall) 
+```
+
+
+## However... `r hexes(c("tune", "probably"))`
+
+```{r}
+#| label: nnet-cal-plot-sens
+#| output-location: column
+#| out-width: 90%
+#| fig-width: 5
+#| fig-height: 5
+
+more_sens <-
+  select_best_desirability(
+    nnet_res,
+    maximize(sensitivity),
+    minimize(brier_class),
+    constrain(specificity, low = 0.8, high = 1.0)
+  )
+
+nnet_res |>
+  collect_predictions(
+    parameters = more_sens
+  ) |>
+  cal_plot_windowed(
+    truth = class,
+    estimate = .pred_event,
+    window_size = 0.2,
+    step_size = 0.025,
+  )
+```
+
+
+::: notes
+The curve hugging the bottom of the plot means that we are drastically _overestimating_ the probability of the "event" class relative to how often it occurs "in the wild."
+
+That's the point of cost-sensitive learning, but it's bad for calibration.
+
+:::
+
+## Conflicting goals
+
+The problem here is that we are biasing the probability estimates so that we can predict more data to be the rare "event" class _using a default probability cutoff of 1/2_. 
+
+<br> 
+
+That is compromising the overall model fit; our probabilities are not accurate.
+
+- If we don't use the class probability estimates, this is fine. 
+
+<br>
+
+In the _postprocessing_ slides, we'll examine an alternative approach that involves different kinds of tradeoffs. 
+
+
+## Fitting a workflow `r hexes(c("tune", "workflows"))`
+
+Let's say that we want to train the model on the "best" parameter estimates.
+
+We can use a tibble of tuning parameters and _splice_ them into the workflow in place of `tune()`: 
+
+:::: {.columns}
+
+::: {.column width="45%"}
+```{r}
+#| label: sim-sens-fit
+#| code-line-numbers: "|4|"
+set.seed(398)
+nnet_sens_fit <-
+  nnet_wflow |>
+  finalize_workflow(more_sens) |>
+  fit(sim_train)
+```
+:::
+
+::: {.column width="55%"}
+```{r}
+#| label: sim-sens-fit-print
+#| code-line-numbers: false
+nnet_sens_fit |> extract_fit_engine()
+```
+:::
+
+::::
+
+
+## Ordering off of the menu `r hexes(c("tune", "workflows"))`
+
+If we want to choose from the numerically best for an existing metric, there is a simpler function: 
+
+
+:::: {.columns}
+
+::: {.column width="45%"}
+```{r}
+#| label: sim-fit-to-train
+#| code-line-numbers: "|4|"
+set.seed(398)
+mlp_brier_fit <-
+  nnet_res |>
+  fit_best(metric = "brier_class")
+```
+:::
+
+::: {.column width="55%"}
+```{r}
+#| label: sim-fit-to-train-print
+#| code-line-numbers: false
+mlp_brier_fit |> extract_fit_engine()
+```
+:::
+
+::::
+
+## Extracting Results  `r hexes(c("tune", "workflows", "purrr", "dplyr", "tibble"))`
+
+If we want to know about the resampled workflow, we can write a function that can return information from `tune_grid()`. 
+
+<br> 
+
+For example, this one can save the optimization process results: 
+
+:::: {.columns}
+
+::: {.column width="50%"}
+```{r}
+#| label: extract-hist
+#| code-line-numbers: "|2-3|8|"
+extract_iter_hist <- function(wflow) {
+  require(tidymodels)
+  require(tibble)
+  wflow |>
+    extract_fit_engine() |>
+    pluck("loss") |>
+    as_tibble_col("loss") |>
+    mutate(epoch = row_number() - 1)
+}
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: extract-hist-res
+mlp_brier_fit |> 
+  extract_iter_hist() |> 
+  slice(1:5)
+```
+:::
+
+::::
+
+## Your turn {transition="slide-in"}
+
+1. Read the docs for [`control_grid()`](https://tune.tidymodels.org/reference/control_grid.html), specifically the `extract` option.
+2. Create a control object that extracts the iteration history.
+3. Re-run `tune_grid()` with the same grid (or fewer grid points) and use the `control` option with the extraction function. 
+4. Afterward use [`collect_extracts()`](https://tune.tidymodels.org/reference/collect_predictions.html) to get the results. 
+5. Plot the iteration history for one or more grid points, coloring by the resample `id`. 
+
+Parallel processing will make this go more quickly. 
+
+```{r}
+#| label: extraction
+#| echo: false
+countdown::countdown(minutes = 10, id = "racing-repeat")
+```
+
+
+
+## What's next `r hexes(c("finetune"))`
+
+Let's look at _racing_: an old variation of grid search that adaptively processes the grid. 
+
+<br> 
+
+If we are
+
+ - initially screening _many_ models/preprocessors/postprocessors and/or
+ - have a large grid
+ 
+This can lead to remarkable speed-ups. 

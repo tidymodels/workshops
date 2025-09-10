@@ -1,6 +1,6 @@
 ---
 title: "1 - Introduction"
-subtitle: "Advanced tidymodels"
+subtitle: "Getting More Out of Feature Engineering and Tuning for Machine Learning"
 format:
   revealjs: 
     slide-number: true
@@ -72,6 +72,7 @@ Wi-Fi password
 
 -   Please do not photograph people wearing red lanyards
 
+
 ## Who are you?
 
 -   You can use the magrittr `%>%` or base R `|>` pipe
@@ -80,7 +81,7 @@ Wi-Fi password
 
 -   You have exposure to basic statistical concepts
 
--   You do **not** need intermediate or expert familiarity with modeling or ML
+-   You do need intermediate familiarity with modeling or ML
 
 -   You have used some tidymodels packages
  
@@ -128,14 +129,13 @@ Many thanks to Davis Vaughan, Julia Silge, David Robinson, Julie Jung, Alison Hi
 
 ## Tentative plan for this workshop
 
-- Feature engineering with recipes
+
 - Model optimization by tuning
   - Grid search
   - Racing
-  - Iterative methods
-- Extras (time permitting)
-  - Effect encodings
-  - A case study
+- Feature engineering with recipes
+- Postprocessing  
+- Feature selection
 
 ##  {.center}
 
@@ -153,129 +153,319 @@ If you are using your own laptop instead of Posit Cloud:
 #| eval: false
 
 # Install the packages for the workshop
-pkgs <- 
-  c("bonsai", "Cubist", "doParallel", "earth", "embed", "finetune", 
-    "lightgbm", "lme4", "parallelly", "plumber", "probably", 
-    "ranger", "rpart", "rpart.plot", "rules", "splines2", "stacks", 
-    "text2vec", "textrecipes", "tidymodels", "vetiver")
+pkgs <- c("almanac", "betacal", "bonsai", "C50", "Cubist", "dimRed", 
+          "doParallel", "earth", "embed", "extrasteps", "finetune", "forested", 
+          "igraph", "irlba", "kknn", "lightgbm", "lme4", "mirai", "parallelly", 
+          "plumber", "probably", "ranger", "RANN", "rpart", "rpart.plot", 
+          "RSpectra", "rules", "splines2", "stacks", "text2vec", "textrecipes", 
+          "tidymodels", "uwot", "vetiver")
 
 install.packages(pkgs)
 ```
 
-Also, you should install the newest version of the dials package (version 1.3.0). To check this, you can run: 
+Also, you should make sure that you have installed the newest version of a few packages. To check this, you can run: 
 
 ```{r}
-#| label: check-dials
+#| label: check-versions
 #| eval: false
 #| echo: true
-rlang::check_installed("dials", version = "1.3.0")
+rlang::check_installed("tidymodels", version = "1.4.1")
+rlang::check_installed("embed", version = "1.2.0")
 ```
 
-## Hotel Data `r hexes("tidymodels", "dplyr")`
+# Let's get started!  {background-color="#B00000FF"}
 
-We'll use [data on hotels](https://www.sciencedirect.com/science/article/pii/S2352340918315191) to predict the cost of a room. 
+## Load tidymodels `r hexes("tidymodels")`
 
-The [data](https://modeldata.tidymodels.org/reference/hotel_rates.html) are in the modeldata package. We'll sample down the data and refactor some columns: 
-
-:::: {.columns}
-
-::: {.column width="40%"}
+We're here to learn more about how to use the more advanced bits of tidymodels for supervised learning. Let's load the meta-package: 
 
 ```{r}
-#| label: tune-startup
+#| label: load-tm
+#| message: true
 library(tidymodels)
+```
 
-# Max's usual settings: 
+## Resolve naming conflicts `r hexes("tidymodels")`
+
+You might want to run this function to avoid function name conflicts: 
+
+<br> 
+
+```{r}
+#| label: tm-conflicts
 tidymodels_prefer()
-theme_set(theme_bw())
-options(
-  pillar.advice = FALSE, 
-  pillar.min_title_chars = Inf
-)
 ```
 
+<br> 
+
+To get more details, use the `quiet = FALSE` option. 
+
+## Data sets
+
+For illustration, we'll use a few different data sets today: 
+
+::: incremental
+ - `class_data`: a simulated set of data with a 1:10 class imbalance. Two classes, 20 predictors, and 2,000 data points. 
+ - `leaf_data`: a real data set to identify plant species from their leaves. Thirty-two levels, 53 predictors, and 1,907 data points. 
+ - `hotel_data`: a real data set for predicting the average cost per night. Numeric outcome, 27 predictors, and 15,402 data points. 
 :::
 
-::: {.column width="60%"}
+. . .
+
+<br> 
+
+Let's get warmed up with the first data set. 
+
+## Imbalanced data
+
+These data can be loaded from the GitHub repo: 
+
+<br>
 
 ```{r}
-#| label: data-import
-data(hotel_rates)
-set.seed(295)
-hotel_rates <- 
-  hotel_rates |> 
-  sample_n(5000) |> 
-  arrange(arrival_date) |> 
-  select(-arrival_date) |> 
-  mutate(
-    company = factor(as.character(company)),
-    country = factor(as.character(country)),
-    agent = factor(as.character(agent))
-  )
+#| label: load-class-data
+
+"https://raw.githubusercontent.com/tidymodels/" |> 
+  paste0("workshops/main/slides/class_data.RData") |> 
+  url() |> 
+  load()
 ```
 
+<br> 
 
-:::
-
-::::
-
-## Hotel date columns
-
-```{r}
-#| labels: hotel-names
-
-names(hotel_rates)
-```
-
-
-## Data splitting strategy
-
-```{r}
-#| label: spending-diagram
-#| fig-align: "center"
-#| out-width: "20%"
-#| echo: false
-
-knitr::include_graphics("images/initial-split.svg")
-```
-
-
-## Data Spending `r hexes("rsample")`
-
-Let's split the data into a training set (75%) and testing set (25%) using stratification:
-
-```{r}
-#| label: hotel-split
-set.seed(4028)
-hotel_split <- initial_split(hotel_rates, strata = avg_price_per_room)
-
-hotel_train <- training(hotel_split)
-hotel_test <- testing(hotel_split)
-```
+The outcome column is `class` with levels `"event"` and `"no_event"`. Predictors are `"predictor_01"` to `"predictor_30"`.
 
 
 
 ## Your turn {transition="slide-in"}
 
-Let's take some time and investigate the _training data_. The outcome is `avg_price_per_room`. 
+Let's warm up by taking 8 minutes to explore the data. 
 
-Are there any interesting characteristics of the data?
+<br>
+
+We'll ask you to tell us something about these data that might be interesting for modeling. 
+
+```{r ex-class-data}
+#| echo: false
+countdown::countdown(minutes = 8, id = "class-data")
+```
+
+# A quick review of tidymodels {background-color="#D04E59FF"}
+
+## Data splitting `r hexes("rsample")`
+
+One of our first tasks is to split our data into (at a minimum) a training set and a testing set. The rsample package has numerous functions for this, prefixed by `initial_`. 
+<br>
+
+Let's create a 3:1 split of the simulated data and use a stratified random sample (by class):
 
 ```{r}
-#| label: hotel-investigation-exercise
-#| echo: false
-countdown::countdown(minutes = 10, id = "hotel-investigation")
+#| label: sim-split
+#| code-line-numbers: "|1|2-3|7-8|"
+set.seed(429)
+sim_split <- initial_split(class_data, prop = 0.75, strata = class)
+sim_split
+
+sim_train <- training(sim_split)
+sim_test  <- testing(sim_split)
 ```
+
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/initial-data-splitting.html), [TMwR](https://www.tmwr.org/splitting)
+:::
+
+## Data splitting `r hexes(c("ggplot2", "rsample"))`
+
+:::: {.columns}
+
+::: {.column width="50%"}
+```{r}
+#| label: train-freq
+#| fig-width: 6
+#| fig-height: 4
+sim_train |> 
+  ggplot(aes(class)) + 
+  geom_bar()
+```
+:::
+
+::: {.column width="50%"}
+```{r}
+#| label: test-freq
+#| fig-width: 6
+#| fig-height: 4
+sim_test |> 
+  ggplot(aes(class)) + 
+  geom_bar()
+```
+:::
+
+::::
+
+## Resampling 
+
+:::: {.columns}
+
+::: {.column width="45%"}
+We'll want to get accurate estimates of model performance. 
+
+Let's use a resampling method to make multiple versions of our data (using 10-fold cross-validation).
+
+<br> 
+
+For large amounts of data, a validation set is also a good alternative. 
+:::
+
+::: {.column width="55%"}
+
+![](images/10-Fold-CV.svg){fig-align='center' width=90%}
+:::
+
+::::
+
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/resampling.html), [TMwR](https://www.tmwr.org/resampling)
+:::
+
+## Resampling `r hexes("rsample")`
+
+```{r}
+#| label: sim-folds
+#| code-line-numbers: "1|2|"
+set.seed(523)
+sim_rs <- vfold_cv(sim_train, v = 10, strata = class)
+sim_rs
+```
+
+
+## Resampled data sets `r hexes("rsample")`
+
+```{r}
+#| label: folds
+
+model_data_1 <- sim_rs |> get_rsplit(1) |> analysis()
+model_data_1 |> count(class)
+
+perf_data_1 <- sim_rs |> get_rsplit(1) |> assessment()
+perf_data_1 |> count(class)
+```
+
+## Models via parsnip `r hexes("parsnip")`
+
+Let's fit a simple decision tree to the data: 
+
+```{r}
+#| label: sim-tree-fit
+#| code-line-numbers: "|1-2|5|"
+# Specify what you want
+tree_spec <- decision_tree(mode = "classification")
+
+# Then train:
+tree_fit <- tree_spec |> fit(class ~ ., data = model_data_1)  
+tree_fit
+```  
+
+## Predicting... `r hexes("parsnip")`
+
+
+```{r}
+#| label: sim-tree-pred
+predict(tree_fit, new_data = head(perf_data_1, 4))
+
+predict(tree_fit, new_data = head(perf_data_1, 4), type = "prob")
+```  
+
+## Augmenting... `r hexes(c("broom", "parsnip"))`
+
+```{r}
+#| label: sim-tree-aug
+tree_pred <- augment(tree_fit, new_data = perf_data_1)
+tree_pred |> slice(1:5)
+```  
+
+## Performance metrics `r hexes("yardstick")`
+
+There are _many_ yardstick metrics<sup>*</sup> for [class predictions](https://yardstick.tidymodels.org/reference/index.html#classification-metrics) and [probability estimates](https://yardstick.tidymodels.org/reference/index.html#class-probability-metrics). 
+
+Let's make a collection of metrics and then evaluate our model.
+
+```{r}
+#| label: sim-metrics
+#| code-line-numbers: "|1|2|"
+cls_metrics <- metric_set(brier_class, roc_auc, sensitivity, specificity)
+tree_pred |> cls_metrics(truth = class, estimate = .pred_class, .pred_event)
+```
+
+::: {.absolute bottom=0 left=0}
+<sup>*</sup> ... and metrics for [regression](https://yardstick.tidymodels.org/reference/index.html#regression-metrics) and others. 
+:::
+
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/cls-metrics.html)
+:::
+
+
+## Recipes and workflows `r hexes(c("recipes", "workflows"))`
+
+Recipes are preprocessors that perform sequential operations on the preductors. 
+
+. . .
+
+<br> 
+
+For example, to center and scale our predictors: 
+
+```{r}
+#| label: sim-recipes
+#| code-line-numbers: "|2|3|"
+
+rec <- 
+  recipe(class ~ ., data = sim_train) |> 
+  step_normalize(all_numeric_predictors())
+```
+
+. . .
+
+<br> 
+
+A model, a recipe, and other objects can be added to a _workflow_ to have a single object for the whole modeling sequence: 
+
+```{r}
+#| label: sim-wflow
+tree_wflow <- workflow(rec, tree_spec)
+```
+
+
+## Your turn {transition="slide-in"}
+
+Fit a different type of decision tree, this time:
+
+- Using the `C5.0` engine
+- Change the minimum number of samples required for splitting to 10. 
+
+<br>
+
+Did performance change much? 
+
+<br>
+
+```{r}
+#| label: change-engine
+#| echo: false
+countdown::countdown(minutes = 5, id = "change-engine")
+```
+
 
 ## Our versions
 
 ```{r pkg-list, echo = FALSE}
-deps <- 
-  c("bonsai", "Cubist", "doParallel", "earth", "embed", "finetune", 
-    "lightgbm", "lme4", "parallelly", "plumber", "probably", "rules", "splines2", 
-    "stacks", "text2vec", "textrecipes", "tidymodels", "vetiver")
-
-loaded <- purrr::map(deps, ~ library(.x, character.only = TRUE))
+pkgs <- c("almanac", "betacal", "bonsai", "C50", "Cubist", "dimRed", 
+          "doParallel", "earth", "embed", "extrasteps", "finetune", "forested", 
+          "igraph", "irlba", "kknn", "lightgbm", "lme4", "mirai", "parallelly", 
+          "plumber", "probably", "ranger", "RANN", "rpart", "rpart.plot", 
+          "RSpectra", "rules", "splines2", "stacks", "text2vec", "textrecipes", 
+          "tidymodels", "uwot", "vetiver")
+loaded <- purrr::map(pkgs, ~ library(.x, character.only = TRUE))
 excl <- c("iterators", "emo", "countdown", "stats", "graphics", 
           "grDevices", "utils", "datasets", "methods", "base", "forcats", 
           "infer", "foreach", "Matrix", "R6", "parallel", "devtools", "usethis")
@@ -311,9 +501,10 @@ quarto_info <- paste0("Quarto (", system("quarto --version", intern = TRUE), ")"
 
 `r R.version.string`, `r quarto_info`
 
-::: {.columns style="font-size:0.7em;"}
+::: {.columns style="font-size:0.5em; font-family: monospace"}
 ::: {.column width="25%"}
 ```{r}
+#| label: column1
 #| echo: false
 knitr::kable(column1)
 ```
@@ -321,6 +512,7 @@ knitr::kable(column1)
 
 ::: {.column width="25%"}
 ```{r}
+#| label: column2
 #| echo: false
 knitr::kable(column2)
 ```
@@ -328,6 +520,7 @@ knitr::kable(column2)
 
 ::: {.column width="25%"}
 ```{r}
+#| label: column3
 #| echo: false
 knitr::kable(column3)
 ```
@@ -335,6 +528,7 @@ knitr::kable(column3)
 
 ::: {.column width="25%"}
 ```{r}
+#| label: column4
 #| echo: false
 knitr::kable(column4)
 ```
