@@ -26,10 +26,6 @@ knitr:
 ```{r}
 #| label: start-quiet
 #| include: false
-library(mirai)
-daemons(0) # reset to sequential if re-running
-daemons(parallel::detectCores())
-
 load("lgbm_times.RData")
 ```
 
@@ -40,6 +36,7 @@ load("lgbm_times.RData")
 library(tidymodels)
 library(desirability2)
 library(probably)
+library(mirai)
 
 # check torch:
 if (torch::torch_is_installed()) {
@@ -49,6 +46,7 @@ if (torch::torch_is_installed()) {
 tidymodels_prefer()
 theme_set(theme_bw())
 options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
+daemons(parallel::detectCores())
 ```
 
 ## More startup!   `r hexes(c("rsample"))`
@@ -98,21 +96,18 @@ nnet_param <-
 
 How can we modify our predictions? Some examples: 
 
-::: incremental
  - Fixing calibration issues<sup>*</sup>.
  - Limit the range of predictions.
  - Alternative cutoffs for binary data.
  - Declining to predict.
-:::
-
 
 . . .
 
-<sup>*</sup> Requires further estimation (and data)
+<sup>*</sup> Requires further estimation (and data).
 
 <br>
 
-Let's first consider the easiest case. 
+Let's first consider the easiest case: alternative cutoffs.
 
 ## Alternative thresholds
 
@@ -201,7 +196,7 @@ nnet_wflow <- workflow(rec, nnet_spec, thrsh_tlr)
 
 <br>
 
-- We don't have to set the names of the outcome or prediction columns. 
+- We don't have to set the names of the outcome or prediction columns (yet). 
 - `fit()` and `predict()` happen automatically. 
 
 
@@ -309,7 +304,7 @@ autoplot(nnet_thrsh_res)
  - `tanh` activation is doing much better. 
  - `threshold` should not (and does not) affect the Brier or ROC metrics. 
  - We can achieve low Brier scores.
- - We could run another grid with values <2% to get a better threshold estimate.
+ - We could run another grid with values <2% for a better threshold estimate.
 
 ## Multimetric optimization `r hexes(c("tune"))`
 
@@ -356,7 +351,7 @@ nnet_thrsh_res |>
 
 ## Thoughts about these results
 
-The calibration issue in the previous plot shows that very likely non-events will have underestimated probabilities.
+The calibration issue in the previous plot shows that some very likely non-events will have underestimated probabilities.
 
    - That may not matter if we are very focused on events. 
    - Thresholding does not affect calibration. 
@@ -382,13 +377,17 @@ That said, this is probably a better approach than cost-sensitive learning.
 
 If an adjustment requires data, where do we get it from?
 
+::: incremental
+- Fitting a calibration model to the training set re-predictions would be bad. 
+
+- Also, we don't want to touch the validation or test sets. 
+:::
+
+. . .
+
 <br>
 
-Fitting a calibration model to the training set re-predictions would be a bad idea. 
-
-<br>
-
-Also, we don't want to touch the validation or test sets. 
+We need another data set.
 
 ## Data sources
 
@@ -461,7 +460,7 @@ knitr::kable(xtab_counts)
 
 ## Calibration
 
-Calibration models, in essence, try to predict the true class using the model predictions. 
+Calibration models, in essence, try to predict the true class using the model predictions. _Symbolically_: 
 
 - For regression models: `outcome ~ .pred`
 - For binary classifiers: `class ~ .pred_class_1`
@@ -489,8 +488,8 @@ You can tune the calibration method, one of which is _no calibration_.
 
 ## Your turn {transition="slide-in"}
 
-- Based on previous results, choose a specific activation type and fix it (i.e., no `tune()`).
-- Add a calibrator to your tailor with a value of `method = tune()`. 
+- Based on previous results, choose and fix a specific activation type (i.e., no `tune()`).
+- Add a calibrator to your tailor with a `method = tune()` value. 
 - Run another grid search
 
 Does it help with this data set?
@@ -501,3 +500,4 @@ Does it help with this data set?
 #| echo: false
 countdown::countdown(minutes = 10, id = "class-data")
 ```
+
