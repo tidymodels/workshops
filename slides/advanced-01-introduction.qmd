@@ -56,6 +56,23 @@ Wi-Fi password
 :::
 :::
 
+## Venue information
+
+-   There are gender neutral bathrooms located on floor LL2, next to Chicago A
+
+-   A meditation/prayer room is located on floor LL2 in Chicago A
+
+-   A lactation room is located on floor LL2 in Chicago B
+
+## Workshop policies
+
+-   Please review the posit::conf code of conduct, which applies to all workshops: <https://posit.co/code-of-conduct>
+
+-   CoC site has info on how to report a problem (in person, email, phone)
+
+-   Please do not photograph people wearing red lanyards
+
+
 ## Who are you?
 
 -   You can use the magrittr `%>%` or base R `|>` pipe
@@ -124,6 +141,10 @@ Many thanks to Davis Vaughan, Julia Silge, David Robinson, Julie Jung, Alison Hi
 
 ### Introduce yourself to your neighbors 👋
 
+<br></br>
+
+### <i class="fa fa-cloud"></i> Log in to Posit Cloud (free): TODO-ADD-LATER
+
 ## Let's install some packages
 
 If you are using your own laptop instead of Posit Cloud:
@@ -145,7 +166,7 @@ install.packages(pkgs)
 Also, you should make sure that you have installed the newest version of a few packages. To check this, you can run: 
 
 ```{r}
-#| label: check-dials
+#| label: check-versions
 #| eval: false
 #| echo: true
 rlang::check_installed("tidymodels", version = "1.4.1")
@@ -156,13 +177,7 @@ rlang::check_installed("embed", version = "1.2.0")
 
 ## Load tidymodels `r hexes("tidymodels")`
 
-We're here to learn more about how to use the more advanced bits of tidymodels for supervised learning. 
-
-<br>
-
-. . .
-
-First, let's load the meta-package: 
+We're here to learn more about how to use the more advanced bits of tidymodels for supervised learning. Let's load the meta-package: 
 
 ```{r}
 #| label: load-tm
@@ -170,16 +185,20 @@ First, let's load the meta-package:
 library(tidymodels)
 ```
 
-. . .
+## Resolve naming conflicts `r hexes("tidymodels")`
 
-<br>
+You might want to run this function to avoid function name conflicts: 
 
-Second: you might want to run this function to avoid function name conflicts: 
+<br> 
 
 ```{r}
 #| label: tm-conflicts
 tidymodels_prefer()
 ```
+
+<br> 
+
+To get more details, use the `quiet = FALSE` option. 
 
 ## Data sets
 
@@ -324,10 +343,10 @@ sim_rs
 ```{r}
 #| label: folds
 
-model_data_1 <- analysis(sim_rs$splits[[1]])
+model_data_1 <- sim_rs |> get_rsplit(1) |> analysis()
 model_data_1 |> count(class)
 
-perf_data_1 <- assessment(sim_rs$splits[[1]])
+perf_data_1 <- sim_rs |> get_rsplit(1) |> assessment()
 perf_data_1 |> count(class)
 ```
 
@@ -456,7 +475,7 @@ pkgs <-
   sessioninfo::package_info(loaded, dependencies = FALSE) |> 
   select(-date)
 df <- tibble::tibble(
-  package = paste0("`", pkgs$package, "`"),
+  package = pkgs$package,
   version = pkgs$ondiskversion
 )
 
@@ -482,7 +501,7 @@ quarto_info <- paste0("Quarto (", system("quarto --version", intern = TRUE), ")"
 
 `r R.version.string`, `r quarto_info`
 
-::: {.columns style="font-size:0.5em;"}
+::: {.columns style="font-size:0.5em; font-family: monospace"}
 ::: {.column width="25%"}
 ```{r}
 #| label: column1
