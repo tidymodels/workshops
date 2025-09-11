@@ -7,8 +7,8 @@
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.7.32">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-ea385d0e468b0dd5ea5bf0780b1290d9.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.7.33">
 
   <title>Machine learning with tidymodels – 1 - Introduction</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -95,7 +95,7 @@
     code span.vs { color: #20794d; } /* VerbatimString */
     code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   </style>
-  <link rel="stylesheet" href="../site_libs/revealjs/dist/theme/quarto-13a620129f9b162607aa967697424fae.css">
+  <link rel="stylesheet" href="../site_libs/revealjs/dist/theme/quarto-78ae11b80182891a5a3fcac50dfd1b11.css">
   <link href="../site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="../site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="../site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -190,10 +190,10 @@
   <link href="../site_libs/countdown-0.4.0/countdown.css" rel="stylesheet">
   <script src="../site_libs/countdown-0.4.0/countdown.js"></script>
 <meta property="og:title" content="1 - Introduction – Machine learning with tidymodels">
-<meta property="og:description" content="Advanced tidymodels">
+<meta property="og:description" content="Getting More Out of Feature Engineering and Tuning for Machine Learning">
 <meta property="og:site_name" content="Machine learning with tidymodels">
 <meta name="twitter:title" content="1 - Introduction – Machine learning with tidymodels">
-<meta name="twitter:description" content="Advanced tidymodels">
+<meta name="twitter:description" content="Getting More Out of Feature Engineering and Tuning for Machine Learning">
 <meta name="twitter:card" content="summary">
 </head>
 <body class="quarto-light">
@@ -203,7 +203,7 @@
 
 <section id="title-slide" class="quarto-title-block center">
   <h1 class="title">1 - Introduction</h1>
-  <p class="subtitle">Advanced tidymodels</p>
+  <p class="subtitle">Getting More Out of Feature Engineering and Tuning for Machine Learning</p>
 
 <div class="quarto-title-authors">
 </div>
@@ -251,7 +251,7 @@
 <li><p>You can use the magrittr <code>%&gt;%</code> or base R <code>|&gt;</code> pipe</p></li>
 <li><p>You are familiar with functions from dplyr, tidyr, ggplot2</p></li>
 <li><p>You have exposure to basic statistical concepts</p></li>
-<li><p>You do <strong>not</strong> need intermediate or expert familiarity with modeling or ML</p></li>
+<li><p>You do need intermediate familiarity with modeling or ML</p></li>
 <li><p>You have used some tidymodels packages</p></li>
 <li><p>You have some experience with evaluating statistical models using resampling techniques</p></li>
 </ul>
@@ -264,6 +264,9 @@
 <li>Emil Hvitfeldt</li>
 <li>Max Kuhn</li>
 </ul>
+<div class="fragment">
+<p>+ our TA today, Edgar Ruiz!</p>
+</div>
 <div class="fragment">
 <p>Many thanks to Davis Vaughan, Julia Silge, David Robinson, Julie Jung, Alison Hill, and Desirée De Leon for their role in creating these materials!</p>
 </div>
@@ -299,130 +302,385 @@
 <section id="tentative-plan-for-this-workshop" class="slide level2">
 <h2>Tentative plan for this workshop</h2>
 <ul>
-<li>Feature engineering with recipes</li>
 <li>Model optimization by tuning
 <ul>
 <li>Grid search</li>
 <li>Racing</li>
-<li>Iterative methods</li>
 </ul></li>
-<li>Extras (time permitting)
-<ul>
-<li>Effect encodings</li>
-<li>A case study</li>
-</ul></li>
+<li>Feature engineering with recipes</li>
+<li>Postprocessing<br>
+</li>
+<li>Feature selection</li>
 </ul>
 </section>
 <section id="section-4" class="slide level2 center">
 <h2></h2>
 <h3 id="introduce-yourself-to-your-neighbors">Introduce yourself to your neighbors 👋</h3>
-<p><br><br></p>
-<h3 id="log-in-to-posit-cloud-free-todo-add-later"><i class="fa fa-cloud"></i> Log in to Posit Cloud (free): TODO-ADD-LATER</h3>
+</section>
+<section id="getting-the-materials" class="slide level2">
+<h2>Getting the materials</h2>
+<p><br></p>
+<h3 id="if-you-are-using-posit-cloud">If you are using Posit Cloud:</h3>
+<p><i class="fa fa-cloud"></i> Log in to Posit Cloud (free): TODO-ADD-LATER</p>
+<p><br></p>
+<h3 id="if-you-are-working-locally">If you are working locally:</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="co"># local download</span></span>
+<span id="cb1-2"><a></a>usethis<span class="sc">::</span><span class="fu">use_course</span>(<span class="st">"tidymodels/workshops"</span>, <span class="at">destdir =</span> <span class="st">"some_path"</span>)</span>
+<span id="cb1-3"><a></a></span>
+<span id="cb1-4"><a></a><span class="co"># or fork via</span></span>
+<span id="cb1-5"><a></a>usethis<span class="sc">::</span><span class="fu">create_from_github</span>(<span class="st">"tidymodels/workshops"</span>, <span class="at">fork =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="lets-install-some-packages" class="slide level2">
 <h2>Let’s install some packages</h2>
 <p>If you are using your own laptop instead of Posit Cloud:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="co"># Install the packages for the workshop</span></span>
-<span id="cb1-2"><a></a>pkgs <span class="ot">&lt;-</span> </span>
-<span id="cb1-3"><a></a>  <span class="fu">c</span>(<span class="st">"bonsai"</span>, <span class="st">"Cubist"</span>, <span class="st">"doParallel"</span>, <span class="st">"earth"</span>, <span class="st">"embed"</span>, <span class="st">"finetune"</span>, </span>
-<span id="cb1-4"><a></a>    <span class="st">"lightgbm"</span>, <span class="st">"lme4"</span>, <span class="st">"parallelly"</span>, <span class="st">"plumber"</span>, <span class="st">"probably"</span>, </span>
-<span id="cb1-5"><a></a>    <span class="st">"ranger"</span>, <span class="st">"rpart"</span>, <span class="st">"rpart.plot"</span>, <span class="st">"rules"</span>, <span class="st">"splines2"</span>, <span class="st">"stacks"</span>, </span>
-<span id="cb1-6"><a></a>    <span class="st">"text2vec"</span>, <span class="st">"textrecipes"</span>, <span class="st">"tidymodels"</span>, <span class="st">"vetiver"</span>)</span>
-<span id="cb1-7"><a></a></span>
-<span id="cb1-8"><a></a><span class="fu">install.packages</span>(pkgs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="co"># Install the packages for the workshop</span></span>
+<span id="cb2-2"><a></a>pkgs <span class="ot">&lt;-</span> </span>
+<span id="cb2-3"><a></a>  <span class="fu">c</span>(<span class="st">"almanac"</span>, <span class="st">"betacal"</span>, <span class="st">"bonsai"</span>, <span class="st">"brulee"</span>, <span class="st">"C50"</span>, <span class="st">"Cubist"</span>, <span class="st">"desirability2"</span>, </span>
+<span id="cb2-4"><a></a>    <span class="st">"dimRed"</span>, <span class="st">"earth"</span>, <span class="st">"embed"</span>, <span class="st">"extrasteps"</span>, <span class="st">"finetune"</span>, <span class="st">"igraph"</span>, </span>
+<span id="cb2-5"><a></a>    <span class="st">"important"</span>, <span class="st">"irlba"</span>, <span class="st">"kknn"</span>, <span class="st">"lightgbm"</span>, <span class="st">"lme4"</span>, <span class="st">"mirai"</span>, <span class="st">"parallelly"</span>, </span>
+<span id="cb2-6"><a></a>    <span class="st">"plumber"</span>, <span class="st">"probably"</span>, <span class="st">"RANN"</span>, <span class="st">"rpart"</span>, <span class="st">"RSpectra"</span>, <span class="st">"rules"</span>, </span>
+<span id="cb2-7"><a></a>    <span class="st">"splines2"</span>, <span class="st">"stacks"</span>, <span class="st">"text2vec"</span>, <span class="st">"textrecipes"</span>, <span class="st">"tidymodels"</span>, </span>
+<span id="cb2-8"><a></a>    <span class="st">"uwot"</span>, <span class="st">"vetiver"</span>)</span>
+<span id="cb2-9"><a></a></span>
+<span id="cb2-10"><a></a><span class="fu">install.packages</span>(pkgs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Also, you should install the newest version of the dials package (version 1.3.0). To check this, you can run:</p>
+<p>Also, you should make sure that you have installed the newest version of a few packages. To check this, you can run:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a>rlang<span class="sc">::</span><span class="fu">check_installed</span>(<span class="st">"dials"</span>, <span class="at">version =</span> <span class="st">"1.3.0"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a>rlang<span class="sc">::</span><span class="fu">check_installed</span>(<span class="st">"tidymodels"</span>, <span class="at">version =</span> <span class="st">"1.4.1"</span>)</span>
+<span id="cb3-2"><a></a>rlang<span class="sc">::</span><span class="fu">check_installed</span>(<span class="st">"embed"</span>, <span class="at">version =</span> <span class="st">"1.2.0"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="hotel-data" class="slide level2">
-<h2>Hotel Data <img data-src="hexes/tidymodels.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/dplyr.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
-<p>We’ll use <a href="https://www.sciencedirect.com/science/article/pii/S2352340918315191">data on hotels</a> to predict the cost of a room.</p>
-<p>The <a href="https://modeldata.tidymodels.org/reference/hotel_rates.html">data</a> are in the modeldata package. We’ll sample down the data and refactor some columns:</p>
-<div class="columns">
-<div class="column" style="width:40%;">
-<div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a><span class="fu">library</span>(tidymodels)</span>
-<span id="cb3-2"><a></a></span>
-<span id="cb3-3"><a></a><span class="co"># Max's usual settings: </span></span>
-<span id="cb3-4"><a></a><span class="fu">tidymodels_prefer</span>()</span>
-<span id="cb3-5"><a></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
-<span id="cb3-6"><a></a><span class="fu">options</span>(</span>
-<span id="cb3-7"><a></a>  <span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, </span>
-<span id="cb3-8"><a></a>  <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span></span>
-<span id="cb3-9"><a></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</div><div class="column" style="width:60%;">
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a><span class="fu">data</span>(hotel_rates)</span>
-<span id="cb4-2"><a></a><span class="fu">set.seed</span>(<span class="dv">295</span>)</span>
-<span id="cb4-3"><a></a>hotel_rates <span class="ot">&lt;-</span> </span>
-<span id="cb4-4"><a></a>  hotel_rates <span class="sc">|&gt;</span> </span>
-<span id="cb4-5"><a></a>  <span class="fu">sample_n</span>(<span class="dv">5000</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb4-6"><a></a>  <span class="fu">arrange</span>(arrival_date) <span class="sc">|&gt;</span> </span>
-<span id="cb4-7"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>arrival_date) <span class="sc">|&gt;</span> </span>
-<span id="cb4-8"><a></a>  <span class="fu">mutate</span>(</span>
-<span id="cb4-9"><a></a>    <span class="at">company =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(company)),</span>
-<span id="cb4-10"><a></a>    <span class="at">country =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(country)),</span>
-<span id="cb4-11"><a></a>    <span class="at">agent =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(agent))</span>
-<span id="cb4-12"><a></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</div></div>
-</section>
-<section id="hotel-date-columns" class="slide level2">
-<h2>Hotel date columns</h2>
-<div class="cell" data-labels="hotel-names">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a><span class="fu">names</span>(hotel_rates)</span>
-<span id="cb5-2"><a></a><span class="co">#&gt;  [1] "avg_price_per_room"             "lead_time"                     </span></span>
-<span id="cb5-3"><a></a><span class="co">#&gt;  [3] "stays_in_weekend_nights"        "stays_in_week_nights"          </span></span>
-<span id="cb5-4"><a></a><span class="co">#&gt;  [5] "adults"                         "children"                      </span></span>
-<span id="cb5-5"><a></a><span class="co">#&gt;  [7] "babies"                         "meal"                          </span></span>
-<span id="cb5-6"><a></a><span class="co">#&gt;  [9] "country"                        "market_segment"                </span></span>
-<span id="cb5-7"><a></a><span class="co">#&gt; [11] "distribution_channel"           "is_repeated_guest"             </span></span>
-<span id="cb5-8"><a></a><span class="co">#&gt; [13] "previous_cancellations"         "previous_bookings_not_canceled"</span></span>
-<span id="cb5-9"><a></a><span class="co">#&gt; [15] "reserved_room_type"             "assigned_room_type"            </span></span>
-<span id="cb5-10"><a></a><span class="co">#&gt; [17] "booking_changes"                "agent"                         </span></span>
-<span id="cb5-11"><a></a><span class="co">#&gt; [19] "company"                        "days_in_waiting_list"          </span></span>
-<span id="cb5-12"><a></a><span class="co">#&gt; [21] "customer_type"                  "required_car_parking_spaces"   </span></span>
-<span id="cb5-13"><a></a><span class="co">#&gt; [23] "total_of_special_requests"      "arrival_date_num"              </span></span>
-<span id="cb5-14"><a></a><span class="co">#&gt; [25] "near_christmas"                 "near_new_years"                </span></span>
-<span id="cb5-15"><a></a><span class="co">#&gt; [27] "historical_adr"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="data-splitting-strategy" class="slide level2">
-<h2>Data splitting strategy</h2>
+<section>
+<section id="lets-get-started" class="title-slide slide level1 center" data-background-color="#B00000FF">
+<h1>Let’s get started!</h1>
 
-<img data-src="images/initial-split.svg" class="quarto-figure quarto-figure-center r-stretch" style="width:20.0%"></section>
-<section id="data-spending" class="slide level2">
-<h2>Data Spending <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
-<p>Let’s split the data into a training set (75%) and testing set (25%) using stratification:</p>
+</section>
+<section id="load-tidymodels" class="slide level2">
+<h2>Load tidymodels <img data-src="hexes/tidymodels.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p>We’re here to learn more about how to use the more advanced bits of tidymodels for supervised learning. Let’s load the meta-package:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a><span class="fu">set.seed</span>(<span class="dv">4028</span>)</span>
-<span id="cb6-2"><a></a>hotel_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(hotel_rates, <span class="at">strata =</span> avg_price_per_room)</span>
-<span id="cb6-3"><a></a></span>
-<span id="cb6-4"><a></a>hotel_train <span class="ot">&lt;-</span> <span class="fu">training</span>(hotel_split)</span>
-<span id="cb6-5"><a></a>hotel_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(hotel_split)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb4-2"><a></a><span class="co">#&gt; ── Attaching packages ──────────────────────────── tidymodels 1.4.1 ──</span></span>
+<span id="cb4-3"><a></a><span class="co">#&gt; ✔ broom        1.0.9     ✔ rsample      1.3.1</span></span>
+<span id="cb4-4"><a></a><span class="co">#&gt; ✔ dials        1.4.2     ✔ tailor       0.1.0</span></span>
+<span id="cb4-5"><a></a><span class="co">#&gt; ✔ dplyr        1.1.4     ✔ tidyr        1.3.1</span></span>
+<span id="cb4-6"><a></a><span class="co">#&gt; ✔ infer        1.0.9     ✔ tune         2.0.0</span></span>
+<span id="cb4-7"><a></a><span class="co">#&gt; ✔ modeldata    1.5.1     ✔ workflows    1.3.0</span></span>
+<span id="cb4-8"><a></a><span class="co">#&gt; ✔ parsnip      1.3.3     ✔ workflowsets 1.1.1</span></span>
+<span id="cb4-9"><a></a><span class="co">#&gt; ✔ purrr        1.1.0     ✔ yardstick    1.3.2</span></span>
+<span id="cb4-10"><a></a><span class="co">#&gt; ✔ recipes      1.3.1</span></span>
+<span id="cb4-11"><a></a><span class="co">#&gt; ── Conflicts ─────────────────────────────── tidymodels_conflicts() ──</span></span>
+<span id="cb4-12"><a></a><span class="co">#&gt; ✖ purrr::discard() masks scales::discard()</span></span>
+<span id="cb4-13"><a></a><span class="co">#&gt; ✖ dplyr::filter()  masks stats::filter()</span></span>
+<span id="cb4-14"><a></a><span class="co">#&gt; ✖ dplyr::lag()     masks stats::lag()</span></span>
+<span id="cb4-15"><a></a><span class="co">#&gt; ✖ recipes::step()  masks stats::step()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
+<section id="resolve-naming-conflicts" class="slide level2">
+<h2>Resolve naming conflicts <img data-src="hexes/tidymodels.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p>You might want to run this function to avoid function name conflicts:</p>
+<p><br></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a><span class="fu">tidymodels_prefer</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><br></p>
+<p>To get more details, use the <code>quiet = FALSE</code> option.</p>
+</section>
+<section id="data-sets" class="slide level2">
+<h2>Data sets</h2>
+<p>For illustration, we’ll use a few different data sets today:</p>
+<ul>
+<li class="fragment"><code>class_data</code>: a simulated set of data with a 1:10 class imbalance. Two classes, 20 predictors, and 2,000 data points.</li>
+<li class="fragment"><code>leaf_data</code>: a real data set to identify plant species from their leaves. Thirty-two levels, 53 predictors, and 1,907 data points.</li>
+<li class="fragment"><code>hotel_data</code>: a real data set for predicting the average cost per night. Numeric outcome, 27 predictors, and 15,402 data points.</li>
+</ul>
+<div class="fragment">
+<p><br></p>
+<p>Let’s get warmed up with the first data set.</p>
+</div>
+</section>
+<section id="imbalanced-data" class="slide level2">
+<h2>Imbalanced data</h2>
+<p>These data can be loaded from the GitHub repo:</p>
+<p><br></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a><span class="st">"https://raw.githubusercontent.com/tidymodels/"</span> <span class="sc">|&gt;</span> </span>
+<span id="cb6-2"><a></a>  <span class="fu">paste0</span>(<span class="st">"workshops/main/slides/class_data.RData"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb6-3"><a></a>  <span class="fu">url</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb6-4"><a></a>  <span class="fu">load</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><br></p>
+<p>The outcome column is <code>class</code> with levels <code>"event"</code> and <code>"no_event"</code>. Predictors are <code>"predictor_01"</code> to <code>"predictor_30"</code>.</p>
 </section>
 <section id="your-turn" class="slide level2" data-transition="slide-in">
 <h2>Your turn</h2>
-<p>Let’s take some time and investigate the <em>training data</em>. The outcome is <code>avg_price_per_room</code>.</p>
-<p>Are there any interesting characteristics of the data?</p>
+<p>Let’s warm up by taking 8 minutes to explore the data.</p>
+<p><br></p>
+<p>We’ll ask you to tell us something about these data that might be interesting for modeling.</p>
 <div class="cell">
 <div class="cell-output-display">
-<div class="countdown" id="hotel-investigation" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown" id="class-data" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
 <div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
-<code class="countdown-time"><span class="countdown-digits minutes">10</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+<code class="countdown-time"><span class="countdown-digits minutes">08</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
+</div>
+</div>
+</div>
+</section></section>
+<section>
+<section id="a-quick-review-of-tidymodels" class="title-slide slide level1 center" data-background-color="#D04E59FF">
+<h1>A quick review of tidymodels</h1>
+
+</section>
+<section id="data-splitting" class="slide level2">
+<h2>Data splitting <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p>One of our first tasks is to split our data into (at a minimum) a training set and a testing set. The rsample package has numerous functions for this, prefixed by <code>initial_</code>. <br></p>
+<p>Let’s create a 3:1 split of the simulated data and use a stratified random sample (by class):</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7" data-code-line-numbers="|1|2-3|7-8|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a><span class="fu">set.seed</span>(<span class="dv">429</span>)</span>
+<span id="cb7-2"><a></a>sim_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(class_data, <span class="at">prop =</span> <span class="fl">0.75</span>, <span class="at">strata =</span> class)</span>
+<span id="cb7-3"><a></a>sim_split</span>
+<span id="cb7-4"><a></a><span class="co">#&gt; &lt;Training/Testing/Total&gt;</span></span>
+<span id="cb7-5"><a></a><span class="co">#&gt; &lt;1499/501/2000&gt;</span></span>
+<span id="cb7-6"><a></a></span>
+<span id="cb7-7"><a></a>sim_train <span class="ot">&lt;-</span> <span class="fu">training</span>(sim_split)</span>
+<span id="cb7-8"><a></a>sim_test  <span class="ot">&lt;-</span> <span class="fu">testing</span>(sim_split)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="absolute" style="bottom: 0px; right: 0px; ">
+<p><a href="https://aml4td.org/chapters/initial-data-splitting.html">AML4TD</a>, <a href="https://www.tmwr.org/splitting">TMwR</a></p>
+</div>
+</section>
+<section id="data-splitting-1" class="slide level2">
+<h2>Data splitting <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/ggplot2.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a>sim_train <span class="sc">|&gt;</span> </span>
+<span id="cb8-2"><a></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(class)) <span class="sc">+</span> </span>
+<span id="cb8-3"><a></a>  <span class="fu">geom_bar</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="advanced-01-introduction_files/figure-revealjs/train-freq-1.svg"></p>
+</figure>
+</div>
+</div>
+</div>
+</div><div class="column" style="width:50%;">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a>sim_test <span class="sc">|&gt;</span> </span>
+<span id="cb9-2"><a></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(class)) <span class="sc">+</span> </span>
+<span id="cb9-3"><a></a>  <span class="fu">geom_bar</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="advanced-01-introduction_files/figure-revealjs/test-freq-1.svg"></p>
+</figure>
+</div>
+</div>
+</div>
+</div></div>
+</section>
+<section id="resampling" class="slide level2">
+<h2>Resampling</h2>
+<div class="columns">
+<div class="column" style="width:45%;">
+<p>We’ll want to get accurate estimates of model performance.</p>
+<p>Let’s use a resampling method to make multiple versions of our data (using 10-fold cross-validation).</p>
+<p><br></p>
+<p>For large amounts of data, a validation set is also a good alternative.</p>
+</div><div class="column" style="width:55%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="images/10-Fold-CV.svg" class="quarto-figure quarto-figure-center" style="width:90.0%"></p>
+</figure>
+</div>
+</div></div>
+<div class="absolute" style="bottom: 0px; right: 0px; ">
+<p><a href="https://aml4td.org/chapters/resampling.html">AML4TD</a>, <a href="https://www.tmwr.org/resampling">TMwR</a></p>
+</div>
+</section>
+<section id="resampling-1" class="slide level2">
+<h2>Resampling <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10" data-code-line-numbers="1|2|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a><span class="fu">set.seed</span>(<span class="dv">523</span>)</span>
+<span id="cb10-2"><a></a>sim_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(sim_train, <span class="at">v =</span> <span class="dv">10</span>, <span class="at">strata =</span> class)</span>
+<span id="cb10-3"><a></a>sim_rs</span>
+<span id="cb10-4"><a></a><span class="co">#&gt; #  10-fold cross-validation using stratification </span></span>
+<span id="cb10-5"><a></a><span class="co">#&gt; # A tibble: 10 × 2</span></span>
+<span id="cb10-6"><a></a><span class="co">#&gt;    splits             id    </span></span>
+<span id="cb10-7"><a></a><span class="co">#&gt;    &lt;list&gt;             &lt;chr&gt; </span></span>
+<span id="cb10-8"><a></a><span class="co">#&gt;  1 &lt;split [1348/151]&gt; Fold01</span></span>
+<span id="cb10-9"><a></a><span class="co">#&gt;  2 &lt;split [1349/150]&gt; Fold02</span></span>
+<span id="cb10-10"><a></a><span class="co">#&gt;  3 &lt;split [1349/150]&gt; Fold03</span></span>
+<span id="cb10-11"><a></a><span class="co">#&gt;  4 &lt;split [1349/150]&gt; Fold04</span></span>
+<span id="cb10-12"><a></a><span class="co">#&gt;  5 &lt;split [1349/150]&gt; Fold05</span></span>
+<span id="cb10-13"><a></a><span class="co">#&gt;  6 &lt;split [1349/150]&gt; Fold06</span></span>
+<span id="cb10-14"><a></a><span class="co">#&gt;  7 &lt;split [1349/150]&gt; Fold07</span></span>
+<span id="cb10-15"><a></a><span class="co">#&gt;  8 &lt;split [1349/150]&gt; Fold08</span></span>
+<span id="cb10-16"><a></a><span class="co">#&gt;  9 &lt;split [1350/149]&gt; Fold09</span></span>
+<span id="cb10-17"><a></a><span class="co">#&gt; 10 &lt;split [1350/149]&gt; Fold10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="resampled-data-sets" class="slide level2">
+<h2>Resampled data sets <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a></a>model_data_1 <span class="ot">&lt;-</span> sim_rs <span class="sc">|&gt;</span> <span class="fu">get_rsplit</span>(<span class="dv">1</span>) <span class="sc">|&gt;</span> <span class="fu">analysis</span>()</span>
+<span id="cb11-2"><a></a>model_data_1 <span class="sc">|&gt;</span> <span class="fu">count</span>(class)</span>
+<span id="cb11-3"><a></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
+<span id="cb11-4"><a></a><span class="co">#&gt;   class        n</span></span>
+<span id="cb11-5"><a></a><span class="co">#&gt;   &lt;fct&gt;    &lt;int&gt;</span></span>
+<span id="cb11-6"><a></a><span class="co">#&gt; 1 event      151</span></span>
+<span id="cb11-7"><a></a><span class="co">#&gt; 2 no_event  1197</span></span>
+<span id="cb11-8"><a></a></span>
+<span id="cb11-9"><a></a>perf_data_1 <span class="ot">&lt;-</span> sim_rs <span class="sc">|&gt;</span> <span class="fu">get_rsplit</span>(<span class="dv">1</span>) <span class="sc">|&gt;</span> <span class="fu">assessment</span>()</span>
+<span id="cb11-10"><a></a>perf_data_1 <span class="sc">|&gt;</span> <span class="fu">count</span>(class)</span>
+<span id="cb11-11"><a></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
+<span id="cb11-12"><a></a><span class="co">#&gt;   class        n</span></span>
+<span id="cb11-13"><a></a><span class="co">#&gt;   &lt;fct&gt;    &lt;int&gt;</span></span>
+<span id="cb11-14"><a></a><span class="co">#&gt; 1 event       17</span></span>
+<span id="cb11-15"><a></a><span class="co">#&gt; 2 no_event   134</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="models-via-parsnip" class="slide level2">
+<h2>Models via parsnip <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p>Let’s fit a simple decision tree to the data:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12" data-code-line-numbers="|1-2|5|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a></a><span class="co"># Specify what you want</span></span>
+<span id="cb12-2"><a></a>tree_spec <span class="ot">&lt;-</span> <span class="fu">decision_tree</span>(<span class="at">mode =</span> <span class="st">"classification"</span>)</span>
+<span id="cb12-3"><a></a></span>
+<span id="cb12-4"><a></a><span class="co"># Then train:</span></span>
+<span id="cb12-5"><a></a>tree_fit <span class="ot">&lt;-</span> tree_spec <span class="sc">|&gt;</span> <span class="fu">fit</span>(class <span class="sc">~</span> ., <span class="at">data =</span> model_data_1)  </span>
+<span id="cb12-6"><a></a>tree_fit</span>
+<span id="cb12-7"><a></a><span class="co">#&gt; parsnip model object</span></span>
+<span id="cb12-8"><a></a><span class="co">#&gt; </span></span>
+<span id="cb12-9"><a></a><span class="co">#&gt; n= 1348 </span></span>
+<span id="cb12-10"><a></a><span class="co">#&gt; </span></span>
+<span id="cb12-11"><a></a><span class="co">#&gt; node), split, n, loss, yval, (yprob)</span></span>
+<span id="cb12-12"><a></a><span class="co">#&gt;       * denotes terminal node</span></span>
+<span id="cb12-13"><a></a><span class="co">#&gt; </span></span>
+<span id="cb12-14"><a></a><span class="co">#&gt;  1) root 1348 151 no_event (0.11201780 0.88798220)  </span></span>
+<span id="cb12-15"><a></a><span class="co">#&gt;    2) predictor_27&lt; -2.268929 76  11 event (0.85526316 0.14473684) *</span></span>
+<span id="cb12-16"><a></a><span class="co">#&gt;    3) predictor_27&gt;=-2.268929 1272  86 no_event (0.06761006 0.93238994)  </span></span>
+<span id="cb12-17"><a></a><span class="co">#&gt;      6) predictor_29&gt;=2.144976 89  25 event (0.71910112 0.28089888)  </span></span>
+<span id="cb12-18"><a></a><span class="co">#&gt;       12) predictor_29&gt;=2.599392 45   3 event (0.93333333 0.06666667) *</span></span>
+<span id="cb12-19"><a></a><span class="co">#&gt;       13) predictor_29&lt; 2.599392 44  22 event (0.50000000 0.50000000)  </span></span>
+<span id="cb12-20"><a></a><span class="co">#&gt;         26) predictor_18&gt;=0.2344964 32  11 event (0.65625000 0.34375000)  </span></span>
+<span id="cb12-21"><a></a><span class="co">#&gt;           52) predictor_03&lt; -0.2257182 16   1 event (0.93750000 0.06250000) *</span></span>
+<span id="cb12-22"><a></a><span class="co">#&gt;           53) predictor_03&gt;=-0.2257182 16   6 no_event (0.37500000 0.62500000) *</span></span>
+<span id="cb12-23"><a></a><span class="co">#&gt;         27) predictor_18&lt; 0.2344964 12   1 no_event (0.08333333 0.91666667) *</span></span>
+<span id="cb12-24"><a></a><span class="co">#&gt;      7) predictor_29&lt; 2.144976 1183  22 no_event (0.01859679 0.98140321) *</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="predicting" class="slide level2">
+<h2>Predicting… <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a></a><span class="fu">predict</span>(tree_fit, <span class="at">new_data =</span> <span class="fu">head</span>(perf_data_1, <span class="dv">4</span>))</span>
+<span id="cb13-2"><a></a><span class="co">#&gt; # A tibble: 4 × 1</span></span>
+<span id="cb13-3"><a></a><span class="co">#&gt;   .pred_class</span></span>
+<span id="cb13-4"><a></a><span class="co">#&gt;   &lt;fct&gt;      </span></span>
+<span id="cb13-5"><a></a><span class="co">#&gt; 1 event      </span></span>
+<span id="cb13-6"><a></a><span class="co">#&gt; 2 event      </span></span>
+<span id="cb13-7"><a></a><span class="co">#&gt; 3 event      </span></span>
+<span id="cb13-8"><a></a><span class="co">#&gt; 4 no_event</span></span>
+<span id="cb13-9"><a></a></span>
+<span id="cb13-10"><a></a><span class="fu">predict</span>(tree_fit, <span class="at">new_data =</span> <span class="fu">head</span>(perf_data_1, <span class="dv">4</span>), <span class="at">type =</span> <span class="st">"prob"</span>)</span>
+<span id="cb13-11"><a></a><span class="co">#&gt; # A tibble: 4 × 2</span></span>
+<span id="cb13-12"><a></a><span class="co">#&gt;   .pred_event .pred_no_event</span></span>
+<span id="cb13-13"><a></a><span class="co">#&gt;         &lt;dbl&gt;          &lt;dbl&gt;</span></span>
+<span id="cb13-14"><a></a><span class="co">#&gt; 1      0.855          0.145 </span></span>
+<span id="cb13-15"><a></a><span class="co">#&gt; 2      0.933          0.0667</span></span>
+<span id="cb13-16"><a></a><span class="co">#&gt; 3      0.855          0.145 </span></span>
+<span id="cb13-17"><a></a><span class="co">#&gt; 4      0.0833         0.917</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="augmenting" class="slide level2">
+<h2>Augmenting… <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/broom.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a></a>tree_pred <span class="ot">&lt;-</span> <span class="fu">augment</span>(tree_fit, <span class="at">new_data =</span> perf_data_1)</span>
+<span id="cb14-2"><a></a>tree_pred <span class="sc">|&gt;</span> <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>)</span>
+<span id="cb14-3"><a></a><span class="co">#&gt; # A tibble: 5 × 34</span></span>
+<span id="cb14-4"><a></a><span class="co">#&gt;   .pred_class .pred_event .pred_no_event class predictor_01 predictor_02</span></span>
+<span id="cb14-5"><a></a><span class="co">#&gt;   &lt;fct&gt;             &lt;dbl&gt;          &lt;dbl&gt; &lt;fct&gt;        &lt;dbl&gt;        &lt;dbl&gt;</span></span>
+<span id="cb14-6"><a></a><span class="co">#&gt; 1 event            0.855          0.145  event       -1.64      -1.74   </span></span>
+<span id="cb14-7"><a></a><span class="co">#&gt; 2 event            0.933          0.0667 event       -0.846      0.477  </span></span>
+<span id="cb14-8"><a></a><span class="co">#&gt; 3 event            0.855          0.145  event        0.551      0.00571</span></span>
+<span id="cb14-9"><a></a><span class="co">#&gt; 4 no_event         0.0833         0.917  event       -1.46      -0.335  </span></span>
+<span id="cb14-10"><a></a><span class="co">#&gt; 5 event            0.855          0.145  event       -0.194     -0.276  </span></span>
+<span id="cb14-11"><a></a><span class="co">#&gt; # ℹ 28 more variables: predictor_03 &lt;dbl&gt;, predictor_04 &lt;dbl&gt;,</span></span>
+<span id="cb14-12"><a></a><span class="co">#&gt; #   predictor_05 &lt;dbl&gt;, predictor_06 &lt;dbl&gt;, predictor_07 &lt;dbl&gt;,</span></span>
+<span id="cb14-13"><a></a><span class="co">#&gt; #   predictor_08 &lt;dbl&gt;, predictor_09 &lt;dbl&gt;, predictor_10 &lt;dbl&gt;,</span></span>
+<span id="cb14-14"><a></a><span class="co">#&gt; #   predictor_11 &lt;dbl&gt;, predictor_12 &lt;dbl&gt;, predictor_13 &lt;dbl&gt;,</span></span>
+<span id="cb14-15"><a></a><span class="co">#&gt; #   predictor_14 &lt;dbl&gt;, predictor_15 &lt;dbl&gt;, predictor_16 &lt;dbl&gt;,</span></span>
+<span id="cb14-16"><a></a><span class="co">#&gt; #   predictor_17 &lt;dbl&gt;, predictor_18 &lt;dbl&gt;, predictor_19 &lt;dbl&gt;,</span></span>
+<span id="cb14-17"><a></a><span class="co">#&gt; #   predictor_20 &lt;dbl&gt;, predictor_21 &lt;dbl&gt;, predictor_22 &lt;dbl&gt;, …</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="performance-metrics" class="slide level2">
+<h2>Performance metrics <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
+<p>There are <em>many</em> yardstick metrics<sup>*</sup> for <a href="https://yardstick.tidymodels.org/reference/index.html#classification-metrics">class predictions</a> and <a href="https://yardstick.tidymodels.org/reference/index.html#class-probability-metrics">probability estimates</a>.</p>
+<p>Let’s make a collection of metrics and then evaluate our model.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15" data-code-line-numbers="|1|2|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a></a>cls_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(brier_class, roc_auc, sensitivity, specificity)</span>
+<span id="cb15-2"><a></a>tree_pred <span class="sc">|&gt;</span> <span class="fu">cls_metrics</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class, .pred_event)</span>
+<span id="cb15-3"><a></a><span class="co">#&gt; # A tibble: 4 × 3</span></span>
+<span id="cb15-4"><a></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
+<span id="cb15-5"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb15-6"><a></a><span class="co">#&gt; 1 sensitivity binary        0.647 </span></span>
+<span id="cb15-7"><a></a><span class="co">#&gt; 2 specificity binary        0.985 </span></span>
+<span id="cb15-8"><a></a><span class="co">#&gt; 3 brier_class binary        0.0429</span></span>
+<span id="cb15-9"><a></a><span class="co">#&gt; 4 roc_auc     binary        0.899</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="absolute" style="left: 0px; bottom: 0px; ">
+<p><sup>*</sup> … and metrics for <a href="https://yardstick.tidymodels.org/reference/index.html#regression-metrics">regression</a> and others.</p>
+</div>
+<div class="absolute" style="bottom: 0px; right: 0px; ">
+<p><a href="https://aml4td.org/chapters/cls-metrics.html">AML4TD</a></p>
+</div>
+</section>
+<section id="recipes-and-workflows" class="slide level2">
+<h2>Recipes and workflows <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
+<p>Recipes are preprocessors that perform sequential operations on the preductors.</p>
+<div class="fragment">
+<p><br></p>
+<p>For example, to center and scale our predictors:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16" data-code-line-numbers="|2|3|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a></a>rec <span class="ot">&lt;-</span> </span>
+<span id="cb16-2"><a></a>  <span class="fu">recipe</span>(class <span class="sc">~</span> ., <span class="at">data =</span> sim_train) <span class="sc">|&gt;</span> </span>
+<span id="cb16-3"><a></a>  <span class="fu">step_normalize</span>(<span class="fu">all_numeric_predictors</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div class="fragment">
+<p><br></p>
+<p>A model, a recipe, and other objects can be added to a <em>workflow</em> to have a single object for the whole modeling sequence:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a></a>tree_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(rec, tree_spec)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</section>
+<section id="your-turn-1" class="slide level2" data-transition="slide-in">
+<h2>Your turn</h2>
+<p>Fit a different type of decision tree, this time:</p>
+<ul>
+<li>Using the <code>C5.0</code> engine</li>
+<li>Change the minimum number of samples required for splitting to 10.</li>
+</ul>
+<p><br></p>
+<p>Did performance change much?</p>
+<p><br></p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="countdown" id="change-engine" data-update-every="1" tabindex="0" style="right:0;bottom:0;">
+<div class="countdown-controls"><button class="countdown-bump-down">−</button><button class="countdown-bump-up">+</button></div>
+<code class="countdown-time"><span class="countdown-digits minutes">05</span><span class="countdown-digits colon">:</span><span class="countdown-digits seconds">00</span></code>
 </div>
 </div>
 </div>
 </section>
 <section id="our-versions" class="slide level2">
 <h2>Our versions</h2>
-<p>R version 4.5.1 (2025-06-13), Quarto (1.7.32)</p>
-<div class="columns" style="font-size:0.7em;">
+<p>R version 4.5.1 (2025-06-13), Quarto (1.7.33)</p>
+<div class="columns" style="font-size:0.5em; font-family: monospace">
 <div class="column" style="width:25%;">
 <div class="cell">
 <div class="cell-output-display">
@@ -435,6 +693,14 @@
 </thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">almanac</td>
+<td style="text-align: left;">1.0.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">betacal</td>
+<td style="text-align: left;">0.1.0</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;">bonsai</td>
 <td style="text-align: left;">0.4.0</td>
 </tr>
@@ -443,36 +709,48 @@
 <td style="text-align: left;">1.0.9</td>
 </tr>
 <tr class="odd">
+<td style="text-align: left;">brulee</td>
+<td style="text-align: left;">0.6.0.9000</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C50</td>
+<td style="text-align: left;">0.2.0</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;">Cubist</td>
 <td style="text-align: left;">0.5.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CVST</td>
+<td style="text-align: left;">0.2-3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">desirability2</td>
+<td style="text-align: left;">0.2.0</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">dials</td>
 <td style="text-align: left;">1.4.2</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">doParallel</td>
-<td style="text-align: left;">1.0.17</td>
+<td style="text-align: left;">dimRed</td>
+<td style="text-align: left;">0.2.7</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">dplyr</td>
 <td style="text-align: left;">1.1.4</td>
 </tr>
 <tr class="odd">
+<td style="text-align: left;">DRR</td>
+<td style="text-align: left;">0.0.4</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">earth</td>
 <td style="text-align: left;">5.3.4</td>
 </tr>
-<tr class="even">
-<td style="text-align: left;">embed</td>
-<td style="text-align: left;">1.1.5</td>
-</tr>
 <tr class="odd">
-<td style="text-align: left;">finetune</td>
-<td style="text-align: left;">1.2.1</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">forested</td>
-<td style="text-align: left;">0.2.0</td>
+<td style="text-align: left;">embed</td>
+<td style="text-align: left;">1.2.0</td>
 </tr>
 </tbody>
 </table>
@@ -490,12 +768,44 @@
 </thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">extrasteps</td>
+<td style="text-align: left;">0.3.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">finetune</td>
+<td style="text-align: left;">1.2.1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">forested</td>
+<td style="text-align: left;">0.2.0</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">Formula</td>
 <td style="text-align: left;">1.2-5</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">ggplot2</td>
 <td style="text-align: left;">3.5.2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">igraph</td>
+<td style="text-align: left;">2.1.4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">important</td>
+<td style="text-align: left;">0.2.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">irlba</td>
+<td style="text-align: left;">2.3.5.1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">kernlab</td>
+<td style="text-align: left;">0.9-33</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">kknn</td>
+<td style="text-align: left;">1.4.1</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">lattice</td>
@@ -510,9 +820,28 @@
 <td style="text-align: left;">1.1-37</td>
 </tr>
 <tr class="even">
+<td style="text-align: left;">mirai</td>
+<td style="text-align: left;">2.5.0</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;">modeldata</td>
 <td style="text-align: left;">1.5.1</td>
 </tr>
+</tbody>
+</table>
+</div>
+</div>
+</div><div class="column" style="width:25%;">
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">package</th>
+<th style="text-align: left;">version</th>
+</tr>
+</thead>
+<tbody>
 <tr class="odd">
 <td style="text-align: left;">parallelly</td>
 <td style="text-align: left;">1.45.1</td>
@@ -529,21 +858,6 @@
 <td style="text-align: left;">plotrix</td>
 <td style="text-align: left;">3.8-4</td>
 </tr>
-</tbody>
-</table>
-</div>
-</div>
-</div><div class="column" style="width:25%;">
-<div class="cell">
-<div class="cell-output-display">
-<table class="caption-top">
-<thead>
-<tr class="header">
-<th style="text-align: left;">package</th>
-<th style="text-align: left;">version</th>
-</tr>
-</thead>
-<tbody>
 <tr class="odd">
 <td style="text-align: left;">plumber</td>
 <td style="text-align: left;">1.3.0</td>
@@ -557,32 +871,36 @@
 <td style="text-align: left;">1.1.0</td>
 </tr>
 <tr class="even">
+<td style="text-align: left;">RANN</td>
+<td style="text-align: left;">2.6.2</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;">recipes</td>
 <td style="text-align: left;">1.3.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">rpart</td>
+<td style="text-align: left;">4.1.24</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">rsample</td>
 <td style="text-align: left;">1.3.1</td>
 </tr>
 <tr class="even">
+<td style="text-align: left;">RSpectra</td>
+<td style="text-align: left;">0.16-2</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;">rules</td>
 <td style="text-align: left;">1.0.2</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">scales</td>
 <td style="text-align: left;">1.4.0</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">splines2</td>
 <td style="text-align: left;">0.5.4</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">stacks</td>
-<td style="text-align: left;">1.1.1</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">text2vec</td>
-<td style="text-align: left;">0.6.4</td>
 </tr>
 </tbody>
 </table>
@@ -600,16 +918,24 @@
 </thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">stacks</td>
+<td style="text-align: left;">1.1.1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">tailor</td>
+<td style="text-align: left;">0.1.0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">text2vec</td>
+<td style="text-align: left;">0.6.4</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">textrecipes</td>
 <td style="text-align: left;">1.1.0</td>
 </tr>
-<tr class="even">
-<td style="text-align: left;">tibble</td>
-<td style="text-align: left;">3.3.0</td>
-</tr>
 <tr class="odd">
 <td style="text-align: left;">tidymodels</td>
-<td style="text-align: left;">1.3.0</td>
+<td style="text-align: left;">1.4.1</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">tidyr</td>
@@ -620,18 +946,22 @@
 <td style="text-align: left;">2.0.0</td>
 </tr>
 <tr class="even">
+<td style="text-align: left;">uwot</td>
+<td style="text-align: left;">0.2.3</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;">vetiver</td>
 <td style="text-align: left;">0.2.5</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">workflows</td>
 <td style="text-align: left;">1.3.0</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">workflowsets</td>
 <td style="text-align: left;">1.1.1</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">yardstick</td>
 <td style="text-align: left;">1.3.2</td>
 </tr>
@@ -642,7 +972,7 @@
 </div></div>
 
 
-</section>
+</section></section>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">
