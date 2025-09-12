@@ -166,17 +166,7 @@ For more advanced use cases, you can extract and save them. See:
 
 <hr size="5">
 
-# Advanced 2 - Feature Engineering
-
-## Resampling Strategy 
-
-These data have a time component, and while not a typical time series data set, we have the option to use a time series resampling method. 
-
-An example is shown in the extra slides “Case Study on Transportation”.
-
-Consider the agent data. Cross-validation may not group all of an agent’s data into the analysis or assessment sets. In this case, our analysis data might have future data that is later than the agent’s data in the assessment set. 
-
-# Advanced 3 - Tuning Hyperparameters
+# Advanced 2 - Model optimization by tuning
 
 ## Different types of grids
 
@@ -216,7 +206,7 @@ ns_tunable
 ns_tunable$call_info
 ```
 
-## Grid Search
+## Neural network tuning
 
 There might be some warnings that 
 
@@ -241,47 +231,6 @@ Comparing these methods:
  - They usually perform about the same. 
  - future is more mature and is geared towards users and developers. 
  - mirai contains its own queuing system and can be more efficient in allocating work. 
-
-## Early stopping for boosted trees
-
-When deciding on the number of boosting iterations, there are two main strategies:
-
- * Directly tune it (`trees = tune()`)
- 
- * Set it to one value and tune the number of early stopping iterations (`trees = 500`, `stop_iter = tune()`).
-
-Early stopping is when we monitor the model's performance. If the model doesn't improve for `stop_iter` iterations, training stops. 
-
-Here's an example where, after eleven iterations, performance starts to get worse. 
-
-
-```{r early-stopping}
-#| echo: false
-
-roc_vals <- c(0.4994, 0.5075, 0.6131, 0.7077, 0.7376, 0.752, 0.7807, 0.7927, 
-              0.7969, 0.7915, 0.8118, 0.8019, 0.7926, 0.7772, 0.776)
-iterations <- seq_along(roc_vals)
-
-early_stop <- tibble(iterations = iterations, `ROC AUC` = roc_vals)
-
-early_stop |> ggplot(aes(iterations, `ROC AUC`)) + geom_point() + theme_bw()
-```
-
-This is likely due to over-fitting, so we stop the model at eleven boosting iterations.  
-
-Early stopping usually has good results and takes far less time. 
-
-We _could use_ an engine argument called `validation` here. However, that's not an argument for any function in the lightgbm package. 
-
-bonsai has its own wrapper around (`lightgbm::lgb.train()`) called `bonsai::train_lightgbm()`. We use that here, and it has a `validation` argument.
-
-How would you know that? There are a few different ways:
-
- * Look at the documentation in `?boost_tree` and click on the `lightgbm` entry in the engine list. 
- * Check out the pkgdown reference website <https://parsnip.tidymodels.org/reference/index.html>
- * Run the `translate()` function on the parsnip specification object. 
-
-The first two options are best since they tell you a lot more about the particularities of each model engine (there are a lot for lightgbm). 
 
 <hr size="5">
 
