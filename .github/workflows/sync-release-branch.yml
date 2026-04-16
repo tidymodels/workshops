@@ -1,0 +1,34 @@
+name: Sync release branch
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'archive/**'
+      - 'docs/archive/**'
+      - '_freeze/**'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to release branch (excluding archive)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create or reset release branch from main
+          git checkout -B release
+
+          # Remove archive directories, freeze cache, and source files
+          git rm -r --cached archive/ docs/archive/ _freeze/ source-files/ --quiet 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "chore: sync release branch (exclude archive)"
+
+          git push origin release --force
