@@ -5,8 +5,7 @@ dev_pkgs <- c(
   "hadley/emo",
   "sessioninfo",
   "svglite",
-  "leaflet",
-  "doMC"
+  "leaflet"
 )
 
 # pak::pak(dev_pkgs)
