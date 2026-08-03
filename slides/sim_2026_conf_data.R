@@ -81,6 +81,7 @@ sim_2026_conf_data <- function(n = 1000, difficulty = 1.5, seed = 2026) {
   cov2cor(cov_mat)
 
   sim_dat <- NULL
+  lvls <- paste0("class_", 1:2)
 
   iter <- max(1, ceiling(n / num_proto))
 
@@ -103,7 +104,8 @@ sim_2026_conf_data <- function(n = 1000, difficulty = 1.5, seed = 2026) {
         dplyr::slice_sample(n = n) |>
         dplyr::mutate(
           pred_1 = as.numeric(scale(pred_1)),
-          pred_2 = as.numeric(scale(pred_2))
+          pred_2 = as.numeric(scale(pred_2)),
+          class = factor(class, levels = lvls)
         )
     },
     seed = seed
