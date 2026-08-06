@@ -63,12 +63,11 @@ countdown::countdown(minutes = 3, id = "how-to-fit-linear-model")
 ```{r setup-previous}
 #| echo: false
 library(tidymodels)
-load("2026_class_data.RData")
 
 set.seed(123)
-example_split <- initial_split(class_data)
-example_train <- training(example_split)
-example_test <- testing(example_split)
+cls_split <- initial_split(cls_data_2026, prop = 0.8)
+cls_train <- training(cls_split)
+cls_test <- testing(cls_split)
 ```
 
 ```{r logistic-reg}
@@ -385,10 +384,10 @@ plot_rates +
 #| label: 2d-cacls
 #| include: false
 
-rng_1 <- extendrange(example_train$pred_1)
-rng_2 <- extendrange(example_train$pred_2)
+rng_1 <- extendrange(cls_train$pred_1)
+rng_2 <- extendrange(cls_train$pred_2)
 seq_n <- 250
-example_grid <- 
+cls_grid <- 
   crossing(
     pred_1 = seq(rng_1[1], rng_1[2], length.out =seq_n),
     pred_2 = seq(rng_2[1], rng_2[2], length.out =seq_n)
@@ -396,20 +395,20 @@ example_grid <-
 
 lr_grid <- 
   logistic_reg() |> 
-  fit(class ~ ., data = example_train) |> 
-  augment(new_data = example_grid) |> 
+  fit(class ~ ., data = cls_train) |> 
+  augment(new_data = cls_grid) |> 
   mutate(Model = "Logistic Regression") |> 
   select(.pred_class_1, pred_1, pred_2, Model)
 
 tree_grid <- 
   decision_tree(mode = "classification") |> 
-  fit(class ~ ., data = example_train) |> 
-  augment(new_data = example_grid) |> 
+  fit(class ~ ., data = cls_train) |> 
+  augment(new_data = cls_grid) |> 
   mutate(Model = "Decision Tree") |> 
   select(.pred_class_1, pred_1, pred_2, Model)
 
 bound_base <- 
-  example_train |> 
+  cls_train |> 
   ggplot(aes(pred_1, pred_2)) + 
   geom_point(aes(col = class, pch = class), alpha = 2 / 3, cex = 2.5) + 
   coord_obs_pred() + 
@@ -523,7 +522,7 @@ tree_spec <-
   set_mode("classification")
 
 tree_spec |> 
-  fit(class ~ ., data = example_train) 
+  fit(class ~ ., data = cls_train) 
 ```
 
 ## A model workflow `r hexes("parsnip", "workflows")`
@@ -536,7 +535,7 @@ tree_spec <-
 workflow() |>
   add_formula(class ~ .) |>
   add_model(tree_spec) |>
-  fit(data = example_train) 
+  fit(data = cls_train) 
 ```
 
 ## A model workflow `r hexes("parsnip", "workflows")`
@@ -547,7 +546,7 @@ tree_spec <-
   set_mode("classification")
 
 workflow(class ~ ., tree_spec) |> 
-  fit(data = example_train) 
+  fit(data = cls_train) 
 ```
 
 ## Your turn {transition="slide-in"}
@@ -590,7 +589,7 @@ tree_spec <-
 
 tree_fit <-
   workflow(class ~ ., tree_spec) |> 
-  fit(data = example_train)
+  fit(data = cls_train)
 ```
 
 ## Your turn {transition="slide-in"}
@@ -599,7 +598,7 @@ tree_fit <-
 
 *Run:*
 
-`predict(tree_fit, new_data = example_test)`
+`predict(tree_fit, new_data = cls_test)`
 
 *What do you notice about the structure of the result?*
 
@@ -614,7 +613,7 @@ countdown::countdown(minutes = 3, id = "predict-tree-fit")
 
 *Run:*
 
-`augment(tree_fit, new_data = example_test)`
+`augment(tree_fit, new_data = cls_test)`
 
 *How does the output compare to the output from `predict()`?*
 
