@@ -46,8 +46,8 @@ library(ggplot2)
 theme_set(theme_bw())
 options(
   cli.width = 70,
-  ggplot2.discrete.fill = c("#218239", "#d4ad42"),
-  ggplot2.discrete.colour = c("#218239", "#d4ad42")
+  ggplot2.discrete.fill = c("#1BB6AFFF", "#EE6100FF"),
+  ggplot2.discrete.colour = c("#1BB6AFFF", "#EE6100FF")
 )
 
 train_color <- "#1a162d"
