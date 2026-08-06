@@ -11,6 +11,11 @@ dev_pkgs <- c(
 # pak::pak(dev_pkgs)
 
 #   ----------------------------------------------------------------------
+# temp check for correct package versions
+
+rlang::check_installed("modeldata", version = "1.5.1.9000")
+
+#   ----------------------------------------------------------------------
 
 hexes <- function(..., size = 64) {
   x <- c(...)
