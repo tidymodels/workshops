@@ -41,7 +41,6 @@ knitr::opts_chunk$set(
 library(countdown)
 library(emo)
 # devtools::install_github("hadley/emo")
-library(forested)
 library(ggplot2)
 theme_set(theme_bw())
 options(

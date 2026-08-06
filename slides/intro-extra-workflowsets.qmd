@@ -27,15 +27,14 @@ knitr:
 ```{r setup-previous}
 #| echo: false
 library(tidymodels)
-library(forested)
 
 set.seed(123)
-forested_split <- initial_split(forested_ga, prop = 0.8)
-forested_train <- training(forested_split)
-forested_test <- testing(forested_split)
+cls_split <- initial_split(cls_data_2026, prop = 0.8)
+cls_train <- training(cls_split)
+cls_test <- testing(cls_split)
 
 set.seed(123)
-forested_folds <- vfold_cv(forested_train, v = 10)
+cls_folds <- vfold_cv(cls_train, v = 10)
 
 # decrease cost_complexity from its default 0.01 to make a more
 # complex and performant tree. see `?decision_tree()` to learn more.
@@ -45,18 +44,13 @@ rf_spec <- rand_forest(trees = 1000, mode = "classification")
 ```
 
 
-## How can we compare multiple model workflows at once?
+# How can we compare multiple model workflows at once?
 
-```{r forest-mountain, echo = FALSE}
-#| fig-align: "center"
-
-knitr::include_graphics("images/forest_mountain.svg")
-```
 
 ## Evaluate a workflow set
 
 ```{r workflow-set}
-wf_set <- workflow_set(list(forested ~ .), list(tree_spec, rf_spec))
+wf_set <- workflow_set(list(class ~ .), list(tree_spec, rf_spec))
 wf_set
 ```
 
@@ -65,7 +59,7 @@ wf_set
 ```{r workflow-map}
 #| cache: true
 wf_set_fit <- wf_set |>
-  workflow_map("fit_resamples", resamples = forested_folds)
+  workflow_map("fit_resamples", resamples = cls_folds)
 wf_set_fit
 ```
 
