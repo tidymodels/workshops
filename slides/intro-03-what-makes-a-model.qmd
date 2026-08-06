@@ -54,37 +54,25 @@ countdown::countdown(minutes = 3, id = "how-to-fit-linear-model")
 
 . . .
 
-::: columns
-::: {.column width="60%"}
 -   Choose a [model type]{.underline}
 -   Specify an engine
 -   Set the mode
-:::
-
-::: {.column width="40%"}
-<br><br><br>
-![](images/forest_mountain.svg){.absolute height="300"}
-:::
-:::
 
 ## To specify a model `r hexes("parsnip")`
 
 ```{r setup-previous}
 #| echo: false
 library(tidymodels)
-library(forested)
 
 set.seed(123)
-
-forested_split <- initial_split(forested_ga, prop = 0.8)
-forested_train <- training(forested_split)
-forested_test <- testing(forested_split)
+cls_split <- initial_split(cls_data_2026, prop = 0.8)
+cls_train <- training(cls_split)
+cls_test <- testing(cls_split)
 ```
 
 ```{r logistic-reg}
 logistic_reg()
 ```
-
 
 :::notes
 Models have default engines
@@ -92,18 +80,9 @@ Models have default engines
 
 ## To specify a model `r hexes("parsnip")`
 
-::: columns
-::: {.column width="60%"}
 -   Choose a model type
 -   Specify an [engine]{.underline}
 -   Set the mode
-:::
-
-::: {.column width="40%"}
-<br><br><br>
-![](images/forest_mountain.svg){.absolute height="300"}
-:::
-:::
 
 ## To specify a model `r hexes("parsnip")`
 
@@ -121,18 +100,9 @@ logistic_reg() |>
 
 ## To specify a model `r hexes("parsnip")`
 
-::: columns
-::: {.column width="60%"}
 -   Choose a model type
 -   Specify an engine
 -   Set the [mode]{.underline}
-:::
-
-::: {.column width="40%"}
-<br><br><br>
-![](images/forest_mountain.svg){.absolute height="300"}
-:::
-:::
 
 
 ## To specify a model `r hexes("parsnip")`
@@ -167,18 +137,9 @@ All available models are listed at <https://www.tidymodels.org/find/parsnip/>
 
 ## To specify a model `r hexes("parsnip")`
 
-::: columns
-::: {.column width="60%"}
 -   Choose a [model type]{.underline}
 -   Specify an [engine]{.underline}
 -   Set the [mode]{.underline}
-:::
-
-::: {.column width="40%"}
-<br><br><br>
-![](images/forest_mountain.svg){.absolute height="300"}
-:::
-:::
 
 ## Your turn {transition="slide-in"}
 
@@ -404,7 +365,7 @@ plot_rates +
 :::
 
 ::: {.column width="50%"}
-### Decision trees
+### Decision tree
 ```{r plot-tree-preds-2}
 #| echo: false
 #| fig.width: 7
@@ -415,6 +376,84 @@ plot_rates +
 ```
 :::
 :::
+
+
+## In two dimensions
+
+```{r}
+#| label: 2d-cacls
+#| include: false
+
+rng_1 <- extendrange(cls_train$pred_1)
+rng_2 <- extendrange(cls_train$pred_2)
+seq_n <- 250
+cls_grid <- 
+  crossing(
+    pred_1 = seq(rng_1[1], rng_1[2], length.out =seq_n),
+    pred_2 = seq(rng_2[1], rng_2[2], length.out =seq_n)
+  )
+
+lr_grid <- 
+  logistic_reg() |> 
+  fit(class ~ ., data = cls_train) |> 
+  augment(new_data = cls_grid) |> 
+  mutate(Model = "Logistic Regression") |> 
+  select(.pred_class_1, pred_1, pred_2, Model)
+
+tree_grid <- 
+  decision_tree(mode = "classification") |> 
+  fit(class ~ ., data = cls_train) |> 
+  augment(new_data = cls_grid) |> 
+  mutate(Model = "Decision Tree") |> 
+  select(.pred_class_1, pred_1, pred_2, Model)
+
+bound_base <- 
+  cls_train |> 
+  ggplot(aes(pred_1, pred_2)) + 
+  geom_point(aes(col = class, pch = class), alpha = 2 / 3, cex = 2.5) + 
+  coord_obs_pred() + 
+  theme(legend.position = "bottom")
+```
+
+::: columns
+::: {.column width="50%"}
+### Logistic regression
+```{r plot-logistic-reg-2d}
+#| echo: false
+#| fig.width: 7
+#| fig.height: 6
+bound_base +
+  geom_contour(
+    data = lr_grid,
+    aes(z = .pred_class_1),
+    breaks = 1 / 2,
+    col = "black",
+    linewidth = 1
+  ) +
+  labs(col = NULL, pch = NULL)
+```
+:::
+
+::: {.column width="50%"}
+### Decision tree
+```{r plot-tree-preds-2d}
+#| echo: false
+#| fig.width: 7
+#| fig.height: 6
+
+bound_base +
+  geom_contour(
+    data = tree_grid,
+    aes(z = .pred_class_1),
+    breaks = 1 / 2,
+    col = "black",
+    linewidth = 1
+  ) +
+  labs(col = NULL, pch = NULL)
+```
+:::
+:::
+
 
 # A model workflow
 
@@ -465,7 +504,7 @@ While centering + scaling are easy to explain the general idea with, it's not ne
 
 . . .
 
--   [Most importantly]{.underline}, a workflow captures the entire modeling process: `fit()` and `predict()` apply to the preprocessing steps in addition to the actual model fit
+-   [Most importantly]{.underline}, a workflow captures the entire modeling process: `fit()` and `predict()` apply to the pre/post processing steps in addition to the actual model fit
 
 ::: notes
 Two ways workflows handle levels better than base R:
@@ -483,7 +522,7 @@ tree_spec <-
   set_mode("classification")
 
 tree_spec |> 
-  fit(forested ~ ., data = forested_train) 
+  fit(class ~ ., data = cls_train) 
 ```
 
 ## A model workflow `r hexes("parsnip", "workflows")`
@@ -494,9 +533,9 @@ tree_spec <-
   set_mode("classification")
 
 workflow() |>
-  add_formula(forested ~ .) |>
+  add_formula(class ~ .) |>
   add_model(tree_spec) |>
-  fit(data = forested_train) 
+  fit(data = cls_train) 
 ```
 
 ## A model workflow `r hexes("parsnip", "workflows")`
@@ -506,8 +545,8 @@ tree_spec <-
   decision_tree() |> 
   set_mode("classification")
 
-workflow(forested ~ ., tree_spec) |> 
-  fit(data = forested_train) 
+workflow(class ~ ., tree_spec) |> 
+  fit(data = cls_train) 
 ```
 
 ## Your turn {transition="slide-in"}
@@ -522,7 +561,7 @@ tree_spec <- decision_tree() |>
   set_mode("classification")
 
 tree_wflow <- workflow() |>
-  add_formula(forested ~ .) |>
+  add_formula(class ~ .) |>
   add_model(tree_spec)
 
 tree_wflow
@@ -549,8 +588,8 @@ tree_spec <-
   set_mode("classification")
 
 tree_fit <-
-  workflow(forested ~ ., tree_spec) |> 
-  fit(data = forested_train) 
+  workflow(class ~ ., tree_spec) |> 
+  fit(data = cls_train)
 ```
 
 ## Your turn {transition="slide-in"}
@@ -559,7 +598,7 @@ tree_fit <-
 
 *Run:*
 
-`predict(tree_fit, new_data = forested_test)`
+`predict(tree_fit, new_data = cls_test)`
 
 *What do you notice about the structure of the result?*
 
@@ -574,7 +613,7 @@ countdown::countdown(minutes = 3, id = "predict-tree-fit")
 
 *Run:*
 
-`augment(tree_fit, new_data = forested_test)`
+`augment(tree_fit, new_data = cls_test)`
 
 *How does the output compare to the output from `predict()`?*
 
