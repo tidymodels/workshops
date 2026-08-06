@@ -27,15 +27,18 @@ knitr:
 ```{r setup-previous}
 #| echo: false
 library(tidymodels)
-library(forested)
 
 set.seed(123)
-forested_split <- initial_split(forested_ga, prop = 0.8)
-forested_train <- training(forested_split)
-forested_test <- testing(forested_split)
+cls_split <- initial_split(cls_data_2026, prop = 0.8)
+cls_train <- training(cls_split)
+cls_test <- testing(cls_split)
+
+tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
+cls_wflow <- workflow(class ~ ., tree_spec)
+cls_fit <- fit(cls_wflow, cls_train)
 
 set.seed(123)
-forested_folds <- vfold_cv(forested_train, v = 10)
+cls_folds <- vfold_cv(cls_train, v = 10)
 ```
 
 ## Tuning parameters
@@ -82,7 +85,7 @@ Let's take our previous random forest workflow and tag for tuning the minimum nu
 rf_spec <- rand_forest(min_n = tune()) |> 
   set_mode("classification")
 
-rf_wflow <- workflow(forested ~ ., rf_spec)
+rf_wflow <- workflow(class ~ ., rf_spec)
 rf_wflow
 ```
 
@@ -97,7 +100,7 @@ rf_wflow
 set.seed(22)
 rf_res <- tune_grid(
   rf_wflow,
-  forested_folds,
+  cls_folds,
   grid = 5
 )
 ```
@@ -124,7 +127,7 @@ best_parameter
 
 rf_wflow <- finalize_workflow(rf_wflow, best_parameter)
 
-final_fit <- last_fit(rf_wflow, forested_split) 
+final_fit <- last_fit(rf_wflow, cls_split) 
 
 collect_metrics(final_fit)
 ```

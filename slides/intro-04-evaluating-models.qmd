@@ -28,20 +28,19 @@ knitr:
 ```{r setup-previous}
 #| echo: false
 library(tidymodels)
-library(forested)
 
 set.seed(123)
-forested_split <- initial_split(forested_ga, prop = 0.8)
-forested_train <- training(forested_split)
-forested_test <- testing(forested_split)
+cls_split <- initial_split(cls_data_2026, prop = 0.8)
+cls_train <- training(cls_split)
+cls_test <- testing(cls_split)
 
 tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
-forested_wflow <- workflow(forested ~ ., tree_spec)
-forested_fit <- fit(forested_wflow, forested_train)
+cls_wflow <- workflow(class ~ ., tree_spec)
+cls_fit <- fit(cls_wflow, cls_train)
 ```
 
-```{r forested-fit-augment}
-augment(forested_fit, new_data = forested_train)
+```{r example-fit-augment}
+augment(cls_fit, new_data = cls_train)
 ```
 
 ## Confusion matrix `r hexes("yardstick")`
@@ -51,15 +50,15 @@ augment(forested_fit, new_data = forested_train)
 ## Confusion matrix `r hexes("yardstick")`
 
 ```{r conf-mat}
-augment(forested_fit, new_data = forested_train) |>
-  conf_mat(truth = forested, estimate = .pred_class)
+augment(cls_fit, new_data = cls_train) |>
+  conf_mat(truth = class, estimate = .pred_class)
 ```
 
 ## Confusion matrix `r hexes("yardstick")`
 
 ```{r conf-mat-plot}
-augment(forested_fit, new_data = forested_train) |>
-  conf_mat(truth = forested, estimate = .pred_class) |>
+augment(cls_fit, new_data = cls_train) |>
+  conf_mat(truth = class, estimate = .pred_class) |>
   autoplot(type = "heatmap")
 ```
 
@@ -88,8 +87,8 @@ countdown::countdown(minutes = 5, id = "derive-accuracy")
 ::: columns
 ::: {.column width="60%"}
 ```{r acc}
-augment(forested_fit, new_data = forested_train) |>
-  accuracy(truth = forested, estimate = .pred_class)
+augment(cls_fit, new_data = cls_train) |>
+  accuracy(truth = class, estimate = .pred_class)
 ```
 :::
 
@@ -103,9 +102,9 @@ augment(forested_fit, new_data = forested_train) |>
 We need to be careful of using `accuracy()` since it can give "good" performance by only predicting one way with imbalanced data:
 
 ```{r acc-2}
-augment(forested_fit, new_data = forested_train) %>%
-  mutate(.pred_class = factor("Yes", levels = c("Yes", "No"))) %>%
-  accuracy(truth = forested, estimate = .pred_class)
+augment(cls_fit, new_data = cls_train) %>%
+  mutate(.pred_class = factor("class_1", levels = c("class_1", "class_2"))) %>%
+  accuracy(truth = class, estimate = .pred_class)
 ```
 
 ## Metrics for model performance `r hexes("yardstick")`
@@ -113,8 +112,8 @@ augment(forested_fit, new_data = forested_train) %>%
 ::: columns
 ::: {.column width="60%"}
 ```{r sens}
-augment(forested_fit, new_data = forested_train) |>
-  sensitivity(truth = forested, estimate = .pred_class)
+augment(cls_fit, new_data = cls_train) |>
+  sensitivity(truth = class, estimate = .pred_class)
 ```
 :::
 
@@ -130,15 +129,15 @@ augment(forested_fit, new_data = forested_train) |>
 ::: {.column width="60%"}
 ```{r sens-2}
 #| code-line-numbers: "3-6"
-augment(forested_fit, new_data = forested_train) |>
-  sensitivity(truth = forested, estimate = .pred_class)
+augment(cls_fit, new_data = cls_train) |>
+  sensitivity(truth = class, estimate = .pred_class)
 ```
 
 <br>
 
 ```{r spec}
-augment(forested_fit, new_data = forested_train) |>
-  specificity(truth = forested, estimate = .pred_class)
+augment(cls_fit, new_data = cls_train) |>
+  specificity(truth = class, estimate = .pred_class)
 ```
 :::
 
@@ -151,11 +150,11 @@ augment(forested_fit, new_data = forested_train) |>
 
 We can use `metric_set()` to combine multiple calculations into one
 
-```{r forested-metrics}
-forested_metrics <- metric_set(accuracy, specificity, sensitivity)
+```{r example-metrics}
+cls_metrics <- metric_set(accuracy, specificity, sensitivity)
 
-augment(forested_fit, new_data = forested_train) |>
-  forested_metrics(truth = forested, estimate = .pred_class)
+augment(cls_fit, new_data = cls_train) |>
+  cls_metrics(truth = class, estimate = .pred_class)
 ```
 
 ## Metrics for model performance `r hexes("yardstick")`
@@ -163,31 +162,32 @@ augment(forested_fit, new_data = forested_train) |>
 Metrics and metric sets work with grouped data frames!
 
 ```{r accuracy-grouped}
-augment(forested_fit, new_data = forested_train) |>
-  group_by(tree_no_tree) |>
-  accuracy(truth = forested, estimate = .pred_class)
+augment(cls_fit, new_data = cls_train) |>
+  mutate(group = rep_len(LETTERS[1:3], nrow(cls_train))) |> 
+  group_by(group) |>
+  accuracy(truth = class, estimate = .pred_class)
 ```
 
 ## Your turn {transition="slide-in"}
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Apply the `forested_metrics` metric set to `augment()` \
+*Apply the `cls_metrics` metric set to `augment()` \
 output grouped by `tree_no_tree`.*
 
 *Do any metrics differ substantially between groups?*
 
-```{r ex-forested-grouped-metrics}
+```{r ex-example-grouped-metrics}
 #| echo: false
-countdown::countdown(minutes = 5, id = "forested-grouped-metrics")
+countdown::countdown(minutes = 5, id = "example-grouped-metrics")
 ```
 
 :::notes
 The specificity for `"Tree"` is a good bit lower than it is for `"No tree"`.
 
 Specificity is the proportion of negatives that are correctly identified as negatives.
-"Negative" is the non-event level of the outcome, i.e. "non-forested."
-So, when this index classifies the plot as having a tree, the model does not do well at correctly identifying the plot as non-forested when it is indeed non-forested.
+"Negative" is the non-event level of the outcome, i.e. "class 2" in our example. 
+So, when this index classifies the plot as having a tree, the model does not do well at correctly identifying the plot as class 2 when it is indeed the second class.
 :::
 
 ## Two class data
@@ -214,8 +214,8 @@ What happens for a 20% threshold?
 #| label: thresholds
 #| echo: false
 
-augment(forested_fit, new_data = forested_train) |> 
-  roc_curve(truth = forested, .pred_Yes) |> 
+augment(cls_fit, new_data = cls_train) |> 
+  roc_curve(truth = class, .pred_class_1) |> 
   filter(is.finite(.threshold)) |> 
   pivot_longer(c(specificity, sensitivity), names_to = "statistic", values_to = "value") |> 
   rename(`event threshold` = .threshold) |> 
@@ -246,8 +246,8 @@ with sensitivity and specificity calculated at all possible thresholds.
 #| fig-height: 4
 #| out.width: 100%
 
-p_roc <- augment(forested_fit, new_data = forested_train) |> 
-  roc_curve(truth = forested, .pred_Yes) |>
+p_roc <- augment(cls_fit, new_data = cls_train) |> 
+  roc_curve(truth = class, .pred_class_1) |>
   autoplot()
 p_roc
 ```
@@ -283,12 +283,12 @@ p_roc
 
 ```{r roc-auc}
 # Assumes _first_ factor level is event; there are options to change that
-augment(forested_fit, new_data = forested_train) |> 
-  roc_curve(truth = forested, .pred_Yes) |>
+augment(cls_fit, new_data = cls_train) |> 
+  roc_curve(truth = class, .pred_class_1) |>
   slice(1, 20, 50)
 
-augment(forested_fit, new_data = forested_train) |> 
-  roc_auc(truth = forested, .pred_Yes)
+augment(cls_fit, new_data = cls_train) |> 
+  roc_auc(truth = class, .pred_class_1)
 ```
 
 ## ROC curve plot `r hexes("yardstick")`
@@ -299,10 +299,10 @@ augment(forested_fit, new_data = forested_train) |>
 #| out.width: 100%
 #| output-location: "column"
 
-augment(forested_fit, 
-        new_data = forested_train) |> 
-  roc_curve(truth = forested, 
-            .pred_Yes) |>
+augment(cls_fit, 
+        new_data = cls_train) |> 
+  roc_curve(truth = class, 
+            .pred_class_1) |>
   autoplot()
 ```
 
@@ -334,8 +334,8 @@ $$
 ## Brier score  {.annotation}
 
 ```{r brier}
-augment(forested_fit, new_data = forested_train) |> 
-  brier_class(truth = forested, .pred_Yes) 
+augment(cls_fit, new_data = cls_train) |> 
+  brier_class(truth = class, .pred_class_1) 
 ```
 
 . . .
@@ -348,30 +348,30 @@ Smaller values are better, for binary classification the "bad model threshold" i
 ::: columns
 ::: {.column width="50%"}
 The ROC captures separation.
-```{r separation-forested}
+```{r separation-example}
 #| echo: false
 #| fig-height: 4
 #| fig-width: 5
 #| out-width: 100%
-augment(forested_fit, new_data = forested_train) |> 
-  ggplot(aes(.pred_Yes, col = forested, fill = forested)) + 
+augment(cls_fit, new_data = cls_train) |> 
+  ggplot(aes(.pred_class_1, col = class, fill = class)) + 
   stat_density(alpha = 1 / 4, trim = TRUE, adjust = 1.2) + 
   lims(x = 0:1) +
-  labs(x = "Predicted probability of forested") +
+  labs(x = "Predicted probability of Class 1") +
   theme(legend.position = "top")
 ```
 :::
 ::: {.column width="50%"}
 The Brier score captures calibration.
-```{r calibration-forested}
+```{r calibration-example}
 #| echo: false
 #| fig-height: 4
 #| fig-width: 5
 #| out-width: 100%
 library(probably)
 
-augment(forested_fit, new_data = forested_train) |> 
-  cal_plot_breaks(forested, .pred_Yes, num_breaks = 30)
+augment(cls_fit, new_data = cls_train) |> 
+  cal_plot_breaks(class, .pred_class_1, num_breaks = 30)
 ```
 :::
 :::
@@ -406,8 +406,8 @@ Calibration plot: We bin observations according to predicted probability. In the
 ## Dangers of overfitting ⚠️ `r hexes("yardstick")`
 
 ```{r augment-train}
-forested_fit |>
-  augment(forested_train)
+cls_fit |>
+  augment(cls_train)
 ```
 
 We call this "resubstitution" or "repredicting the training set"
@@ -415,9 +415,9 @@ We call this "resubstitution" or "repredicting the training set"
 ## Dangers of overfitting ⚠️ `r hexes("yardstick")`
 
 ```{r augment-acc}
-forested_fit |>
-  augment(forested_train) |>
-  accuracy(forested, .pred_class)
+cls_fit |>
+  augment(cls_train) |>
+  accuracy(class, .pred_class)
 ```
 
 We call this a "resubstitution estimate"
@@ -427,9 +427,9 @@ We call this a "resubstitution estimate"
 ::: columns
 ::: {.column width="50%"}
 ```{r augment-acc-2}
-forested_fit |>
-  augment(forested_train) |>
-  accuracy(forested, .pred_class)
+cls_fit |>
+  augment(cls_train) |>
+  accuracy(class, .pred_class)
 ```
 :::
 
@@ -442,17 +442,17 @@ forested_fit |>
 ::: columns
 ::: {.column width="50%"}
 ```{r augment-acc-3}
-forested_fit |>
-  augment(forested_train) |>
-  accuracy(forested, .pred_class)
+cls_fit |>
+  augment(cls_train) |>
+  accuracy(class, .pred_class)
 ```
 :::
 
 ::: {.column width="50%"}
 ```{r augment-acc-test}
-forested_fit |>
-  augment(forested_test) |>
-  accuracy(forested, .pred_class)
+cls_fit |>
+  augment(cls_test) |>
+  accuracy(class, .pred_class)
 ```
 :::
 :::
@@ -488,17 +488,17 @@ countdown::countdown(minutes = 5, id = "augment-metrics")
 ::: columns
 ::: {.column width="50%"}
 ```{r brier-class}
-forested_fit |>
-  augment(forested_train) |>
-  roc_auc(forested, .pred_Yes)
+cls_fit |>
+  augment(cls_train) |>
+  roc_auc(class, .pred_class_1)
 ```
 :::
 
 ::: {.column width="50%"}
 ```{r brier-class-2}
-forested_fit |>
-  augment(forested_test) |>
-  roc_auc(forested, .pred_Yes)
+cls_fit |>
+  augment(cls_test) |>
+  roc_auc(class, .pred_class_1)
 ```
 :::
 :::
@@ -538,10 +538,6 @@ And we want to understand if these are important differences?
 -   *ends up in analysis*
 -   *ends up in assessment*
 
-*for* **each** *fold?*
-
-![](images/forest_mountain.svg){width="200"}
-
 ```{r ex-percent-in-folds}
 #| echo: false
 countdown::countdown(minutes = 3, id = "percent-in-folds")
@@ -550,16 +546,16 @@ countdown::countdown(minutes = 3, id = "percent-in-folds")
 ## Cross-validation `r hexes("rsample")`
 
 ```{r vfold-cv}
-vfold_cv(forested_train) # v = 10 is default
+vfold_cv(cls_train) # v = 10 is default
 ```
 
 ## Cross-validation `r hexes("rsample")`
 
 What is in this?
 
-```{r forested-splits}
-forested_folds <- vfold_cv(forested_train)
-forested_folds$splits[1:3]
+```{r example-splits}
+cls_folds <- vfold_cv(cls_train)
+cls_folds$splits[1:3]
 ```
 
 ::: notes
@@ -569,17 +565,17 @@ Talk about a list column, storing non-atomic types in dataframe
 ## Cross-validation `r hexes("rsample")`
 
 ```{r vfold-cv-v}
-vfold_cv(forested_train, v = 5)
+vfold_cv(cls_train, v = 5)
 ```
 
 ## Cross-validation `r hexes("rsample")`
 
 We'll use this setup:
 
-```{r forested-folds}
+```{r example-folds}
 set.seed(123)
-forested_folds <- vfold_cv(forested_train, v = 10)
-forested_folds
+cls_folds <- vfold_cv(cls_train, v = 10)
+cls_folds
 ```
 
 . . .
@@ -591,14 +587,14 @@ Set the seed when creating resamples
 ## Fit our model to the resamples
 
 ```{r fit-resamples}
-forested_res <- fit_resamples(forested_wflow, forested_folds)
-forested_res
+cls_res <- fit_resamples(cls_wflow, cls_folds)
+cls_res
 ```
 
 ## Evaluating model performance `r hexes("tune")`
 
 ```{r collect-metrics}
-forested_res |>
+cls_res |>
   collect_metrics()
 ```
 
@@ -616,17 +612,17 @@ How do the metrics from resampling compare to the metrics from training and test
 
 ```{r calc-roc-auc}
 #| echo: false
-forested_training_roc_auc <-
-  forested_fit |>
-  augment(forested_train) |>
-  roc_auc(forested, .pred_Yes) |>
+cls_training_roc_auc <-
+  cls_fit |>
+  augment(cls_train) |>
+  roc_auc(class, .pred_class_1) |>
   pull(.estimate) |>
   round(digits = 2)
 
-forested_testing_roc_auc <-
-  forested_fit |>
-  augment(forested_test) |>
-  roc_auc(forested, .pred_Yes) |>
+cls_testing_roc_auc <-
+  cls_fit |>
+  augment(cls_test) |>
+  roc_auc(class, .pred_class_1) |>
   pull(.estimate) |>
   round(digits = 2)
 ```
@@ -634,7 +630,7 @@ forested_testing_roc_auc <-
 ::: columns
 ::: {.column width="50%"}
 ```{r collect-metrics-2}
-forested_res |>
+cls_res |>
   collect_metrics() |> 
   select(.metric, mean, n)
 ```
@@ -643,8 +639,8 @@ forested_res |>
 ::: {.column width="50%"}
 The ROC AUC previously was
 
-- `r forested_training_roc_auc` for the training set
-- `r forested_testing_roc_auc` for test set
+- `r cls_training_roc_auc` for the training set
+- `r cls_testing_roc_auc` for test set
 :::
 :::
 
@@ -660,32 +656,32 @@ Remember that:
 
 ```{r save-predictions}
 # Save the assessment set results
-ctrl_forested <- control_resamples(save_pred = TRUE)
-forested_res <- fit_resamples(forested_wflow, forested_folds, control = ctrl_forested)
+ctrl_rs <- control_resamples(save_pred = TRUE)
+cls_res <- fit_resamples(cls_wflow, cls_folds, control = ctrl_rs)
 
-forested_res
+cls_res
 ```
 
 ## Evaluating model performance `r hexes("tune")`
 
 ```{r collect-predictions}
 # Save the assessment set results
-forested_preds <- collect_predictions(forested_res)
-forested_preds
+cls_preds <- collect_predictions(cls_res)
+cls_preds
 ```
 
 ## Evaluating model performance `r hexes("tune")`
 
-```{r forested-metrics-by-id}
-forested_preds |> 
+```{r example-metrics-by-id}
+cls_preds |> 
   group_by(id) |>
-  forested_metrics(truth = forested, estimate = .pred_class)
+  cls_metrics(truth = class, estimate = .pred_class)
 ```
 
 ## Where are the fitted models? `r hexes("tune")`  {.annotation}
 
-```{r forested-res}
-forested_res
+```{r example-res}
+cls_res
 ```
 
 . . .
@@ -702,7 +698,7 @@ forested_res
 
 ```{r bootstraps}
 set.seed(3214)
-bootstraps(forested_train)
+bootstraps(cls_train)
 ```
 
 ##  {background-iframe="https://rsample.tidymodels.org/reference/index.html"}
@@ -740,15 +736,15 @@ countdown::countdown(minutes = 5, id = "try-rsample")
 
 ```{r mc-cv}
 set.seed(322)
-mc_cv(forested_train, times = 10)
+mc_cv(cls_train, times = 10)
 ```
 
 ## Validation set `r hexes("rsample")`
 
 ```{r validation-split}
 set.seed(853)
-forested_val_split <- initial_validation_split(forested)
-validation_set(forested_val_split)
+cls_val_split <- initial_validation_split(cls_data_2026)
+validation_set(cls_val_split)
 ```
 
 . . .
@@ -781,7 +777,7 @@ rf_spec
 ## Create a random forest model `r hexes("workflows")`
 
 ```{r rf-wflow}
-rf_wflow <- workflow(forested ~ ., rf_spec)
+rf_wflow <- workflow(class ~ ., rf_spec)
 rf_wflow
 ```
 
@@ -802,12 +798,12 @@ countdown::countdown(minutes = 8, id = "try-fit-resamples")
 ## Evaluating model performance `r hexes("tune")`
 
 ```{r collect-metrics-rf}
-ctrl_forested <- control_resamples(save_pred = TRUE)
+ctrl_rs <- control_resamples(save_pred = TRUE)
 
 # Random forest uses random numbers so set the seed first
 
 set.seed(2)
-rf_res <- fit_resamples(rf_wflow, forested_folds, control = ctrl_forested)
+rf_res <- fit_resamples(rf_wflow, cls_folds, control = ctrl_rs)
 collect_metrics(rf_res)
 ```
 
@@ -830,8 +826,8 @@ Let's fit the model on the training set and verify our performance using the tes
 We've shown you `fit()` and `predict()` (+ `augment()`) but there is a shortcut:
 
 ```{r final-fit}
-# forested_split has train + test info
-final_fit <- last_fit(rf_wflow, forested_split) 
+# cls_split has train + test info
+final_fit <- last_fit(rf_wflow, cls_split) 
 
 final_fit
 ```
