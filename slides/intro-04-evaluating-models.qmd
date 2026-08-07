@@ -23,10 +23,9 @@ knitr:
 #| file: setup.R
 ```
 
-## Looking at predictions
+## Previously...
 
 ```{r setup-previous}
-#| echo: false
 library(tidymodels)
 
 set.seed(123)
@@ -39,7 +38,7 @@ cls_wflow <- workflow(class ~ ., tree_spec)
 cls_fit <- fit(cls_wflow, cls_train)
 ```
 
-## Logistic Fit
+## A logistic Fit
 
 ```{r example-fit-augment}
 lr_fit <- 
@@ -65,6 +64,9 @@ lr_re_pred |>
 ## Confusion matrix `r hexes("yardstick")`
 
 ```{r conf-mat-plot}
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: center
 lr_re_pred |>
   conf_mat(truth = class, estimate = .pred_class) |>
   autoplot(type = "heatmap")
@@ -84,6 +86,11 @@ lr_re_pred |>
 ![](images/confusion-matrix-accuracy.png)
 :::
 :::
+
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/cls-metrics.html#sec-cls-hard-metrics)
+:::
+
 
 ## Dangers of accuracy `r hexes("yardstick")`
 
@@ -106,6 +113,10 @@ The Brier score is analogous to the mean squared error in regression models:
 $$
 Brier_{class} = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 $$
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/cls-metrics.html#sec-brier)
+:::
+
 
 ## Brier score  {.annotation}
 
@@ -116,14 +127,22 @@ lr_re_pred |>
 
 . . .
 
-Smaller values are better, for binary classification the "bad model threshold" is about 0.25.
+Smaller values are better.  
 
+. . . 
+
+<br>
+
+For binary classification: 
+
+- The "bad model threshold" is about 0.25.
+- A single column is given for the probability estimates (unnamed). 
 
 ## Separation and calibration
 
 ::: columns
 ::: {.column width="50%"}
-The ROC captures separation.
+Accuracy measures separation.
 ```{r separation-example}
 #| echo: false
 #| fig-height: 4
@@ -151,6 +170,10 @@ lr_re_pred |>
   cal_plot_breaks(class, .pred_class_1)
 ```
 :::
+:::
+
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/cls-metrics.html#sec-metric-information)
 :::
 
 ::: notes
@@ -473,6 +496,10 @@ And we want to understand if these are important differences?
 ## Cross-validation
 
 ![](https://www.tmwr.org/premade/three-CV.svg)
+
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/resampling.html#sec-cv)
+:::
 
 ## Cross-validation
 
@@ -809,6 +836,9 @@ lr_re_pred |>
 :::
 :::
 
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/cls-metrics.html#sec-cls-two-classes)
+:::
 
 ## Metrics for model performance `r hexes("yardstick")`
 
@@ -901,6 +931,11 @@ p_roc
 :::notes
 ROC curves are insensitive to class imbalance.
 :::
+
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/cls-metrics.html#sec-roc)
+:::
+
 
 ## ROC curves
 
