@@ -38,6 +38,7 @@ tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
 cls_wflow <- workflow(class ~ ., tree_spec)
 cls_fit <- fit(cls_wflow, cls_train)
 ```
+
 ## Logistic Fit
 
 ```{r example-fit-augment}
@@ -256,23 +257,114 @@ lr_re_pred |>
 
 ## Dangers of overfitting
 
-![](https://raw.githubusercontent.com/topepo/2022-nyr-workshop/main/images/tuning-overfitting-train-1.svg)
+
+```{r}
+#| label: overfitting-training
+#| echo: false
+#| out-width: 90%
+#| fig-width: 10
+#| fig-height: 4
+#| fig-align: "center"
+#| warning: false
+
+load("overfitting_data.RData")
+p_tr <- 
+  svm_res |> 
+  select(cost, label, grid) |> 
+  unnest(cols = c(grid)) %>%
+  ggplot(aes(x = X1, y = X2)) +
+  geom_point(
+    data = training_set,
+    aes(col = class),
+    alpha = .75,
+    cex = 1,
+    show.legend = FALSE
+  ) +
+  geom_contour(aes(z = .pred_Class1), breaks = 0.5, col = "black") +
+  facet_wrap( ~ label, nrow = 1) +
+  ggtitle("Training Set (Parabolic Data)") +
+  labs(x = "Predictor A", y = "Predictor B") + 
+  lims(x = c(-5.2, 5.2), y = c(-5.2, 5.2)) +
+  coord_fixed(ratio = 1) +
+  scale_color_manual(values = c("#FFAD0AFF", "#1BB6AFFF"))
+
+p_tr_stat <- 
+  svm_res |> 
+  select(cost, label, train_stats) |> 
+  unnest(cols = c(train_stats)) |> 
+  ggplot(aes(y = .row, x = .col, label = result)) + 
+  geom_text() + facet_wrap(~ label) + 
+  theme_void()+ lims(y = c(0, 3)) + 
+  theme(strip.text = element_blank()) 
+
+p_tr / p_tr_stat + plot_layout(heights = c(4, 1))
+```
 
 ::: {.absolute bottom=0 right=0}
 [AML4TD](https://aml4td.org/chapters/overfitting.html)
 :::
 
-
 ## Dangers of overfitting ⚠️
 
-![](https://raw.githubusercontent.com/topepo/2022-nyr-workshop/main/images/tuning-overfitting-test-1.svg)
+
+```{r}
+#| label: overfitting-testing
+#| echo: false
+#| out-width: 90%
+#| fig-width: 10
+#| fig-height: 4
+#| fig-align: "center"
+
+p_tr <- 
+  svm_res |> 
+  select(cost, label, grid) |> 
+  unnest(cols = c(grid)) %>%
+  ggplot(aes(x = X1, y = X2)) +
+  geom_point(
+    data = testing_set,
+    aes(col = class),
+    alpha = .75,
+    cex = 1,
+    show.legend = FALSE
+  ) +
+  geom_contour(aes(z = .pred_Class1), breaks = 0.5, col = "black") +
+  facet_wrap( ~ label, nrow = 1) +
+  ggtitle("Testing Set (Parabolic Data)") +
+  labs(x = "Predictor A", y = "Predictor B") + 
+  lims(x = c(-5.2, 5.2), y = c(-5.2, 5.2)) +
+  coord_fixed(ratio = 1) +
+  scale_color_manual(values = c("#FFAD0AFF", "#1BB6AFFF"))
+
+p_tr_stat <- 
+  svm_res |> 
+  select(cost, label, test_stats) |> 
+  unnest(cols = c(test_stats)) |> 
+  ggplot(aes(y = .row, x = .col, label = result)) + 
+  geom_text() + facet_wrap(~ label) + 
+  theme_void()+ lims(y = c(0, 3)) + 
+  theme(strip.text = element_blank()) 
+
+p_tr / p_tr_stat + plot_layout(heights = c(4, 1))
+```
+
+## Dangers of overfitting 
+
+- The underfit model's performance didn't change that much. It is too simple and can't overfit
+- The overfit model is too complex:
+  - It is chasing specific data points so that it can predict the training set points as perfectly as possible. 
+  - It _over_ adapts to the training data because it can be very flexible. 
+- We can't really know if it under- or overfits until we have new data.
+
 
 ## Dangers of overfitting ⚠️ `r hexes("yardstick")`
 
 ```{r augment-train}
 lr_fit |>
-  augment(cls_train)
+  augment(cls_train) |> 
+  print(n = 5)
 ```
+
+<br>
 
 We call this "resubstitution" or "repredicting the training set"
 
@@ -323,6 +415,14 @@ lr_fit |>
 
 . . .
 
+Why aren't the numbers very different? 
+
+. . .
+
+Can basic logistic regression overfit? 
+
+. . .
+
 ⚠️ Remember that we're demonstrating overfitting 
 
 . . .
@@ -332,21 +432,6 @@ lr_fit |>
 
 ##  {background-image="https://media.giphy.com/media/55itGuoAJiZEEen9gg/giphy.gif" background-size="70%"}
 
-## Your turn {transition="slide-in"}
-
-![](images/parsnip-flagger.jpg){.absolute bottom="0" left="0" width="150" height="150"}
-
-*Use `augment()` and a metric function to compute a classification metric like `roc_auc()`.*
-
-*Compute the metrics for both training and testing data to demonstrate overfitting!*
-
-*Notice the evidence of overfitting!* ⚠️
-
-```{r ex-augment-metrics}
-#| echo: false
-countdown::countdown(minutes = 5, id = "augment-metrics")
-```
-
 ## Dangers of overfitting ⚠️ `r hexes("yardstick")`
 
 ::: columns
@@ -354,7 +439,7 @@ countdown::countdown(minutes = 5, id = "augment-metrics")
 ```{r brier-class}
 lr_fit |>
   augment(cls_train) |>
-  roc_auc(class, .pred_class_1)
+  brier_class(class, .pred_class_1)
 ```
 :::
 
@@ -362,7 +447,7 @@ lr_fit |>
 ```{r brier-class-2}
 lr_fit |>
   augment(cls_test) |>
-  roc_auc(class, .pred_class_1)
+  brier_class(class, .pred_class_1)
 ```
 :::
 :::
@@ -437,7 +522,7 @@ vfold_cv(cls_train, v = 5)
 We'll use this setup:
 
 ```{r example-folds}
-set.seed(123)
+set.seed(343)
 cls_folds <- vfold_cv(cls_train, v = 10)
 cls_folds
 ```
@@ -451,7 +536,9 @@ Set the seed when creating resamples
 ## Fit our model to the resamples
 
 ```{r fit-resamples}
-cls_res <- fit_resamples(cls_wflow, cls_folds)
+lr_wflow <- workflow(class ~ ., logistic_reg())
+
+cls_res <- fit_resamples(lr_wflow, cls_folds)
 cls_res
 ```
 
@@ -476,19 +563,19 @@ How do the metrics from resampling compare to the metrics from training and test
 
 ```{r calc-roc-auc}
 #| echo: false
-cls_training_roc_auc <-
+cls_training_brier <-
   lr_fit |>
   augment(cls_train) |>
-  roc_auc(class, .pred_class_1) |>
+  brier_class(class, .pred_class_1) |>
   pull(.estimate) |>
-  round(digits = 2)
+  round(digits = 3)
 
-cls_testing_roc_auc <-
+cls_testing_brier <-
   lr_fit |>
   augment(cls_test) |>
-  roc_auc(class, .pred_class_1) |>
+  brier_class(class, .pred_class_1) |>
   pull(.estimate) |>
-  round(digits = 2)
+  round(digits = 3)
 ```
 
 ::: columns
@@ -496,15 +583,15 @@ cls_testing_roc_auc <-
 ```{r collect-metrics-2}
 cls_res |>
   collect_metrics() |> 
-  select(.metric, mean, n)
+  select(.metric, mean, std_err, n)
 ```
 :::
 
 ::: {.column width="50%"}
-The ROC AUC previously was
+The Brier score previously was
 
-- `r cls_training_roc_auc` for the training set
-- `r cls_testing_roc_auc` for test set
+- `r cls_training_brier` for the training set
+- `r cls_testing_brier` for test set
 :::
 :::
 
@@ -516,12 +603,27 @@ Remember that:
 
 ⚠️ the test set is precious
 
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+Rerun the same code three times with different random number seeds. 
+
+How much do the results change? 
+
+```{r ex-try-refit-resamples}
+#| echo: false
+countdown::countdown(minutes = 8, id = "try-refit-resamples")
+```
+
+
+
 ## Evaluating model performance `r hexes("tune")`
 
 ```{r save-predictions}
 # Save the assessment set results
 ctrl_rs <- control_resamples(save_pred = TRUE)
-cls_res <- fit_resamples(cls_wflow, cls_folds, control = ctrl_rs)
+cls_res <- fit_resamples(lr_wflow, cls_folds, control = ctrl_rs)
 
 cls_res
 ```
@@ -608,6 +710,19 @@ rf_res <- fit_resamples(rf_wflow, cls_folds, control = ctrl_rs)
 collect_metrics(rf_res)
 ```
 
+## Evaluating model performance `r hexes("tune")`
+
+probably has a nice interface for calibration curves:
+
+```{r}
+#| label: fit-resamples-cal-plot
+cal_plot_windowed(rf_res, step_size = 0.03)
+```
+
+<br>
+
+The out-of-sample predictions are pooled before computing the calibration curve. 
+
 
 ## The final fit `r hexes("tune")` 
 
@@ -651,6 +766,22 @@ extract_workflow(final_fit)
 . . .
 
 Use this for **prediction** on new data, like for deploying
+
+
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+Repredict the training set using `final_fit`. 
+
+Does the random forest model give overly optimistic results on the training set? 
+
+```{r ex-try-rf-overfit}
+#| echo: false
+countdown::countdown(minutes = 8, id = "try-rf-overfit")
+```
+
 
 ## The whole game
 

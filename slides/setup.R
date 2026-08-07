@@ -39,6 +39,7 @@ knitr::opts_chunk$set(
 
 # devtools::install_github("gadenbuie/countdown")
 library(countdown)
+library(patchwork)
 library(emo)
 # devtools::install_github("hadley/emo")
 library(ggplot2)
