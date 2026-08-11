@@ -107,6 +107,18 @@ Some _possible_ parameters:
 
 We'll focus on the learning rate for now. 
 
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+Open the help page for `boost_tree()` (via `?boost_tree`) and look at the _engine documentation_ for xgboost models. 
+
+```{r ex-xgboost}
+#| echo: false
+countdown::countdown(minutes = 5, id = "xgboost")
+```
+
 ## Grid search
 
 A small grid of points trying to minimize the error via learning rate: 
@@ -128,24 +140,43 @@ We could start with a few points and search the space:
 
 ![](animations/anime_seq.gif){fig-align="center" width=60%}
 
+## Specifying the model
+
+```{r}
+#| label: bst-spec
+#| message: true
+# xgboost is the default engine
+bst_spec <- boost_tree(trees = 100, learn_rate = tune(), mode = "classification")
+bst_wflow <- workflow(class ~ ., bst_spec)
+```
+
 ## Working with Parameters
 
--   The tidymodels framework provides pre-defined information on tuning parameters (such as their type, range, transformations, etc.).
+
+
+::: columns
+::: {.column width="45%"}
+
+
+-   tidymodels provides pre-defined information on tuning parameters (such as their type, range, transformations, etc.).
 
 -   The `extract_parameter_set_dials()` function extracts these tuning parameters and the info.
+:::
 
-
+::: {.column width="55%"}
 ```{r}
 #| label: bst-param
 #| message: true
-bst_spec <- boost_tree(trees = 100, learn_rate = tune(), mode = "classification")
-bst_wflow <- workflow(class ~ ., bst_spec)
-
 bst_param <- 
   bst_wflow |> 
   extract_parameter_set_dials() 
 bst_param  
+
+bst_param |> 
+  update(learn_rate = learn_rate(c(-10, 1)))
 ```  
+:::
+:::
 
 ## Different types of grids `r hexes(c("dials"))`  {.annotation}
 
