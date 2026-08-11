@@ -30,6 +30,7 @@ knitr:
 ```{r setup-previous}
 #| echo: false
 library(tidymodels)
+library(probably) 
 
 set.seed(123)
 cls_split <- initial_split(cls_data_2026, prop = 0.8)
@@ -112,7 +113,9 @@ We'll focus on the learning rate for now.
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-Open the help page for `boost_tree()` (via `?boost_tree`) and look at the _engine documentation_ for xgboost models. 
+Open the help page for `boost_tree()` (via `?boost_tree`). 
+
+Look at the _engine documentation_ for xgboost models. 
 
 ```{r ex-xgboost}
 #| echo: false
@@ -145,35 +148,41 @@ We could start with a few points and search the space:
 ```{r}
 #| label: bst-spec
 #| message: true
+#| code-line-numbers: "2|3|5|"
 # xgboost is the default engine
-bst_spec <- boost_tree(trees = 100, learn_rate = tune(), mode = "classification")
+bst_spec <- boost_tree(trees = 500, learn_rate = tune(), mode = "classification")
 bst_wflow <- workflow(class ~ ., bst_spec)
+
+bst_wflow
 ```
 
 ## Working with Parameters
 
-
-
 ::: columns
 ::: {.column width="45%"}
 
+tidymodels provides pre-defined information on tuning parameters (such as their type, range, transformations, etc.).
 
--   tidymodels provides pre-defined information on tuning parameters (such as their type, range, transformations, etc.).
-
--   The `extract_parameter_set_dials()` function extracts these tuning parameters and the info.
+We can: 
+  
+- Extract the parameter information
+- Update their characteristics
+- Give their information to `tune_grid()`, etc.
+    
 :::
 
 ::: {.column width="55%"}
 ```{r}
 #| label: bst-param
 #| message: true
-bst_param <- 
-  bst_wflow |> 
+#| code-line-numbers: "2|3|17|"
+mtry_param <- 
+  boost_tree(mtry = tune()) |> 
   extract_parameter_set_dials() 
-bst_param  
+mtry_param  
 
-bst_param |> 
-  update(learn_rate = learn_rate(c(-10, 1)))
+mtry_param |> 
+  update(mtry = mtry(c(1, 10)))
 ```  
 :::
 :::
@@ -228,7 +237,7 @@ grids |>
 `tune_grid()` works similar to `fit_resamples()` but covers multiple parameter values:
 
 ```{r}
-#| label: rf-tune_grid
+#| label: bst-tune_grid
 #| code-line-numbers: "2|3-4|5|"
 
 set.seed(22)
@@ -259,8 +268,8 @@ autoplot(bst_res)
 Let's repeat this process but make sure that we keep the out-of-sample predictions
 
 ```{r}
-#| label: rf-tune-grid-pred
-#| code-line-numbers: "2|3-4|5|"
+#| label: bst-tune-grid-pred
+#| code-line-numbers: "|6|"
 
 set.seed(22)
 bst_res <- tune_grid(
@@ -299,25 +308,15 @@ bst_res |>
 Which is numerically best? 
 
 ```{r}
-#| label: rf-results
+#| label: bst-results
+#| code-line-numbers: "1|11|"
+show_best(bst_res, metric = "brier_class")
 
-show_best(bst_res)
-
-best_parameter <- select_best(bst_res)
+best_parameter <- select_best(bst_res, metric = "brier_class")
 best_parameter
 ```
 
-`collect_metrics()` and `autoplot()` are also available.
-
-## Compare results
-
-autoplot
-
-save predictions
-
-fit_best
-
-extracts
+`collect_metrics()` is also available.
 
 ## Running in parallel  {.annotation}
 
@@ -418,7 +417,7 @@ Faceted on the expensiveness of preprocessing used.
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-*Modify your model workflow to tune one or more parameters.*
+*Modify your model workflow to tune additional parameters.*
 
 *Use grid search to find the best parameter(s).*
 
@@ -446,35 +445,51 @@ Let's fit the model on the training set and verify our performance using the tes
 
 We've shown you `fit()` and `predict()` (+ `augment()`) but there is a shortcut:
 
-```{r final-fit}
+```{r final-res}
+#| code-line-numbers: "1|3|4|"
 bst_final_wflow <- finalize_workflow(bst_wflow, best_parameter)
 # cls_split has train + test info
 set.seed(690)
-final_fit <- last_fit(bst_final_wflow, cls_split) 
+final_res <- last_fit(bst_final_wflow, cls_split) 
 
-final_fit
+final_res
 ```
 
-## What is in `final_fit`? `r hexes("tune")`
+## What is in `final_res`? `r hexes("tune")`
 
-```{r collect-metrics-final-fit}
-collect_metrics(final_fit)
+```{r collect-metrics-final-res}
+collect_metrics(final_res)
 ```
 
 . . .
 
 These are metrics computed with the **test** set
 
-## What is in `final_fit`? `r hexes("tune")`
+## What is in `final_res`? `r hexes("tune")`
 
-```{r collect-predictions-final-fit}
-collect_predictions(final_fit)
+```{r collect-predictions-final-res}
+collect_predictions(final_res)
 ```
 
-## What is in `final_fit`? `r hexes("tune")`
+
+## What is in `final_res`? `r hexes(c("probably", "tune"))`
+
+```{r}
+#| label: test-cal
+#| fig-width: 7
+#| fig-height: 4
+#| out-width: 70%
+#| fig-align: center
+
+final_res |> 
+  cal_plot_windowed(window_size = 0.2, step_size = 0.025) +
+  geom_rug()
+```
+
+## What is in `final_res`? `r hexes("tune")`
 
 ```{r extract-workflow}
-extract_workflow(final_fit)
+extract_workflow(final_res)
 ```
 
 . . .
@@ -501,7 +516,7 @@ cls_grid <-
     pred_2 = seq(rng_2[1], rng_2[2], length.out =seq_n)
   )
 
-bst_grid <- augment(final_fit |> extract_workflow(), new_data = cls_grid)
+bst_grid <- augment(final_res |> extract_workflow(), new_data = cls_grid)
 
 bind_rows(
   cls_train |> mutate(Data = "Training"), 
@@ -523,7 +538,6 @@ bind_rows(
   labs(col = NULL, pch = NULL)
 
 ```
-
 
 ## The whole game
 
