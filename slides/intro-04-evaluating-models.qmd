@@ -23,10 +23,10 @@ knitr:
 #| file: setup.R
 ```
 
-## Looking at predictions
+## Previously...
 
 ```{r setup-previous}
-#| echo: false
+#| code-line-numbers: "1|3-6|8-10|"
 library(tidymodels)
 
 set.seed(123)
@@ -39,8 +39,17 @@ cls_wflow <- workflow(class ~ ., tree_spec)
 cls_fit <- fit(cls_wflow, cls_train)
 ```
 
+## A logistic regression fit
+
 ```{r example-fit-augment}
-augment(cls_fit, new_data = cls_train)
+#| code-line-numbers: "1-3|5|16|"
+lr_fit <- 
+  logistic_reg() |> 
+  fit(class ~ ., data = cls_train)
+
+augment(lr_fit, new_data = cls_train) |> print(n = 5)
+
+lr_re_pred <- augment(lr_fit, new_data = cls_train)
 ```
 
 ## Confusion matrix `r hexes("yardstick")`
@@ -50,44 +59,27 @@ augment(cls_fit, new_data = cls_train)
 ## Confusion matrix `r hexes("yardstick")`
 
 ```{r conf-mat}
-augment(cls_fit, new_data = cls_train) |>
+lr_re_pred |>
   conf_mat(truth = class, estimate = .pred_class)
 ```
 
 ## Confusion matrix `r hexes("yardstick")`
 
 ```{r conf-mat-plot}
-augment(cls_fit, new_data = cls_train) |>
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: center
+lr_re_pred |>
   conf_mat(truth = class, estimate = .pred_class) |>
   autoplot(type = "heatmap")
 ```
-
-## Your turn {transition="slide-in"}
-
-![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
-
-<br>
-
-*How would you combine TP, TN, FP, and FN into one number to describe how often the model is correct?*
-
-:::::: {.columns}
-::: {.column}
-![](images/confusion-matrix.png){width=60%}
-:::
-::: {.column}
-```{r ex-derive-accuracy}
-#| echo: false
-countdown::countdown(minutes = 5, id = "derive-accuracy")
-```
-:::
-:::
 
 ## Metrics for model performance `r hexes("yardstick")`
 
 ::: columns
 ::: {.column width="60%"}
 ```{r acc}
-augment(cls_fit, new_data = cls_train) |>
+lr_re_pred |>
   accuracy(truth = class, estimate = .pred_class)
 ```
 :::
@@ -97,226 +89,20 @@ augment(cls_fit, new_data = cls_train) |>
 :::
 :::
 
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/cls-metrics.html#sec-cls-hard-metrics)
+:::
+
+
 ## Dangers of accuracy `r hexes("yardstick")`
 
 We need to be careful of using `accuracy()` since it can give "good" performance by only predicting one way with imbalanced data:
 
 ```{r acc-2}
-augment(cls_fit, new_data = cls_train) %>%
+#| code-line-numbers: "1|2|3|"
+lr_re_pred %>%
   mutate(.pred_class = factor("class_1", levels = c("class_1", "class_2"))) %>%
   accuracy(truth = class, estimate = .pred_class)
-```
-
-## Metrics for model performance `r hexes("yardstick")`
-
-::: columns
-::: {.column width="60%"}
-```{r sens}
-augment(cls_fit, new_data = cls_train) |>
-  sensitivity(truth = class, estimate = .pred_class)
-```
-:::
-
-::: {.column width="40%"}
-![](images/confusion-matrix-sensitivity.png)
-:::
-:::
-
-
-## Metrics for model performance `r hexes("yardstick")`
-
-::: columns
-::: {.column width="60%"}
-```{r sens-2}
-#| code-line-numbers: "3-6"
-augment(cls_fit, new_data = cls_train) |>
-  sensitivity(truth = class, estimate = .pred_class)
-```
-
-<br>
-
-```{r spec}
-augment(cls_fit, new_data = cls_train) |>
-  specificity(truth = class, estimate = .pred_class)
-```
-:::
-
-::: {.column width="40%"}
-![](images/confusion-matrix-specificity.png)
-:::
-:::
-
-## Metrics for model performance `r hexes("yardstick")`
-
-We can use `metric_set()` to combine multiple calculations into one
-
-```{r example-metrics}
-cls_metrics <- metric_set(accuracy, specificity, sensitivity)
-
-augment(cls_fit, new_data = cls_train) |>
-  cls_metrics(truth = class, estimate = .pred_class)
-```
-
-## Metrics for model performance `r hexes("yardstick")`
-
-Metrics and metric sets work with grouped data frames!
-
-```{r accuracy-grouped}
-augment(cls_fit, new_data = cls_train) |>
-  mutate(group = rep_len(LETTERS[1:3], nrow(cls_train))) |> 
-  group_by(group) |>
-  accuracy(truth = class, estimate = .pred_class)
-```
-
-## Your turn {transition="slide-in"}
-
-![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
-
-*Apply the `cls_metrics` metric set to `augment()` \
-output grouped by `tree_no_tree`.*
-
-*Do any metrics differ substantially between groups?*
-
-```{r ex-example-grouped-metrics}
-#| echo: false
-countdown::countdown(minutes = 5, id = "example-grouped-metrics")
-```
-
-:::notes
-The specificity for `"Tree"` is a good bit lower than it is for `"No tree"`.
-
-Specificity is the proportion of negatives that are correctly identified as negatives.
-"Negative" is the non-event level of the outcome, i.e. "class 2" in our example. 
-So, when this index classifies the plot as having a tree, the model does not do well at correctly identifying the plot as class 2 when it is indeed the second class.
-:::
-
-## Two class data
-
-These metrics assume that we know the threshold for converting "soft" probability predictions into "hard" class predictions.
-
-. . .
-
-Is a 50% threshold good? 
-
-What happens if we say that we need to be 80% sure to declare an event?
-
--   sensitivity ⬇️, specificity ⬆️
-
-. . .
-
-What happens for a 20% threshold?
-
--   sensitivity ⬆️, specificity ⬇️
-
-## Varying the threshold
-
-```{r}
-#| label: thresholds
-#| echo: false
-
-augment(cls_fit, new_data = cls_train) |> 
-  roc_curve(truth = class, .pred_class_1) |> 
-  filter(is.finite(.threshold)) |> 
-  pivot_longer(c(specificity, sensitivity), names_to = "statistic", values_to = "value") |> 
-  rename(`event threshold` = .threshold) |> 
-  ggplot(aes(x = `event threshold`, y = value, col = statistic, group = statistic)) + 
-  geom_line() +
-  scale_color_brewer(palette = "Dark2") +
-  labs(y = NULL) +
-  coord_equal() +
-  theme(legend.position = "top")
-```
-
-## ROC curves
-
-::: columns
-::: {.column width="50%"}
-For an ROC (receiver operator characteristic) curve, we plot
-
-- the false positive rate (1 - specificity) on the x-axis
-- the true positive rate (sensitivity) on the y-axis
-
-with sensitivity and specificity calculated at all possible thresholds.
-:::
-
-::: {.column width="50%"}
-```{r roc-curve-1}
-#| echo: false
-#| fig-width: 4
-#| fig-height: 4
-#| out.width: 100%
-
-p_roc <- augment(cls_fit, new_data = cls_train) |> 
-  roc_curve(truth = class, .pred_class_1) |>
-  autoplot()
-p_roc
-```
-:::
-:::
-
-:::notes
-ROC curves are insensitive to class imbalance.
-:::
-
-## ROC curves
-
-::: columns
-::: {.column width="50%"}
-We can use the area under the ROC curve as a classification metric: 
-
-- ROC AUC = 1 💯 
-- ROC AUC = 1/2 😢
-:::
-
-::: {.column width="50%"}
-```{r roc-curve-2}
-#| echo: false
-#| fig-width: 4
-#| fig-height: 4
-#| out.width: 100%
-p_roc
-```
-:::
-:::
-
-## ROC curves `r hexes("yardstick")`
-
-```{r roc-auc}
-# Assumes _first_ factor level is event; there are options to change that
-augment(cls_fit, new_data = cls_train) |> 
-  roc_curve(truth = class, .pred_class_1) |>
-  slice(1, 20, 50)
-
-augment(cls_fit, new_data = cls_train) |> 
-  roc_auc(truth = class, .pred_class_1)
-```
-
-## ROC curve plot `r hexes("yardstick")`
-
-```{r roc-curve-code}
-#| fig-width: 4
-#| fig-height: 4
-#| out.width: 100%
-#| output-location: "column"
-
-augment(cls_fit, 
-        new_data = cls_train) |> 
-  roc_curve(truth = class, 
-            .pred_class_1) |>
-  autoplot()
-```
-
-## Your turn {transition="slide-in"}
-
-![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
-
-*Compute and plot an ROC curve for your current model.*
-
-*What data are being used for this ROC curve plot?*
-
-```{r ex-roc-curve}
-#| echo: false
-countdown::countdown(minutes = 5, id = "roc-curve")
 ```
 
 ## Brier score formula
@@ -328,37 +114,51 @@ What if we don't turn predicted probabilities into class predictions?
 The Brier score is analogous to the mean squared error in regression models:
 
 $$
-Brier_{class} = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
+Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 $$
+
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/cls-metrics.html#sec-brier)
+:::
+
 
 ## Brier score  {.annotation}
 
 ```{r brier}
-augment(cls_fit, new_data = cls_train) |> 
+lr_re_pred |> 
   brier_class(truth = class, .pred_class_1) 
 ```
 
 . . .
 
-Smaller values are better, for binary classification the "bad model threshold" is about 0.25.
+Smaller values are better.  
 
+. . . 
 
-## Separation vs calibration
+<br>
+
+For binary classification: 
+
+- The "bad model threshold" is about 0.25.
+- A single column is given for the probability estimates (unnamed). 
+
+## Separation and calibration
 
 ::: columns
 ::: {.column width="50%"}
-The ROC captures separation.
+Accuracy measures separation.
 ```{r separation-example}
 #| echo: false
 #| fig-height: 4
 #| fig-width: 5
 #| out-width: 100%
-augment(cls_fit, new_data = cls_train) |> 
-  ggplot(aes(.pred_class_1, col = class, fill = class)) + 
-  stat_density(alpha = 1 / 4, trim = TRUE, adjust = 1.2) + 
+lr_re_pred |> 
+  ggplot(aes(.pred_class_1)) + 
+  geom_histogram(col = "white", binwidth = 0.04) + 
+  facet_wrap(~ class, ncol = 1) + 
   lims(x = 0:1) +
   labs(x = "Predicted probability of Class 1") +
-  theme(legend.position = "top")
+  lims(y = c(0, 100))
 ```
 :::
 ::: {.column width="50%"}
@@ -370,10 +170,14 @@ The Brier score captures calibration.
 #| out-width: 100%
 library(probably)
 
-augment(cls_fit, new_data = cls_train) |> 
-  cal_plot_breaks(class, .pred_class_1, num_breaks = 30)
+lr_re_pred |> 
+  cal_plot_breaks(class, .pred_class_1)
 ```
 :::
+:::
+
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/cls-metrics.html#sec-metric-information)
 :::
 
 ::: notes
@@ -382,6 +186,94 @@ augment(cls_fit, new_data = cls_train) |>
 
 Calibration plot: We bin observations according to predicted probability. In the bin for 20%-30% predicted prob, we should see an event rate of ~25% if the model is well-calibrated.
 :::
+
+## Separation and (bad) calibration
+::: columns
+::: {.column width="50%"}
+Excellent separation
+```{r bad-separation-example}
+#| echo: false
+#| fig-height: 4
+#| fig-width: 5
+#| out-width: 100%
+set.seed(201)
+bad_pred <- 
+  lr_re_pred |> 
+  mutate(
+    bad = if_else(class == "class_1", rnorm(nrow(lr_re_pred), 0.58, 0.03), rnorm(nrow(lr_re_pred), 0.42, 0.03))
+  )
+
+bad_pred  |> 
+  ggplot(aes(bad)) + 
+  geom_histogram(col = "white", binwidth = 0.03) + 
+  facet_wrap(~ class, ncol = 1) + 
+  lims(x = 0:1) +
+  labs(x = "Predicted probability of Class 1")
+```
+:::
+::: {.column width="50%"}
+Terrible calibration.
+```{r bad-calibration-example}
+#| echo: false
+#| fig-height: 4
+#| fig-width: 5
+#| out-width: 100%
+
+bad_pred |> 
+  cal_plot_breaks(class, bad)
+```
+:::
+:::
+
+
+## Your turn {transition="slide-in"}  
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+The probably package was used to make the calibration plots: 
+
+```r
+library(probably)
+lr_re_pred |> cal_plot_breaks(class, .pred_class_1)
+```
+
+<br> 
+
+Try the other calibration curve methods in probably: 
+
+ - [`cal_plot_logistic()`](https://probably.tidymodels.org/reference/cal_plot_logistic.html)
+ - [`cal_plot_windowed()`](https://probably.tidymodels.org/reference/cal_plot_windowed.html)
+ 
+Do you prefer one over the others? 
+
+
+```{r ex-example-grouped-metrics}
+#| echo: false
+countdown::countdown(minutes = 5, id = "calibration-plots")
+```
+
+## Metrics for model performance `r hexes("yardstick")`
+
+We can use `metric_set()` to combine multiple calculations into one
+
+```{r example-metrics}
+cls_metrics <- metric_set(accuracy, brier_class)
+
+lr_re_pred |>
+  cls_metrics(truth = class, estimate = .pred_class, .pred_class_1)
+```
+
+## Metrics for model performance `r hexes("yardstick")`
+
+Metrics and metric sets work with grouped data frames!
+
+```{r accuracy-grouped}
+lr_re_pred |>
+  mutate(group = rep_len(LETTERS[1:3], nrow(cls_train))) |> 
+  group_by(group) |>
+  cls_metrics(truth = class, estimate = .pred_class, .pred_class_1)
+```
+
 
 ##  {background-iframe="https://yardstick.tidymodels.org/reference/index.html"}
 
@@ -392,30 +284,121 @@ Calibration plot: We bin observations according to predicted probability. In the
 
 ## Dangers of overfitting
 
-![](https://raw.githubusercontent.com/topepo/2022-nyr-workshop/main/images/tuning-overfitting-train-1.svg)
+
+```{r}
+#| label: overfitting-training
+#| echo: false
+#| out-width: 90%
+#| fig-width: 10
+#| fig-height: 4
+#| fig-align: "center"
+#| warning: false
+
+load("overfitting_data.RData")
+p_tr <- 
+  svm_res |> 
+  select(cost, label, grid) |> 
+  unnest(cols = c(grid)) %>%
+  ggplot(aes(x = X1, y = X2)) +
+  geom_point(
+    data = training_set,
+    aes(col = class),
+    alpha = .75,
+    cex = 1,
+    show.legend = FALSE
+  ) +
+  geom_contour(aes(z = .pred_Class1), breaks = 0.5, col = "black") +
+  facet_wrap( ~ label, nrow = 1) +
+  ggtitle("Training Set (Parabolic Data)") +
+  labs(x = "Predictor A", y = "Predictor B") + 
+  lims(x = c(-5.2, 5.2), y = c(-5.2, 5.2)) +
+  coord_fixed(ratio = 1) +
+  scale_color_manual(values = c("#FFAD0AFF", "#1BB6AFFF"))
+
+p_tr_stat <- 
+  svm_res |> 
+  select(cost, label, train_stats) |> 
+  unnest(cols = c(train_stats)) |> 
+  ggplot(aes(y = .row, x = .col, label = result)) + 
+  geom_text() + facet_wrap(~ label) + 
+  theme_void()+ lims(y = c(0, 3)) + 
+  theme(strip.text = element_blank()) 
+
+p_tr / p_tr_stat + plot_layout(heights = c(4, 1))
+```
 
 ::: {.absolute bottom=0 right=0}
 [AML4TD](https://aml4td.org/chapters/overfitting.html)
 :::
 
-
 ## Dangers of overfitting ⚠️
 
-![](https://raw.githubusercontent.com/topepo/2022-nyr-workshop/main/images/tuning-overfitting-test-1.svg)
+
+```{r}
+#| label: overfitting-testing
+#| echo: false
+#| out-width: 90%
+#| fig-width: 10
+#| fig-height: 4
+#| fig-align: "center"
+
+p_tr <- 
+  svm_res |> 
+  select(cost, label, grid) |> 
+  unnest(cols = c(grid)) %>%
+  ggplot(aes(x = X1, y = X2)) +
+  geom_point(
+    data = testing_set,
+    aes(col = class),
+    alpha = .75,
+    cex = 1,
+    show.legend = FALSE
+  ) +
+  geom_contour(aes(z = .pred_Class1), breaks = 0.5, col = "black") +
+  facet_wrap( ~ label, nrow = 1) +
+  ggtitle("Testing Set (Parabolic Data)") +
+  labs(x = "Predictor A", y = "Predictor B") + 
+  lims(x = c(-5.2, 5.2), y = c(-5.2, 5.2)) +
+  coord_fixed(ratio = 1) +
+  scale_color_manual(values = c("#FFAD0AFF", "#1BB6AFFF"))
+
+p_tr_stat <- 
+  svm_res |> 
+  select(cost, label, test_stats) |> 
+  unnest(cols = c(test_stats)) |> 
+  ggplot(aes(y = .row, x = .col, label = result)) + 
+  geom_text() + facet_wrap(~ label) + 
+  theme_void()+ lims(y = c(0, 3)) + 
+  theme(strip.text = element_blank()) 
+
+p_tr / p_tr_stat + plot_layout(heights = c(4, 1))
+```
+
+## Dangers of overfitting 
+
+- The underfit model's performance didn't change that much. It is too simple and can't overfit
+- The overfit model is too complex:
+  - It is chasing specific data points so that it can predict the training set points as perfectly as possible. 
+  - It _over_ adapts to the training data because it can be very flexible. 
+- We can't really know if it under- or overfits until we have different data for model _fitting_ and model _evaluation_.
+
 
 ## Dangers of overfitting ⚠️ `r hexes("yardstick")`
 
 ```{r augment-train}
-cls_fit |>
-  augment(cls_train)
+lr_fit |>
+  augment(cls_train) |> 
+  print(n = 5)
 ```
+
+<br>
 
 We call this "resubstitution" or "repredicting the training set"
 
 ## Dangers of overfitting ⚠️ `r hexes("yardstick")`
 
 ```{r augment-acc}
-cls_fit |>
+lr_fit |>
   augment(cls_train) |>
   accuracy(class, .pred_class)
 ```
@@ -427,7 +410,7 @@ We call this a "resubstitution estimate"
 ::: columns
 ::: {.column width="50%"}
 ```{r augment-acc-2}
-cls_fit |>
+lr_fit |>
   augment(cls_train) |>
   accuracy(class, .pred_class)
 ```
@@ -442,7 +425,7 @@ cls_fit |>
 ::: columns
 ::: {.column width="50%"}
 ```{r augment-acc-3}
-cls_fit |>
+lr_fit |>
   augment(cls_train) |>
   accuracy(class, .pred_class)
 ```
@@ -450,12 +433,20 @@ cls_fit |>
 
 ::: {.column width="50%"}
 ```{r augment-acc-test}
-cls_fit |>
+lr_fit |>
   augment(cls_test) |>
   accuracy(class, .pred_class)
 ```
 :::
 :::
+
+. . .
+
+Why aren't the numbers very different? 
+
+. . .
+
+Can basic logistic regression overfit? 
 
 . . .
 
@@ -468,37 +459,22 @@ cls_fit |>
 
 ##  {background-image="https://media.giphy.com/media/55itGuoAJiZEEen9gg/giphy.gif" background-size="70%"}
 
-## Your turn {transition="slide-in"}
-
-![](images/parsnip-flagger.jpg){.absolute bottom="0" left="0" width="150" height="150"}
-
-*Use `augment()` and a metric function to compute a classification metric like `roc_auc()`.*
-
-*Compute the metrics for both training and testing data to demonstrate overfitting!*
-
-*Notice the evidence of overfitting!* ⚠️
-
-```{r ex-augment-metrics}
-#| echo: false
-countdown::countdown(minutes = 5, id = "augment-metrics")
-```
-
 ## Dangers of overfitting ⚠️ `r hexes("yardstick")`
 
 ::: columns
 ::: {.column width="50%"}
 ```{r brier-class}
-cls_fit |>
+lr_fit |>
   augment(cls_train) |>
-  roc_auc(class, .pred_class_1)
+  brier_class(class, .pred_class_1)
 ```
 :::
 
 ::: {.column width="50%"}
 ```{r brier-class-2}
-cls_fit |>
+lr_fit |>
   augment(cls_test) |>
-  roc_auc(class, .pred_class_1)
+  brier_class(class, .pred_class_1)
 ```
 :::
 :::
@@ -524,6 +500,10 @@ And we want to understand if these are important differences?
 ## Cross-validation
 
 ![](https://www.tmwr.org/premade/three-CV.svg)
+
+::: {.absolute bottom=0 right=0}
+[AML4TD](https://aml4td.org/chapters/resampling.html#sec-cv)
+:::
 
 ## Cross-validation
 
@@ -573,7 +553,7 @@ vfold_cv(cls_train, v = 5)
 We'll use this setup:
 
 ```{r example-folds}
-set.seed(123)
+set.seed(343)
 cls_folds <- vfold_cv(cls_train, v = 10)
 cls_folds
 ```
@@ -587,7 +567,10 @@ Set the seed when creating resamples
 ## Fit our model to the resamples
 
 ```{r fit-resamples}
-cls_res <- fit_resamples(cls_wflow, cls_folds)
+#| code-line-numbers: "1|3|4|"
+lr_wflow <- workflow(class ~ ., logistic_reg())
+
+cls_res <- fit_resamples(lr_wflow, cls_folds)
 cls_res
 ```
 
@@ -612,19 +595,19 @@ How do the metrics from resampling compare to the metrics from training and test
 
 ```{r calc-roc-auc}
 #| echo: false
-cls_training_roc_auc <-
-  cls_fit |>
+cls_training_brier <-
+  lr_fit |>
   augment(cls_train) |>
-  roc_auc(class, .pred_class_1) |>
+  brier_class(class, .pred_class_1) |>
   pull(.estimate) |>
-  round(digits = 2)
+  round(digits = 3)
 
-cls_testing_roc_auc <-
-  cls_fit |>
+cls_testing_brier <-
+  lr_fit |>
   augment(cls_test) |>
-  roc_auc(class, .pred_class_1) |>
+  brier_class(class, .pred_class_1) |>
   pull(.estimate) |>
-  round(digits = 2)
+  round(digits = 3)
 ```
 
 ::: columns
@@ -632,15 +615,15 @@ cls_testing_roc_auc <-
 ```{r collect-metrics-2}
 cls_res |>
   collect_metrics() |> 
-  select(.metric, mean, n)
+  select(.metric, mean, std_err, n)
 ```
 :::
 
 ::: {.column width="50%"}
-The ROC AUC previously was
+The Brier score previously was
 
-- `r cls_training_roc_auc` for the training set
-- `r cls_testing_roc_auc` for test set
+- `r cls_training_brier` for the training set
+- `r cls_testing_brier` for test set
 :::
 :::
 
@@ -652,12 +635,30 @@ Remember that:
 
 ⚠️ the test set is precious
 
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+<br>
+
+Rerun the same code three times with different random number seeds. 
+
+How much do the results change? 
+
+```{r ex-try-refit-resamples}
+#| echo: false
+countdown::countdown(minutes = 5, id = "try-refit-resamples")
+```
+
+
+
 ## Evaluating model performance `r hexes("tune")`
 
 ```{r save-predictions}
+#| code-line-numbers: "1-2|3|5|"
 # Save the assessment set results
 ctrl_rs <- control_resamples(save_pred = TRUE)
-cls_res <- fit_resamples(cls_wflow, cls_folds, control = ctrl_rs)
+cls_res <- fit_resamples(lr_wflow, cls_folds, control = ctrl_rs)
 
 cls_res
 ```
@@ -675,7 +676,7 @@ cls_preds
 ```{r example-metrics-by-id}
 cls_preds |> 
   group_by(id) |>
-  cls_metrics(truth = class, estimate = .pred_class)
+  cls_metrics(truth = class, estimate = .pred_class, .pred_class_1)
 ```
 
 ## Where are the fitted models? `r hexes("tune")`  {.annotation}
@@ -687,6 +688,280 @@ cls_res
 . . .
 
 🗑️
+
+# Decision tree 🌳
+
+# Random forest 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌵🌴🌲🌳🌴🌵🌳🌴🌳
+
+## Random forest 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵
+
+- Ensemble many decision tree models
+
+- All the trees vote! 🗳️
+
+- Bootstrap aggregating + random predictor sampling
+
+. . .
+
+- Often works well without tuning hyperparameters (more on this later!), as long as there are enough trees
+
+## Create a random forest model `r hexes("parsnip")`
+
+```{r rf-spec}
+rf_spec <- rand_forest(trees = 1000, mode = "classification")
+rf_spec
+```
+
+## Create a random forest model `r hexes("workflows")`
+
+```{r rf-wflow}
+rf_wflow <- workflow(class ~ ., rf_spec)
+rf_wflow
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Use `fit_resamples()` and `rf_wflow` to:*
+
+-   *keep predictions*
+-   *compute metrics*
+
+```{r ex-try-fit-resamples}
+#| echo: false
+countdown::countdown(minutes = 8, id = "try-fit-resamples")
+```
+
+## Evaluating model performance `r hexes("tune")`
+
+```{r collect-metrics-rf}
+#| code-line-numbers: "1|3|5-7|"
+ctrl_rs <- control_resamples(save_pred = TRUE)
+
+# Random forest uses random numbers so set the seed first
+
+set.seed(2)
+rf_res <- fit_resamples(rf_wflow, cls_folds, control = ctrl_rs)
+collect_metrics(rf_res)
+```
+
+## Evaluating model performance `r hexes(c("probably", "tune"))`
+
+probably has a nice interface for calibration curves:
+
+```{r}
+#| label: fit-resamples-cal-plot
+cal_plot_windowed(rf_res, step_size = 0.03)
+```
+
+<br>
+
+The out-of-sample predictions are pooled before computing the calibration curve. 
+
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+Repredict the training set using `final_fit`. 
+
+Does the random forest model give overly optimistic results on the training set? 
+
+```{r ex-try-rf-overfit}
+#| echo: false
+countdown::countdown(minutes = 8, id = "try-rf-overfit")
+```
+
+
+## The whole game
+
+```{r diagram-final-performance, echo = FALSE}
+#| fig-align: "center"
+
+knitr::include_graphics("images/whole-game-transparent-select.jpg")
+```
+
+# Backup Slides {background-color="#BDE9C9FF"}
+
+
+## Metrics for model performance `r hexes("yardstick")`
+
+::: columns
+::: {.column width="60%"}
+```{r sens}
+lr_re_pred |>
+  sensitivity(truth = class, estimate = .pred_class)
+```
+:::
+
+::: {.column width="40%"}
+![](images/confusion-matrix-sensitivity.png)
+:::
+:::
+
+::: {.absolute bottom=0 left=0}
+[AML4TD](https://aml4td.org/chapters/cls-metrics.html#sec-cls-two-classes)
+:::
+
+## Metrics for model performance `r hexes("yardstick")`
+
+::: columns
+::: {.column width="60%"}
+```{r sens-2}
+#| code-line-numbers: "3-6"
+lr_re_pred |>
+  sensitivity(truth = class, estimate = .pred_class)
+```
+
+<br>
+
+```{r spec}
+lr_re_pred |>
+  specificity(truth = class, estimate = .pred_class)
+```
+:::
+
+::: {.column width="40%"}
+![](images/confusion-matrix-specificity.png)
+:::
+:::
+
+
+## Two class data
+
+These metrics assume that we know the threshold for converting "soft" probability predictions into "hard" class predictions.
+
+. . .
+
+Is a 50% threshold good? 
+
+What happens if we say that we need to be 80% sure to declare an event?
+
+-   sensitivity ⬇️, specificity ⬆️
+
+. . .
+
+What happens for a 20% threshold?
+
+-   sensitivity ⬆️, specificity ⬇️
+
+## Varying the threshold
+
+```{r}
+#| label: thresholds
+#| echo: false
+
+lr_re_pred |> 
+  roc_curve(truth = class, .pred_class_1) |> 
+  filter(is.finite(.threshold)) |> 
+  pivot_longer(c(specificity, sensitivity), names_to = "statistic", values_to = "value") |> 
+  rename(`event threshold` = .threshold) |> 
+  ggplot(aes(x = `event threshold`, y = value, col = statistic, group = statistic)) + 
+  geom_line() +
+  scale_color_brewer(palette = "Dark2") +
+  labs(y = NULL) +
+  coord_equal() +
+  theme(legend.position = "top")
+```
+
+## ROC curves
+
+::: columns
+::: {.column width="50%"}
+For an ROC (receiver operator characteristic) curve, we plot
+
+- the false positive rate (1 - specificity) on the x-axis
+- the true positive rate (sensitivity) on the y-axis
+
+with sensitivity and specificity calculated at all possible thresholds.
+:::
+
+::: {.column width="50%"}
+```{r roc-curve-1}
+#| echo: false
+#| fig-width: 4
+#| fig-height: 4
+#| out.width: 100%
+
+p_roc <- lr_re_pred |> 
+  roc_curve(truth = class, .pred_class_1) |>
+  autoplot()
+p_roc
+```
+:::
+:::
+
+:::notes
+ROC curves are insensitive to class imbalance.
+:::
+
+::: {.absolute bottom=0 left=0}
+[AML4TD](https://aml4td.org/chapters/cls-metrics.html#sec-roc)
+:::
+
+
+## ROC curves
+
+::: columns
+::: {.column width="50%"}
+We can use the area under the ROC curve as a classification metric: 
+
+- ROC AUC = 1 💯 
+- ROC AUC = 1/2 😢
+:::
+
+::: {.column width="50%"}
+```{r roc-curve-2}
+#| echo: false
+#| fig-width: 4
+#| fig-height: 4
+#| out.width: 100%
+p_roc
+```
+:::
+:::
+
+## ROC curves `r hexes("yardstick")`
+
+```{r roc-auc}
+# Assumes _first_ factor level is event; there are options to change that
+lr_re_pred |> 
+  roc_curve(truth = class, .pred_class_1) |>
+  slice(1, 20, 50)
+
+lr_re_pred |> 
+  roc_auc(truth = class, .pred_class_1)
+```
+
+## ROC curve plot `r hexes("yardstick")`
+
+```{r roc-curve-code}
+#| fig-width: 4
+#| fig-height: 4
+#| out.width: 100%
+#| output-location: "column"
+
+augment(lr_fit, 
+        new_data = cls_train) |> 
+  roc_curve(truth = class, 
+            .pred_class_1) |>
+  autoplot()
+```
+
+## Your turn {transition="slide-in"}
+
+![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
+
+*Compute and plot an ROC curve for your current model.*
+
+*What data are being used for this ROC curve plot?*
+
+```{r ex-roc-curve}
+#| echo: false
+countdown::countdown(minutes = 5, id = "roc-curve")
+```
+
 
 # Alternate resampling schemes
 
@@ -750,118 +1025,3 @@ validation_set(cls_val_split)
 . . .
 
 A validation set is just another type of resample
-
-# Decision tree 🌳
-
-# Random forest 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌵🌴🌲🌳🌴🌵🌳🌴🌳
-
-## Random forest 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵
-
-- Ensemble many decision tree models
-
-- All the trees vote! 🗳️
-
-- Bootstrap aggregating + random predictor sampling
-
-. . .
-
-- Often works well without tuning hyperparameters (more on this later!), as long as there are enough trees
-
-## Create a random forest model `r hexes("parsnip")`
-
-```{r rf-spec}
-rf_spec <- rand_forest(trees = 1000, mode = "classification")
-rf_spec
-```
-
-## Create a random forest model `r hexes("workflows")`
-
-```{r rf-wflow}
-rf_wflow <- workflow(class ~ ., rf_spec)
-rf_wflow
-```
-
-## Your turn {transition="slide-in"}
-
-![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
-
-*Use `fit_resamples()` and `rf_wflow` to:*
-
--   *keep predictions*
--   *compute metrics*
-
-```{r ex-try-fit-resamples}
-#| echo: false
-countdown::countdown(minutes = 8, id = "try-fit-resamples")
-```
-
-## Evaluating model performance `r hexes("tune")`
-
-```{r collect-metrics-rf}
-ctrl_rs <- control_resamples(save_pred = TRUE)
-
-# Random forest uses random numbers so set the seed first
-
-set.seed(2)
-rf_res <- fit_resamples(rf_wflow, cls_folds, control = ctrl_rs)
-collect_metrics(rf_res)
-```
-
-## The whole game - status update
-
-```{r diagram-select, echo = FALSE}
-#| fig-align: "center"
-
-knitr::include_graphics("images/whole-game-transparent-select.jpg")
-```
-
-## The final fit `r hexes("tune")` 
-
-Suppose that we are happy with our random forest model.
-
-Let's fit the model on the training set and verify our performance using the test set.
-
-. . .
-
-We've shown you `fit()` and `predict()` (+ `augment()`) but there is a shortcut:
-
-```{r final-fit}
-# cls_split has train + test info
-final_fit <- last_fit(rf_wflow, cls_split) 
-
-final_fit
-```
-
-## What is in `final_fit`? `r hexes("tune")`
-
-```{r collect-metrics-final-fit}
-collect_metrics(final_fit)
-```
-
-. . .
-
-These are metrics computed with the **test** set
-
-## What is in `final_fit`? `r hexes("tune")`
-
-```{r collect-predictions-final-fit}
-collect_predictions(final_fit)
-```
-
-## What is in `final_fit`? `r hexes("tune")`
-
-```{r extract-workflow}
-extract_workflow(final_fit)
-```
-
-. . .
-
-Use this for **prediction** on new data, like for deploying
-
-## The whole game
-
-```{r diagram-final-performance, echo = FALSE}
-#| fig-align: "center"
-
-knitr::include_graphics("images/whole-game-final-performance.jpg")
-```
