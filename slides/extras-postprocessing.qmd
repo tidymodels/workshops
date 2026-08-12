@@ -22,13 +22,6 @@ knitr:
 #| file: setup.R
 ```
 
-
-```{r}
-#| label: start-quiet
-#| include: false
-load("lgbm_times.RData")
-```
-
 ## Startup!  `r hexes(c("probably", "tailor", "tidymodels"))`
 
 ```{r}
@@ -53,13 +46,14 @@ daemons(parallel::detectCores())
 
 ```{r}
 #| label: user-startup-2
-# Load our example data for this section
-"https://raw.githubusercontent.com/tidymodels/" |> 
-  paste0("workshops/main/slides/class_data.RData") |> 
-  url() |> 
-  load()
-
+#| code-line-numbers: "|3-4|5-6|8-10|12-13|"
 set.seed(429)
+class_data <- 
+  # Nonlinear classification with a low event rate
+  sim_classification(5000, intercept = -10) |> 
+  # Add some noise predictors that are correlated with one another
+  bind_cols(sim_noise(5000, num_var = 15, cov_type = "toeplitz", cov_param = 0.5))
+
 sim_split <- initial_split(class_data, prop = 0.75, strata = class)
 sim_train <- training(sim_split)
 sim_test  <- testing(sim_split)
@@ -152,7 +146,7 @@ There is a `fit()` method that requires data and the names of the prediction col
 #| code-line-numbers: "|5|14|15|16-17|"
 three_rows <- 
   tribble(
-     ~ class, ~ .pred_class, ~.pred_event, ~.pred_nonevent,
+     ~ class, ~ .pred_class, ~.pred_class_1, ~.pred_class_2,
      "event",       "event",          0.6,             0.4,
      "event",    "nonevent",          0.4,             0.6, 
   "nonevent",    "nonevent",          0.1,             0.9  
@@ -165,7 +159,7 @@ thrsh_fit <-
     three_rows,
     outcome = class,
     estimate = .pred_class,
-    .pred_event:.pred_nonevent  # No argument name and order matches factor levels
+    .pred_class_1:.pred_class_2  # No argument name and order matches factor levels
   )
 ```
 
@@ -246,6 +240,7 @@ countdown::countdown(minutes = 3, id = "ordering-rules")
 
 ```{r}
 #| label: tune-threshold
+#| cache: true
 #| code-line-numbers: "|3|5|10|"
 thrsh_tlr <-
   tailor() |>
@@ -343,7 +338,7 @@ nnet_thrsh_res |>
   ) |>
   cal_plot_windowed(
     truth = class,
-    estimate = .pred_event,
+    estimate = .pred_class_1,
     window_size = 0.2,
     step_size = 0.025,
   )
