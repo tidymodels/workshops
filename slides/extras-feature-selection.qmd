@@ -41,13 +41,14 @@ daemons(parallel::detectCores())
 
 ```{r}
 #| label: user-startup-2
-# Load our example data for this section
-"https://raw.githubusercontent.com/tidymodels/" |> 
-  paste0("workshops/main/slides/class_data.RData") |> 
-  url() |> 
-  load()
-
+#| code-line-numbers: "|3-4|5-6|8-10|12-13|"
 set.seed(429)
+class_data <- 
+  # Nonlinear classification with a low event rate
+  sim_classification(5000, intercept = -10) |> 
+  # Add some noise predictors that are correlated with one another
+  bind_cols(sim_noise(5000, num_var = 15, cov_type = "toeplitz", cov_param = 0.5))
+
 sim_split <- initial_split(class_data, prop = 0.75, strata = class)
 sim_train <- training(sim_split)
 sim_test  <- testing(sim_split)
@@ -59,13 +60,10 @@ sim_rs <- vfold_cv(sim_train, v = 10, strata = class)
 ```{r}
 #| label: noise-truth
 #| include: false
-noise_ind <- c(1, 2, 4, 7, 8, 9, 11, 12, 13, 15, 16, 21, 24, 28, 30)
-noise_cols <- recipes::names0(max(noise_ind), "predictor_")
-noise_cols <- noise_cols[noise_ind]
+noise_ind <- 17:31
+noise_cols <- names(class_data)[noise_ind]
 num_noise <- length(noise_ind)
-all_cols <- sim_train |> select(-class) |> names()
-num_total <- length(all_cols)
-num_real <- num_total - num_noise
+num_total <- ncol(sim_train) - 1
 ```
 
 
@@ -119,7 +117,7 @@ The selection process should take place _inside_ a resampling loop so that the w
 [A&M (2002)](https://scholar.google.com/scholar?hl=en&as_sdt=0%2C7&q=Selection+bias+in+gene+extraction+on+the+basis+of+microarray+gene+expression+data&as_ylo=2002&as_yhi=2002&btnG=), [AML4TD](https://aml4td.org/chapters/feature-selection.html#sec-selection-overfitting), [FES](https://bookdown.org/max/FES/selection-overfitting.html)
 :::
 
-# Imbalanced example (again) {background-color="#EDD6D5FF"}
+# Imbalanced example {background-color="#EDD6D5FF"}
 
 ## IMPORTANT `r hexes(c("filtro"))`
 
@@ -170,7 +168,8 @@ knn_param <-
   extract_parameter_set_dials() |>
   update(
     threshold = threshold(c(0.001, 0.1)),
-    neighbors = neighbors(c(1, 50))
+    neighbors = neighbors(c(1, 50)),
+    prop_terms = prop_terms(c(0.1, 1))
   )
 ```
 
@@ -187,7 +186,7 @@ knn_res <-
   knn_wflow |>
   tune_grid(
     resamples = sim_rs,
-    grid = 50,
+    grid = 20,
     control = ctrl,
     metrics = cls_mtr,
     param_info = knn_param
@@ -385,7 +384,7 @@ We already have our fitted model and, if we are happy with it:
 #| label: test-manual
 #| code-line-numbers: "|1|2|6-9|"
 test_pred <- augment(knn_fit, sim_test)
-test_pred |> cls_mtr(class, estimate = .pred_class, .pred_event)
+test_pred |> cls_mtr(class, estimate = .pred_class, .pred_class_1)
 ```
 
 . . .
@@ -417,7 +416,7 @@ knn_res |>
 test_pred|>
   cal_plot_windowed(
     truth = class,
-    estimate = .pred_event,
+    estimate = .pred_class_1,
     window_size = 0.2,
     step_size = 0.025,
   )
@@ -439,7 +438,7 @@ Looks alright. The small _effective_ sample size (`r sum(test_pred$class == "eve
 test_pred|>
   cal_plot_windowed(
     truth = class,
-    estimate = .pred_event,
+    estimate = .pred_class_1,
     window_size = 0.2,
     step_size = 0.025,
   )
