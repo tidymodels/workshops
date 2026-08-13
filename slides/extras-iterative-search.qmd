@@ -48,11 +48,13 @@ mirai::daemons(parallel::detectCores())
 
 ```{r}
 #| label: user-startup-2
-# Load our example data for this section
-"https://raw.githubusercontent.com/tidymodels/" |> 
-  paste0("workshops/main/slides/class_data.RData") |> 
-  url() |> 
-  load()
+# Make our example data for this section
+set.seed(429)
+class_data <- 
+  # Nonlinear classification data
+  sim_classification(5000) |> 
+  # Add some noise predictors that are correlated with one another
+  bind_cols(sim_noise(5000, num_var = 15, cov_type = "toeplitz", cov_param = 0.5))
 
 set.seed(429)
 sim_split <- initial_split(class_data, prop = 0.75, strata = class)

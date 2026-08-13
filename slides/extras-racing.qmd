@@ -39,19 +39,22 @@ library(bonsai)
 tidymodels_prefer()
 theme_set(theme_bw())
 options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
+
+cores <- parallel::detectCores() - 1
 ```
 
 ## More startup!   `r hexes(c("rsample"))`
 
 ```{r}
 #| label: user-startup-2
-# Load our example data for this section
-"https://raw.githubusercontent.com/tidymodels/" |> 
-  paste0("workshops/main/slides/class_data.RData") |> 
-  url() |> 
-  load()
-
+# Make our example data for this section
 set.seed(429)
+class_data <- 
+  # Nonlinear classification data
+  sim_classification(5000) |> 
+  # Add some noise predictors that are correlated with one another
+  bind_cols(sim_noise(5000, num_var = 15, cov_type = "toeplitz", cov_param = 0.5))
+
 sim_split <- initial_split(class_data, prop = 0.75, strata = class)
 sim_train <- training(sim_split)
 sim_test  <- testing(sim_split)
@@ -341,7 +344,7 @@ lgbm_wflow <- workflow(class ~ ., lgbm_spec)
 
 ```{r } 
 #| label: lgb-grid-race
-#| cache: true
+#| cache: false
 #| code-line-numbers: "|3-4|6-7|12|14-15|"
 library(finetune)
 
@@ -351,7 +354,7 @@ ctrl <- control_race(verbose_elim = FALSE)
 # Optimizes on the first metric in the set
 cls_mtr <- metric_set(brier_class, roc_auc, sensitivity, specificity)
 
-mirai::daemons(parallel::detectCores() - 1)
+mirai::daemons(cores)
 
 set.seed(321)
 lgbm_res <-
