@@ -7,8 +7,8 @@
 <script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../../../site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.6.42">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.9.36">
 
   <title>Machine learning with tidymodels – 5 - Feature engineering: splines, target encoding and dates</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -17,6 +17,9 @@
   <link rel="stylesheet" href="../../../site_libs/revealjs/dist/reset.css">
   <link rel="stylesheet" href="../../../site_libs/revealjs/dist/reveal.css">
   <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -29,8 +32,9 @@
       vertical-align: middle;
     }
     /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -41,7 +45,7 @@
     }
     @media print {
     pre > code.sourceCode { white-space: pre-wrap; }
-    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
     }
     pre.numberSource code
       { counter-reset: source-line 0; }
@@ -94,7 +98,7 @@
     code span.vs { color: #20794d; } /* VerbatimString */
     code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   </style>
-  <link rel="stylesheet" href="../../../site_libs/revealjs/dist/theme/quarto-17117e7eb423c4f46c4b0ab0993f5429.css">
+  <link rel="stylesheet" href="../../../site_libs/revealjs/dist/theme/quarto-81ee52b29bb6f2a04cb8e66c1ccbc34d.css">
   <link href="../../../site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="../../../site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="../../../site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -211,13 +215,13 @@
 <section id="getting-set-up" class="slide level2">
 <h2>Getting set up <img data-src="hexes/tidymodels.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">library</span>(tidymodels)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">library</span>(tidymodels)</span>
 <span id="cb1-2"><a></a><span class="fu">library</span>(embed)</span>
 <span id="cb1-3"><a></a><span class="fu">library</span>(extrasteps)</span>
 <span id="cb1-4"><a></a></span>
 <span id="cb1-5"><a></a><span class="fu">tidymodels_prefer</span>()</span>
 <span id="cb1-6"><a></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
-<span id="cb1-7"><a></a><span class="fu">options</span>(<span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-7"><a></a><span class="fu">options</span>(<span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section>
@@ -229,7 +233,7 @@
 <h2>Hotel rates data set</h2>
 <p>Regression data set for predicting the average daily rate for a room, for “Resort Hotel”. The <code>agent</code> and <code>company</code> use random names.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="fu">glimpse</span>(hotel_rates)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="fu">glimpse</span>(hotel_rates)</span>
 <span id="cb2-2"><a></a><span class="co">#&gt; Rows: 15,402</span></span>
 <span id="cb2-3"><a></a><span class="co">#&gt; Columns: 28</span></span>
 <span id="cb2-4"><a></a><span class="co">#&gt; $ avg_price_per_room             &lt;dbl&gt; 110.00, 74.00, 81.90, 81.00, 112.20, 90…</span></span>
@@ -259,7 +263,7 @@
 <span id="cb2-28"><a></a><span class="co">#&gt; $ arrival_date_num               &lt;dbl&gt; 2016.5, 2016.5, 2016.5, 2016.5, 2016.5,…</span></span>
 <span id="cb2-29"><a></a><span class="co">#&gt; $ near_christmas                 &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</span></span>
 <span id="cb2-30"><a></a><span class="co">#&gt; $ near_new_years                 &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</span></span>
-<span id="cb2-31"><a></a><span class="co">#&gt; $ historical_adr                 &lt;dbl&gt; 104.9811, 104.9811, 104.9811, 104.9811,…</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-31"><a></a><span class="co">#&gt; $ historical_adr                 &lt;dbl&gt; 104.9811, 104.9811, 104.9811, 104.9811,…</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="footer">
 <p>Antonio, N., de Almeida, A., and Nunes, L. (2019). Hotel booking demand datasets. Data in Brief, 22, 41-49.</p>
@@ -269,10 +273,10 @@
 <h2>Hotel data splitting <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <p>Generally, you should always do data splitting. We are doing it here explicitly because some artifacts of splitting data become useful later on.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
 <span id="cb3-2"><a></a>hotel_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(hotel_rates)</span>
 <span id="cb3-3"><a></a>hotel_train <span class="ot">&lt;-</span> <span class="fu">training</span>(hotel_split)</span>
-<span id="cb3-4"><a></a>hotel_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(hotel_split)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-4"><a></a>hotel_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(hotel_split)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="your-turn" class="slide level2">
@@ -472,7 +476,7 @@
 <div class="columns">
 <div class="column" style="width:30%;">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
 <span id="cb4-2"><a></a>  <span class="fu">count</span>(country)</span>
 <span id="cb4-3"><a></a><span class="co">#&gt; # A tibble: 88 × 2</span></span>
 <span id="cb4-4"><a></a><span class="co">#&gt;    country     n</span></span>
@@ -487,11 +491,11 @@
 <span id="cb4-13"><a></a><span class="co">#&gt;  8 bel       184</span></span>
 <span id="cb4-14"><a></a><span class="co">#&gt;  9 bgr         2</span></span>
 <span id="cb4-15"><a></a><span class="co">#&gt; 10 bhs         1</span></span>
-<span id="cb4-16"><a></a><span class="co">#&gt; # ℹ 78 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb4-16"><a></a><span class="co">#&gt; # ℹ 78 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div><div class="column" style="width:35%;">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
 <span id="cb5-2"><a></a>  <span class="fu">count</span>(company)</span>
 <span id="cb5-3"><a></a><span class="co">#&gt; # A tibble: 157 × 2</span></span>
 <span id="cb5-4"><a></a><span class="co">#&gt;    company                 n</span></span>
@@ -506,11 +510,11 @@
 <span id="cb5-13"><a></a><span class="co">#&gt;  8 blasingime_llc          1</span></span>
 <span id="cb5-14"><a></a><span class="co">#&gt;  9 boddy_llc              16</span></span>
 <span id="cb5-15"><a></a><span class="co">#&gt; 10 boles_pbc               3</span></span>
-<span id="cb5-16"><a></a><span class="co">#&gt; # ℹ 147 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-16"><a></a><span class="co">#&gt; # ℹ 147 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div><div class="column" style="width:35%;">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
 <span id="cb6-2"><a></a>  <span class="fu">count</span>(agent)</span>
 <span id="cb6-3"><a></a><span class="co">#&gt; # A tibble: 119 × 2</span></span>
 <span id="cb6-4"><a></a><span class="co">#&gt;    agent                 n</span></span>
@@ -525,7 +529,7 @@
 <span id="cb6-13"><a></a><span class="co">#&gt;  8 bernice_baltierra    35</span></span>
 <span id="cb6-14"><a></a><span class="co">#&gt;  9 betzy_rodriguez      66</span></span>
 <span id="cb6-15"><a></a><span class="co">#&gt; 10 brayan_guerrero       2</span></span>
-<span id="cb6-16"><a></a><span class="co">#&gt; # ℹ 109 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-16"><a></a><span class="co">#&gt; # ℹ 109 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div></div>
 </section>
@@ -577,7 +581,7 @@
 </div>
 </div><div class="column">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
 <span id="cb7-2"><a></a>  <span class="fu">summarise</span>(</span>
 <span id="cb7-3"><a></a>    <span class="at">mean =</span> <span class="fu">mean</span>(avg_price_per_room),</span>
 <span id="cb7-4"><a></a>    <span class="at">.by =</span> agent</span>
@@ -595,7 +599,7 @@
 <span id="cb7-16"><a></a><span class="co">#&gt;  8 reema_el_tamer       118. </span></span>
 <span id="cb7-17"><a></a><span class="co">#&gt;  9 jawhara_al_azad       90.1</span></span>
 <span id="cb7-18"><a></a><span class="co">#&gt; 10 not_applicable        84.1</span></span>
-<span id="cb7-19"><a></a><span class="co">#&gt; # ℹ 109 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb7-19"><a></a><span class="co">#&gt; # ℹ 109 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div></div>
 </div>
@@ -618,7 +622,7 @@
 <div class="columns">
 <div class="column">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
 <span id="cb8-2"><a></a>  <span class="fu">count</span>(agent, <span class="at">.drop =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb8-3"><a></a><span class="co">#&gt; # A tibble: 174 × 2</span></span>
 <span id="cb8-4"><a></a><span class="co">#&gt;    agent                   n</span></span>
@@ -633,11 +637,11 @@
 <span id="cb8-13"><a></a><span class="co">#&gt;  8 anna_beltran_moreno     0</span></span>
 <span id="cb8-14"><a></a><span class="co">#&gt;  9 anna_choi               0</span></span>
 <span id="cb8-15"><a></a><span class="co">#&gt; 10 araseli_billy           1</span></span>
-<span id="cb8-16"><a></a><span class="co">#&gt; # ℹ 164 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb8-16"><a></a><span class="co">#&gt; # ℹ 164 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div><div class="column">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a>hotel_test <span class="sc">|&gt;</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a>hotel_test <span class="sc">|&gt;</span></span>
 <span id="cb9-2"><a></a>  <span class="fu">count</span>(agent, <span class="at">.drop =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb9-3"><a></a><span class="co">#&gt; # A tibble: 174 × 2</span></span>
 <span id="cb9-4"><a></a><span class="co">#&gt;    agent                   n</span></span>
@@ -652,7 +656,7 @@
 <span id="cb9-13"><a></a><span class="co">#&gt;  8 anna_beltran_moreno     0</span></span>
 <span id="cb9-14"><a></a><span class="co">#&gt;  9 anna_choi               0</span></span>
 <span id="cb9-15"><a></a><span class="co">#&gt; 10 araseli_billy           1</span></span>
-<span id="cb9-16"><a></a><span class="co">#&gt; # ℹ 164 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb9-16"><a></a><span class="co">#&gt; # ℹ 164 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div></div>
 </section>
@@ -663,12 +667,12 @@
 <p>Calculate the global mean of the outcome and use it for cases that aren’t seen in the training data set.</p>
 <p><br></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a><span class="fu">mean</span>(hotel_train<span class="sc">$</span>avg_price_per_room)</span>
-<span id="cb10-2"><a></a><span class="co">#&gt; [1] 104.6039</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a><span class="fu">mean</span>(hotel_train<span class="sc">$</span>avg_price_per_room)</span>
+<span id="cb10-2"><a></a><span class="co">#&gt; [1] 104.6039</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div><div class="column">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
 <span id="cb11-2"><a></a>  <span class="fu">summarise</span>(</span>
 <span id="cb11-3"><a></a>    <span class="at">mean =</span> <span class="fu">mean</span>(avg_price_per_room),</span>
 <span id="cb11-4"><a></a>    <span class="at">.by =</span> agent</span>
@@ -686,7 +690,7 @@
 <span id="cb11-16"><a></a><span class="co">#&gt;  8 reema_el_tamer       118. </span></span>
 <span id="cb11-17"><a></a><span class="co">#&gt;  9 jawhara_al_azad       90.1</span></span>
 <span id="cb11-18"><a></a><span class="co">#&gt; 10 not_applicable        84.1</span></span>
-<span id="cb11-19"><a></a><span class="co">#&gt; # ℹ 109 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb11-19"><a></a><span class="co">#&gt; # ℹ 109 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div></div>
 </section>
@@ -698,7 +702,7 @@
 <p>We use the global mean to account for 0 occurrences. Let us adjust the calculated mean by the global mean depending on the counts.</p>
 </div><div class="column">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
 <span id="cb12-2"><a></a>  <span class="fu">summarise</span>(</span>
 <span id="cb12-3"><a></a>    <span class="at">mean =</span> <span class="fu">mean</span>(avg_price_per_room),</span>
 <span id="cb12-4"><a></a>    <span class="at">n =</span> <span class="fu">n</span>(),</span>
@@ -718,7 +722,7 @@
 <span id="cb12-18"><a></a><span class="co">#&gt;  8 bernice_baltierra  71.3    35</span></span>
 <span id="cb12-19"><a></a><span class="co">#&gt;  9 betzy_rodriguez    84.0    66</span></span>
 <span id="cb12-20"><a></a><span class="co">#&gt; 10 brayan_guerrero    37.5     2</span></span>
-<span id="cb12-21"><a></a><span class="co">#&gt; # ℹ 109 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb12-21"><a></a><span class="co">#&gt; # ℹ 109 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div></div>
 </section>
@@ -742,7 +746,7 @@
 <section id="target-encoding-in-recipes" class="slide level2">
 <h2>Target encoding in recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a></a><span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">|&gt;</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a></a><span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">|&gt;</span></span>
 <span id="cb13-2"><a></a>  <span class="fu">step_lencode</span>(</span>
 <span id="cb13-3"><a></a>    agent, country, company,</span>
 <span id="cb13-4"><a></a>    <span class="at">outcome =</span> <span class="fu">vars</span>(<span class="st">"avg_price_per_room"</span>), <span class="at">smooth =</span> <span class="cn">TRUE</span>,</span>
@@ -763,7 +767,7 @@
 <span id="cb13-19"><a></a><span class="co">#&gt;  8  69.8   108.     109.</span></span>
 <span id="cb13-20"><a></a><span class="co">#&gt;  9 126.     99.9    109.</span></span>
 <span id="cb13-21"><a></a><span class="co">#&gt; 10 144.    108.     109.</span></span>
-<span id="cb13-22"><a></a><span class="co">#&gt; # ℹ 11,541 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb13-22"><a></a><span class="co">#&gt; # ℹ 11,541 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="your-turn-2" class="slide level2">
@@ -1075,7 +1079,7 @@
 <h2>time events</h2>
 <p>Using <code>extrasteps::step_time_event()</code> and the <a href="https://davisvaughan.github.io/almanac/index.html">almanac</a> package, we can create useful time features.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a></a><span class="fu">library</span>(almanac)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a></a><span class="fu">library</span>(almanac)</span>
 <span id="cb14-2"><a></a></span>
 <span id="cb14-3"><a></a>rule_1 <span class="ot">&lt;-</span> <span class="fu">weekly</span>() <span class="sc">|&gt;</span></span>
 <span id="cb14-4"><a></a>  <span class="fu">recur_on_weekdays</span>() <span class="sc">|&gt;</span></span>
@@ -1087,17 +1091,17 @@
 <span id="cb14-10"><a></a></span>
 <span id="cb14-11"><a></a>rule_3 <span class="ot">&lt;-</span> <span class="fu">yearly</span>(<span class="st">"1997-06-05"</span>) <span class="sc">|&gt;</span></span>
 <span id="cb14-12"><a></a>  <span class="fu">recur_on_day_of_week</span>(<span class="st">"Thursday"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb14-13"><a></a>  <span class="fu">recur_on_month_of_year</span>(<span class="fu">c</span>(<span class="st">"Jun"</span>, <span class="st">"July"</span>, <span class="st">"Aug"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb14-13"><a></a>  <span class="fu">recur_on_month_of_year</span>(<span class="fu">c</span>(<span class="st">"Jun"</span>, <span class="st">"July"</span>, <span class="st">"Aug"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="step_time_event" class="slide level2">
 <h2><code>step_time_event()</code> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <p>Create a list of rules (last slide) and pass them to the <code>rules</code> argument of <a href="https://emilhvitfeldt.github.io/extrasteps/reference/step_time_event.html"><code>extrasteps::step_time_event()</code></a></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a></a>rules <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">rule_1 =</span> rule_1, <span class="at">rule_2 =</span> rule_2, <span class="at">rule_3 =</span> rule_3)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a></a>rules <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">rule_1 =</span> rule_1, <span class="at">rule_2 =</span> rule_2, <span class="at">rule_3 =</span> rule_3)</span>
 <span id="cb15-2"><a></a></span>
 <span id="cb15-3"><a></a><span class="fu">recipe</span>(<span class="sc">~</span>arrival_date, <span class="at">data =</span> hotel_rates) <span class="sc">|&gt;</span></span>
-<span id="cb15-4"><a></a>  <span class="fu">step_time_event</span>(arrival_date, <span class="at">rules =</span> rules)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb15-4"><a></a>  <span class="fu">step_time_event</span>(arrival_date, <span class="at">rules =</span> rules)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="absolute" style="bottom: 0px; right: 0px; ">
 <p><a href="https://feaz-book.com/datetime-advanced">FEAZ</a></p>
@@ -1437,190 +1441,173 @@
     </script>
 
     <script id="quarto-html-after-body" type="application/javascript">
-    window.document.addEventListener("DOMContentLoaded", function (event) {
-      const toggleBodyColorMode = (bsSheetEl) => {
-        const mode = bsSheetEl.getAttribute("data-mode");
-        const bodyEl = window.document.querySelector("body");
-        if (mode === "dark") {
-          bodyEl.classList.add("quarto-dark");
-          bodyEl.classList.remove("quarto-light");
-        } else {
-          bodyEl.classList.add("quarto-light");
-          bodyEl.classList.remove("quarto-dark");
-        }
-      }
-      const toggleBodyColorPrimary = () => {
-        const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
-        if (bsSheetEl) {
-          toggleBodyColorMode(bsSheetEl);
-        }
-      }
-      toggleBodyColorPrimary();  
-      const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
-      tabsets.forEach(function(tabset) {
-        const tabby = new Tabby('#' + tabset.id);
-      });
-      const isCodeAnnotation = (el) => {
-        for (const clz of el.classList) {
-          if (clz.startsWith('code-annotation-')) {                     
-            return true;
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
           }
+          return false;
         }
-        return false;
-      }
-      const onCopySuccess = function(e) {
-        // button target
-        const button = e.trigger;
-        // don't keep focus
-        button.blur();
-        // flash "checked"
-        button.classList.add('code-copy-button-checked');
-        var currentTitle = button.getAttribute("title");
-        button.setAttribute("title", "Copied!");
-        let tooltip;
-        if (window.bootstrap) {
-          button.setAttribute("data-bs-toggle", "tooltip");
-          button.setAttribute("data-bs-placement", "left");
-          button.setAttribute("data-bs-title", "Copied!");
-          tooltip = new bootstrap.Tooltip(button, 
-            { trigger: "manual", 
-              customClass: "code-copy-button-tooltip",
-              offset: [0, -8]});
-          tooltip.show();    
-        }
-        setTimeout(function() {
-          if (tooltip) {
-            tooltip.hide();
-            button.removeAttribute("data-bs-title");
-            button.removeAttribute("data-bs-toggle");
-            button.removeAttribute("data-bs-placement");
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copied!");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copied!");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
           }
-          button.setAttribute("title", currentTitle);
-          button.classList.remove('code-copy-button-checked');
-        }, 1000);
-        // clear code selection
-        e.clearSelection();
-      }
-      const getTextToCopy = function(trigger) {
-          const codeEl = trigger.previousElementSibling.cloneNode(true);
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+          const outerScaffold = trigger.parentElement.cloneNode(true);
+          const codeEl = outerScaffold.querySelector('code');
           for (const childEl of codeEl.children) {
             if (isCodeAnnotation(childEl)) {
               childEl.remove();
             }
           }
           return codeEl.innerText;
-      }
-      const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
-        text: getTextToCopy
-      });
-      clipboard.on('success', onCopySuccess);
-      if (window.document.getElementById('quarto-embedded-source-code-modal')) {
-        const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
-          text: getTextToCopy,
-          container: window.document.getElementById('quarto-embedded-source-code-modal')
-        });
-        clipboardModal.on('success', onCopySuccess);
-      }
-        var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
-        var mailtoRegex = new RegExp(/^mailto:/);
-          var filterRegex = new RegExp("https:\/\/workshops\.tidymodels\.org");
-        var isInternal = (href) => {
-            return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
         }
-        // Inspect non-navigation links and adorn them if external
-     	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
-        for (var i=0; i<links.length; i++) {
-          const link = links[i];
-          if (!isInternal(link.href)) {
-            // undo the damage that might have been done by quarto-nav.js in the case of
-            // links that we want to consider external
-            if (link.dataset.originalHref !== undefined) {
-              link.href = link.dataset.originalHref;
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
+        });
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
+        }
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp("https:\/\/workshops\.tidymodels\.org");
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
             }
           }
-        }
-      function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
-        const config = {
-          allowHTML: true,
-          maxWidth: 500,
-          delay: 100,
-          arrow: false,
-          appendTo: function(el) {
-              return el.closest('section.slide') || el.parentElement;
-          },
-          interactive: true,
-          interactiveBorder: 10,
-          theme: 'light-border',
-          placement: 'bottom-start',
-        };
-        if (contentFn) {
-          config.content = contentFn;
-        }
-        if (onTriggerFn) {
-          config.onTrigger = onTriggerFn;
-        }
-        if (onUntriggerFn) {
-          config.onUntrigger = onUntriggerFn;
-        }
-          config['offset'] = [0,0];
-          config['maxWidth'] = 700;
-        window.tippy(el, config); 
-      }
-      const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
-      for (var i=0; i<noterefs.length; i++) {
-        const ref = noterefs[i];
-        tippyHover(ref, function() {
-          // use id or data attribute instead here
-          let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
-          try { href = new URL(href).hash; } catch {}
-          const id = href.replace(/^#\/?/, "");
-          const note = window.document.getElementById(id);
-          if (note) {
-            return note.innerHTML;
-          } else {
-            return "";
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
           }
-        });
-      }
-      const findCites = (el) => {
-        const parentEl = el.parentElement;
-        if (parentEl) {
-          const cites = parentEl.dataset.cites;
-          if (cites) {
-            return {
-              el,
-              cites: cites.split(' ')
-            };
-          } else {
-            return findCites(el.parentElement)
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
           }
-        } else {
-          return undefined;
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
         }
-      };
-      var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
-      for (var i=0; i<bibliorefs.length; i++) {
-        const ref = bibliorefs[i];
-        const citeInfo = findCites(ref);
-        if (citeInfo) {
-          tippyHover(citeInfo.el, function() {
-            var popup = window.document.createElement('div');
-            citeInfo.cites.forEach(function(cite) {
-              var citeDiv = window.document.createElement('div');
-              citeDiv.classList.add('hanging-indent');
-              citeDiv.classList.add('csl-entry');
-              var biblioDiv = window.document.getElementById('ref-' + cite);
-              if (biblioDiv) {
-                citeDiv.innerHTML = biblioDiv.innerHTML;
-              }
-              popup.appendChild(citeDiv);
-            });
-            return popup.innerHTML;
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
           });
         }
-      }
-    });
-    </script>
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
     
 
 </body></html>
