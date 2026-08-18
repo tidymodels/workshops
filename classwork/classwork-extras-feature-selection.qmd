@@ -1,6 +1,6 @@
 ---
-title: "7 - Feature selection - Classwork"
-subtitle: "Getting More Out of Feature Engineering and Tuning for Machine Learning"
+title: "Extras - Feature selection - Classwork"
+subtitle: "Practical Machine Learning with tidymodels"
 editor_options: 
   chunk_output_type: console
 ---
@@ -15,30 +15,25 @@ library(important)
 library(probably)
 library(mirai)
 
-# check torch:
-if (torch::torch_is_installed()) {
-  library(torch)
-}
-
-# Max's usual settings:
 tidymodels_prefer()
 theme_set(theme_bw())
-options(
-  pillar.advice = FALSE,
-  pillar.min_title_chars = Inf
-)
+options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
 daemons(parallel::detectCores())
+```
 
-# Load our example data for this section
-"https://raw.githubusercontent.com/tidymodels/" |>
-  paste0("workshops/main/slides/class_data.RData") |>
-  url() |>
-  load()
+## More setup
 
+```{r}
 set.seed(429)
+class_data <- 
+  # Nonlinear classification with a low event rate
+  sim_classification(5000, intercept = -10) |> 
+  # Add some noise predictors that are correlated with one another
+  bind_cols(sim_noise(5000, num_var = 15, cov_type = "toeplitz", cov_param = 0.5))
+
 sim_split <- initial_split(class_data, prop = 0.75, strata = class)
 sim_train <- training(sim_split)
-sim_test <- testing(sim_split)
+sim_test  <- testing(sim_split)
 
 set.seed(523)
 sim_rs <- vfold_cv(sim_train, v = 10, strata = class)
@@ -56,15 +51,19 @@ rec <-
     id = "filter"
   ) |>
   step_normalize(all_numeric_predictors())
-
-knn_spec <-
-  nearest_neighbor(neighbors = tune(), weight_func = tune()) |>
+  
+knn_spec <- 
+  nearest_neighbor(neighbors = tune(), weight_func = tune()) |> 
   set_mode("classification")
-
+  
 thrsh_tlr <-
   tailor() |>
-  adjust_probability_threshold(threshold = tune())
+  adjust_probability_threshold(threshold = tune()) 
+```
 
+## Setup the workflow
+
+```{r}
 knn_wflow <- workflow(rec, knn_spec, thrsh_tlr)
 
 knn_param <-
@@ -72,11 +71,12 @@ knn_param <-
   extract_parameter_set_dials() |>
   update(
     threshold = threshold(c(0.001, 0.1)),
-    neighbors = neighbors(c(1, 50))
+    neighbors = neighbors(c(1, 50)),
+    prop_terms = prop_terms(c(0.1, 1))
   )
 ```
 
-## Tuning
+## Tuning results
 
 ```{r}
 cls_mtr <- metric_set(brier_class, roc_auc, sensitivity, specificity)
@@ -87,7 +87,7 @@ knn_res <-
   knn_wflow |>
   tune_grid(
     resamples = sim_rs,
-    grid = 50,
+    grid = 20,
     control = ctrl,
     metrics = cls_mtr,
     param_info = knn_param
@@ -98,16 +98,25 @@ knn_res <-
 
 ```{r}
 autoplot(knn_res)
+```
 
 ## Brier results
-autoplot(knn_res, metric = "brier_class") +
-  facet_grid(. ~ name, scale = "free_x")
+
+```{r}
+autoplot(knn_res, metric = "brier_class") + 
+  facet_grid(. ~ name, scale = "free_x") 
+```
 
 ## ROC curve results
-autoplot(knn_res, metric = "roc_auc") +
-  facet_grid(. ~ name, scale = "free_x")
 
-## Sensitivity/Specificity results
+```{r}
+autoplot(knn_res, metric = "roc_auc") + 
+  facet_grid(. ~ name, scale = "free_x") 
+```
+
+## Sensitivity/specificity results
+
+```{r}
 autoplot(knn_res, metric = c("sensitivity", "specificity"))
 ```
 
@@ -116,54 +125,78 @@ autoplot(knn_res, metric = c("sensitivity", "specificity"))
 ```{r}
 knn_fit <- fit_best(knn_res, metric = "brier_class")
 filter_info <-
-  knn_fit |>
-  extract_recipe() |>
-  tidy(id = "filter")
+	knn_fit |>
+	extract_recipe() |>
+	tidy(id = "filter")
 
 filter_info
 ```
 
-## Proceed to the test set -- Manual approach 
+## Other steps
 
-We already have our fitted model and, if we are happy with it:  
+The important package has two other feature selection steps that can be used with multiple scores:
+
+`step_predictor_retain()`: choose predictors based on a logical statement. Example:
+
+```r
+imp_rf > 2 & cor_pearson >= 0.75
+```
+
+`step_predictor_desirability()`: choose multiple scores to compute then use desirability functions to rank them:
+
+```r
+desirability(
+  maximize(correlation),
+  maximize(imp_rf)
+)
+```
+
+## Manual approach
+
+We already have our fitted model and, if we are happy with it:
 
 ```{r}
 test_pred <- augment(knn_fit, sim_test)
-test_pred |> cls_mtr(class, estimate = .pred_class, .pred_event)
+test_pred |> cls_mtr(class, estimate = .pred_class, .pred_class_1)
 ```
 
-
-## Checking (approximate) calibration
+## Checking (Approximate) Calibration
 
 ```{r}
 test_pred |>
   cal_plot_windowed(
     truth = class,
-    estimate = .pred_event,
+    estimate = .pred_class_1,
     window_size = 0.2,
     step_size = 0.025,
   )
 ```
 
-## Proceed to the test set -- Automated approach
+## Automated approach
+
+We have to start with a finalized workflow (i.e., no `tune()` values):
 
 ```{r}
 knn_best <- select_best(knn_res, metric = "brier_class")
 knn_last_wflow <- finalize_workflow(knn_wflow, knn_best)
+```
 
-knn_test_res <-
-  knn_last_wflow |>
+`last_fit()` uses the original split object to fit, predict, and measure the model using the test set:
+
+```{r}
+knn_test_res <- 
+  knn_last_wflow |> 
   last_fit(sim_split, metrics = cls_mtr)
-
+  
 knn_test_res
 ```
 
-We can pick out the parts that we want: 
+We can pick out the parts that we want:
 
 ```{r}
 knn_final_fit <- knn_test_res |> extract_workflow()
 knn_test_pred <- knn_test_res |> collect_predictions()
-knn_test_mtr <- knn_test_res |> collect_metrics()
+knn_test_mtr  <- knn_test_res |> collect_metrics()
 
 knn_test_mtr
 ```

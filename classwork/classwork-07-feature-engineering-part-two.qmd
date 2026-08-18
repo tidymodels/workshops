@@ -1,6 +1,6 @@
 ---
-title: "5 - Feature engineering: splines, target encoding and dates"
-subtitle: "Getting More Out of Feature Engineering and Tuning for Machine Learning"
+title: "7 - Feature engineering: splines, target encoding and dates - Classwork"
+subtitle: "Practical Machine Learning with tidymodels"
 editor_options: 
   chunk_output_type: console
 ---
@@ -17,6 +17,12 @@ library(extrasteps)
 tidymodels_prefer()
 theme_set(theme_bw())
 options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
+```
+
+## Hotel rates data set
+
+```{r}
+glimpse(hotel_rates)
 ```
 
 ## Hotel data splitting
@@ -48,6 +54,75 @@ Apply B-splines to some variables using `step_spline_b()`.
 
 ```
 
+## Factors with many categories
+
+```{r}
+hotel_train |>
+  count(country)
+```
+
+```{r}
+hotel_train |>
+  count(company)
+```
+
+```{r}
+hotel_train |>
+  count(agent)
+```
+
+## Target encoding motivation
+
+We calculate the mean of the outcome within each level of the predictor, and use that as the new value.
+
+Don't do just this! We are building up the method one thing at a time. Unregularized target encoding is really prone to overfitting.
+
+```{r}
+hotel_train |>
+  summarise(
+    mean = mean(avg_price_per_room),
+    .by = agent
+  )
+```
+
+## Target encoding handling unseen levels
+
+```{r}
+hotel_train |>
+  count(agent, .drop = FALSE)
+```
+
+```{r}
+hotel_test |>
+  count(agent, .drop = FALSE)
+```
+
+Calculate the global mean of the outcome and use it for cases that aren't seen in the training data set.
+
+```{r}
+mean(hotel_train$avg_price_per_room)
+```
+
+```{r}
+hotel_train |>
+  summarise(
+    mean = mean(avg_price_per_room),
+    .by = agent
+  )
+```
+
+## How do we handle low counts?
+
+```{r}
+hotel_train |>
+  summarise(
+    mean = mean(avg_price_per_room),
+    n = n(),
+    .by = agent
+  ) |>
+  arrange(agent)
+```
+
 ## Target encoding in recipes
 
 ```{r}
@@ -68,10 +143,10 @@ recipe(avg_price_per_room ~ ., data = hotel_train) |>
 
 Apply target encoding to the data set, see how it affects different predictors, not just the ones we listed here.
 
-- `step_lencode()`
-- `step_lencode_glm()`
-- `step_lencode_bayes()`
-- `step_lencode_mixed()`
+* `step_lencode()`
+* `step_lencode_glm()`
+* `step_lencode_bayes()`
+* `step_lencode_mixed()`
 
 ```{r}
 # Your code here!
@@ -82,7 +157,7 @@ Apply target encoding to the data set, see how it affects different predictors, 
 
 Explore the `arrival_date` variable and its relation to `avg_price_per_room`.
 
-The lubridate package might provide helpful.
+The lubridate package might be helpful.
 
 ```{r}
 # Your code here!
@@ -99,6 +174,8 @@ Apply date steps to the `arrival_date` variable and try to see if we capture any
 ```
 
 ## time events
+
+Using `extrasteps::step_time_event()` and the [almanac](https://davisvaughan.github.io/almanac/index.html) package, we can create useful time features.
 
 ```{r}
 library(almanac)
@@ -118,7 +195,10 @@ rule_3 <- yearly("1997-06-05") |>
 
 ## `step_time_event()`
 
+Create a list of rules (last slide) and pass them to the `rules` argument of [`extrasteps::step_time_event()`](https://emilhvitfeldt.github.io/extrasteps/reference/step_time_event.html)
+
 ```{r}
+#| eval: false
 rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
 
 recipe(~arrival_date, data = hotel_rates) |>

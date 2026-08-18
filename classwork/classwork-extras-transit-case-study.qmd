@@ -1,0 +1,319 @@
+---
+title: "Extras - Case Study on Transportation - Classwork"
+subtitle: "Practical Machine Learning with tidymodels"
+editor_options: 
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Your turn
+
+Take a look at these data for a few minutes and see if you can find any interesting characteristics in the predictors or the outcome.
+
+```{r}
+library(tidymodels)
+library(rules)
+data("Chicago")
+dim(Chicago)
+stations
+```
+
+```{r}
+# Your code here!
+
+```
+
+## Splitting with Chicago data
+
+Let's put the last two weeks of data into the test set. `initial_time_split()` can be used for this purpose:
+
+```{r}
+data(Chicago)
+
+chi_split <- initial_time_split(Chicago, prop = 1 - (14/nrow(Chicago)))
+chi_split
+
+chi_train <- training(chi_split)
+chi_test  <- testing(chi_split)
+
+## training
+nrow(chi_train)
+ 
+## testing
+nrow(chi_test)
+```
+
+## Times series resampling
+
+Use the `date` column to find the date data.
+
+```{r}
+#| eval: false
+chi_rs <-
+  chi_train |>
+  sliding_period(
+    index = "date",  
+  )
+```
+
+Our units will be weeks.
+
+```{r}
+#| eval: false
+chi_rs <-
+  chi_train |>
+  sliding_period(
+    index = "date",  
+    period = "week",
+  )
+```
+
+Every analysis set has 15 years of data.
+
+```{r}
+#| eval: false
+chi_rs <-
+  chi_train |>
+  sliding_period(
+    index = "date",  
+    period = "week",
+    lookback = 52 * 15  
+  )
+```
+
+Every assessment set has 2 weeks of data.
+
+```{r}
+#| eval: false
+chi_rs <-
+  chi_train |>
+  sliding_period(
+    index = "date",  
+    period = "week",
+    lookback = 52 * 15,
+    assess_stop = 2,
+  )
+```
+
+Increment by 2 weeks so that there are no overlapping assessment sets.
+
+```{r}
+chi_rs <-
+  chi_train |>
+  sliding_period(
+    index = "date",  
+    period = "week",
+    lookback = 52 * 15,
+    assess_stop = 2,
+    step = 2 
+  )
+```
+
+```{r}
+chi_rs$splits[[1]] |> assessment() |> pluck("date") |> range()
+chi_rs$splits[[2]] |> assessment() |> pluck("date") |> range()
+```
+
+## Our resampling object
+
+```{r}
+chi_rs
+```
+
+## Feature engineering with recipes
+
+```{r}
+chi_rec <- 
+  recipe(ridership ~ ., data = chi_train)
+```
+
+Based on the formula, the function assigns columns to roles of "outcome" or "predictor"
+
+```{r}
+summary(chi_rec)
+```
+
+## A recipe - work with dates
+
+```{r}
+chi_rec <- 
+  recipe(ridership ~ ., data = chi_train) |> 
+  step_date(date, features = c("dow", "month", "year")) 
+```
+
+Add indicators for major holidays.
+
+```{r}
+chi_rec <- 
+  recipe(ridership ~ ., data = chi_train) |> 
+  step_date(date, features = c("dow", "month", "year")) |> 
+  step_holiday(date) 
+```
+
+```{r}
+chi_rec <- 
+  recipe(ridership ~ ., data = chi_train) |> 
+  step_date(date, features = c("dow", "month", "year")) |> 
+  step_holiday(date) |> 
+  update_role(date, new_role = "id") |>
+  update_role_requirements(role = "id", bake = TRUE)
+```
+
+## A recipe - remove constant columns
+
+```{r}
+chi_rec <- 
+  recipe(ridership ~ ., data = chi_train) |> 
+  step_date(date, features = c("dow", "month", "year")) |> 
+  step_holiday(date) |> 
+  update_role(date, new_role = "id") |>
+  update_role_requirements(role = "id", bake = TRUE) |> 
+  step_zv(all_nominal_predictors()) 
+```
+
+## A recipe - handle correlations
+
+```{r}
+chi_pca_rec <- 
+  chi_rec |> 
+  step_normalize(all_of(!!stations)) |> 
+  step_pca(all_of(!!stations), num_comp = tune())
+```
+
+## Make some models
+
+```{r}
+cb_spec <- cubist_rules(committees = 25, neighbors = tune())
+mars_spec <- mars(prod_degree = tune()) |> set_mode("regression")
+lm_spec <- linear_reg()
+
+chi_set <- 
+  workflow_set(
+    list(pca = chi_pca_rec, basic = chi_rec), 
+    list(cubist = cb_spec, mars = mars_spec, lm = lm_spec)
+  ) |> 
+  # Evaluate models using mean absolute errors
+  option_add(metrics = metric_set(mae))
+```
+
+## Process them on the resamples
+
+```{r}
+# Set up some objects for stacking ensembles (in a few slides)
+grid_ctrl <- control_grid(save_pred = TRUE, save_workflow = TRUE)
+
+chi_res <- 
+  chi_set |> 
+  workflow_map(
+    resamples = chi_rs,
+    grid = 10,
+    control = grid_ctrl,
+    verbose = TRUE,
+    seed = 12
+  )
+```
+
+## How do the results look?
+
+```{r}
+rank_results(chi_res)
+```
+
+## Plot the results
+
+```{r}
+autoplot(chi_res)
+```
+
+## Pull out specific results
+
+```{r}
+chi_res |> 
+  extract_workflow_set_result("pca_cubist") |> 
+  autoplot()
+```
+
+## Building a model stack
+
+```{r}
+library(stacks)
+```
+
+## Start the stack and add members
+
+```{r}
+chi_stack <- 
+  stacks() |> 
+  add_candidates(chi_res)
+```
+
+## Estimate weights for each candidate
+
+```{r}
+set.seed(122)
+chi_stack_res <- blend_predictions(chi_stack, penalty = 10^seq(-6, -1, length.out = 25))
+
+chi_stack_res
+```
+
+## How did it do?
+
+```{r}
+autoplot(chi_stack_res)
+```
+
+## What does it use?
+
+```{r}
+autoplot(chi_stack_res, type = "weights")
+```
+
+## Fit the required candidate models
+
+```{r}
+chi_stack_res <- fit_members(chi_stack_res)
+```
+
+## The test set: best Cubist model
+
+```{r}
+best_cubist <- 
+  chi_res |> 
+  extract_workflow_set_result("pca_cubist") |> 
+  select_best()
+
+cubist_res <- 
+  chi_res |> 
+  extract_workflow("pca_cubist") |> 
+  finalize_workflow(best_cubist) |> 
+  last_fit(split = chi_split, metrics = metric_set(mae))
+```
+
+## The test set: stack ensemble
+
+```{r}
+stack_pred <- 
+  predict(chi_stack_res, chi_test) |> 
+  bind_cols(chi_test)
+```
+
+## Compare the results
+
+```{r}
+collect_metrics(cubist_res)
+
+stack_pred |> mae(ridership, .pred)
+```
+
+## Plot the test set
+
+```{r}
+library(probably)
+cubist_res |> 
+  collect_predictions() |> 
+  ggplot(aes(ridership, .pred)) + 
+  geom_point(alpha = 1 / 2) + 
+  geom_abline(lty = 2, col = "green") + 
+  coord_obs_pred()
+```
