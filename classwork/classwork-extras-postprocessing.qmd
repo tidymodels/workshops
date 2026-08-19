@@ -1,7 +1,7 @@
 ---
-title: "6 - Postprocessing - Classwork"
-subtitle: "Getting More Out of Feature Engineering and Tuning for Machine Learning"
-editor_options: 
+title: "Extras - Postprocessing - Classwork"
+subtitle: "Practical Machine Learning with tidymodels"
+editor_options:
   chunk_output_type: console
 ---
 
@@ -20,22 +20,27 @@ if (torch::torch_is_installed()) {
   library(torch)
 }
 
-# Max's usual settings:
 tidymodels_prefer()
 theme_set(theme_bw())
-options(
-  pillar.advice = FALSE,
-  pillar.min_title_chars = Inf
-)
+options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
 daemons(parallel::detectCores())
+```
 
-# Load our example data for this section
-"https://raw.githubusercontent.com/tidymodels/" |>
-  paste0("workshops/main/slides/class_data.RData") |>
-  url() |>
-  load()
+## More setup
 
+```{r}
 set.seed(429)
+class_data <-
+  # Nonlinear classification with a low event rate
+  sim_classification(5000, intercept = -10) |>
+  # Add some noise predictors that are correlated with one another
+  bind_cols(sim_noise(
+    5000,
+    num_var = 15,
+    cov_type = "toeplitz",
+    cov_param = 0.5
+  ))
+
 sim_split <- initial_split(class_data, prop = 0.75, strata = class)
 sim_train <- training(sim_split)
 sim_test <- testing(sim_split)
@@ -68,11 +73,9 @@ nnet_wflow <- workflow(rec, nnet_spec)
 nnet_param <-
   nnet_wflow |>
   extract_parameter_set_dials()
-```  
+```
 
-## Tailors 
-
-The tailor package is similar to recipes but specifies how to adjust predictions. 
+## Tailors
 
 ```{r}
 thrsh_tlr <-
@@ -85,14 +88,13 @@ thrsh_tlr
 ## Manual use of a tailor
 
 ```{r}
-# fmt: skip
-three_rows <- 
+three_rows <-
   tribble(
-     ~ class, ~ .pred_class, ~.pred_event, ~.pred_nonevent,
-     "event",       "event",          0.6,             0.4,
-     "event",    "nonevent",          0.4,             0.6, 
-  "nonevent",    "nonevent",          0.1,             0.9  
-  ) |> 
+    ~class    , ~.pred_class , ~.pred_class_1 , ~.pred_class_2 ,
+    "class_1" , "class_1"    , 0.6            , 0.4            ,
+    "class_1" , "class_2"    , 0.4            , 0.6            ,
+    "class_2" , "class_2"    , 0.1            , 0.9
+  ) |>
   mutate(across(where(is.character), factor))
 
 thrsh_fit <-
@@ -101,16 +103,19 @@ thrsh_fit <-
     three_rows,
     outcome = class,
     estimate = .pred_class,
-    .pred_event:.pred_nonevent # No argument name and order matches factor levels
+    .pred_class_1:.pred_class_2 # No argument name and order matches factor levels
   )
+```
+
+`predict()` applies the adjustments:
+
+```{r}
 thrsh_fit
 
 predict(thrsh_fit, three_rows)
 ```
 
 ## tailors within workflows
-
-In practice, we would add the tailor to a workflow to make it easier to use: 
 
 ```{r}
 nnet_wflow <- workflow(rec, nnet_spec, thrsh_tlr)
@@ -133,7 +138,11 @@ nnet_thrsh_param <-
   nnet_thrsh_wflow |>
   extract_parameter_set_dials() |>
   update(threshold = threshold(c(0.001, 0.5)))
+```
 
+Nearly the same code as before:
+
+```{r}
 ctrl <- control_grid(save_pred = TRUE, save_workflow = TRUE)
 cls_mtr <- metric_set(brier_class, roc_auc, sensitivity, specificity)
 
@@ -184,7 +193,7 @@ nnet_thrsh_res |>
   ) |>
   cal_plot_windowed(
     truth = class,
-    estimate = .pred_event,
+    estimate = .pred_class_1,
     window_size = 0.2,
     step_size = 0.025,
   )
@@ -192,8 +201,9 @@ nnet_thrsh_res |>
 
 ## Your turn
 
-- Based on previous results, choose and fix a specific activation type (i.e., no `tune()`).
-- Add a calibrator to your tailor with a `method = tune()` value. 
+- Based on previous results, choose and fix a specific activation type (i.e., no
+  `tune()`).
+- Add a calibrator to your tailor with a `method = tune()` value.
 - Run another grid search
 
 Does it help with this data set?

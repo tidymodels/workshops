@@ -1,7 +1,7 @@
 ---
-title: "3 - Racing - Classwork"
-subtitle: "Getting More Out of Feature Engineering and Tuning for Machine Learning"
-editor_options: 
+title: "Extras - Racing - Classwork"
+subtitle: "Practical Machine Learning with tidymodels"
+editor_options:
   chunk_output_type: console
 ---
 
@@ -9,28 +9,34 @@ We recommend restarting R between each slide deck!
 
 ## Setup
 
-Setup from deck 2
-
 ```{r}
 library(tidymodels)
 library(finetune)
 library(bonsai)
 
-# Max's usual settings:
 tidymodels_prefer()
 theme_set(theme_bw())
-options(
-  pillar.advice = FALSE,
-  pillar.min_title_chars = Inf
-)
+options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
 
-# Load our example data for this section
-"https://raw.githubusercontent.com/tidymodels/" |>
-  paste0("workshops/main/slides/class_data.RData") |>
-  url() |>
-  load()
+cores <- parallel::detectCores() - 1
+```
 
+## More setup
+
+```{r}
+# Make our example data for this section
 set.seed(429)
+class_data <-
+  # Nonlinear classification data
+  sim_classification(5000) |>
+  # Add some noise predictors that are correlated with one another
+  bind_cols(sim_noise(
+    5000,
+    num_var = 15,
+    cov_type = "toeplitz",
+    cov_param = 0.5
+  ))
+
 sim_split <- initial_split(class_data, prop = 0.75, strata = class)
 sim_train <- training(sim_split)
 sim_test <- testing(sim_split)
@@ -39,7 +45,10 @@ set.seed(523)
 sim_rs <- vfold_cv(sim_train, v = 10, strata = class)
 ```
 
-## Boosted trees
+## Boosted Tree Tuning Parameters
+
+We'll need to load the bonsai package. This has the information needed to use
+lightgbm
 
 ```{r}
 library(bonsai)
@@ -61,10 +70,9 @@ lgbm_spec <-
 lgbm_wflow <- workflow(class ~ ., lgbm_spec)
 ```
 
-## Racing our boosted trees
+## Racing
 
-
-```{r } 
+```{r}
 library(finetune)
 
 # Set this to true to demo
@@ -73,26 +81,37 @@ ctrl <- control_race(verbose_elim = FALSE)
 # Optimizes on the first metric in the set
 cls_mtr <- metric_set(brier_class, roc_auc, sensitivity, specificity)
 
-mirai::daemons(parallel::detectCores() - 1)
+mirai::daemons(cores)
 
 set.seed(321)
 lgbm_res <-
   lgbm_wflow |>
   tune_race_anova(
-    # <- very similar syntax to tune_grid()
+    # very similar syntax to tune_grid()
     resamples = sim_rs,
-    # Let's use a larger grid
-    grid = 50,
+    grid = 50, # let's use a larger grid
     control = ctrl,
     metrics = cls_mtr
   )
+```
 
+## Racing Results
+
+```{r}
 show_best(lgbm_res, metric = "brier_class")
+```
 
+`select_best()` never considers candidate models that did not get to the end of
+the race.
+
+There is a helper function to see how candidate models were removed from
+consideration.
+
+```{r}
 plot_race(lgbm_res)
 ```
 
-## Your turn 
+## Your turn
 
 - Run `tune_race_anova()` with a different seed and/or a different metric.
 - Did you get the same or similar results?

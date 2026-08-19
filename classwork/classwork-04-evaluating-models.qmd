@@ -1,0 +1,397 @@
+---
+title: "4 - Evaluating models - Classwork"
+subtitle: "Practical Machine Learning with tidymodels"
+editor_options:
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Setup
+
+Setup from deck 3:
+
+```{r}
+library(tidymodels)
+library(probably)
+
+set.seed(123)
+cls_split <- initial_split(cls_data_2026, prop = 0.8)
+cls_train <- training(cls_split)
+cls_test <- testing(cls_split)
+
+tree_spec <- decision_tree(cost_complexity = 0.0001, mode = "classification")
+cls_wflow <- workflow(class ~ ., tree_spec)
+cls_fit <- fit(cls_wflow, cls_train)
+```
+
+## A logistic regression fit
+
+```{r}
+lr_fit <-
+  logistic_reg() |>
+  fit(class ~ ., data = cls_train)
+
+augment(lr_fit, new_data = cls_train) |> print(n = 5)
+
+lr_re_pred <- augment(lr_fit, new_data = cls_train)
+```
+
+## Confusion matrix
+
+```{r}
+lr_re_pred |>
+  conf_mat(truth = class, estimate = .pred_class)
+```
+
+```{r}
+lr_re_pred |>
+  conf_mat(truth = class, estimate = .pred_class) |>
+  autoplot(type = "heatmap")
+```
+
+## Metrics for model performance
+
+```{r}
+lr_re_pred |>
+  accuracy(truth = class, estimate = .pred_class)
+```
+
+## Dangers of accuracy
+
+We need to be careful of using `accuracy()` since it can give "good" performance
+by only predicting one way with imbalanced data:
+
+```{r}
+lr_re_pred |>
+  mutate(.pred_class = factor("class_1", levels = c("class_1", "class_2"))) |>
+  accuracy(truth = class, estimate = .pred_class)
+```
+
+## Brier score
+
+```{r}
+lr_re_pred |>
+  brier_class(truth = class, .pred_class_1)
+```
+
+Smaller values are better.
+
+## Your turn
+
+The probably package was used to make the calibration plots:
+
+```{r}
+library(probably)
+lr_re_pred |> cal_plot_breaks(class, .pred_class_1)
+```
+
+Try the other calibration curve methods in probably:
+
+- `cal_plot_logistic()`
+- `cal_plot_windowed()`
+
+Do you prefer one over the others?
+
+```{r}
+# Your code here!
+
+```
+
+## Metrics for model performance
+
+We can use `metric_set()` to combine multiple calculations into one
+
+```{r}
+cls_metrics <- metric_set(accuracy, brier_class)
+
+lr_re_pred |>
+  cls_metrics(truth = class, estimate = .pred_class, .pred_class_1)
+```
+
+Metrics and metric sets work with grouped data frames!
+
+```{r}
+lr_re_pred |>
+  mutate(group = rep_len(LETTERS[1:3], nrow(cls_train))) |>
+  group_by(group) |>
+  cls_metrics(truth = class, estimate = .pred_class, .pred_class_1)
+```
+
+## Dangers of overfitting
+
+```{r}
+lr_fit |>
+  augment(cls_train) |>
+  print(n = 5)
+```
+
+We call this "resubstitution" or "repredicting the training set"
+
+```{r}
+lr_fit |>
+  augment(cls_train) |>
+  accuracy(class, .pred_class)
+```
+
+We call this a "resubstitution estimate"
+
+Compare the training set with the test set:
+
+```{r}
+lr_fit |>
+  augment(cls_test) |>
+  accuracy(class, .pred_class)
+```
+
+Why aren't the numbers very different? Can basic logistic regression overfit?
+
+⚠️ Remember that we're only repredicting the training set to demonstrate
+overfitting - it is not a valid way to evaluate a model.
+
+⚠️ Don't use the test set until the *end* of your modeling analysis.
+
+Same comparison, using the Brier score:
+
+```{r}
+lr_fit |>
+  augment(cls_train) |>
+  brier_class(class, .pred_class_1)
+```
+
+```{r}
+lr_fit |>
+  augment(cls_test) |>
+  brier_class(class, .pred_class_1)
+```
+
+## Your turn
+
+If we use 10 folds, what percent of the training data
+
+- ends up in analysis
+- ends up in assessment
+
+## Cross-validation
+
+```{r}
+vfold_cv(cls_train) # v = 10 is default
+```
+
+What is in this?
+
+```{r}
+cls_folds <- vfold_cv(cls_train)
+cls_folds$splits[1:3]
+```
+
+```{r}
+vfold_cv(cls_train, v = 5)
+```
+
+We'll use this setup:
+
+```{r}
+set.seed(343)
+cls_folds <- vfold_cv(cls_train, v = 10)
+cls_folds
+```
+
+## Fit our model to the resamples
+
+```{r}
+lr_wflow <- workflow(class ~ ., logistic_reg())
+
+cls_res <- fit_resamples(lr_wflow, cls_folds)
+cls_res
+```
+
+## Evaluating model performance
+
+```{r}
+cls_res |>
+  collect_metrics()
+```
+
+```{r}
+cls_res |>
+  collect_metrics() |>
+  select(.metric, mean, std_err, n)
+```
+
+## Your turn
+
+Rerun the same code three times with different random number seeds.
+
+How much do the results change?
+
+```{r}
+# Your code here!
+
+```
+
+## Evaluating model performance
+
+```{r}
+# Save the assessment set results
+ctrl_rs <- control_resamples(save_pred = TRUE)
+cls_res <- fit_resamples(lr_wflow, cls_folds, control = ctrl_rs)
+
+cls_res
+```
+
+```{r}
+# Save the assessment set results
+cls_preds <- collect_predictions(cls_res)
+cls_preds
+```
+
+```{r}
+cls_preds |>
+  group_by(id) |>
+  cls_metrics(truth = class, estimate = .pred_class, .pred_class_1)
+```
+
+## Where are the fitted models?
+
+```{r}
+cls_res
+```
+
+🗑️
+
+## Create a random forest model
+
+```{r}
+rf_spec <- rand_forest(trees = 1000, mode = "classification")
+rf_spec
+```
+
+```{r}
+rf_wflow <- workflow(class ~ ., rf_spec)
+rf_wflow
+```
+
+## Your turn
+
+Use `fit_resamples()` and `rf_wflow` to:
+
+- keep predictions
+- compute metrics
+
+```{r}
+# Your code here!
+
+```
+
+## Evaluating model performance
+
+```{r}
+ctrl_rs <- control_resamples(save_pred = TRUE)
+
+# Random forest uses random numbers so set the seed first
+
+set.seed(2)
+rf_res <- fit_resamples(rf_wflow, cls_folds, control = ctrl_rs)
+collect_metrics(rf_res)
+```
+
+probably has a nice interface for calibration curves:
+
+```{r}
+cal_plot_windowed(rf_res, step_size = 0.03)
+```
+
+## Your turn
+
+Repredict the training set using the random forest model.
+
+Does the random forest model give overly optimistic results on the training set?
+
+```{r}
+# Your code here!
+
+```
+
+# Backup slides
+
+## Metrics for model performance
+
+```{r}
+lr_re_pred |>
+  sensitivity(truth = class, estimate = .pred_class)
+```
+
+```{r}
+lr_re_pred |>
+  specificity(truth = class, estimate = .pred_class)
+```
+
+## ROC curves
+
+```{r}
+# Assumes _first_ factor level is event; there are options to change that
+lr_re_pred |>
+  roc_curve(truth = class, .pred_class_1) |>
+  slice(1, 20, 50)
+
+lr_re_pred |>
+  roc_auc(truth = class, .pred_class_1)
+```
+
+## ROC curve plot
+
+```{r}
+augment(lr_fit, new_data = cls_train) |>
+  roc_curve(truth = class, .pred_class_1) |>
+  autoplot()
+```
+
+## Your turn
+
+Compute and plot an ROC curve for your current model.
+
+What data are being used for this ROC curve plot?
+
+```{r}
+# Your code here!
+
+```
+
+## Bootstrapping
+
+```{r}
+set.seed(3214)
+bootstraps(cls_train)
+```
+
+## Your turn
+
+Create:
+
+- Monte Carlo Cross-Validation sets
+- validation set
+
+(use the reference guide to find the functions)
+
+Don't forget to set a seed when you resample!
+
+```{r}
+# Your code here!
+
+```
+
+## Monte Carlo Cross-Validation
+
+```{r}
+set.seed(322)
+mc_cv(cls_train, times = 10)
+```
+
+## Validation set
+
+```{r}
+set.seed(853)
+cls_val_split <- initial_validation_split(cls_data_2026)
+validation_set(cls_val_split)
+```

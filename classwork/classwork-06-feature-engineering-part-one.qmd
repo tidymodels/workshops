@@ -1,7 +1,7 @@
 ---
-title: "4 - Feature engineering: dummies and embeddings"
-subtitle: "Getting More Out of Feature Engineering and Tuning for Machine Learning"
-editor_options: 
+title: "6 - Feature engineering: dummies and embeddings - Classwork"
+subtitle: "Practical Machine Learning with tidymodels"
+editor_options:
   chunk_output_type: console
 ---
 
@@ -24,24 +24,48 @@ options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
   load()
 ```
 
+## Leaf data set
+
+```{r}
+glimpse(leaf_data)
+```
+
 ## Your turn
 
 Load and explore the leaf data.
 
-Make time to look at the `edge` column and think about how one would encode it into numerics.
+Make time to look at the `edge` column and think about how one would encode it
+into numerics.
 
 ```{r}
 # Your code here!
 
 ```
 
+## Leaf edges
+
+```{r}
+leaf_data |>
+  count(edge)
+```
+
 ## Your turn
 
-Figure out whether `step_dummy_extract()` or `step_dummy_multi_choice()` is most appropriate on the `edge` variable in `leaf_data` and apply it.
+Figure out whether `step_dummy_extract()` or `step_dummy_multi_choice()` is most
+appropriate on the `edge` variable in `leaf_data` and apply it.
 
 ```{r}
 # Your code here!
 
+```
+
+## Redundant Information
+
+A feature with no information could be included.
+
+```{r}
+leaf_data |>
+  count(outlying_contour)
 ```
 
 ## Applying PCA with recipes
@@ -54,7 +78,7 @@ rec <- recipe(mpg ~ ., data = mtcars) |>
   step_pca(all_numeric_predictors(), num_comp = 5)
 ```
 
-Or using a threshold
+or using the `threshold` argument
 
 ```{r}
 rec <- recipe(mpg ~ ., data = mtcars) |>
@@ -62,12 +86,11 @@ rec <- recipe(mpg ~ ., data = mtcars) |>
   step_pca(all_numeric_predictors(), threshold = 0.8)
 ```
 
-## Your Turn
+## Your turn
 
 Apply PCA using `step_pca()` to `leaf_data` data set.
 
 Experiment with different values of `num_comp` and or `threshold`.
-
 
 ```{r}
 # Your code here!
@@ -75,6 +98,8 @@ Experiment with different values of `num_comp` and or `threshold`.
 ```
 
 ## Truncated PCA with recipes
+
+Can only be done using `num_comp`
 
 ```{r}
 library(embed)
@@ -86,6 +111,11 @@ rec <- recipe(mpg ~ ., data = mtcars) |>
 
 ## Sparse PCA with recipes
 
+Can only be done using `num_comp`.
+
+The `predictor_prop` argument is used to determine how many zeroes in the
+loadings.
+
 ```{r}
 library(embed)
 
@@ -93,6 +123,8 @@ rec <- recipe(mpg ~ ., data = mtcars) |>
   step_normalize(all_predictors()) |>
   step_pca_sparse(all_numeric_predictors(), num_comp = 5, predictor_prop = 0.8)
 ```
+
+`predictor_prop = 0.8`
 
 ```{r}
 recipe(mpg ~ ., data = mtcars) |>
@@ -108,6 +140,21 @@ recipe(mpg ~ ., data = mtcars) |>
   select(-id)
 ```
 
+`predictor_prop = 0.2`
+
+```{r}
+recipe(mpg ~ ., data = mtcars) |>
+  step_normalize(all_predictors()) |>
+  step_pca_sparse(
+    all_numeric_predictors(),
+    num_comp = 4,
+    predictor_prop = 0.2
+  ) |>
+  prep() |>
+  tidy(number = 2) |>
+  pivot_wider(names_from = component, values_from = value) |>
+  select(-id)
+```
 
 ## NNMF with recipes
 
@@ -120,7 +167,6 @@ recipe(mpg ~ ., data = mtcars) |>
   tidy(number = 1) |>
   pivot_wider(names_from = component, values_from = value) |>
   select(-id)
-
 ```
 
 ## UMAP with recipes
@@ -135,7 +181,7 @@ recipe(mpg ~ ., data = mtcars) |>
   bake(NULL)
 ```
 
-## ISomap with recipes
+## Isomap with recipes
 
 ```{r}
 library(embed)
@@ -146,4 +192,3 @@ recipe(mpg ~ ., data = mtcars) |>
   prep() |>
   bake(NULL)
 ```
-

@@ -1,0 +1,189 @@
+---
+title: "5 - Tuning models - Classwork"
+subtitle: "Practical Machine Learning with tidymodels"
+editor_options:
+  chunk_output_type: console
+---
+
+We recommend restarting R between each slide deck!
+
+## Setup
+
+Setup from deck 4:
+
+```{r}
+library(tidymodels)
+library(probably)
+
+set.seed(123)
+cls_split <- initial_split(cls_data_2026, prop = 0.8)
+cls_train <- training(cls_split)
+cls_test <- testing(cls_split)
+
+set.seed(123)
+cls_folds <- vfold_cv(cls_train, v = 10)
+```
+
+## Your turn
+
+Open the help page for `boost_tree()` (via `?boost_tree`).
+
+Look at the *engine documentation* for xgboost models.
+
+```{r}
+# Your code here!
+
+```
+
+## Specifying the model
+
+```{r}
+# xgboost is the default engine
+bst_spec <- boost_tree(
+  trees = 500,
+  learn_rate = tune(),
+  mode = "classification"
+)
+bst_wflow <- workflow(class ~ ., bst_spec)
+
+bst_wflow
+```
+
+## Working with Parameters
+
+```{r}
+mtry_param <-
+  boost_tree(mtry = tune()) |>
+  extract_parameter_set_dials()
+mtry_param
+
+mtry_param |>
+  update(mtry = mtry(c(1, 10)))
+```
+
+## Try out multiple values
+
+```{r}
+set.seed(22)
+bst_res <- tune_grid(
+  bst_wflow,
+  cls_folds,
+  grid = 15
+)
+```
+
+## Compare results
+
+```{r}
+autoplot(bst_res)
+```
+
+## Saving predictions
+
+Let's repeat this process but make sure that we keep the out-of-sample
+predictions
+
+```{r}
+set.seed(22)
+bst_res <- tune_grid(
+  bst_wflow,
+  cls_folds,
+  grid = 15,
+  control = control_grid(save_pred = TRUE)
+)
+```
+
+## Checking (Approximate) Calibration
+
+```{r}
+#| eval: false
+
+bst_res |>
+  cal_plot_windowed(
+    window_size = 0.2,
+    step_size = 0.025,
+  )
+```
+
+## Compare results
+
+Which is numerically best?
+
+```{r}
+show_best(bst_res, metric = "brier_class")
+
+best_parameter <- select_best(bst_res, metric = "brier_class")
+best_parameter
+```
+
+## Running in parallel
+
+We can use the future or mirai packages to do this:
+
+```{r}
+cores <- parallelly::availableCores(logical = FALSE)
+```
+
+```{r}
+#| eval: false
+
+library(future)
+plan(multisession, workers = cores)
+
+# Now call `tune_grid()`!
+```
+
+```{r}
+#| eval: false
+
+library(mirai)
+daemons(cores)
+
+# Now call `tune_grid()`!
+```
+
+## Your turn
+
+Modify your model workflow to tune additional parameters.
+
+Use grid search to find the best parameter(s).
+
+```{r}
+# Your code here!
+
+```
+
+## The final fit
+
+```{r}
+bst_final_wflow <- finalize_workflow(bst_wflow, best_parameter)
+# cls_split has train + test info
+set.seed(690)
+final_res <- last_fit(bst_final_wflow, cls_split)
+
+final_res
+```
+
+## What is in `final_res`?
+
+```{r}
+collect_metrics(final_res)
+```
+
+These are metrics computed with the **test** set
+
+```{r}
+collect_predictions(final_res)
+```
+
+```{r}
+final_res |>
+  cal_plot_windowed(window_size = 0.2, step_size = 0.025) +
+  geom_rug()
+```
+
+```{r}
+extract_workflow(final_res)
+```
+
+Use this for **prediction** on new data, like for deploying
