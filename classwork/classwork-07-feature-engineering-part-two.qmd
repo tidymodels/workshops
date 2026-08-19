@@ -1,7 +1,7 @@
 ---
 title: "7 - Feature engineering: splines, target encoding and dates - Classwork"
 subtitle: "Practical Machine Learning with tidymodels"
-editor_options: 
+editor_options:
   chunk_output_type: console
 ---
 
@@ -73,9 +73,11 @@ hotel_train |>
 
 ## Target encoding motivation
 
-We calculate the mean of the outcome within each level of the predictor, and use that as the new value.
+We calculate the mean of the outcome within each level of the predictor, and use
+that as the new value.
 
-Don't do just this! We are building up the method one thing at a time. Unregularized target encoding is really prone to overfitting.
+Don't do just this! We are building up the method one thing at a time.
+Unregularized target encoding is really prone to overfitting.
 
 ```{r}
 hotel_train |>
@@ -97,7 +99,8 @@ hotel_test |>
   count(agent, .drop = FALSE)
 ```
 
-Calculate the global mean of the outcome and use it for cases that aren't seen in the training data set.
+Calculate the global mean of the outcome and use it for cases that aren't seen
+in the training data set.
 
 ```{r}
 mean(hotel_train$avg_price_per_room)
@@ -141,12 +144,13 @@ recipe(avg_price_per_room ~ ., data = hotel_train) |>
 
 ## Your turn
 
-Apply target encoding to the data set, see how it affects different predictors, not just the ones we listed here.
+Apply target encoding to the data set, see how it affects different predictors,
+not just the ones we listed here.
 
-* `step_lencode()`
-* `step_lencode_glm()`
-* `step_lencode_bayes()`
-* `step_lencode_mixed()`
+- `step_lencode()`
+- `step_lencode_glm()`
+- `step_lencode_bayes()`
+- `step_lencode_mixed()`
 
 ```{r}
 # Your code here!
@@ -166,7 +170,8 @@ The lubridate package might be helpful.
 
 ## Your turn
 
-Apply date steps to the `arrival_date` variable and try to see if we capture anything about `avg_price_per_room`.
+Apply date steps to the `arrival_date` variable and try to see if we capture
+anything about `avg_price_per_room`.
 
 ```{r}
 # Your code here!
@@ -175,7 +180,9 @@ Apply date steps to the `arrival_date` variable and try to see if we capture any
 
 ## time events
 
-Using `extrasteps::step_time_event()` and the [almanac](https://davisvaughan.github.io/almanac/index.html) package, we can create useful time features.
+Using `extrasteps::step_time_event()` and the
+[almanac](https://davisvaughan.github.io/almanac/index.html) package, we can
+create useful time features.
 
 ```{r}
 library(almanac)
@@ -195,10 +202,12 @@ rule_3 <- yearly("1997-06-05") |>
 
 ## `step_time_event()`
 
-Create a list of rules (last slide) and pass them to the `rules` argument of [`extrasteps::step_time_event()`](https://emilhvitfeldt.github.io/extrasteps/reference/step_time_event.html)
+Create a list of rules (last slide) and pass them to the `rules` argument of
+[`extrasteps::step_time_event()`](https://emilhvitfeldt.github.io/extrasteps/reference/step_time_event.html)
 
 ```{r}
 #| eval: false
+
 rules <- list(rule_1 = rule_1, rule_2 = rule_2, rule_3 = rule_3)
 
 recipe(~arrival_date, data = hotel_rates) |>
