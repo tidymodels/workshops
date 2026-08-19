@@ -100,8 +100,8 @@ We need to be careful of using `accuracy()` since it can give "good" performance
 
 ```{r acc-2}
 #| code-line-numbers: "1|2|3|"
-lr_re_pred %>%
-  mutate(.pred_class = factor("class_1", levels = c("class_1", "class_2"))) %>%
+lr_re_pred |>
+  mutate(.pred_class = factor("class_1", levels = c("class_1", "class_2"))) |>
   accuracy(truth = class, estimate = .pred_class)
 ```
 
@@ -298,7 +298,7 @@ load("overfitting_data.RData")
 p_tr <- 
   svm_res |> 
   select(cost, label, grid) |> 
-  unnest(cols = c(grid)) %>%
+  unnest(cols = c(grid)) |>
   ggplot(aes(x = X1, y = X2)) +
   geom_point(
     data = training_set,
@@ -345,7 +345,7 @@ p_tr / p_tr_stat + plot_layout(heights = c(4, 1))
 p_tr <- 
   svm_res |> 
   select(cost, label, grid) |> 
-  unnest(cols = c(grid)) %>%
+  unnest(cols = c(grid)) |>
   ggplot(aes(x = X1, y = X2)) +
   geom_point(
     data = testing_set,
@@ -752,6 +752,8 @@ probably has a nice interface for calibration curves:
 
 ```{r}
 #| label: fit-resamples-cal-plot
+
+library(probably)
 cal_plot_windowed(rf_res, step_size = 0.03)
 ```
 
@@ -764,7 +766,7 @@ The out-of-sample predictions are pooled before computing the calibration curve.
 
 ![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
 
-Repredict the training set using `final_fit`. 
+Fit `rf_wflow` to the training set and repredict it. 
 
 Does the random forest model give overly optimistic results on the training set? 
 
@@ -774,12 +776,12 @@ countdown::countdown(minutes = 8, id = "try-rf-overfit")
 ```
 
 
-## The whole game
+## The whole game - status update
 
-```{r diagram-final-performance, echo = FALSE}
+```{r diagram-resamples, echo = FALSE}
 #| fig-align: "center"
 
-knitr::include_graphics("images/whole-game-transparent-select.jpg")
+knitr::include_graphics("images/whole-game-transparent-resamples.jpg")
 ```
 
 # Backup Slides {background-color="#BDE9C9FF"}
@@ -980,14 +982,6 @@ bootstraps(cls_train)
 
 ::: footer
 :::
-
-## The whole game - status update
-
-```{r diagram-resamples, echo = FALSE}
-#| fig-align: "center"
-
-knitr::include_graphics("images/whole-game-transparent-resamples.jpg")
-```
 
 ## Your turn {transition="slide-in"}
 
