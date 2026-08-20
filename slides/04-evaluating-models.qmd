@@ -663,11 +663,41 @@ cls_res <- fit_resamples(lr_wflow, cls_folds, control = ctrl_rs)
 cls_res
 ```
 
+
+## Evaluating model performance `r hexes(c("tune"))`
+
+`collect_metrics()` shows us the overall resampling estimates of performance: 
+
+<br> 
+
+```{r}
+#| label: fit-resamples-metrics
+
+collect_metrics(cls_res)
+```
+
+## Evaluating model performance `r hexes(c("probably", "tune"))`
+
+probably has a nice interface for calibration curves:
+
+```{r}
+#| label: fit-resamples-cal-plot
+
+library(probably)
+cal_plot_windowed(cls_res, step_size = 0.03)
+```
+
+<br>
+
+The out-of-sample predictions are pooled before computing the calibration curve. 
+
+
 ## Evaluating model performance `r hexes("tune")`
 
 ```{r collect-predictions}
 # Save the assessment set results
-cls_preds <- collect_predictions(cls_res)
+cls_preds <- collect_predictions(cls_res) |> slice(1:5)
+
 cls_preds
 ```
 
@@ -688,93 +718,6 @@ cls_res
 . . .
 
 🗑️
-
-# Decision tree 🌳
-
-# Random forest 🌳🌲🌴🌵🌴🌳🌳🌴🌲🌵🌴🌲🌳🌴🌳🌵🌵🌴🌲🌲🌳🌴🌳🌴🌲🌴🌵🌴🌲🌴🌵🌲🌵🌴🌲🌳🌴🌵🌳🌴🌳
-
-## Random forest 🌳🌲🌴🌵🌳🌳🌴🌲🌵🌴🌳🌵
-
-- Ensemble many decision tree models
-
-- All the trees vote! 🗳️
-
-- Bootstrap aggregating + random predictor sampling
-
-. . .
-
-- Often works well without tuning hyperparameters (more on this later!), as long as there are enough trees
-
-## Create a random forest model `r hexes("parsnip")`
-
-```{r rf-spec}
-rf_spec <- rand_forest(trees = 1000, mode = "classification")
-rf_spec
-```
-
-## Create a random forest model `r hexes("workflows")`
-
-```{r rf-wflow}
-rf_wflow <- workflow(class ~ ., rf_spec)
-rf_wflow
-```
-
-## Your turn {transition="slide-in"}
-
-![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
-
-*Use `fit_resamples()` and `rf_wflow` to:*
-
--   *keep predictions*
--   *compute metrics*
-
-```{r ex-try-fit-resamples}
-#| echo: false
-countdown::countdown(minutes = 8, id = "try-fit-resamples")
-```
-
-## Evaluating model performance `r hexes("tune")`
-
-```{r collect-metrics-rf}
-#| code-line-numbers: "1|3|5-7|"
-ctrl_rs <- control_resamples(save_pred = TRUE)
-
-# Random forest uses random numbers so set the seed first
-
-set.seed(2)
-rf_res <- fit_resamples(rf_wflow, cls_folds, control = ctrl_rs)
-collect_metrics(rf_res)
-```
-
-## Evaluating model performance `r hexes(c("probably", "tune"))`
-
-probably has a nice interface for calibration curves:
-
-```{r}
-#| label: fit-resamples-cal-plot
-
-library(probably)
-cal_plot_windowed(rf_res, step_size = 0.03)
-```
-
-<br>
-
-The out-of-sample predictions are pooled before computing the calibration curve. 
-
-
-## Your turn {transition="slide-in"}
-
-![](images/parsnip-flagger.jpg){.absolute top="0" right="0" width="150" height="150"}
-
-Fit `rf_wflow` to the training set and repredict it. 
-
-Does the random forest model give overly optimistic results on the training set? 
-
-```{r ex-try-rf-overfit}
-#| echo: false
-countdown::countdown(minutes = 8, id = "try-rf-overfit")
-```
-
 
 ## The whole game - status update
 
