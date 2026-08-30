@@ -130,8 +130,7 @@
 					'&copy; <a href="http://www.maptilesapi.com/">MapTiles API</a>, {attribution.OpenStreetMap}',
 				variant: 'en/map/v1',
 				// Get your own MapTiles API access token here : https://www.maptilesapi.com/
-				// NB : this is a demonstration key that comes with no guarantee and not to be used in production
-				apikey: '<insert your api key here>',
+				apikey: '',
 				maxZoom: 19
 			},
 			variants: {
