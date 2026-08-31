@@ -7,8 +7,8 @@
 <script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../../../site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.9.36">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.10.18">
 
   <title>Machine learning with tidymodels – 5 - Tuning models</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,10 +20,13 @@
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
@@ -253,76 +256,76 @@
 <h2>Specifying tuning parameters</h2>
 <p>Let’s take our previous random forest workflow and tag for tuning the minimum number of data points in each node:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1" data-code-line-numbers="1|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a>rf_spec <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(<span class="at">min_n =</span> <span class="fu">tune</span>()) <span class="sc">|&gt;</span> </span>
-<span id="cb1-2"><a></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
-<span id="cb1-3"><a></a></span>
-<span id="cb1-4"><a></a>rf_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(forested <span class="sc">~</span> ., rf_spec)</span>
-<span id="cb1-5"><a></a>rf_wflow</span>
-<span id="cb1-6"><a></a><span class="co">#&gt; ══ Workflow ══════════════════════════════════════════════════════════</span></span>
-<span id="cb1-7"><a></a><span class="co">#&gt; Preprocessor: Formula</span></span>
-<span id="cb1-8"><a></a><span class="co">#&gt; Model: rand_forest()</span></span>
-<span id="cb1-9"><a></a><span class="co">#&gt; </span></span>
-<span id="cb1-10"><a></a><span class="co">#&gt; ── Preprocessor ──────────────────────────────────────────────────────</span></span>
-<span id="cb1-11"><a></a><span class="co">#&gt; forested ~ .</span></span>
-<span id="cb1-12"><a></a><span class="co">#&gt; </span></span>
-<span id="cb1-13"><a></a><span class="co">#&gt; ── Model ─────────────────────────────────────────────────────────────</span></span>
-<span id="cb1-14"><a></a><span class="co">#&gt; Random Forest Model Specification (classification)</span></span>
-<span id="cb1-15"><a></a><span class="co">#&gt; </span></span>
-<span id="cb1-16"><a></a><span class="co">#&gt; Main Arguments:</span></span>
-<span id="cb1-17"><a></a><span class="co">#&gt;   min_n = tune()</span></span>
-<span id="cb1-18"><a></a><span class="co">#&gt; </span></span>
-<span id="cb1-19"><a></a><span class="co">#&gt; Computational engine: ranger</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1" data-code-line-numbers="1|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a aria-label="1"></a>rf_spec <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(<span class="at">min_n =</span> <span class="fu">tune</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb1-2"><a aria-label="2"></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
+<span id="cb1-3"><a aria-label="3"></a></span>
+<span id="cb1-4"><a aria-label="4"></a>rf_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(forested <span class="sc">~</span> ., rf_spec)</span>
+<span id="cb1-5"><a aria-label="5"></a>rf_wflow</span>
+<span id="cb1-6"><a aria-label="6"></a><span class="co">#&gt; ══ Workflow ══════════════════════════════════════════════════════════</span></span>
+<span id="cb1-7"><a aria-label="7"></a><span class="co">#&gt; Preprocessor: Formula</span></span>
+<span id="cb1-8"><a aria-label="8"></a><span class="co">#&gt; Model: rand_forest()</span></span>
+<span id="cb1-9"><a aria-label="9"></a><span class="co">#&gt; </span></span>
+<span id="cb1-10"><a aria-label="10"></a><span class="co">#&gt; ── Preprocessor ──────────────────────────────────────────────────────</span></span>
+<span id="cb1-11"><a aria-label="11"></a><span class="co">#&gt; forested ~ .</span></span>
+<span id="cb1-12"><a aria-label="12"></a><span class="co">#&gt; </span></span>
+<span id="cb1-13"><a aria-label="13"></a><span class="co">#&gt; ── Model ─────────────────────────────────────────────────────────────</span></span>
+<span id="cb1-14"><a aria-label="14"></a><span class="co">#&gt; Random Forest Model Specification (classification)</span></span>
+<span id="cb1-15"><a aria-label="15"></a><span class="co">#&gt; </span></span>
+<span id="cb1-16"><a aria-label="16"></a><span class="co">#&gt; Main Arguments:</span></span>
+<span id="cb1-17"><a aria-label="17"></a><span class="co">#&gt;   min_n = tune()</span></span>
+<span id="cb1-18"><a aria-label="18"></a><span class="co">#&gt; </span></span>
+<span id="cb1-19"><a aria-label="19"></a><span class="co">#&gt; Computational engine: ranger</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="try-out-multiple-values" class="slide level2">
 <h2>Try out multiple values</h2>
 <p><code>tune_grid()</code> works similar to <code>fit_resamples()</code> but covers multiple parameter values:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2" data-code-line-numbers="2|3-4|5|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="fu">set.seed</span>(<span class="dv">22</span>)</span>
-<span id="cb2-2"><a></a>rf_res <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(</span>
-<span id="cb2-3"><a></a>  rf_wflow,</span>
-<span id="cb2-4"><a></a>  forested_folds,</span>
-<span id="cb2-5"><a></a>  <span class="at">grid =</span> <span class="dv">5</span></span>
-<span id="cb2-6"><a></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2" data-code-line-numbers="2|3-4|5|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a aria-label="1"></a><span class="fu">set.seed</span>(<span class="dv">22</span>)</span>
+<span id="cb2-2"><a aria-label="2"></a>rf_res <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(</span>
+<span id="cb2-3"><a aria-label="3"></a>  rf_wflow,</span>
+<span id="cb2-4"><a aria-label="4"></a>  forested_folds,</span>
+<span id="cb2-5"><a aria-label="5"></a>  <span class="at">grid =</span> <span class="dv">5</span></span>
+<span id="cb2-6"><a aria-label="6"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="compare-results" class="slide level2">
 <h2>Compare results</h2>
 <p>Inspecting results and selecting the best-performing hyperparameter(s):</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a><span class="fu">show_best</span>(rf_res)</span>
-<span id="cb3-2"><a></a><span class="co">#&gt; # A tibble: 5 × 7</span></span>
-<span id="cb3-3"><a></a><span class="co">#&gt;   min_n .metric .estimator  mean     n std_err .config        </span></span>
-<span id="cb3-4"><a></a><span class="co">#&gt;   &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;          </span></span>
-<span id="cb3-5"><a></a><span class="co">#&gt; 1    40 roc_auc binary     0.762    10 0.0103  pre0_mod5_post0</span></span>
-<span id="cb3-6"><a></a><span class="co">#&gt; 2    31 roc_auc binary     0.761    10 0.0100  pre0_mod4_post0</span></span>
-<span id="cb3-7"><a></a><span class="co">#&gt; 3    22 roc_auc binary     0.760    10 0.00997 pre0_mod3_post0</span></span>
-<span id="cb3-8"><a></a><span class="co">#&gt; 4    12 roc_auc binary     0.758    10 0.0102  pre0_mod2_post0</span></span>
-<span id="cb3-9"><a></a><span class="co">#&gt; 5     3 roc_auc binary     0.755    10 0.00980 pre0_mod1_post0</span></span>
-<span id="cb3-10"><a></a></span>
-<span id="cb3-11"><a></a>best_parameter <span class="ot">&lt;-</span> <span class="fu">select_best</span>(rf_res)</span>
-<span id="cb3-12"><a></a>best_parameter</span>
-<span id="cb3-13"><a></a><span class="co">#&gt; # A tibble: 1 × 2</span></span>
-<span id="cb3-14"><a></a><span class="co">#&gt;   min_n .config        </span></span>
-<span id="cb3-15"><a></a><span class="co">#&gt;   &lt;int&gt; &lt;chr&gt;          </span></span>
-<span id="cb3-16"><a></a><span class="co">#&gt; 1    40 pre0_mod5_post0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a aria-label="1"></a><span class="fu">show_best</span>(rf_res)</span>
+<span id="cb3-2"><a aria-label="2"></a><span class="co">#&gt; # A tibble: 5 × 7</span></span>
+<span id="cb3-3"><a aria-label="3"></a><span class="co">#&gt;   min_n .metric .estimator  mean     n std_err .config        </span></span>
+<span id="cb3-4"><a aria-label="4"></a><span class="co">#&gt;   &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;          </span></span>
+<span id="cb3-5"><a aria-label="5"></a><span class="co">#&gt; 1    40 roc_auc binary     0.762    10 0.0103  pre0_mod5_post0</span></span>
+<span id="cb3-6"><a aria-label="6"></a><span class="co">#&gt; 2    31 roc_auc binary     0.761    10 0.0100  pre0_mod4_post0</span></span>
+<span id="cb3-7"><a aria-label="7"></a><span class="co">#&gt; 3    22 roc_auc binary     0.760    10 0.00997 pre0_mod3_post0</span></span>
+<span id="cb3-8"><a aria-label="8"></a><span class="co">#&gt; 4    12 roc_auc binary     0.758    10 0.0102  pre0_mod2_post0</span></span>
+<span id="cb3-9"><a aria-label="9"></a><span class="co">#&gt; 5     3 roc_auc binary     0.755    10 0.00980 pre0_mod1_post0</span></span>
+<span id="cb3-10"><a aria-label="10"></a></span>
+<span id="cb3-11"><a aria-label="11"></a>best_parameter <span class="ot">&lt;-</span> <span class="fu">select_best</span>(rf_res)</span>
+<span id="cb3-12"><a aria-label="12"></a>best_parameter</span>
+<span id="cb3-13"><a aria-label="13"></a><span class="co">#&gt; # A tibble: 1 × 2</span></span>
+<span id="cb3-14"><a aria-label="14"></a><span class="co">#&gt;   min_n .config        </span></span>
+<span id="cb3-15"><a aria-label="15"></a><span class="co">#&gt;   &lt;int&gt; &lt;chr&gt;          </span></span>
+<span id="cb3-16"><a aria-label="16"></a><span class="co">#&gt; 1    40 pre0_mod5_post0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p><code>collect_metrics()</code> and <code>autoplot()</code> are also available.</p>
 </section>
 <section id="the-final-fit" class="slide level2">
 <h2>The final fit</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a>rf_wflow <span class="ot">&lt;-</span> <span class="fu">finalize_workflow</span>(rf_wflow, best_parameter)</span>
-<span id="cb4-2"><a></a></span>
-<span id="cb4-3"><a></a>final_fit <span class="ot">&lt;-</span> <span class="fu">last_fit</span>(rf_wflow, forested_split) </span>
-<span id="cb4-4"><a></a></span>
-<span id="cb4-5"><a></a><span class="fu">collect_metrics</span>(final_fit)</span>
-<span id="cb4-6"><a></a><span class="co">#&gt; # A tibble: 3 × 4</span></span>
-<span id="cb4-7"><a></a><span class="co">#&gt;   .metric     .estimator .estimate .config        </span></span>
-<span id="cb4-8"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;          </span></span>
-<span id="cb4-9"><a></a><span class="co">#&gt; 1 accuracy    binary         0.764 pre0_mod0_post0</span></span>
-<span id="cb4-10"><a></a><span class="co">#&gt; 2 roc_auc     binary         0.764 pre0_mod0_post0</span></span>
-<span id="cb4-11"><a></a><span class="co">#&gt; 3 brier_class binary         0.161 pre0_mod0_post0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a aria-label="1"></a>rf_wflow <span class="ot">&lt;-</span> <span class="fu">finalize_workflow</span>(rf_wflow, best_parameter)</span>
+<span id="cb4-2"><a aria-label="2"></a></span>
+<span id="cb4-3"><a aria-label="3"></a>final_fit <span class="ot">&lt;-</span> <span class="fu">last_fit</span>(rf_wflow, forested_split) </span>
+<span id="cb4-4"><a aria-label="4"></a></span>
+<span id="cb4-5"><a aria-label="5"></a><span class="fu">collect_metrics</span>(final_fit)</span>
+<span id="cb4-6"><a aria-label="6"></a><span class="co">#&gt; # A tibble: 3 × 4</span></span>
+<span id="cb4-7"><a aria-label="7"></a><span class="co">#&gt;   .metric     .estimator .estimate .config        </span></span>
+<span id="cb4-8"><a aria-label="8"></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt; &lt;chr&gt;          </span></span>
+<span id="cb4-9"><a aria-label="9"></a><span class="co">#&gt; 1 accuracy    binary         0.764 pre0_mod0_post0</span></span>
+<span id="cb4-10"><a aria-label="10"></a><span class="co">#&gt; 2 roc_auc     binary         0.764 pre0_mod0_post0</span></span>
+<span id="cb4-11"><a aria-label="11"></a><span class="co">#&gt; 3 brier_class binary         0.161 pre0_mod0_post0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="your-turn" class="slide level2" data-transition="slide-in">

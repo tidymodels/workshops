@@ -7,8 +7,8 @@
 <script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../../../site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.9.36">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.10.18">
 
   <title>Machine learning with tidymodels – Extras - Iterative search</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,10 +20,13 @@
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
@@ -215,61 +218,61 @@
 <section id="startup" class="slide level2">
 <h2>Startup! <img data-src="hexes/tidymodels.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/probably.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">library</span>(tidymodels)</span>
-<span id="cb1-2"><a></a><span class="fu">library</span>(important)</span>
-<span id="cb1-3"><a></a><span class="fu">library</span>(probably)</span>
-<span id="cb1-4"><a></a></span>
-<span id="cb1-5"><a></a><span class="fu">tidymodels_prefer</span>()</span>
-<span id="cb1-6"><a></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
-<span id="cb1-7"><a></a><span class="fu">options</span>(<span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span>)</span>
-<span id="cb1-8"><a></a>mirai<span class="sc">::</span><span class="fu">daemons</span>(parallel<span class="sc">::</span><span class="fu">detectCores</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a aria-label="1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb1-2"><a aria-label="2"></a><span class="fu">library</span>(important)</span>
+<span id="cb1-3"><a aria-label="3"></a><span class="fu">library</span>(probably)</span>
+<span id="cb1-4"><a aria-label="4"></a></span>
+<span id="cb1-5"><a aria-label="5"></a><span class="fu">tidymodels_prefer</span>()</span>
+<span id="cb1-6"><a aria-label="6"></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
+<span id="cb1-7"><a aria-label="7"></a><span class="fu">options</span>(<span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span>)</span>
+<span id="cb1-8"><a aria-label="8"></a>mirai<span class="sc">::</span><span class="fu">daemons</span>(parallel<span class="sc">::</span><span class="fu">detectCores</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="more-startup" class="slide level2">
 <h2>More startup! <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="co"># Load our example data for this section</span></span>
-<span id="cb2-2"><a></a><span class="st">"https://raw.githubusercontent.com/tidymodels/"</span> <span class="sc">|&gt;</span> </span>
-<span id="cb2-3"><a></a>  <span class="fu">paste0</span>(<span class="st">"workshops/main/slides/class_data.RData"</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb2-4"><a></a>  <span class="fu">url</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb2-5"><a></a>  <span class="fu">load</span>()</span>
-<span id="cb2-6"><a></a></span>
-<span id="cb2-7"><a></a><span class="fu">set.seed</span>(<span class="dv">429</span>)</span>
-<span id="cb2-8"><a></a>sim_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(class_data, <span class="at">prop =</span> <span class="fl">0.75</span>, <span class="at">strata =</span> class)</span>
-<span id="cb2-9"><a></a>sim_train <span class="ot">&lt;-</span> <span class="fu">training</span>(sim_split)</span>
-<span id="cb2-10"><a></a>sim_test  <span class="ot">&lt;-</span> <span class="fu">testing</span>(sim_split)</span>
-<span id="cb2-11"><a></a></span>
-<span id="cb2-12"><a></a><span class="fu">set.seed</span>(<span class="dv">523</span>)</span>
-<span id="cb2-13"><a></a>sim_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(sim_train, <span class="at">v =</span> <span class="dv">10</span>, <span class="at">strata =</span> class)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a aria-label="1"></a><span class="co"># Load our example data for this section</span></span>
+<span id="cb2-2"><a aria-label="2"></a><span class="st">"https://raw.githubusercontent.com/tidymodels/"</span> <span class="sc">|&gt;</span> </span>
+<span id="cb2-3"><a aria-label="3"></a>  <span class="fu">paste0</span>(<span class="st">"workshops/main/slides/class_data.RData"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb2-4"><a aria-label="4"></a>  <span class="fu">url</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb2-5"><a aria-label="5"></a>  <span class="fu">load</span>()</span>
+<span id="cb2-6"><a aria-label="6"></a></span>
+<span id="cb2-7"><a aria-label="7"></a><span class="fu">set.seed</span>(<span class="dv">429</span>)</span>
+<span id="cb2-8"><a aria-label="8"></a>sim_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(class_data, <span class="at">prop =</span> <span class="fl">0.75</span>, <span class="at">strata =</span> class)</span>
+<span id="cb2-9"><a aria-label="9"></a>sim_train <span class="ot">&lt;-</span> <span class="fu">training</span>(sim_split)</span>
+<span id="cb2-10"><a aria-label="10"></a>sim_test  <span class="ot">&lt;-</span> <span class="fu">testing</span>(sim_split)</span>
+<span id="cb2-11"><a aria-label="11"></a></span>
+<span id="cb2-12"><a aria-label="12"></a><span class="fu">set.seed</span>(<span class="dv">523</span>)</span>
+<span id="cb2-13"><a aria-label="13"></a>sim_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(sim_train, <span class="at">v =</span> <span class="dv">10</span>, <span class="at">strata =</span> class)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="neural-network" class="slide level2">
 <h2>Neural network <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <p>From the seventh advanced slide deck:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a>nnet_spec <span class="ot">&lt;-</span></span>
-<span id="cb3-2"><a></a>  <span class="fu">mlp</span>(<span class="at">hidden_units =</span> <span class="fu">tune</span>(), <span class="at">penalty =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>(),</span>
-<span id="cb3-3"><a></a>      <span class="at">epochs =</span> <span class="dv">100</span>, <span class="at">activation =</span> <span class="fu">tune</span>()</span>
-<span id="cb3-4"><a></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb3-5"><a></a>  <span class="fu">set_engine</span>(<span class="st">"brulee"</span>, <span class="at">stop_iter =</span> <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
-<span id="cb3-6"><a></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
-<span id="cb3-7"><a></a></span>
-<span id="cb3-8"><a></a>rec <span class="ot">&lt;-</span> </span>
-<span id="cb3-9"><a></a>  <span class="fu">recipe</span>(class <span class="sc">~</span> ., <span class="at">data =</span> sim_train) <span class="sc">|&gt;</span> </span>
-<span id="cb3-10"><a></a>  <span class="fu">step_normalize</span>(<span class="fu">all_numeric_predictors</span>())</span>
-<span id="cb3-11"><a></a>  </span>
-<span id="cb3-12"><a></a>thrsh_tlr <span class="ot">&lt;-</span></span>
-<span id="cb3-13"><a></a>  <span class="fu">tailor</span>() <span class="sc">|&gt;</span></span>
-<span id="cb3-14"><a></a>  <span class="fu">adjust_probability_threshold</span>(<span class="at">threshold =</span> <span class="fu">tune</span>()) </span>
-<span id="cb3-15"><a></a>  </span>
-<span id="cb3-16"><a></a>nnet_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(rec, nnet_spec, thrsh_tlr)</span>
-<span id="cb3-17"><a></a></span>
-<span id="cb3-18"><a></a>nnet_param <span class="ot">&lt;-</span></span>
-<span id="cb3-19"><a></a>  nnet_wflow <span class="sc">|&gt;</span> </span>
-<span id="cb3-20"><a></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb3-21"><a></a>  <span class="fu">update</span>(<span class="at">threshold =</span> <span class="fu">threshold</span>(<span class="fu">c</span>(<span class="fl">0.0001</span>, <span class="fl">0.1</span>)))</span>
-<span id="cb3-22"><a></a>  </span>
-<span id="cb3-23"><a></a>cls_mtr <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(brier_class, roc_auc, sensitivity, specificity)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a aria-label="1"></a>nnet_spec <span class="ot">&lt;-</span></span>
+<span id="cb3-2"><a aria-label="2"></a>  <span class="fu">mlp</span>(<span class="at">hidden_units =</span> <span class="fu">tune</span>(), <span class="at">penalty =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>(),</span>
+<span id="cb3-3"><a aria-label="3"></a>      <span class="at">epochs =</span> <span class="dv">100</span>, <span class="at">activation =</span> <span class="fu">tune</span>()</span>
+<span id="cb3-4"><a aria-label="4"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb3-5"><a aria-label="5"></a>  <span class="fu">set_engine</span>(<span class="st">"brulee"</span>, <span class="at">stop_iter =</span> <span class="dv">10</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-6"><a aria-label="6"></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
+<span id="cb3-7"><a aria-label="7"></a></span>
+<span id="cb3-8"><a aria-label="8"></a>rec <span class="ot">&lt;-</span> </span>
+<span id="cb3-9"><a aria-label="9"></a>  <span class="fu">recipe</span>(class <span class="sc">~</span> ., <span class="at">data =</span> sim_train) <span class="sc">|&gt;</span> </span>
+<span id="cb3-10"><a aria-label="10"></a>  <span class="fu">step_normalize</span>(<span class="fu">all_numeric_predictors</span>())</span>
+<span id="cb3-11"><a aria-label="11"></a>  </span>
+<span id="cb3-12"><a aria-label="12"></a>thrsh_tlr <span class="ot">&lt;-</span></span>
+<span id="cb3-13"><a aria-label="13"></a>  <span class="fu">tailor</span>() <span class="sc">|&gt;</span></span>
+<span id="cb3-14"><a aria-label="14"></a>  <span class="fu">adjust_probability_threshold</span>(<span class="at">threshold =</span> <span class="fu">tune</span>()) </span>
+<span id="cb3-15"><a aria-label="15"></a>  </span>
+<span id="cb3-16"><a aria-label="16"></a>nnet_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(rec, nnet_spec, thrsh_tlr)</span>
+<span id="cb3-17"><a aria-label="17"></a></span>
+<span id="cb3-18"><a aria-label="18"></a>nnet_param <span class="ot">&lt;-</span></span>
+<span id="cb3-19"><a aria-label="19"></a>  nnet_wflow <span class="sc">|&gt;</span> </span>
+<span id="cb3-20"><a aria-label="20"></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb3-21"><a aria-label="21"></a>  <span class="fu">update</span>(<span class="at">threshold =</span> <span class="fu">threshold</span>(<span class="fu">c</span>(<span class="fl">0.0001</span>, <span class="fl">0.1</span>)))</span>
+<span id="cb3-22"><a aria-label="22"></a>  </span>
+<span id="cb3-23"><a aria-label="23"></a>cls_mtr <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(brier_class, roc_auc, sensitivity, specificity)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="iterative-search" class="slide level2">
@@ -279,7 +282,7 @@
 <p>Suppose that we are only tuning the learning rate in our neural network.</p>
 <p><br></p>
 <p>We could do something like:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a>brier_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(brier <span class="sc">~</span> learn_rate, <span class="at">data =</span> resample_results)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a aria-label="1"></a>brier_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(brier <span class="sc">~</span> learn_rate, <span class="at">data =</span> resample_results)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>and use this to predict and rank new learning rate candidates.</p>
 </section>
 <section id="iterative-search-1" class="slide level2">
@@ -442,238 +445,238 @@
 <section id="an-initial-grid" class="slide level2">
 <h2>An Initial Grid</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a><span class="fu">set.seed</span>(<span class="dv">12</span>)</span>
-<span id="cb5-2"><a></a>init_res <span class="ot">&lt;-</span></span>
-<span id="cb5-3"><a></a>  nnet_wflow <span class="sc">|&gt;</span></span>
-<span id="cb5-4"><a></a>  <span class="fu">tune_grid</span>(</span>
-<span id="cb5-5"><a></a>    <span class="at">resamples =</span> sim_rs,</span>
-<span id="cb5-6"><a></a>    <span class="at">grid =</span> <span class="fu">nrow</span>(nnet_param) <span class="sc">+</span> <span class="dv">6</span>, <span class="co"># for activation values + 1 extra</span></span>
-<span id="cb5-7"><a></a>    <span class="at">param_info =</span> nnet_param,</span>
-<span id="cb5-8"><a></a>    <span class="at">metrics =</span> cls_mtr</span>
-<span id="cb5-9"><a></a>  )</span>
-<span id="cb5-10"><a></a></span>
-<span id="cb5-11"><a></a><span class="fu">show_best</span>(init_res, <span class="at">metric =</span> <span class="st">"brier_class"</span>, <span class="at">n =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>.metric, <span class="sc">-</span>.estimator)</span>
-<span id="cb5-12"><a></a><span class="co">#&gt; # A tibble: 3 × 9</span></span>
-<span id="cb5-13"><a></a><span class="co">#&gt;   hidden_units      penalty activation learn_rate threshold   mean     n std_err</span></span>
-<span id="cb5-14"><a></a><span class="co">#&gt;          &lt;int&gt;        &lt;dbl&gt; &lt;chr&gt;           &lt;dbl&gt;     &lt;dbl&gt;  &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
-<span id="cb5-15"><a></a><span class="co">#&gt; 1           30 0.001        log_sigmo…     0.331     0.0101 0.0401    10 0.00236</span></span>
-<span id="cb5-16"><a></a><span class="co">#&gt; 2           40 0.0000000001 elu            0.0132    0.0600 0.0431    10 0.00183</span></span>
-<span id="cb5-17"><a></a><span class="co">#&gt; 3            6 0.0001       elu            0.0251    0.0800 0.0447    10 0.00280</span></span>
-<span id="cb5-18"><a></a><span class="co">#&gt; # ℹ 1 more variable: .config &lt;chr&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a aria-label="1"></a><span class="fu">set.seed</span>(<span class="dv">12</span>)</span>
+<span id="cb5-2"><a aria-label="2"></a>init_res <span class="ot">&lt;-</span></span>
+<span id="cb5-3"><a aria-label="3"></a>  nnet_wflow <span class="sc">|&gt;</span></span>
+<span id="cb5-4"><a aria-label="4"></a>  <span class="fu">tune_grid</span>(</span>
+<span id="cb5-5"><a aria-label="5"></a>    <span class="at">resamples =</span> sim_rs,</span>
+<span id="cb5-6"><a aria-label="6"></a>    <span class="at">grid =</span> <span class="fu">nrow</span>(nnet_param) <span class="sc">+</span> <span class="dv">6</span>, <span class="co"># for activation values + 1 extra</span></span>
+<span id="cb5-7"><a aria-label="7"></a>    <span class="at">param_info =</span> nnet_param,</span>
+<span id="cb5-8"><a aria-label="8"></a>    <span class="at">metrics =</span> cls_mtr</span>
+<span id="cb5-9"><a aria-label="9"></a>  )</span>
+<span id="cb5-10"><a aria-label="10"></a></span>
+<span id="cb5-11"><a aria-label="11"></a><span class="fu">show_best</span>(init_res, <span class="at">metric =</span> <span class="st">"brier_class"</span>, <span class="at">n =</span> <span class="dv">3</span>) <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>.metric, <span class="sc">-</span>.estimator)</span>
+<span id="cb5-12"><a aria-label="12"></a><span class="co">#&gt; # A tibble: 3 × 9</span></span>
+<span id="cb5-13"><a aria-label="13"></a><span class="co">#&gt;   hidden_units      penalty activation learn_rate threshold   mean     n std_err</span></span>
+<span id="cb5-14"><a aria-label="14"></a><span class="co">#&gt;          &lt;int&gt;        &lt;dbl&gt; &lt;chr&gt;           &lt;dbl&gt;     &lt;dbl&gt;  &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
+<span id="cb5-15"><a aria-label="15"></a><span class="co">#&gt; 1           30 0.001        log_sigmo…     0.331     0.0101 0.0401    10 0.00236</span></span>
+<span id="cb5-16"><a aria-label="16"></a><span class="co">#&gt; 2           40 0.0000000001 elu            0.0132    0.0600 0.0431    10 0.00183</span></span>
+<span id="cb5-17"><a aria-label="17"></a><span class="co">#&gt; 3            6 0.0001       elu            0.0251    0.0800 0.0447    10 0.00280</span></span>
+<span id="cb5-18"><a aria-label="18"></a><span class="co">#&gt; # ℹ 1 more variable: .config &lt;chr&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="bo-using-tidymodels" class="slide level2">
 <h2>BO using tidymodels</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6" data-code-line-numbers="1|6,8-11|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a>ctrl_bo <span class="ot">&lt;-</span> <span class="fu">control_bayes</span>(<span class="at">verbose_iter =</span> <span class="cn">TRUE</span>, <span class="at">no_improve =</span> <span class="cn">Inf</span>) </span>
-<span id="cb6-2"><a></a></span>
-<span id="cb6-3"><a></a><span class="fu">set.seed</span>(<span class="dv">125</span>)</span>
-<span id="cb6-4"><a></a>nnet_bayes_res <span class="ot">&lt;-</span></span>
-<span id="cb6-5"><a></a>  nnet_wflow <span class="sc">|&gt;</span></span>
-<span id="cb6-6"><a></a>  <span class="fu">tune_bayes</span>(</span>
-<span id="cb6-7"><a></a>    <span class="at">resamples =</span> sim_rs,</span>
-<span id="cb6-8"><a></a>    <span class="at">initial =</span> init_res,     <span class="co"># &lt;- initial results</span></span>
-<span id="cb6-9"><a></a>    <span class="at">iter =</span> <span class="dv">25</span>,</span>
-<span id="cb6-10"><a></a>    <span class="at">control =</span> ctrl_bo,</span>
-<span id="cb6-11"><a></a>    <span class="at">param_info =</span> nnet_param,</span>
-<span id="cb6-12"><a></a>    <span class="at">metrics =</span> cls_mtr</span>
-<span id="cb6-13"><a></a>  )</span>
-<span id="cb6-14"><a></a><span class="co">#&gt; Optimizing brier_class using the expected improvement</span></span>
-<span id="cb6-15"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-16"><a></a><span class="co">#&gt; ── Iteration 1 ───────────────────────────────────────────────────────</span></span>
-<span id="cb6-17"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-18"><a></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
-<span id="cb6-19"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
-<span id="cb6-20"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
-<span id="cb6-21"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
-<span id="cb6-22"><a></a><span class="co">#&gt; i hidden_units=11, penalty=1.13e-10, activation=log_sigmoid, learn_rate=0.36,</span></span>
-<span id="cb6-23"><a></a><span class="co">#&gt;   threshold=0.0678</span></span>
-<span id="cb6-24"><a></a><span class="co">#&gt; i Estimating performance</span></span>
-<span id="cb6-25"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
-<span id="cb6-26"><a></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.05066 (+/-0.00346)</span></span>
-<span id="cb6-27"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-28"><a></a><span class="co">#&gt; ── Iteration 2 ───────────────────────────────────────────────────────</span></span>
-<span id="cb6-29"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-30"><a></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
-<span id="cb6-31"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
-<span id="cb6-32"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
-<span id="cb6-33"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
-<span id="cb6-34"><a></a><span class="co">#&gt; i hidden_units=8, penalty=0.22, activation=tanh, learn_rate=0.0143,</span></span>
-<span id="cb6-35"><a></a><span class="co">#&gt;   threshold=0.0983</span></span>
-<span id="cb6-36"><a></a><span class="co">#&gt; i Estimating performance</span></span>
-<span id="cb6-37"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
-<span id="cb6-38"><a></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.09955 (+/-0.000591)</span></span>
-<span id="cb6-39"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-40"><a></a><span class="co">#&gt; ── Iteration 3 ───────────────────────────────────────────────────────</span></span>
-<span id="cb6-41"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-42"><a></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
-<span id="cb6-43"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
-<span id="cb6-44"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
-<span id="cb6-45"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
-<span id="cb6-46"><a></a><span class="co">#&gt; i hidden_units=15, penalty=3.26e-06, activation=log_sigmoid, learn_rate=0.62,</span></span>
-<span id="cb6-47"><a></a><span class="co">#&gt;   threshold=0.0729</span></span>
-<span id="cb6-48"><a></a><span class="co">#&gt; i Estimating performance</span></span>
-<span id="cb6-49"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
-<span id="cb6-50"><a></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.05926 (+/-0.00613)</span></span>
-<span id="cb6-51"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-52"><a></a><span class="co">#&gt; ── Iteration 4 ───────────────────────────────────────────────────────</span></span>
-<span id="cb6-53"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-54"><a></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
-<span id="cb6-55"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
-<span id="cb6-56"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
-<span id="cb6-57"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
-<span id="cb6-58"><a></a><span class="co">#&gt; i hidden_units=46, penalty=0.000214, activation=log_sigmoid,</span></span>
-<span id="cb6-59"><a></a><span class="co">#&gt;   learn_rate=0.537, threshold=0.0526</span></span>
-<span id="cb6-60"><a></a><span class="co">#&gt; i Estimating performance</span></span>
-<span id="cb6-61"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
-<span id="cb6-62"><a></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.04446 (+/-0.00401)</span></span>
-<span id="cb6-63"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-64"><a></a><span class="co">#&gt; ── Iteration 5 ───────────────────────────────────────────────────────</span></span>
-<span id="cb6-65"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-66"><a></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
-<span id="cb6-67"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
-<span id="cb6-68"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
-<span id="cb6-69"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
-<span id="cb6-70"><a></a><span class="co">#&gt; i hidden_units=46, penalty=0.287, activation=log_sigmoid, learn_rate=0.63,</span></span>
-<span id="cb6-71"><a></a><span class="co">#&gt;   threshold=0.0109</span></span>
-<span id="cb6-72"><a></a><span class="co">#&gt; i Estimating performance</span></span>
-<span id="cb6-73"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
-<span id="cb6-74"><a></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.09951 (+/-0.000609)</span></span>
-<span id="cb6-75"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-76"><a></a><span class="co">#&gt; ── Iteration 6 ───────────────────────────────────────────────────────</span></span>
-<span id="cb6-77"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-78"><a></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
-<span id="cb6-79"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
-<span id="cb6-80"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
-<span id="cb6-81"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
-<span id="cb6-82"><a></a><span class="co">#&gt; i hidden_units=9, penalty=0.00057, activation=elu, learn_rate=0.0486,</span></span>
-<span id="cb6-83"><a></a><span class="co">#&gt;   threshold=0.0268</span></span>
-<span id="cb6-84"><a></a><span class="co">#&gt; i Estimating performance</span></span>
-<span id="cb6-85"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
-<span id="cb6-86"><a></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.04341 (+/-0.00331)</span></span>
-<span id="cb6-87"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-88"><a></a><span class="co">#&gt; ── Iteration 7 ───────────────────────────────────────────────────────</span></span>
-<span id="cb6-89"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-90"><a></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
-<span id="cb6-91"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
-<span id="cb6-92"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
-<span id="cb6-93"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
-<span id="cb6-94"><a></a><span class="co">#&gt; i hidden_units=4, penalty=0.000623, activation=tanh, learn_rate=0.394,</span></span>
-<span id="cb6-95"><a></a><span class="co">#&gt;   threshold=0.0324</span></span>
-<span id="cb6-96"><a></a><span class="co">#&gt; i Estimating performance</span></span>
-<span id="cb6-97"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
-<span id="cb6-98"><a></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.05986 (+/-0.00719)</span></span>
-<span id="cb6-99"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-100"><a></a><span class="co">#&gt; ── Iteration 8 ───────────────────────────────────────────────────────</span></span>
-<span id="cb6-101"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-102"><a></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
-<span id="cb6-103"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
-<span id="cb6-104"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
-<span id="cb6-105"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
-<span id="cb6-106"><a></a><span class="co">#&gt; i hidden_units=21, penalty=1.15e-10, activation=tanh, learn_rate=0.00174,</span></span>
-<span id="cb6-107"><a></a><span class="co">#&gt;   threshold=0.0478</span></span>
-<span id="cb6-108"><a></a><span class="co">#&gt; i Estimating performance</span></span>
-<span id="cb6-109"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
-<span id="cb6-110"><a></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.04676 (+/-0.0028)</span></span>
-<span id="cb6-111"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-112"><a></a><span class="co">#&gt; ── Iteration 9 ───────────────────────────────────────────────────────</span></span>
-<span id="cb6-113"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-114"><a></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
-<span id="cb6-115"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
-<span id="cb6-116"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
-<span id="cb6-117"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
-<span id="cb6-118"><a></a><span class="co">#&gt; i hidden_units=14, penalty=0.00108, activation=relu, learn_rate=0.514,</span></span>
-<span id="cb6-119"><a></a><span class="co">#&gt;   threshold=0.0514</span></span>
-<span id="cb6-120"><a></a><span class="co">#&gt; i Estimating performance</span></span>
-<span id="cb6-121"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
-<span id="cb6-122"><a></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.05046 (+/-0.00298)</span></span>
-<span id="cb6-123"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-124"><a></a><span class="co">#&gt; ── Iteration 10 ──────────────────────────────────────────────────────</span></span>
-<span id="cb6-125"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-126"><a></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
-<span id="cb6-127"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
-<span id="cb6-128"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
-<span id="cb6-129"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
-<span id="cb6-130"><a></a><span class="co">#&gt; i hidden_units=28, penalty=0.000376, activation=elu, learn_rate=0.00663,</span></span>
-<span id="cb6-131"><a></a><span class="co">#&gt;   threshold=0.0603</span></span>
-<span id="cb6-132"><a></a><span class="co">#&gt; i Estimating performance</span></span>
-<span id="cb6-133"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
-<span id="cb6-134"><a></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.04702 (+/-0.00472)</span></span>
-<span id="cb6-135"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-136"><a></a><span class="co">#&gt; ── Iteration 11 ──────────────────────────────────────────────────────</span></span>
-<span id="cb6-137"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-138"><a></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
-<span id="cb6-139"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
-<span id="cb6-140"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
-<span id="cb6-141"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
-<span id="cb6-142"><a></a><span class="co">#&gt; i hidden_units=48, penalty=2.23e-10, activation=elu, learn_rate=0.00108,</span></span>
-<span id="cb6-143"><a></a><span class="co">#&gt;   threshold=0.0191</span></span>
-<span id="cb6-144"><a></a><span class="co">#&gt; i Estimating performance</span></span>
-<span id="cb6-145"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
-<span id="cb6-146"><a></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.04567 (+/-0.00454)</span></span>
-<span id="cb6-147"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-148"><a></a><span class="co">#&gt; ── Iteration 12 ──────────────────────────────────────────────────────</span></span>
-<span id="cb6-149"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-150"><a></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
-<span id="cb6-151"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
-<span id="cb6-152"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
-<span id="cb6-153"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
-<span id="cb6-154"><a></a><span class="co">#&gt; i hidden_units=7, penalty=8.08e-06, activation=tanh, learn_rate=0.00123,</span></span>
-<span id="cb6-155"><a></a><span class="co">#&gt;   threshold=0.011</span></span>
-<span id="cb6-156"><a></a><span class="co">#&gt; i Estimating performance</span></span>
-<span id="cb6-157"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
-<span id="cb6-158"><a></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.04621 (+/-0.00301)</span></span>
-<span id="cb6-159"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-160"><a></a><span class="co">#&gt; ── Iteration 13 ──────────────────────────────────────────────────────</span></span>
-<span id="cb6-161"><a></a><span class="co">#&gt; </span></span>
-<span id="cb6-162"><a></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
-<span id="cb6-163"><a></a><span class="co">#&gt; i Gaussian process model</span></span>
-<span id="cb6-164"><a></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
-<span id="cb6-165"><a></a><span class="co">#&gt; i Predicted candidates</span></span>
-<span id="cb6-166"><a></a><span class="co">#&gt; i hidden_units=2, penalty=0.000753, activation=tanhshrink, learn_rate=0.536,</span></span>
-<span id="cb6-167"><a></a><span class="co">#&gt;   threshold=0.0769</span></span>
-<span id="cb6-168"><a></a><span class="co">#&gt; i Estimating performance</span></span>
-<span id="cb6-169"><a></a><span class="co">#&gt; ✓ Estimating performance</span></span>
-<span id="cb6-170"><a></a><span class="co">#&gt; Error in `purrr::map()`:</span></span>
-<span id="cb6-171"><a></a><span class="co">#&gt; ℹ In index: 5.</span></span>
-<span id="cb6-172"><a></a><span class="co">#&gt; Caused by error in `UseMethod()`:</span></span>
-<span id="cb6-173"><a></a><span class="co">#&gt; ! no applicable method for 'mutate' applied to an object of class "NULL"</span></span>
-<span id="cb6-174"><a></a><span class="co">#&gt; ✖ Optimization stopped prematurely; returning current results.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6" data-code-line-numbers="1|6,8-11|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a aria-label="1"></a>ctrl_bo <span class="ot">&lt;-</span> <span class="fu">control_bayes</span>(<span class="at">verbose_iter =</span> <span class="cn">TRUE</span>, <span class="at">no_improve =</span> <span class="cn">Inf</span>) </span>
+<span id="cb6-2"><a aria-label="2"></a></span>
+<span id="cb6-3"><a aria-label="3"></a><span class="fu">set.seed</span>(<span class="dv">125</span>)</span>
+<span id="cb6-4"><a aria-label="4"></a>nnet_bayes_res <span class="ot">&lt;-</span></span>
+<span id="cb6-5"><a aria-label="5"></a>  nnet_wflow <span class="sc">|&gt;</span></span>
+<span id="cb6-6"><a aria-label="6"></a>  <span class="fu">tune_bayes</span>(</span>
+<span id="cb6-7"><a aria-label="7"></a>    <span class="at">resamples =</span> sim_rs,</span>
+<span id="cb6-8"><a aria-label="8"></a>    <span class="at">initial =</span> init_res,     <span class="co"># &lt;- initial results</span></span>
+<span id="cb6-9"><a aria-label="9"></a>    <span class="at">iter =</span> <span class="dv">25</span>,</span>
+<span id="cb6-10"><a aria-label="10"></a>    <span class="at">control =</span> ctrl_bo,</span>
+<span id="cb6-11"><a aria-label="11"></a>    <span class="at">param_info =</span> nnet_param,</span>
+<span id="cb6-12"><a aria-label="12"></a>    <span class="at">metrics =</span> cls_mtr</span>
+<span id="cb6-13"><a aria-label="13"></a>  )</span>
+<span id="cb6-14"><a aria-label="14"></a><span class="co">#&gt; Optimizing brier_class using the expected improvement</span></span>
+<span id="cb6-15"><a aria-label="15"></a><span class="co">#&gt; </span></span>
+<span id="cb6-16"><a aria-label="16"></a><span class="co">#&gt; ── Iteration 1 ───────────────────────────────────────────────────────</span></span>
+<span id="cb6-17"><a aria-label="17"></a><span class="co">#&gt; </span></span>
+<span id="cb6-18"><a aria-label="18"></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
+<span id="cb6-19"><a aria-label="19"></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb6-20"><a aria-label="20"></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb6-21"><a aria-label="21"></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb6-22"><a aria-label="22"></a><span class="co">#&gt; i hidden_units=11, penalty=1.13e-10, activation=log_sigmoid, learn_rate=0.36,</span></span>
+<span id="cb6-23"><a aria-label="23"></a><span class="co">#&gt;   threshold=0.0678</span></span>
+<span id="cb6-24"><a aria-label="24"></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb6-25"><a aria-label="25"></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb6-26"><a aria-label="26"></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.05066 (+/-0.00346)</span></span>
+<span id="cb6-27"><a aria-label="27"></a><span class="co">#&gt; </span></span>
+<span id="cb6-28"><a aria-label="28"></a><span class="co">#&gt; ── Iteration 2 ───────────────────────────────────────────────────────</span></span>
+<span id="cb6-29"><a aria-label="29"></a><span class="co">#&gt; </span></span>
+<span id="cb6-30"><a aria-label="30"></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
+<span id="cb6-31"><a aria-label="31"></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb6-32"><a aria-label="32"></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb6-33"><a aria-label="33"></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb6-34"><a aria-label="34"></a><span class="co">#&gt; i hidden_units=8, penalty=0.22, activation=tanh, learn_rate=0.0143,</span></span>
+<span id="cb6-35"><a aria-label="35"></a><span class="co">#&gt;   threshold=0.0983</span></span>
+<span id="cb6-36"><a aria-label="36"></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb6-37"><a aria-label="37"></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb6-38"><a aria-label="38"></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.09955 (+/-0.000591)</span></span>
+<span id="cb6-39"><a aria-label="39"></a><span class="co">#&gt; </span></span>
+<span id="cb6-40"><a aria-label="40"></a><span class="co">#&gt; ── Iteration 3 ───────────────────────────────────────────────────────</span></span>
+<span id="cb6-41"><a aria-label="41"></a><span class="co">#&gt; </span></span>
+<span id="cb6-42"><a aria-label="42"></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
+<span id="cb6-43"><a aria-label="43"></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb6-44"><a aria-label="44"></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb6-45"><a aria-label="45"></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb6-46"><a aria-label="46"></a><span class="co">#&gt; i hidden_units=15, penalty=3.26e-06, activation=log_sigmoid, learn_rate=0.62,</span></span>
+<span id="cb6-47"><a aria-label="47"></a><span class="co">#&gt;   threshold=0.0729</span></span>
+<span id="cb6-48"><a aria-label="48"></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb6-49"><a aria-label="49"></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb6-50"><a aria-label="50"></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.05926 (+/-0.00613)</span></span>
+<span id="cb6-51"><a aria-label="51"></a><span class="co">#&gt; </span></span>
+<span id="cb6-52"><a aria-label="52"></a><span class="co">#&gt; ── Iteration 4 ───────────────────────────────────────────────────────</span></span>
+<span id="cb6-53"><a aria-label="53"></a><span class="co">#&gt; </span></span>
+<span id="cb6-54"><a aria-label="54"></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
+<span id="cb6-55"><a aria-label="55"></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb6-56"><a aria-label="56"></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb6-57"><a aria-label="57"></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb6-58"><a aria-label="58"></a><span class="co">#&gt; i hidden_units=46, penalty=0.000214, activation=log_sigmoid,</span></span>
+<span id="cb6-59"><a aria-label="59"></a><span class="co">#&gt;   learn_rate=0.537, threshold=0.0526</span></span>
+<span id="cb6-60"><a aria-label="60"></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb6-61"><a aria-label="61"></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb6-62"><a aria-label="62"></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.04446 (+/-0.00401)</span></span>
+<span id="cb6-63"><a aria-label="63"></a><span class="co">#&gt; </span></span>
+<span id="cb6-64"><a aria-label="64"></a><span class="co">#&gt; ── Iteration 5 ───────────────────────────────────────────────────────</span></span>
+<span id="cb6-65"><a aria-label="65"></a><span class="co">#&gt; </span></span>
+<span id="cb6-66"><a aria-label="66"></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
+<span id="cb6-67"><a aria-label="67"></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb6-68"><a aria-label="68"></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb6-69"><a aria-label="69"></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb6-70"><a aria-label="70"></a><span class="co">#&gt; i hidden_units=46, penalty=0.287, activation=log_sigmoid, learn_rate=0.63,</span></span>
+<span id="cb6-71"><a aria-label="71"></a><span class="co">#&gt;   threshold=0.0109</span></span>
+<span id="cb6-72"><a aria-label="72"></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb6-73"><a aria-label="73"></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb6-74"><a aria-label="74"></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.09951 (+/-0.000609)</span></span>
+<span id="cb6-75"><a aria-label="75"></a><span class="co">#&gt; </span></span>
+<span id="cb6-76"><a aria-label="76"></a><span class="co">#&gt; ── Iteration 6 ───────────────────────────────────────────────────────</span></span>
+<span id="cb6-77"><a aria-label="77"></a><span class="co">#&gt; </span></span>
+<span id="cb6-78"><a aria-label="78"></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
+<span id="cb6-79"><a aria-label="79"></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb6-80"><a aria-label="80"></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb6-81"><a aria-label="81"></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb6-82"><a aria-label="82"></a><span class="co">#&gt; i hidden_units=9, penalty=0.00057, activation=elu, learn_rate=0.0486,</span></span>
+<span id="cb6-83"><a aria-label="83"></a><span class="co">#&gt;   threshold=0.0268</span></span>
+<span id="cb6-84"><a aria-label="84"></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb6-85"><a aria-label="85"></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb6-86"><a aria-label="86"></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.04341 (+/-0.00331)</span></span>
+<span id="cb6-87"><a aria-label="87"></a><span class="co">#&gt; </span></span>
+<span id="cb6-88"><a aria-label="88"></a><span class="co">#&gt; ── Iteration 7 ───────────────────────────────────────────────────────</span></span>
+<span id="cb6-89"><a aria-label="89"></a><span class="co">#&gt; </span></span>
+<span id="cb6-90"><a aria-label="90"></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
+<span id="cb6-91"><a aria-label="91"></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb6-92"><a aria-label="92"></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb6-93"><a aria-label="93"></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb6-94"><a aria-label="94"></a><span class="co">#&gt; i hidden_units=4, penalty=0.000623, activation=tanh, learn_rate=0.394,</span></span>
+<span id="cb6-95"><a aria-label="95"></a><span class="co">#&gt;   threshold=0.0324</span></span>
+<span id="cb6-96"><a aria-label="96"></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb6-97"><a aria-label="97"></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb6-98"><a aria-label="98"></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.05986 (+/-0.00719)</span></span>
+<span id="cb6-99"><a aria-label="99"></a><span class="co">#&gt; </span></span>
+<span id="cb6-100"><a aria-label="100"></a><span class="co">#&gt; ── Iteration 8 ───────────────────────────────────────────────────────</span></span>
+<span id="cb6-101"><a aria-label="101"></a><span class="co">#&gt; </span></span>
+<span id="cb6-102"><a aria-label="102"></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
+<span id="cb6-103"><a aria-label="103"></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb6-104"><a aria-label="104"></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb6-105"><a aria-label="105"></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb6-106"><a aria-label="106"></a><span class="co">#&gt; i hidden_units=21, penalty=1.15e-10, activation=tanh, learn_rate=0.00174,</span></span>
+<span id="cb6-107"><a aria-label="107"></a><span class="co">#&gt;   threshold=0.0478</span></span>
+<span id="cb6-108"><a aria-label="108"></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb6-109"><a aria-label="109"></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb6-110"><a aria-label="110"></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.04676 (+/-0.0028)</span></span>
+<span id="cb6-111"><a aria-label="111"></a><span class="co">#&gt; </span></span>
+<span id="cb6-112"><a aria-label="112"></a><span class="co">#&gt; ── Iteration 9 ───────────────────────────────────────────────────────</span></span>
+<span id="cb6-113"><a aria-label="113"></a><span class="co">#&gt; </span></span>
+<span id="cb6-114"><a aria-label="114"></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
+<span id="cb6-115"><a aria-label="115"></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb6-116"><a aria-label="116"></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb6-117"><a aria-label="117"></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb6-118"><a aria-label="118"></a><span class="co">#&gt; i hidden_units=14, penalty=0.00108, activation=relu, learn_rate=0.514,</span></span>
+<span id="cb6-119"><a aria-label="119"></a><span class="co">#&gt;   threshold=0.0514</span></span>
+<span id="cb6-120"><a aria-label="120"></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb6-121"><a aria-label="121"></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb6-122"><a aria-label="122"></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.05046 (+/-0.00298)</span></span>
+<span id="cb6-123"><a aria-label="123"></a><span class="co">#&gt; </span></span>
+<span id="cb6-124"><a aria-label="124"></a><span class="co">#&gt; ── Iteration 10 ──────────────────────────────────────────────────────</span></span>
+<span id="cb6-125"><a aria-label="125"></a><span class="co">#&gt; </span></span>
+<span id="cb6-126"><a aria-label="126"></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
+<span id="cb6-127"><a aria-label="127"></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb6-128"><a aria-label="128"></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb6-129"><a aria-label="129"></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb6-130"><a aria-label="130"></a><span class="co">#&gt; i hidden_units=28, penalty=0.000376, activation=elu, learn_rate=0.00663,</span></span>
+<span id="cb6-131"><a aria-label="131"></a><span class="co">#&gt;   threshold=0.0603</span></span>
+<span id="cb6-132"><a aria-label="132"></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb6-133"><a aria-label="133"></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb6-134"><a aria-label="134"></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.04702 (+/-0.00472)</span></span>
+<span id="cb6-135"><a aria-label="135"></a><span class="co">#&gt; </span></span>
+<span id="cb6-136"><a aria-label="136"></a><span class="co">#&gt; ── Iteration 11 ──────────────────────────────────────────────────────</span></span>
+<span id="cb6-137"><a aria-label="137"></a><span class="co">#&gt; </span></span>
+<span id="cb6-138"><a aria-label="138"></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
+<span id="cb6-139"><a aria-label="139"></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb6-140"><a aria-label="140"></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb6-141"><a aria-label="141"></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb6-142"><a aria-label="142"></a><span class="co">#&gt; i hidden_units=48, penalty=2.23e-10, activation=elu, learn_rate=0.00108,</span></span>
+<span id="cb6-143"><a aria-label="143"></a><span class="co">#&gt;   threshold=0.0191</span></span>
+<span id="cb6-144"><a aria-label="144"></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb6-145"><a aria-label="145"></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb6-146"><a aria-label="146"></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.04567 (+/-0.00454)</span></span>
+<span id="cb6-147"><a aria-label="147"></a><span class="co">#&gt; </span></span>
+<span id="cb6-148"><a aria-label="148"></a><span class="co">#&gt; ── Iteration 12 ──────────────────────────────────────────────────────</span></span>
+<span id="cb6-149"><a aria-label="149"></a><span class="co">#&gt; </span></span>
+<span id="cb6-150"><a aria-label="150"></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
+<span id="cb6-151"><a aria-label="151"></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb6-152"><a aria-label="152"></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb6-153"><a aria-label="153"></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb6-154"><a aria-label="154"></a><span class="co">#&gt; i hidden_units=7, penalty=8.08e-06, activation=tanh, learn_rate=0.00123,</span></span>
+<span id="cb6-155"><a aria-label="155"></a><span class="co">#&gt;   threshold=0.011</span></span>
+<span id="cb6-156"><a aria-label="156"></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb6-157"><a aria-label="157"></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb6-158"><a aria-label="158"></a><span class="co">#&gt; ⓧ Newest results:    brier_class=0.04621 (+/-0.00301)</span></span>
+<span id="cb6-159"><a aria-label="159"></a><span class="co">#&gt; </span></span>
+<span id="cb6-160"><a aria-label="160"></a><span class="co">#&gt; ── Iteration 13 ──────────────────────────────────────────────────────</span></span>
+<span id="cb6-161"><a aria-label="161"></a><span class="co">#&gt; </span></span>
+<span id="cb6-162"><a aria-label="162"></a><span class="co">#&gt; i Current best:      brier_class=0.04006 (@iter 0)</span></span>
+<span id="cb6-163"><a aria-label="163"></a><span class="co">#&gt; i Gaussian process model</span></span>
+<span id="cb6-164"><a aria-label="164"></a><span class="co">#&gt; i Generating 5000 candidates</span></span>
+<span id="cb6-165"><a aria-label="165"></a><span class="co">#&gt; i Predicted candidates</span></span>
+<span id="cb6-166"><a aria-label="166"></a><span class="co">#&gt; i hidden_units=2, penalty=0.000753, activation=tanhshrink, learn_rate=0.536,</span></span>
+<span id="cb6-167"><a aria-label="167"></a><span class="co">#&gt;   threshold=0.0769</span></span>
+<span id="cb6-168"><a aria-label="168"></a><span class="co">#&gt; i Estimating performance</span></span>
+<span id="cb6-169"><a aria-label="169"></a><span class="co">#&gt; ✓ Estimating performance</span></span>
+<span id="cb6-170"><a aria-label="170"></a><span class="co">#&gt; Error in `purrr::map()`:</span></span>
+<span id="cb6-171"><a aria-label="171"></a><span class="co">#&gt; ℹ In index: 5.</span></span>
+<span id="cb6-172"><a aria-label="172"></a><span class="co">#&gt; Caused by error in `UseMethod()`:</span></span>
+<span id="cb6-173"><a aria-label="173"></a><span class="co">#&gt; ! no applicable method for 'mutate' applied to an object of class "NULL"</span></span>
+<span id="cb6-174"><a aria-label="174"></a><span class="co">#&gt; ✖ Optimization stopped prematurely; returning current results.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="best-results" class="slide level2">
 <h2>Best results</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a><span class="fu">show_best</span>(nnet_bayes_res, <span class="at">metric =</span> <span class="st">"brier_class"</span>) <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>.metric, <span class="sc">-</span>.estimator)</span>
-<span id="cb7-2"><a></a><span class="co">#&gt; # A tibble: 5 × 10</span></span>
-<span id="cb7-3"><a></a><span class="co">#&gt;   hidden_units      penalty activation learn_rate threshold   mean     n std_err</span></span>
-<span id="cb7-4"><a></a><span class="co">#&gt;          &lt;int&gt;        &lt;dbl&gt; &lt;chr&gt;           &lt;dbl&gt;     &lt;dbl&gt;  &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
-<span id="cb7-5"><a></a><span class="co">#&gt; 1           30 0.001        log_sigmo…     0.331     0.0101 0.0401    10 0.00236</span></span>
-<span id="cb7-6"><a></a><span class="co">#&gt; 2           40 0.0000000001 elu            0.0132    0.0600 0.0431    10 0.00183</span></span>
-<span id="cb7-7"><a></a><span class="co">#&gt; 3            9 0.000570     elu            0.0486    0.0268 0.0434    10 0.00331</span></span>
-<span id="cb7-8"><a></a><span class="co">#&gt; 4           46 0.000214     log_sigmo…     0.537     0.0526 0.0445    10 0.00401</span></span>
-<span id="cb7-9"><a></a><span class="co">#&gt; 5            6 0.0001       elu            0.0251    0.0800 0.0447    10 0.00280</span></span>
-<span id="cb7-10"><a></a><span class="co">#&gt; # ℹ 2 more variables: .config &lt;chr&gt;, .iter &lt;int&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a aria-label="1"></a><span class="fu">show_best</span>(nnet_bayes_res, <span class="at">metric =</span> <span class="st">"brier_class"</span>) <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="sc">-</span>.metric, <span class="sc">-</span>.estimator)</span>
+<span id="cb7-2"><a aria-label="2"></a><span class="co">#&gt; # A tibble: 5 × 10</span></span>
+<span id="cb7-3"><a aria-label="3"></a><span class="co">#&gt;   hidden_units      penalty activation learn_rate threshold   mean     n std_err</span></span>
+<span id="cb7-4"><a aria-label="4"></a><span class="co">#&gt;          &lt;int&gt;        &lt;dbl&gt; &lt;chr&gt;           &lt;dbl&gt;     &lt;dbl&gt;  &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;</span></span>
+<span id="cb7-5"><a aria-label="5"></a><span class="co">#&gt; 1           30 0.001        log_sigmo…     0.331     0.0101 0.0401    10 0.00236</span></span>
+<span id="cb7-6"><a aria-label="6"></a><span class="co">#&gt; 2           40 0.0000000001 elu            0.0132    0.0600 0.0431    10 0.00183</span></span>
+<span id="cb7-7"><a aria-label="7"></a><span class="co">#&gt; 3            9 0.000570     elu            0.0486    0.0268 0.0434    10 0.00331</span></span>
+<span id="cb7-8"><a aria-label="8"></a><span class="co">#&gt; 4           46 0.000214     log_sigmo…     0.537     0.0526 0.0445    10 0.00401</span></span>
+<span id="cb7-9"><a aria-label="9"></a><span class="co">#&gt; 5            6 0.0001       elu            0.0251    0.0800 0.0447    10 0.00280</span></span>
+<span id="cb7-10"><a aria-label="10"></a><span class="co">#&gt; # ℹ 2 more variables: .config &lt;chr&gt;, .iter &lt;int&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="plotting-bo-results" class="slide level2">
 <h2>Plotting BO Results</h2>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a><span class="fu">autoplot</span>(nnet_bayes_res, <span class="at">metric =</span> <span class="st">"brier_class"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a aria-label="1"></a><span class="fu">autoplot</span>(nnet_bayes_res, <span class="at">metric =</span> <span class="st">"brier_class"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 </div>
 <img data-src="figures/autoplot-marginals-1.svg" class="quarto-figure quarto-figure-center r-stretch" style="width:50.0%"></section>
 <section id="plotting-bo-results-1" class="slide level2">
 <h2>Plotting BO Results</h2>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a><span class="fu">autoplot</span>(nnet_bayes_res, <span class="at">metric =</span> <span class="st">"brier_class"</span>, <span class="at">type =</span> <span class="st">"parameters"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a aria-label="1"></a><span class="fu">autoplot</span>(nnet_bayes_res, <span class="at">metric =</span> <span class="st">"brier_class"</span>, <span class="at">type =</span> <span class="st">"parameters"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 </div>
 <img data-src="figures/autoplot-param-1.svg" class="quarto-figure quarto-figure-center r-stretch" style="width:50.0%"></section>
 <section id="plotting-bo-results-2" class="slide level2">
 <h2>Plotting BO Results</h2>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a><span class="fu">autoplot</span>(nnet_bayes_res, <span class="at">metric =</span> <span class="st">"brier_class"</span>, <span class="at">type =</span> <span class="st">"performance"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a aria-label="1"></a><span class="fu">autoplot</span>(nnet_bayes_res, <span class="at">metric =</span> <span class="st">"brier_class"</span>, <span class="at">type =</span> <span class="st">"performance"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 </div>
 <img data-src="figures/autoplot-perf-1.svg" class="quarto-figure quarto-figure-center r-stretch" style="width:50.0%"></section>

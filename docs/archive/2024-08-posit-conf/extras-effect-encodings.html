@@ -7,8 +7,8 @@
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../../site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.9.36">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.10.18">
 
   <title>Machine learning with tidymodels – Extras - Effect Encodings</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,10 +20,13 @@
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
@@ -215,47 +218,47 @@
 <div class="columns">
 <div class="column" style="width:40%;">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">library</span>(tidymodels)</span>
-<span id="cb1-2"><a></a><span class="fu">library</span>(textrecipes)</span>
-<span id="cb1-3"><a></a><span class="fu">library</span>(bonsai)</span>
-<span id="cb1-4"><a></a></span>
-<span id="cb1-5"><a></a><span class="co"># Max's usual settings: </span></span>
-<span id="cb1-6"><a></a><span class="fu">tidymodels_prefer</span>()</span>
-<span id="cb1-7"><a></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
-<span id="cb1-8"><a></a><span class="fu">options</span>(</span>
-<span id="cb1-9"><a></a>  <span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, </span>
-<span id="cb1-10"><a></a>  <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span></span>
-<span id="cb1-11"><a></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a aria-label="1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb1-2"><a aria-label="2"></a><span class="fu">library</span>(textrecipes)</span>
+<span id="cb1-3"><a aria-label="3"></a><span class="fu">library</span>(bonsai)</span>
+<span id="cb1-4"><a aria-label="4"></a></span>
+<span id="cb1-5"><a aria-label="5"></a><span class="co"># Max's usual settings: </span></span>
+<span id="cb1-6"><a aria-label="6"></a><span class="fu">tidymodels_prefer</span>()</span>
+<span id="cb1-7"><a aria-label="7"></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
+<span id="cb1-8"><a aria-label="8"></a><span class="fu">options</span>(</span>
+<span id="cb1-9"><a aria-label="9"></a>  <span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb1-10"><a aria-label="10"></a>  <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span></span>
+<span id="cb1-11"><a aria-label="11"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div><div class="column" style="width:60%;">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="fu">data</span>(hotel_rates)</span>
-<span id="cb2-2"><a></a><span class="fu">set.seed</span>(<span class="dv">295</span>)</span>
-<span id="cb2-3"><a></a>hotel_rates <span class="ot">&lt;-</span> </span>
-<span id="cb2-4"><a></a>  hotel_rates <span class="sc">%&gt;%</span> </span>
-<span id="cb2-5"><a></a>  <span class="fu">sample_n</span>(<span class="dv">5000</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-6"><a></a>  <span class="fu">arrange</span>(arrival_date) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-7"><a></a>  <span class="fu">select</span>(<span class="sc">-</span>arrival_date) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-8"><a></a>  <span class="fu">mutate</span>(</span>
-<span id="cb2-9"><a></a>    <span class="at">company =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(company)),</span>
-<span id="cb2-10"><a></a>    <span class="at">country =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(country)),</span>
-<span id="cb2-11"><a></a>    <span class="at">agent =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(agent))</span>
-<span id="cb2-12"><a></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a aria-label="1"></a><span class="fu">data</span>(hotel_rates)</span>
+<span id="cb2-2"><a aria-label="2"></a><span class="fu">set.seed</span>(<span class="dv">295</span>)</span>
+<span id="cb2-3"><a aria-label="3"></a>hotel_rates <span class="ot">&lt;-</span> </span>
+<span id="cb2-4"><a aria-label="4"></a>  hotel_rates <span class="sc">%&gt;%</span> </span>
+<span id="cb2-5"><a aria-label="5"></a>  <span class="fu">sample_n</span>(<span class="dv">5000</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-6"><a aria-label="6"></a>  <span class="fu">arrange</span>(arrival_date) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-7"><a aria-label="7"></a>  <span class="fu">select</span>(<span class="sc">-</span>arrival_date) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-8"><a aria-label="8"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb2-9"><a aria-label="9"></a>    <span class="at">company =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(company)),</span>
+<span id="cb2-10"><a aria-label="10"></a>    <span class="at">country =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(country)),</span>
+<span id="cb2-11"><a aria-label="11"></a>    <span class="at">agent =</span> <span class="fu">factor</span>(<span class="fu">as.character</span>(agent))</span>
+<span id="cb2-12"><a aria-label="12"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div></div>
 </section>
 <section id="previously---data-usage" class="slide level2">
 <h2>Previously - Data Usage</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a><span class="fu">set.seed</span>(<span class="dv">4028</span>)</span>
-<span id="cb3-2"><a></a>hotel_split <span class="ot">&lt;-</span></span>
-<span id="cb3-3"><a></a>  <span class="fu">initial_split</span>(hotel_rates, <span class="at">strata =</span> avg_price_per_room)</span>
-<span id="cb3-4"><a></a></span>
-<span id="cb3-5"><a></a>hotel_train <span class="ot">&lt;-</span> <span class="fu">training</span>(hotel_split)</span>
-<span id="cb3-6"><a></a>hotel_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(hotel_split)</span>
-<span id="cb3-7"><a></a></span>
-<span id="cb3-8"><a></a><span class="fu">set.seed</span>(<span class="dv">472</span>)</span>
-<span id="cb3-9"><a></a>hotel_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(hotel_train, <span class="at">strata =</span> avg_price_per_room)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a aria-label="1"></a><span class="fu">set.seed</span>(<span class="dv">4028</span>)</span>
+<span id="cb3-2"><a aria-label="2"></a>hotel_split <span class="ot">&lt;-</span></span>
+<span id="cb3-3"><a aria-label="3"></a>  <span class="fu">initial_split</span>(hotel_rates, <span class="at">strata =</span> avg_price_per_room)</span>
+<span id="cb3-4"><a aria-label="4"></a></span>
+<span id="cb3-5"><a aria-label="5"></a>hotel_train <span class="ot">&lt;-</span> <span class="fu">training</span>(hotel_split)</span>
+<span id="cb3-6"><a aria-label="6"></a>hotel_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(hotel_split)</span>
+<span id="cb3-7"><a aria-label="7"></a></span>
+<span id="cb3-8"><a aria-label="8"></a><span class="fu">set.seed</span>(<span class="dv">472</span>)</span>
+<span id="cb3-9"><a aria-label="9"></a>hotel_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(hotel_train, <span class="at">strata =</span> avg_price_per_room)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="what-do-we-do-with-the-agent-and-company-data" class="slide level2">
@@ -303,32 +306,32 @@
 <div class="column" style="width:50%;">
 <p>Data before:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a>before</span>
-<span id="cb4-2"><a></a><span class="co">#&gt; # A tibble: 7 × 3</span></span>
-<span id="cb4-3"><a></a><span class="co">#&gt;   avg_price_per_room agent            .row</span></span>
-<span id="cb4-4"><a></a><span class="co">#&gt;                &lt;dbl&gt; &lt;fct&gt;           &lt;int&gt;</span></span>
-<span id="cb4-5"><a></a><span class="co">#&gt; 1               52.7 cynthia_worsley     1</span></span>
-<span id="cb4-6"><a></a><span class="co">#&gt; 2               51.8 carlos_bryant       2</span></span>
-<span id="cb4-7"><a></a><span class="co">#&gt; 3               53.8 lance_hitchcock     3</span></span>
-<span id="cb4-8"><a></a><span class="co">#&gt; 4               51.8 lance_hitchcock     4</span></span>
-<span id="cb4-9"><a></a><span class="co">#&gt; 5               46.8 cynthia_worsley     5</span></span>
-<span id="cb4-10"><a></a><span class="co">#&gt; 6               54.7 charles_najera      6</span></span>
-<span id="cb4-11"><a></a><span class="co">#&gt; 7               46.8 cynthia_worsley     7</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a aria-label="1"></a>before</span>
+<span id="cb4-2"><a aria-label="2"></a><span class="co">#&gt; # A tibble: 7 × 3</span></span>
+<span id="cb4-3"><a aria-label="3"></a><span class="co">#&gt;   avg_price_per_room agent            .row</span></span>
+<span id="cb4-4"><a aria-label="4"></a><span class="co">#&gt;                &lt;dbl&gt; &lt;fct&gt;           &lt;int&gt;</span></span>
+<span id="cb4-5"><a aria-label="5"></a><span class="co">#&gt; 1               52.7 cynthia_worsley     1</span></span>
+<span id="cb4-6"><a aria-label="6"></a><span class="co">#&gt; 2               51.8 carlos_bryant       2</span></span>
+<span id="cb4-7"><a aria-label="7"></a><span class="co">#&gt; 3               53.8 lance_hitchcock     3</span></span>
+<span id="cb4-8"><a aria-label="8"></a><span class="co">#&gt; 4               51.8 lance_hitchcock     4</span></span>
+<span id="cb4-9"><a aria-label="9"></a><span class="co">#&gt; 5               46.8 cynthia_worsley     5</span></span>
+<span id="cb4-10"><a aria-label="10"></a><span class="co">#&gt; 6               54.7 charles_najera      6</span></span>
+<span id="cb4-11"><a aria-label="11"></a><span class="co">#&gt; 7               46.8 cynthia_worsley     7</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div><div class="column" style="width:50%;">
 <p>Data after:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a>after</span>
-<span id="cb5-2"><a></a><span class="co">#&gt; # A tibble: 7 × 3</span></span>
-<span id="cb5-3"><a></a><span class="co">#&gt;   avg_price_per_room agent  .row</span></span>
-<span id="cb5-4"><a></a><span class="co">#&gt;                &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;</span></span>
-<span id="cb5-5"><a></a><span class="co">#&gt; 1               52.7  88.5     1</span></span>
-<span id="cb5-6"><a></a><span class="co">#&gt; 2               51.8  89.5     2</span></span>
-<span id="cb5-7"><a></a><span class="co">#&gt; 3               53.8  79.8     3</span></span>
-<span id="cb5-8"><a></a><span class="co">#&gt; 4               51.8  79.8     4</span></span>
-<span id="cb5-9"><a></a><span class="co">#&gt; 5               46.8  88.5     5</span></span>
-<span id="cb5-10"><a></a><span class="co">#&gt; 6               54.7 109.      6</span></span>
-<span id="cb5-11"><a></a><span class="co">#&gt; 7               46.8  88.5     7</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a aria-label="1"></a>after</span>
+<span id="cb5-2"><a aria-label="2"></a><span class="co">#&gt; # A tibble: 7 × 3</span></span>
+<span id="cb5-3"><a aria-label="3"></a><span class="co">#&gt;   avg_price_per_room agent  .row</span></span>
+<span id="cb5-4"><a aria-label="4"></a><span class="co">#&gt;                &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt;</span></span>
+<span id="cb5-5"><a aria-label="5"></a><span class="co">#&gt; 1               52.7  88.5     1</span></span>
+<span id="cb5-6"><a aria-label="6"></a><span class="co">#&gt; 2               51.8  89.5     2</span></span>
+<span id="cb5-7"><a aria-label="7"></a><span class="co">#&gt; 3               53.8  79.8     3</span></span>
+<span id="cb5-8"><a aria-label="8"></a><span class="co">#&gt; 4               51.8  79.8     4</span></span>
+<span id="cb5-9"><a aria-label="9"></a><span class="co">#&gt; 5               46.8  88.5     5</span></span>
+<span id="cb5-10"><a aria-label="10"></a><span class="co">#&gt; 6               54.7 109.      6</span></span>
+<span id="cb5-11"><a aria-label="11"></a><span class="co">#&gt; 7               46.8  88.5     7</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div></div>
 <p>The <code>agent</code> column is replaced with an estimate of the ADR.</p>
@@ -381,14 +384,14 @@
 <section id="agent-effects" class="slide level2 annotation">
 <h2>Agent effects <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6" data-code-line-numbers="1,6|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a><span class="fu">library</span>(embed)</span>
-<span id="cb6-2"><a></a></span>
-<span id="cb6-3"><a></a>hotel_effect_rec <span class="ot">&lt;-</span></span>
-<span id="cb6-4"><a></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">%&gt;%</span> </span>
-<span id="cb6-5"><a></a>  <span class="fu">step_YeoJohnson</span>(lead_time) <span class="sc">%&gt;%</span></span>
-<span id="cb6-6"><a></a>  <span class="fu">step_lencode_mixed</span>(agent, company, <span class="at">outcome =</span> <span class="fu">vars</span>(avg_price_per_room)) <span class="sc">%&gt;%</span></span>
-<span id="cb6-7"><a></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span></span>
-<span id="cb6-8"><a></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6" data-code-line-numbers="1,6|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a aria-label="1"></a><span class="fu">library</span>(embed)</span>
+<span id="cb6-2"><a aria-label="2"></a></span>
+<span id="cb6-3"><a aria-label="3"></a>hotel_effect_rec <span class="ot">&lt;-</span></span>
+<span id="cb6-4"><a aria-label="4"></a>  <span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-5"><a aria-label="5"></a>  <span class="fu">step_YeoJohnson</span>(lead_time) <span class="sc">%&gt;%</span></span>
+<span id="cb6-6"><a aria-label="6"></a>  <span class="fu">step_lencode_mixed</span>(agent, company, <span class="at">outcome =</span> <span class="fu">vars</span>(avg_price_per_room)) <span class="sc">%&gt;%</span></span>
+<span id="cb6-7"><a aria-label="7"></a>  <span class="fu">step_dummy</span>(<span class="fu">all_nominal_predictors</span>()) <span class="sc">%&gt;%</span></span>
+<span id="cb6-8"><a aria-label="8"></a>  <span class="fu">step_zv</span>(<span class="fu">all_predictors</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="fragment">
 <p>It is very important to appropriately validate the effect encoding step to make sure that we are not overfitting.</p>
@@ -397,23 +400,23 @@
 <section id="effect-encoding-results" class="slide level2">
 <h2>Effect encoding results <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7" data-code-line-numbers="4|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a>hotel_effect_wflow <span class="ot">&lt;-</span></span>
-<span id="cb7-2"><a></a>  <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb7-3"><a></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">%&gt;%</span> </span>
-<span id="cb7-4"><a></a>  <span class="fu">update_recipe</span>(hotel_effect_rec)</span>
-<span id="cb7-5"><a></a></span>
-<span id="cb7-6"><a></a>reg_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mae, rsq)</span>
-<span id="cb7-7"><a></a></span>
-<span id="cb7-8"><a></a>hotel_effect_res <span class="ot">&lt;-</span></span>
-<span id="cb7-9"><a></a>  hotel_effect_wflow <span class="sc">%&gt;%</span></span>
-<span id="cb7-10"><a></a>  <span class="fu">fit_resamples</span>(hotel_rs, <span class="at">metrics =</span> reg_metrics)</span>
-<span id="cb7-11"><a></a></span>
-<span id="cb7-12"><a></a><span class="fu">collect_metrics</span>(hotel_effect_res)</span>
-<span id="cb7-13"><a></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
-<span id="cb7-14"><a></a><span class="co">#&gt;   .metric .estimator   mean     n std_err .config             </span></span>
-<span id="cb7-15"><a></a><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
-<span id="cb7-16"><a></a><span class="co">#&gt; 1 mae     standard   17.8      10 0.189   Preprocessor1_Model1</span></span>
-<span id="cb7-17"><a></a><span class="co">#&gt; 2 rsq     standard    0.870    10 0.00357 Preprocessor1_Model1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7" data-code-line-numbers="4|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a aria-label="1"></a>hotel_effect_wflow <span class="ot">&lt;-</span></span>
+<span id="cb7-2"><a aria-label="2"></a>  <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb7-3"><a aria-label="3"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-4"><a aria-label="4"></a>  <span class="fu">update_recipe</span>(hotel_effect_rec)</span>
+<span id="cb7-5"><a aria-label="5"></a></span>
+<span id="cb7-6"><a aria-label="6"></a>reg_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(mae, rsq)</span>
+<span id="cb7-7"><a aria-label="7"></a></span>
+<span id="cb7-8"><a aria-label="8"></a>hotel_effect_res <span class="ot">&lt;-</span></span>
+<span id="cb7-9"><a aria-label="9"></a>  hotel_effect_wflow <span class="sc">%&gt;%</span></span>
+<span id="cb7-10"><a aria-label="10"></a>  <span class="fu">fit_resamples</span>(hotel_rs, <span class="at">metrics =</span> reg_metrics)</span>
+<span id="cb7-11"><a aria-label="11"></a></span>
+<span id="cb7-12"><a aria-label="12"></a><span class="fu">collect_metrics</span>(hotel_effect_res)</span>
+<span id="cb7-13"><a aria-label="13"></a><span class="co">#&gt; # A tibble: 2 × 6</span></span>
+<span id="cb7-14"><a aria-label="14"></a><span class="co">#&gt;   .metric .estimator   mean     n std_err .config             </span></span>
+<span id="cb7-15"><a aria-label="15"></a><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;               </span></span>
+<span id="cb7-16"><a aria-label="16"></a><span class="co">#&gt; 1 mae     standard   17.8      10 0.189   Preprocessor1_Model1</span></span>
+<span id="cb7-17"><a aria-label="17"></a><span class="co">#&gt; 2 rsq     standard    0.870    10 0.00357 Preprocessor1_Model1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Slightly worse but it can handle new agents (if they occur).</p>
 
