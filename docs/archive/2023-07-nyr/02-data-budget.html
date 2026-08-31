@@ -7,8 +7,8 @@
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../../site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.9.36">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.10.18">
 
   <title>Machine learning with tidymodels – 2 - Your data budget</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,10 +20,13 @@
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
@@ -234,15 +237,15 @@
 <section id="which-of-these-variables-can-we-use" class="slide level2">
 <h2>Which of these variables can we use?</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">library</span>(tidymodels)</span>
-<span id="cb1-2"><a></a><span class="fu">library</span>(modeldatatoo)</span>
-<span id="cb1-3"><a></a></span>
-<span id="cb1-4"><a></a>taxi <span class="ot">&lt;-</span> <span class="fu">data_taxi</span>()</span>
-<span id="cb1-5"><a></a></span>
-<span id="cb1-6"><a></a><span class="fu">names</span>(taxi)</span>
-<span id="cb1-7"><a></a><span class="co">#&gt;  [1] "tip"          "id"           "duration"     "distance"     "fare"        </span></span>
-<span id="cb1-8"><a></a><span class="co">#&gt;  [6] "tolls"        "extras"       "total_cost"   "payment_type" "company"     </span></span>
-<span id="cb1-9"><a></a><span class="co">#&gt; [11] "local"        "dow"          "month"        "hour"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a aria-label="1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb1-2"><a aria-label="2"></a><span class="fu">library</span>(modeldatatoo)</span>
+<span id="cb1-3"><a aria-label="3"></a></span>
+<span id="cb1-4"><a aria-label="4"></a>taxi <span class="ot">&lt;-</span> <span class="fu">data_taxi</span>()</span>
+<span id="cb1-5"><a aria-label="5"></a></span>
+<span id="cb1-6"><a aria-label="6"></a><span class="fu">names</span>(taxi)</span>
+<span id="cb1-7"><a aria-label="7"></a><span class="co">#&gt;  [1] "tip"          "id"           "duration"     "distance"     "fare"        </span></span>
+<span id="cb1-8"><a aria-label="8"></a><span class="co">#&gt;  [6] "tolls"        "extras"       "total_cost"   "payment_type" "company"     </span></span>
+<span id="cb1-9"><a aria-label="9"></a><span class="co">#&gt; [11] "local"        "dow"          "month"        "hour"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="checklist-for-predictors" class="slide level2">
@@ -257,10 +260,10 @@
 <h2>Data on Chicago taxi trips</h2>
 <p>We are using a slightly modified version from the modeldatatoo data.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a>taxi <span class="ot">&lt;-</span> taxi <span class="sc">%&gt;%</span></span>
-<span id="cb2-2"><a></a>  <span class="fu">mutate</span>(<span class="at">month =</span> <span class="fu">factor</span>(month, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Jan"</span>, <span class="st">"Feb"</span>, <span class="st">"Mar"</span>, <span class="st">"Apr"</span>))) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-3"><a></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(id, duration, fare, tolls, extras, total_cost, payment_type)) <span class="sc">%&gt;%</span> </span>
-<span id="cb2-4"><a></a>  <span class="fu">drop_na</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a aria-label="1"></a>taxi <span class="ot">&lt;-</span> taxi <span class="sc">%&gt;%</span></span>
+<span id="cb2-2"><a aria-label="2"></a>  <span class="fu">mutate</span>(<span class="at">month =</span> <span class="fu">factor</span>(month, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Jan"</span>, <span class="st">"Feb"</span>, <span class="st">"Mar"</span>, <span class="st">"Apr"</span>))) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-3"><a aria-label="3"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(id, duration, fare, tolls, extras, total_cost, payment_type)) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-4"><a aria-label="4"></a>  <span class="fu">drop_na</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="data-on-chicago-taxi-trips-2" class="slide level2">
@@ -305,21 +308,21 @@
 <section id="data-on-chicago-taxi-trips-3" class="slide level2">
 <h2>Data on Chicago taxi trips</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a>taxi</span>
-<span id="cb3-2"><a></a><span class="co">#&gt; # A tibble: 8,807 × 7</span></span>
-<span id="cb3-3"><a></a><span class="co">#&gt;    tip   distance company      local dow   month  hour</span></span>
-<span id="cb3-4"><a></a><span class="co">#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;        &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;</span></span>
-<span id="cb3-5"><a></a><span class="co">#&gt;  1 yes       1.24 Sun Taxi     no    Thu   Feb      13</span></span>
-<span id="cb3-6"><a></a><span class="co">#&gt;  2 no        5.39 Flash Cab    no    Sat   Mar      12</span></span>
-<span id="cb3-7"><a></a><span class="co">#&gt;  3 yes       3.01 City Service no    Wed   Feb      17</span></span>
-<span id="cb3-8"><a></a><span class="co">#&gt;  4 no       18.4  Sun Taxi     no    Sat   Apr       6</span></span>
-<span id="cb3-9"><a></a><span class="co">#&gt;  5 yes       1.76 Sun Taxi     no    Sun   Jan      15</span></span>
-<span id="cb3-10"><a></a><span class="co">#&gt;  6 yes      13.6  Sun Taxi     no    Mon   Feb      17</span></span>
-<span id="cb3-11"><a></a><span class="co">#&gt;  7 yes       3.71 City Service no    Mon   Mar      21</span></span>
-<span id="cb3-12"><a></a><span class="co">#&gt;  8 yes       4.8  other        no    Tue   Mar       9</span></span>
-<span id="cb3-13"><a></a><span class="co">#&gt;  9 yes      18.0  City Service no    Fri   Jan      19</span></span>
-<span id="cb3-14"><a></a><span class="co">#&gt; 10 no       17.5  other        yes   Thu   Apr      12</span></span>
-<span id="cb3-15"><a></a><span class="co">#&gt; # ℹ 8,797 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a aria-label="1"></a>taxi</span>
+<span id="cb3-2"><a aria-label="2"></a><span class="co">#&gt; # A tibble: 8,807 × 7</span></span>
+<span id="cb3-3"><a aria-label="3"></a><span class="co">#&gt;    tip   distance company      local dow   month  hour</span></span>
+<span id="cb3-4"><a aria-label="4"></a><span class="co">#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;        &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;</span></span>
+<span id="cb3-5"><a aria-label="5"></a><span class="co">#&gt;  1 yes       1.24 Sun Taxi     no    Thu   Feb      13</span></span>
+<span id="cb3-6"><a aria-label="6"></a><span class="co">#&gt;  2 no        5.39 Flash Cab    no    Sat   Mar      12</span></span>
+<span id="cb3-7"><a aria-label="7"></a><span class="co">#&gt;  3 yes       3.01 City Service no    Wed   Feb      17</span></span>
+<span id="cb3-8"><a aria-label="8"></a><span class="co">#&gt;  4 no       18.4  Sun Taxi     no    Sat   Apr       6</span></span>
+<span id="cb3-9"><a aria-label="9"></a><span class="co">#&gt;  5 yes       1.76 Sun Taxi     no    Sun   Jan      15</span></span>
+<span id="cb3-10"><a aria-label="10"></a><span class="co">#&gt;  6 yes      13.6  Sun Taxi     no    Mon   Feb      17</span></span>
+<span id="cb3-11"><a aria-label="11"></a><span class="co">#&gt;  7 yes       3.71 City Service no    Mon   Mar      21</span></span>
+<span id="cb3-12"><a aria-label="12"></a><span class="co">#&gt;  8 yes       4.8  other        no    Tue   Mar       9</span></span>
+<span id="cb3-13"><a aria-label="13"></a><span class="co">#&gt;  9 yes      18.0  City Service no    Fri   Jan      19</span></span>
+<span id="cb3-14"><a aria-label="14"></a><span class="co">#&gt; 10 no       17.5  other        yes   Thu   Apr      12</span></span>
+<span id="cb3-15"><a aria-label="15"></a><span class="co">#&gt; # ℹ 8,797 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="data-splitting-and-spending" class="slide level2">
@@ -376,11 +379,11 @@
 <section id="the-initial-split" class="slide level2 annotation">
 <h2>The initial split <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb4-2"><a></a>taxi_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(taxi)</span>
-<span id="cb4-3"><a></a>taxi_split</span>
-<span id="cb4-4"><a></a><span class="co">#&gt; &lt;Training/Testing/Total&gt;</span></span>
-<span id="cb4-5"><a></a><span class="co">#&gt; &lt;6605/2202/8807&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a aria-label="1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb4-2"><a aria-label="2"></a>taxi_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(taxi)</span>
+<span id="cb4-3"><a aria-label="3"></a>taxi_split</span>
+<span id="cb4-4"><a aria-label="4"></a><span class="co">#&gt; &lt;Training/Testing/Total&gt;</span></span>
+<span id="cb4-5"><a aria-label="5"></a><span class="co">#&gt; &lt;6605/2202/8807&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <aside class="notes">
 <p>How much data in training vs testing? This function uses a good default, but this depends on your specific goal/data We will talk about more powerful ways of splitting, like stratification, later</p>
@@ -399,28 +402,28 @@
 <section id="accessing-the-data" class="slide level2">
 <h2>Accessing the data <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a>taxi_train <span class="ot">&lt;-</span> <span class="fu">training</span>(taxi_split)</span>
-<span id="cb5-2"><a></a>taxi_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(taxi_split)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a aria-label="1"></a>taxi_train <span class="ot">&lt;-</span> <span class="fu">training</span>(taxi_split)</span>
+<span id="cb5-2"><a aria-label="2"></a>taxi_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(taxi_split)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="the-training-set" class="slide level2">
 <h2>The training set<img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a>taxi_train</span>
-<span id="cb6-2"><a></a><span class="co">#&gt; # A tibble: 6,605 × 7</span></span>
-<span id="cb6-3"><a></a><span class="co">#&gt;    tip   distance company                   local dow   month  hour</span></span>
-<span id="cb6-4"><a></a><span class="co">#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;                     &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;</span></span>
-<span id="cb6-5"><a></a><span class="co">#&gt;  1 yes       4.54 City Service              no    Sat   Mar      16</span></span>
-<span id="cb6-6"><a></a><span class="co">#&gt;  2 no       10.2  Flash Cab                 no    Mon   Feb       8</span></span>
-<span id="cb6-7"><a></a><span class="co">#&gt;  3 yes      12.4  other                     no    Sun   Apr      15</span></span>
-<span id="cb6-8"><a></a><span class="co">#&gt;  4 yes      15.3  Sun Taxi                  no    Mon   Apr      18</span></span>
-<span id="cb6-9"><a></a><span class="co">#&gt;  5 no        6.41 Flash Cab                 no    Wed   Apr      14</span></span>
-<span id="cb6-10"><a></a><span class="co">#&gt;  6 yes       1.56 other                     no    Tue   Jan      13</span></span>
-<span id="cb6-11"><a></a><span class="co">#&gt;  7 yes       3.13 Flash Cab                 no    Sun   Apr      12</span></span>
-<span id="cb6-12"><a></a><span class="co">#&gt;  8 yes       7.54 other                     no    Tue   Apr       8</span></span>
-<span id="cb6-13"><a></a><span class="co">#&gt;  9 yes       6.98 Flash Cab                 no    Tue   Apr       5</span></span>
-<span id="cb6-14"><a></a><span class="co">#&gt; 10 yes       0.7  Taxi Affiliation Services no    Tue   Jan       9</span></span>
-<span id="cb6-15"><a></a><span class="co">#&gt; # ℹ 6,595 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a aria-label="1"></a>taxi_train</span>
+<span id="cb6-2"><a aria-label="2"></a><span class="co">#&gt; # A tibble: 6,605 × 7</span></span>
+<span id="cb6-3"><a aria-label="3"></a><span class="co">#&gt;    tip   distance company                   local dow   month  hour</span></span>
+<span id="cb6-4"><a aria-label="4"></a><span class="co">#&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;fct&gt;                     &lt;fct&gt; &lt;fct&gt; &lt;fct&gt; &lt;int&gt;</span></span>
+<span id="cb6-5"><a aria-label="5"></a><span class="co">#&gt;  1 yes       4.54 City Service              no    Sat   Mar      16</span></span>
+<span id="cb6-6"><a aria-label="6"></a><span class="co">#&gt;  2 no       10.2  Flash Cab                 no    Mon   Feb       8</span></span>
+<span id="cb6-7"><a aria-label="7"></a><span class="co">#&gt;  3 yes      12.4  other                     no    Sun   Apr      15</span></span>
+<span id="cb6-8"><a aria-label="8"></a><span class="co">#&gt;  4 yes      15.3  Sun Taxi                  no    Mon   Apr      18</span></span>
+<span id="cb6-9"><a aria-label="9"></a><span class="co">#&gt;  5 no        6.41 Flash Cab                 no    Wed   Apr      14</span></span>
+<span id="cb6-10"><a aria-label="10"></a><span class="co">#&gt;  6 yes       1.56 other                     no    Tue   Jan      13</span></span>
+<span id="cb6-11"><a aria-label="11"></a><span class="co">#&gt;  7 yes       3.13 Flash Cab                 no    Sun   Apr      12</span></span>
+<span id="cb6-12"><a aria-label="12"></a><span class="co">#&gt;  8 yes       7.54 other                     no    Tue   Apr       8</span></span>
+<span id="cb6-13"><a aria-label="13"></a><span class="co">#&gt;  9 yes       6.98 Flash Cab                 no    Tue   Apr       5</span></span>
+<span id="cb6-14"><a aria-label="14"></a><span class="co">#&gt; 10 yes       0.7  Taxi Affiliation Services no    Tue   Jan       9</span></span>
+<span id="cb6-15"><a aria-label="15"></a><span class="co">#&gt; # ℹ 6,595 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="the-test-set" class="slide level2">
@@ -447,15 +450,15 @@
 <section id="data-splitting-and-spending-3" class="slide level2">
 <h2>Data splitting and spending <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb7-2"><a></a>taxi_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(taxi, <span class="at">prop =</span> <span class="fl">0.8</span>)</span>
-<span id="cb7-3"><a></a>taxi_train <span class="ot">&lt;-</span> <span class="fu">training</span>(taxi_split)</span>
-<span id="cb7-4"><a></a>taxi_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(taxi_split)</span>
-<span id="cb7-5"><a></a></span>
-<span id="cb7-6"><a></a><span class="fu">nrow</span>(taxi_train)</span>
-<span id="cb7-7"><a></a><span class="co">#&gt; [1] 7045</span></span>
-<span id="cb7-8"><a></a><span class="fu">nrow</span>(taxi_test)</span>
-<span id="cb7-9"><a></a><span class="co">#&gt; [1] 1762</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a aria-label="1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb7-2"><a aria-label="2"></a>taxi_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(taxi, <span class="at">prop =</span> <span class="fl">0.8</span>)</span>
+<span id="cb7-3"><a aria-label="3"></a>taxi_train <span class="ot">&lt;-</span> <span class="fu">training</span>(taxi_split)</span>
+<span id="cb7-4"><a aria-label="4"></a>taxi_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(taxi_split)</span>
+<span id="cb7-5"><a aria-label="5"></a></span>
+<span id="cb7-6"><a aria-label="6"></a><span class="fu">nrow</span>(taxi_train)</span>
+<span id="cb7-7"><a aria-label="7"></a><span class="co">#&gt; [1] 7045</span></span>
+<span id="cb7-8"><a aria-label="8"></a><span class="fu">nrow</span>(taxi_test)</span>
+<span id="cb7-9"><a aria-label="9"></a><span class="co">#&gt; [1] 1762</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section></section>
 <section>
@@ -521,50 +524,50 @@
 <section id="section-3" class="slide level2">
 <h2></h2>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a>taxi_train <span class="sc">%&gt;%</span> </span>
-<span id="cb8-2"><a></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> tip)) <span class="sc">+</span></span>
-<span id="cb8-3"><a></a>  <span class="fu">geom_bar</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a aria-label="1"></a>taxi_train <span class="sc">%&gt;%</span> </span>
+<span id="cb8-2"><a aria-label="2"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> tip)) <span class="sc">+</span></span>
+<span id="cb8-3"><a aria-label="3"></a>  <span class="fu">geom_bar</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 </div>
 <img data-src="figures/taxi-tip-counts-1.svg" class="quarto-figure quarto-figure-center r-stretch"></section>
 <section id="section-4" class="slide level2">
 <h2></h2>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a>taxi_train <span class="sc">%&gt;%</span> </span>
-<span id="cb9-2"><a></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> tip, <span class="at">fill =</span> local)) <span class="sc">+</span></span>
-<span id="cb9-3"><a></a>  <span class="fu">geom_bar</span>() <span class="sc">+</span></span>
-<span id="cb9-4"><a></a>  <span class="fu">scale_fill_viridis_d</span>(<span class="at">end =</span> .<span class="dv">5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a aria-label="1"></a>taxi_train <span class="sc">%&gt;%</span> </span>
+<span id="cb9-2"><a aria-label="2"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> tip, <span class="at">fill =</span> local)) <span class="sc">+</span></span>
+<span id="cb9-3"><a aria-label="3"></a>  <span class="fu">geom_bar</span>() <span class="sc">+</span></span>
+<span id="cb9-4"><a aria-label="4"></a>  <span class="fu">scale_fill_viridis_d</span>(<span class="at">end =</span> .<span class="dv">5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 </div>
 <img data-src="figures/taxi-tip-by-local-1.svg" class="quarto-figure quarto-figure-center r-stretch"></section>
 <section id="section-5" class="slide level2">
 <h2></h2>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a>taxi_train <span class="sc">%&gt;%</span> </span>
-<span id="cb10-2"><a></a>  <span class="fu">mutate</span>(<span class="at">tip =</span> forcats<span class="sc">::</span><span class="fu">fct_rev</span>(tip)) <span class="sc">%&gt;%</span> </span>
-<span id="cb10-3"><a></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> hour, <span class="at">fill =</span> tip)) <span class="sc">+</span></span>
-<span id="cb10-4"><a></a>  <span class="fu">geom_bar</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a aria-label="1"></a>taxi_train <span class="sc">%&gt;%</span> </span>
+<span id="cb10-2"><a aria-label="2"></a>  <span class="fu">mutate</span>(<span class="at">tip =</span> forcats<span class="sc">::</span><span class="fu">fct_rev</span>(tip)) <span class="sc">%&gt;%</span> </span>
+<span id="cb10-3"><a aria-label="3"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> hour, <span class="at">fill =</span> tip)) <span class="sc">+</span></span>
+<span id="cb10-4"><a aria-label="4"></a>  <span class="fu">geom_bar</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 </div>
 <img data-src="figures/taxi-tip-by-hour-1.svg" class="quarto-figure quarto-figure-center r-stretch"></section>
 <section id="section-6" class="slide level2">
 <h2></h2>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a></a>taxi_train <span class="sc">%&gt;%</span> </span>
-<span id="cb11-2"><a></a>  <span class="fu">mutate</span>(<span class="at">tip =</span> forcats<span class="sc">::</span><span class="fu">fct_rev</span>(tip)) <span class="sc">%&gt;%</span> </span>
-<span id="cb11-3"><a></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> hour, <span class="at">fill =</span> tip)) <span class="sc">+</span></span>
-<span id="cb11-4"><a></a>  <span class="fu">geom_bar</span>(<span class="at">position =</span> <span class="st">"fill"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a aria-label="1"></a>taxi_train <span class="sc">%&gt;%</span> </span>
+<span id="cb11-2"><a aria-label="2"></a>  <span class="fu">mutate</span>(<span class="at">tip =</span> forcats<span class="sc">::</span><span class="fu">fct_rev</span>(tip)) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-3"><a aria-label="3"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> hour, <span class="at">fill =</span> tip)) <span class="sc">+</span></span>
+<span id="cb11-4"><a aria-label="4"></a>  <span class="fu">geom_bar</span>(<span class="at">position =</span> <span class="st">"fill"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 </div>
 <img data-src="figures/taxi-tip-by-hour-fill-1.svg" class="quarto-figure quarto-figure-center r-stretch"></section>
 <section id="section-7" class="slide level2">
 <h2></h2>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a></a>taxi_train <span class="sc">%&gt;%</span> </span>
-<span id="cb12-2"><a></a>  <span class="fu">mutate</span>(<span class="at">tip =</span> forcats<span class="sc">::</span><span class="fu">fct_rev</span>(tip)) <span class="sc">%&gt;%</span> </span>
-<span id="cb12-3"><a></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> distance)) <span class="sc">+</span></span>
-<span id="cb12-4"><a></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">100</span>) <span class="sc">+</span></span>
-<span id="cb12-5"><a></a>  <span class="fu">facet_grid</span>(<span class="fu">vars</span>(tip))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a aria-label="1"></a>taxi_train <span class="sc">%&gt;%</span> </span>
+<span id="cb12-2"><a aria-label="2"></a>  <span class="fu">mutate</span>(<span class="at">tip =</span> forcats<span class="sc">::</span><span class="fu">fct_rev</span>(tip)) <span class="sc">%&gt;%</span> </span>
+<span id="cb12-3"><a aria-label="3"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> distance)) <span class="sc">+</span></span>
+<span id="cb12-4"><a aria-label="4"></a>  <span class="fu">geom_histogram</span>(<span class="at">bins =</span> <span class="dv">100</span>) <span class="sc">+</span></span>
+<span id="cb12-5"><a aria-label="5"></a>  <span class="fu">facet_grid</span>(<span class="fu">vars</span>(tip))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 </div>
 <img data-src="figures/taxi-tip-by-distance-1.svg" class="quarto-figure quarto-figure-center r-stretch"></section></section>
@@ -595,11 +598,11 @@
 <h2>Stratification</h2>
 <p>Use <code>strata = tip</code></p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb13-2"><a></a>taxi_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(taxi, <span class="at">prop =</span> <span class="fl">0.8</span>, <span class="at">strata =</span> tip)</span>
-<span id="cb13-3"><a></a>taxi_split</span>
-<span id="cb13-4"><a></a><span class="co">#&gt; &lt;Training/Testing/Total&gt;</span></span>
-<span id="cb13-5"><a></a><span class="co">#&gt; &lt;7045/1762/8807&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a aria-label="1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb13-2"><a aria-label="2"></a>taxi_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(taxi, <span class="at">prop =</span> <span class="fl">0.8</span>, <span class="at">strata =</span> tip)</span>
+<span id="cb13-3"><a aria-label="3"></a>taxi_split</span>
+<span id="cb13-4"><a aria-label="4"></a><span class="co">#&gt; &lt;Training/Testing/Total&gt;</span></span>
+<span id="cb13-5"><a aria-label="5"></a><span class="co">#&gt; &lt;7045/1762/8807&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="stratification-1" class="slide level2">

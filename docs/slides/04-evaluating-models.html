@@ -7,8 +7,8 @@
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.9.36">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.10.18">
 
   <title>Machine learning with tidymodels – 4 - Evaluating models</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,10 +20,13 @@
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
@@ -215,37 +218,37 @@
 <section id="previously" class="slide level2">
 <h2>Previously…</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1" data-code-line-numbers="1|3-6|8-10|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">library</span>(tidymodels)</span>
-<span id="cb1-2"><a></a></span>
-<span id="cb1-3"><a></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb1-4"><a></a>cls_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(cls_data_2026, <span class="at">prop =</span> <span class="fl">0.8</span>)</span>
-<span id="cb1-5"><a></a>cls_train <span class="ot">&lt;-</span> <span class="fu">training</span>(cls_split)</span>
-<span id="cb1-6"><a></a>cls_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(cls_split)</span>
-<span id="cb1-7"><a></a></span>
-<span id="cb1-8"><a></a>tree_spec <span class="ot">&lt;-</span> <span class="fu">decision_tree</span>(<span class="at">cost_complexity =</span> <span class="fl">0.0001</span>, <span class="at">mode =</span> <span class="st">"classification"</span>)</span>
-<span id="cb1-9"><a></a>cls_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(class <span class="sc">~</span> ., tree_spec)</span>
-<span id="cb1-10"><a></a>cls_fit <span class="ot">&lt;-</span> <span class="fu">fit</span>(cls_wflow, cls_train)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1" data-code-line-numbers="1|3-6|8-10|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a aria-label="1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb1-2"><a aria-label="2"></a></span>
+<span id="cb1-3"><a aria-label="3"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb1-4"><a aria-label="4"></a>cls_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(cls_data_2026, <span class="at">prop =</span> <span class="fl">0.8</span>)</span>
+<span id="cb1-5"><a aria-label="5"></a>cls_train <span class="ot">&lt;-</span> <span class="fu">training</span>(cls_split)</span>
+<span id="cb1-6"><a aria-label="6"></a>cls_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(cls_split)</span>
+<span id="cb1-7"><a aria-label="7"></a></span>
+<span id="cb1-8"><a aria-label="8"></a>tree_spec <span class="ot">&lt;-</span> <span class="fu">decision_tree</span>(<span class="at">cost_complexity =</span> <span class="fl">0.0001</span>, <span class="at">mode =</span> <span class="st">"classification"</span>)</span>
+<span id="cb1-9"><a aria-label="9"></a>cls_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(class <span class="sc">~</span> ., tree_spec)</span>
+<span id="cb1-10"><a aria-label="10"></a>cls_fit <span class="ot">&lt;-</span> <span class="fu">fit</span>(cls_wflow, cls_train)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="a-logistic-regression-fit" class="slide level2">
 <h2>A logistic regression fit</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2" data-code-line-numbers="1-3|5|16|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a>lr_fit <span class="ot">&lt;-</span> </span>
-<span id="cb2-2"><a></a>  <span class="fu">logistic_reg</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb2-3"><a></a>  <span class="fu">fit</span>(class <span class="sc">~</span> ., <span class="at">data =</span> cls_train)</span>
-<span id="cb2-4"><a></a></span>
-<span id="cb2-5"><a></a><span class="fu">augment</span>(lr_fit, <span class="at">new_data =</span> cls_train) <span class="sc">|&gt;</span> <span class="fu">print</span>(<span class="at">n =</span> <span class="dv">5</span>)</span>
-<span id="cb2-6"><a></a><span class="co">#&gt; # A tibble: 800 × 6</span></span>
-<span id="cb2-7"><a></a><span class="co">#&gt;   .pred_class .pred_class_1 .pred_class_2  pred_1 pred_2 class  </span></span>
-<span id="cb2-8"><a></a><span class="co">#&gt;   &lt;fct&gt;               &lt;dbl&gt;         &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;fct&gt;  </span></span>
-<span id="cb2-9"><a></a><span class="co">#&gt; 1 class_1            0.832       0.168    -1.35   -0.446 class_1</span></span>
-<span id="cb2-10"><a></a><span class="co">#&gt; 2 class_1            0.892       0.108    -0.354  -0.181 class_1</span></span>
-<span id="cb2-11"><a></a><span class="co">#&gt; 3 class_2            0.0434      0.957     0.105   1.12  class_2</span></span>
-<span id="cb2-12"><a></a><span class="co">#&gt; 4 class_1            0.999       0.000548  0.0203 -1.20  class_1</span></span>
-<span id="cb2-13"><a></a><span class="co">#&gt; 5 class_1            0.963       0.0373   -0.831  -0.607 class_1</span></span>
-<span id="cb2-14"><a></a><span class="co">#&gt; # ℹ 795 more rows</span></span>
-<span id="cb2-15"><a></a></span>
-<span id="cb2-16"><a></a>lr_re_pred <span class="ot">&lt;-</span> <span class="fu">augment</span>(lr_fit, <span class="at">new_data =</span> cls_train)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2" data-code-line-numbers="1-3|5|16|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a aria-label="1"></a>lr_fit <span class="ot">&lt;-</span> </span>
+<span id="cb2-2"><a aria-label="2"></a>  <span class="fu">logistic_reg</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb2-3"><a aria-label="3"></a>  <span class="fu">fit</span>(class <span class="sc">~</span> ., <span class="at">data =</span> cls_train)</span>
+<span id="cb2-4"><a aria-label="4"></a></span>
+<span id="cb2-5"><a aria-label="5"></a><span class="fu">augment</span>(lr_fit, <span class="at">new_data =</span> cls_train) <span class="sc">|&gt;</span> <span class="fu">print</span>(<span class="at">n =</span> <span class="dv">5</span>)</span>
+<span id="cb2-6"><a aria-label="6"></a><span class="co">#&gt; # A tibble: 800 × 6</span></span>
+<span id="cb2-7"><a aria-label="7"></a><span class="co">#&gt;   .pred_class .pred_class_1 .pred_class_2  pred_1 pred_2 class  </span></span>
+<span id="cb2-8"><a aria-label="8"></a><span class="co">#&gt;   &lt;fct&gt;               &lt;dbl&gt;         &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;fct&gt;  </span></span>
+<span id="cb2-9"><a aria-label="9"></a><span class="co">#&gt; 1 class_1            0.832       0.168    -1.35   -0.446 class_1</span></span>
+<span id="cb2-10"><a aria-label="10"></a><span class="co">#&gt; 2 class_1            0.892       0.108    -0.354  -0.181 class_1</span></span>
+<span id="cb2-11"><a aria-label="11"></a><span class="co">#&gt; 3 class_2            0.0434      0.957     0.105   1.12  class_2</span></span>
+<span id="cb2-12"><a aria-label="12"></a><span class="co">#&gt; 4 class_1            0.999       0.000548  0.0203 -1.20  class_1</span></span>
+<span id="cb2-13"><a aria-label="13"></a><span class="co">#&gt; 5 class_1            0.963       0.0373   -0.831  -0.607 class_1</span></span>
+<span id="cb2-14"><a aria-label="14"></a><span class="co">#&gt; # ℹ 795 more rows</span></span>
+<span id="cb2-15"><a aria-label="15"></a></span>
+<span id="cb2-16"><a aria-label="16"></a>lr_re_pred <span class="ot">&lt;-</span> <span class="fu">augment</span>(lr_fit, <span class="at">new_data =</span> cls_train)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="confusion-matrix" class="slide level2">
@@ -255,20 +258,20 @@
 <section id="confusion-matrix-1" class="slide level2">
 <h2>Confusion matrix <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a>lr_re_pred <span class="sc">|&gt;</span></span>
-<span id="cb3-2"><a></a>  <span class="fu">conf_mat</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class)</span>
-<span id="cb3-3"><a></a><span class="co">#&gt;           Truth</span></span>
-<span id="cb3-4"><a></a><span class="co">#&gt; Prediction class_1 class_2</span></span>
-<span id="cb3-5"><a></a><span class="co">#&gt;    class_1     500      36</span></span>
-<span id="cb3-6"><a></a><span class="co">#&gt;    class_2      34     230</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a aria-label="1"></a>lr_re_pred <span class="sc">|&gt;</span></span>
+<span id="cb3-2"><a aria-label="2"></a>  <span class="fu">conf_mat</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb3-3"><a aria-label="3"></a><span class="co">#&gt;           Truth</span></span>
+<span id="cb3-4"><a aria-label="4"></a><span class="co">#&gt; Prediction class_1 class_2</span></span>
+<span id="cb3-5"><a aria-label="5"></a><span class="co">#&gt;    class_1     500      36</span></span>
+<span id="cb3-6"><a aria-label="6"></a><span class="co">#&gt;    class_2      34     230</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="confusion-matrix-2" class="slide level2">
 <h2>Confusion matrix <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a>lr_re_pred <span class="sc">|&gt;</span></span>
-<span id="cb4-2"><a></a>  <span class="fu">conf_mat</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class) <span class="sc">|&gt;</span></span>
-<span id="cb4-3"><a></a>  <span class="fu">autoplot</span>(<span class="at">type =</span> <span class="st">"heatmap"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a aria-label="1"></a>lr_re_pred <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a aria-label="2"></a>  <span class="fu">conf_mat</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class) <span class="sc">|&gt;</span></span>
+<span id="cb4-3"><a aria-label="3"></a>  <span class="fu">autoplot</span>(<span class="at">type =</span> <span class="st">"heatmap"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure>
@@ -283,12 +286,12 @@
 <div class="columns">
 <div class="column" style="width:60%;">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a>lr_re_pred <span class="sc">|&gt;</span></span>
-<span id="cb5-2"><a></a>  <span class="fu">accuracy</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class)</span>
-<span id="cb5-3"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
-<span id="cb5-4"><a></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
-<span id="cb5-5"><a></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb5-6"><a></a><span class="co">#&gt; 1 accuracy binary         0.912</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a aria-label="1"></a>lr_re_pred <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a aria-label="2"></a>  <span class="fu">accuracy</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb5-3"><a aria-label="3"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb5-4"><a aria-label="4"></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
+<span id="cb5-5"><a aria-label="5"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb5-6"><a aria-label="6"></a><span class="co">#&gt; 1 accuracy binary         0.912</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div><div class="column" style="width:40%;">
 <p><img data-src="images/confusion-matrix-accuracy.png"></p>
@@ -301,13 +304,13 @@
 <h2>Dangers of accuracy <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <p>We need to be careful of using <code>accuracy()</code> since it can give “good” performance by only predicting one way with imbalanced data:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6" data-code-line-numbers="1|2|3|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a>lr_re_pred <span class="sc">%&gt;%</span></span>
-<span id="cb6-2"><a></a>  <span class="fu">mutate</span>(<span class="at">.pred_class =</span> <span class="fu">factor</span>(<span class="st">"class_1"</span>, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"class_1"</span>, <span class="st">"class_2"</span>))) <span class="sc">%&gt;%</span></span>
-<span id="cb6-3"><a></a>  <span class="fu">accuracy</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class)</span>
-<span id="cb6-4"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
-<span id="cb6-5"><a></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
-<span id="cb6-6"><a></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb6-7"><a></a><span class="co">#&gt; 1 accuracy binary         0.668</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6" data-code-line-numbers="1|2|3|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a aria-label="1"></a>lr_re_pred <span class="sc">|&gt;</span></span>
+<span id="cb6-2"><a aria-label="2"></a>  <span class="fu">mutate</span>(<span class="at">.pred_class =</span> <span class="fu">factor</span>(<span class="st">"class_1"</span>, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"class_1"</span>, <span class="st">"class_2"</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb6-3"><a aria-label="3"></a>  <span class="fu">accuracy</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb6-4"><a aria-label="4"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb6-5"><a aria-label="5"></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
+<span id="cb6-6"><a aria-label="6"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb6-7"><a aria-label="7"></a><span class="co">#&gt; 1 accuracy binary         0.668</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="brier-score-formula" class="slide level2">
@@ -326,12 +329,12 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <section id="brier-score" class="slide level2 annotation">
 <h2>Brier score</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a>lr_re_pred <span class="sc">|&gt;</span> </span>
-<span id="cb7-2"><a></a>  <span class="fu">brier_class</span>(<span class="at">truth =</span> class, .pred_class_1) </span>
-<span id="cb7-3"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
-<span id="cb7-4"><a></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
-<span id="cb7-5"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb7-6"><a></a><span class="co">#&gt; 1 brier_class binary        0.0665</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a aria-label="1"></a>lr_re_pred <span class="sc">|&gt;</span> </span>
+<span id="cb7-2"><a aria-label="2"></a>  <span class="fu">brier_class</span>(<span class="at">truth =</span> class, .pred_class_1) </span>
+<span id="cb7-3"><a aria-label="3"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb7-4"><a aria-label="4"></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
+<span id="cb7-5"><a aria-label="5"></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb7-6"><a aria-label="6"></a><span class="co">#&gt; 1 brier_class binary        0.0665</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="fragment">
 <p>Smaller values are better.</p>
@@ -423,8 +426,8 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <h2>Your turn</h2>
 <p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
 <p>The probably package was used to make the calibration plots:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a><span class="fu">library</span>(probably)</span>
-<span id="cb8-2"><a></a>lr_re_pred <span class="sc">|&gt;</span> <span class="fu">cal_plot_breaks</span>(class, .pred_class_1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a aria-label="1"></a><span class="fu">library</span>(probably)</span>
+<span id="cb8-2"><a aria-label="2"></a>lr_re_pred <span class="sc">|&gt;</span> <span class="fu">cal_plot_breaks</span>(class, .pred_class_1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><br></p>
 <p>Try the other calibration curve methods in probably:</p>
 <ul>
@@ -442,34 +445,34 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <h2>Metrics for model performance <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <p>We can use <code>metric_set()</code> to combine multiple calculations into one</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a>cls_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(accuracy, brier_class)</span>
-<span id="cb9-2"><a></a></span>
-<span id="cb9-3"><a></a>lr_re_pred <span class="sc">|&gt;</span></span>
-<span id="cb9-4"><a></a>  <span class="fu">cls_metrics</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class, .pred_class_1)</span>
-<span id="cb9-5"><a></a><span class="co">#&gt; # A tibble: 2 × 3</span></span>
-<span id="cb9-6"><a></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
-<span id="cb9-7"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb9-8"><a></a><span class="co">#&gt; 1 accuracy    binary        0.912 </span></span>
-<span id="cb9-9"><a></a><span class="co">#&gt; 2 brier_class binary        0.0665</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a aria-label="1"></a>cls_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(accuracy, brier_class)</span>
+<span id="cb9-2"><a aria-label="2"></a></span>
+<span id="cb9-3"><a aria-label="3"></a>lr_re_pred <span class="sc">|&gt;</span></span>
+<span id="cb9-4"><a aria-label="4"></a>  <span class="fu">cls_metrics</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class, .pred_class_1)</span>
+<span id="cb9-5"><a aria-label="5"></a><span class="co">#&gt; # A tibble: 2 × 3</span></span>
+<span id="cb9-6"><a aria-label="6"></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
+<span id="cb9-7"><a aria-label="7"></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb9-8"><a aria-label="8"></a><span class="co">#&gt; 1 accuracy    binary        0.912 </span></span>
+<span id="cb9-9"><a aria-label="9"></a><span class="co">#&gt; 2 brier_class binary        0.0665</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="metrics-for-model-performance-2" class="slide level2">
 <h2>Metrics for model performance <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <p>Metrics and metric sets work with grouped data frames!</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a>lr_re_pred <span class="sc">|&gt;</span></span>
-<span id="cb10-2"><a></a>  <span class="fu">mutate</span>(<span class="at">group =</span> <span class="fu">rep_len</span>(LETTERS[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>], <span class="fu">nrow</span>(cls_train))) <span class="sc">|&gt;</span> </span>
-<span id="cb10-3"><a></a>  <span class="fu">group_by</span>(group) <span class="sc">|&gt;</span></span>
-<span id="cb10-4"><a></a>  <span class="fu">cls_metrics</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class, .pred_class_1)</span>
-<span id="cb10-5"><a></a><span class="co">#&gt; # A tibble: 6 × 4</span></span>
-<span id="cb10-6"><a></a><span class="co">#&gt;   group .metric     .estimator .estimate</span></span>
-<span id="cb10-7"><a></a><span class="co">#&gt;   &lt;chr&gt; &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb10-8"><a></a><span class="co">#&gt; 1 A     accuracy    binary        0.899 </span></span>
-<span id="cb10-9"><a></a><span class="co">#&gt; 2 B     accuracy    binary        0.906 </span></span>
-<span id="cb10-10"><a></a><span class="co">#&gt; 3 C     accuracy    binary        0.932 </span></span>
-<span id="cb10-11"><a></a><span class="co">#&gt; 4 A     brier_class binary        0.0689</span></span>
-<span id="cb10-12"><a></a><span class="co">#&gt; 5 B     brier_class binary        0.0693</span></span>
-<span id="cb10-13"><a></a><span class="co">#&gt; 6 C     brier_class binary        0.0613</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a aria-label="1"></a>lr_re_pred <span class="sc">|&gt;</span></span>
+<span id="cb10-2"><a aria-label="2"></a>  <span class="fu">mutate</span>(<span class="at">group =</span> <span class="fu">rep_len</span>(LETTERS[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>], <span class="fu">nrow</span>(cls_train))) <span class="sc">|&gt;</span> </span>
+<span id="cb10-3"><a aria-label="3"></a>  <span class="fu">group_by</span>(group) <span class="sc">|&gt;</span></span>
+<span id="cb10-4"><a aria-label="4"></a>  <span class="fu">cls_metrics</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class, .pred_class_1)</span>
+<span id="cb10-5"><a aria-label="5"></a><span class="co">#&gt; # A tibble: 6 × 4</span></span>
+<span id="cb10-6"><a aria-label="6"></a><span class="co">#&gt;   group .metric     .estimator .estimate</span></span>
+<span id="cb10-7"><a aria-label="7"></a><span class="co">#&gt;   &lt;chr&gt; &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb10-8"><a aria-label="8"></a><span class="co">#&gt; 1 A     accuracy    binary        0.899 </span></span>
+<span id="cb10-9"><a aria-label="9"></a><span class="co">#&gt; 2 B     accuracy    binary        0.906 </span></span>
+<span id="cb10-10"><a aria-label="10"></a><span class="co">#&gt; 3 C     accuracy    binary        0.932 </span></span>
+<span id="cb10-11"><a aria-label="11"></a><span class="co">#&gt; 4 A     brier_class binary        0.0689</span></span>
+<span id="cb10-12"><a aria-label="12"></a><span class="co">#&gt; 5 B     brier_class binary        0.0693</span></span>
+<span id="cb10-13"><a aria-label="13"></a><span class="co">#&gt; 6 C     brier_class binary        0.0613</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="section" class="slide level2" data-background-iframe="https://yardstick.tidymodels.org/reference/index.html">
@@ -509,18 +512,18 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <section id="dangers-of-overfitting-4" class="slide level2">
 <h2>Dangers of overfitting ⚠️ <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a></a>lr_fit <span class="sc">|&gt;</span></span>
-<span id="cb11-2"><a></a>  <span class="fu">augment</span>(cls_train) <span class="sc">|&gt;</span> </span>
-<span id="cb11-3"><a></a>  <span class="fu">print</span>(<span class="at">n =</span> <span class="dv">5</span>)</span>
-<span id="cb11-4"><a></a><span class="co">#&gt; # A tibble: 800 × 6</span></span>
-<span id="cb11-5"><a></a><span class="co">#&gt;   .pred_class .pred_class_1 .pred_class_2  pred_1 pred_2 class  </span></span>
-<span id="cb11-6"><a></a><span class="co">#&gt;   &lt;fct&gt;               &lt;dbl&gt;         &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;fct&gt;  </span></span>
-<span id="cb11-7"><a></a><span class="co">#&gt; 1 class_1            0.832       0.168    -1.35   -0.446 class_1</span></span>
-<span id="cb11-8"><a></a><span class="co">#&gt; 2 class_1            0.892       0.108    -0.354  -0.181 class_1</span></span>
-<span id="cb11-9"><a></a><span class="co">#&gt; 3 class_2            0.0434      0.957     0.105   1.12  class_2</span></span>
-<span id="cb11-10"><a></a><span class="co">#&gt; 4 class_1            0.999       0.000548  0.0203 -1.20  class_1</span></span>
-<span id="cb11-11"><a></a><span class="co">#&gt; 5 class_1            0.963       0.0373   -0.831  -0.607 class_1</span></span>
-<span id="cb11-12"><a></a><span class="co">#&gt; # ℹ 795 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a aria-label="1"></a>lr_fit <span class="sc">|&gt;</span></span>
+<span id="cb11-2"><a aria-label="2"></a>  <span class="fu">augment</span>(cls_train) <span class="sc">|&gt;</span> </span>
+<span id="cb11-3"><a aria-label="3"></a>  <span class="fu">print</span>(<span class="at">n =</span> <span class="dv">5</span>)</span>
+<span id="cb11-4"><a aria-label="4"></a><span class="co">#&gt; # A tibble: 800 × 6</span></span>
+<span id="cb11-5"><a aria-label="5"></a><span class="co">#&gt;   .pred_class .pred_class_1 .pred_class_2  pred_1 pred_2 class  </span></span>
+<span id="cb11-6"><a aria-label="6"></a><span class="co">#&gt;   &lt;fct&gt;               &lt;dbl&gt;         &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;fct&gt;  </span></span>
+<span id="cb11-7"><a aria-label="7"></a><span class="co">#&gt; 1 class_1            0.832       0.168    -1.35   -0.446 class_1</span></span>
+<span id="cb11-8"><a aria-label="8"></a><span class="co">#&gt; 2 class_1            0.892       0.108    -0.354  -0.181 class_1</span></span>
+<span id="cb11-9"><a aria-label="9"></a><span class="co">#&gt; 3 class_2            0.0434      0.957     0.105   1.12  class_2</span></span>
+<span id="cb11-10"><a aria-label="10"></a><span class="co">#&gt; 4 class_1            0.999       0.000548  0.0203 -1.20  class_1</span></span>
+<span id="cb11-11"><a aria-label="11"></a><span class="co">#&gt; 5 class_1            0.963       0.0373   -0.831  -0.607 class_1</span></span>
+<span id="cb11-12"><a aria-label="12"></a><span class="co">#&gt; # ℹ 795 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p><br></p>
 <p>We call this “resubstitution” or “repredicting the training set”</p>
@@ -528,13 +531,13 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <section id="dangers-of-overfitting-5" class="slide level2">
 <h2>Dangers of overfitting ⚠️ <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a></a>lr_fit <span class="sc">|&gt;</span></span>
-<span id="cb12-2"><a></a>  <span class="fu">augment</span>(cls_train) <span class="sc">|&gt;</span></span>
-<span id="cb12-3"><a></a>  <span class="fu">accuracy</span>(class, .pred_class)</span>
-<span id="cb12-4"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
-<span id="cb12-5"><a></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
-<span id="cb12-6"><a></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb12-7"><a></a><span class="co">#&gt; 1 accuracy binary         0.912</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a aria-label="1"></a>lr_fit <span class="sc">|&gt;</span></span>
+<span id="cb12-2"><a aria-label="2"></a>  <span class="fu">augment</span>(cls_train) <span class="sc">|&gt;</span></span>
+<span id="cb12-3"><a aria-label="3"></a>  <span class="fu">accuracy</span>(class, .pred_class)</span>
+<span id="cb12-4"><a aria-label="4"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb12-5"><a aria-label="5"></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
+<span id="cb12-6"><a aria-label="6"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb12-7"><a aria-label="7"></a><span class="co">#&gt; 1 accuracy binary         0.912</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>We call this a “resubstitution estimate”</p>
 </section>
@@ -543,13 +546,13 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <div class="columns">
 <div class="column" style="width:50%;">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a></a>lr_fit <span class="sc">|&gt;</span></span>
-<span id="cb13-2"><a></a>  <span class="fu">augment</span>(cls_train) <span class="sc">|&gt;</span></span>
-<span id="cb13-3"><a></a>  <span class="fu">accuracy</span>(class, .pred_class)</span>
-<span id="cb13-4"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
-<span id="cb13-5"><a></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
-<span id="cb13-6"><a></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb13-7"><a></a><span class="co">#&gt; 1 accuracy binary         0.912</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a aria-label="1"></a>lr_fit <span class="sc">|&gt;</span></span>
+<span id="cb13-2"><a aria-label="2"></a>  <span class="fu">augment</span>(cls_train) <span class="sc">|&gt;</span></span>
+<span id="cb13-3"><a aria-label="3"></a>  <span class="fu">accuracy</span>(class, .pred_class)</span>
+<span id="cb13-4"><a aria-label="4"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb13-5"><a aria-label="5"></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
+<span id="cb13-6"><a aria-label="6"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb13-7"><a aria-label="7"></a><span class="co">#&gt; 1 accuracy binary         0.912</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div><div class="column" style="width:50%;">
 
@@ -560,23 +563,23 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <div class="columns">
 <div class="column" style="width:50%;">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a></a>lr_fit <span class="sc">|&gt;</span></span>
-<span id="cb14-2"><a></a>  <span class="fu">augment</span>(cls_train) <span class="sc">|&gt;</span></span>
-<span id="cb14-3"><a></a>  <span class="fu">accuracy</span>(class, .pred_class)</span>
-<span id="cb14-4"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
-<span id="cb14-5"><a></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
-<span id="cb14-6"><a></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb14-7"><a></a><span class="co">#&gt; 1 accuracy binary         0.912</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a aria-label="1"></a>lr_fit <span class="sc">|&gt;</span></span>
+<span id="cb14-2"><a aria-label="2"></a>  <span class="fu">augment</span>(cls_train) <span class="sc">|&gt;</span></span>
+<span id="cb14-3"><a aria-label="3"></a>  <span class="fu">accuracy</span>(class, .pred_class)</span>
+<span id="cb14-4"><a aria-label="4"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb14-5"><a aria-label="5"></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
+<span id="cb14-6"><a aria-label="6"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb14-7"><a aria-label="7"></a><span class="co">#&gt; 1 accuracy binary         0.912</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div><div class="column" style="width:50%;">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a></a>lr_fit <span class="sc">|&gt;</span></span>
-<span id="cb15-2"><a></a>  <span class="fu">augment</span>(cls_test) <span class="sc">|&gt;</span></span>
-<span id="cb15-3"><a></a>  <span class="fu">accuracy</span>(class, .pred_class)</span>
-<span id="cb15-4"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
-<span id="cb15-5"><a></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
-<span id="cb15-6"><a></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb15-7"><a></a><span class="co">#&gt; 1 accuracy binary         0.895</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a aria-label="1"></a>lr_fit <span class="sc">|&gt;</span></span>
+<span id="cb15-2"><a aria-label="2"></a>  <span class="fu">augment</span>(cls_test) <span class="sc">|&gt;</span></span>
+<span id="cb15-3"><a aria-label="3"></a>  <span class="fu">accuracy</span>(class, .pred_class)</span>
+<span id="cb15-4"><a aria-label="4"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb15-5"><a aria-label="5"></a><span class="co">#&gt;   .metric  .estimator .estimate</span></span>
+<span id="cb15-6"><a aria-label="6"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb15-7"><a aria-label="7"></a><span class="co">#&gt; 1 accuracy binary         0.895</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div></div>
 <div class="fragment">
@@ -600,23 +603,23 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <div class="columns">
 <div class="column" style="width:50%;">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a></a>lr_fit <span class="sc">|&gt;</span></span>
-<span id="cb16-2"><a></a>  <span class="fu">augment</span>(cls_train) <span class="sc">|&gt;</span></span>
-<span id="cb16-3"><a></a>  <span class="fu">brier_class</span>(class, .pred_class_1)</span>
-<span id="cb16-4"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
-<span id="cb16-5"><a></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
-<span id="cb16-6"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb16-7"><a></a><span class="co">#&gt; 1 brier_class binary        0.0665</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a aria-label="1"></a>lr_fit <span class="sc">|&gt;</span></span>
+<span id="cb16-2"><a aria-label="2"></a>  <span class="fu">augment</span>(cls_train) <span class="sc">|&gt;</span></span>
+<span id="cb16-3"><a aria-label="3"></a>  <span class="fu">brier_class</span>(class, .pred_class_1)</span>
+<span id="cb16-4"><a aria-label="4"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb16-5"><a aria-label="5"></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
+<span id="cb16-6"><a aria-label="6"></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb16-7"><a aria-label="7"></a><span class="co">#&gt; 1 brier_class binary        0.0665</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div><div class="column" style="width:50%;">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a></a>lr_fit <span class="sc">|&gt;</span></span>
-<span id="cb17-2"><a></a>  <span class="fu">augment</span>(cls_test) <span class="sc">|&gt;</span></span>
-<span id="cb17-3"><a></a>  <span class="fu">brier_class</span>(class, .pred_class_1)</span>
-<span id="cb17-4"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
-<span id="cb17-5"><a></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
-<span id="cb17-6"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb17-7"><a></a><span class="co">#&gt; 1 brier_class binary        0.0736</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a aria-label="1"></a>lr_fit <span class="sc">|&gt;</span></span>
+<span id="cb17-2"><a aria-label="2"></a>  <span class="fu">augment</span>(cls_test) <span class="sc">|&gt;</span></span>
+<span id="cb17-3"><a aria-label="3"></a>  <span class="fu">brier_class</span>(class, .pred_class_1)</span>
+<span id="cb17-4"><a aria-label="4"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb17-5"><a aria-label="5"></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
+<span id="cb17-6"><a aria-label="6"></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb17-7"><a aria-label="7"></a><span class="co">#&gt; 1 brier_class binary        0.0736</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div></div>
 <div class="fragment">
@@ -670,40 +673,40 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <section id="cross-validation-2" class="slide level2">
 <h2>Cross-validation <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a></a><span class="fu">vfold_cv</span>(cls_train) <span class="co"># v = 10 is default</span></span>
-<span id="cb18-2"><a></a><span class="co">#&gt; #  10-fold cross-validation </span></span>
-<span id="cb18-3"><a></a><span class="co">#&gt; # A tibble: 10 × 2</span></span>
-<span id="cb18-4"><a></a><span class="co">#&gt;    splits           id    </span></span>
-<span id="cb18-5"><a></a><span class="co">#&gt;    &lt;list&gt;           &lt;chr&gt; </span></span>
-<span id="cb18-6"><a></a><span class="co">#&gt;  1 &lt;split [720/80]&gt; Fold01</span></span>
-<span id="cb18-7"><a></a><span class="co">#&gt;  2 &lt;split [720/80]&gt; Fold02</span></span>
-<span id="cb18-8"><a></a><span class="co">#&gt;  3 &lt;split [720/80]&gt; Fold03</span></span>
-<span id="cb18-9"><a></a><span class="co">#&gt;  4 &lt;split [720/80]&gt; Fold04</span></span>
-<span id="cb18-10"><a></a><span class="co">#&gt;  5 &lt;split [720/80]&gt; Fold05</span></span>
-<span id="cb18-11"><a></a><span class="co">#&gt;  6 &lt;split [720/80]&gt; Fold06</span></span>
-<span id="cb18-12"><a></a><span class="co">#&gt;  7 &lt;split [720/80]&gt; Fold07</span></span>
-<span id="cb18-13"><a></a><span class="co">#&gt;  8 &lt;split [720/80]&gt; Fold08</span></span>
-<span id="cb18-14"><a></a><span class="co">#&gt;  9 &lt;split [720/80]&gt; Fold09</span></span>
-<span id="cb18-15"><a></a><span class="co">#&gt; 10 &lt;split [720/80]&gt; Fold10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a aria-label="1"></a><span class="fu">vfold_cv</span>(cls_train) <span class="co"># v = 10 is default</span></span>
+<span id="cb18-2"><a aria-label="2"></a><span class="co">#&gt; #  10-fold cross-validation </span></span>
+<span id="cb18-3"><a aria-label="3"></a><span class="co">#&gt; # A tibble: 10 × 2</span></span>
+<span id="cb18-4"><a aria-label="4"></a><span class="co">#&gt;    splits           id    </span></span>
+<span id="cb18-5"><a aria-label="5"></a><span class="co">#&gt;    &lt;list&gt;           &lt;chr&gt; </span></span>
+<span id="cb18-6"><a aria-label="6"></a><span class="co">#&gt;  1 &lt;split [720/80]&gt; Fold01</span></span>
+<span id="cb18-7"><a aria-label="7"></a><span class="co">#&gt;  2 &lt;split [720/80]&gt; Fold02</span></span>
+<span id="cb18-8"><a aria-label="8"></a><span class="co">#&gt;  3 &lt;split [720/80]&gt; Fold03</span></span>
+<span id="cb18-9"><a aria-label="9"></a><span class="co">#&gt;  4 &lt;split [720/80]&gt; Fold04</span></span>
+<span id="cb18-10"><a aria-label="10"></a><span class="co">#&gt;  5 &lt;split [720/80]&gt; Fold05</span></span>
+<span id="cb18-11"><a aria-label="11"></a><span class="co">#&gt;  6 &lt;split [720/80]&gt; Fold06</span></span>
+<span id="cb18-12"><a aria-label="12"></a><span class="co">#&gt;  7 &lt;split [720/80]&gt; Fold07</span></span>
+<span id="cb18-13"><a aria-label="13"></a><span class="co">#&gt;  8 &lt;split [720/80]&gt; Fold08</span></span>
+<span id="cb18-14"><a aria-label="14"></a><span class="co">#&gt;  9 &lt;split [720/80]&gt; Fold09</span></span>
+<span id="cb18-15"><a aria-label="15"></a><span class="co">#&gt; 10 &lt;split [720/80]&gt; Fold10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="cross-validation-3" class="slide level2">
 <h2>Cross-validation <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <p>What is in this?</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a></a>cls_folds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(cls_train)</span>
-<span id="cb19-2"><a></a>cls_folds<span class="sc">$</span>splits[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>]</span>
-<span id="cb19-3"><a></a><span class="co">#&gt; [[1]]</span></span>
-<span id="cb19-4"><a></a><span class="co">#&gt; &lt;Analysis/Assess/Total&gt;</span></span>
-<span id="cb19-5"><a></a><span class="co">#&gt; &lt;720/80/800&gt;</span></span>
-<span id="cb19-6"><a></a><span class="co">#&gt; </span></span>
-<span id="cb19-7"><a></a><span class="co">#&gt; [[2]]</span></span>
-<span id="cb19-8"><a></a><span class="co">#&gt; &lt;Analysis/Assess/Total&gt;</span></span>
-<span id="cb19-9"><a></a><span class="co">#&gt; &lt;720/80/800&gt;</span></span>
-<span id="cb19-10"><a></a><span class="co">#&gt; </span></span>
-<span id="cb19-11"><a></a><span class="co">#&gt; [[3]]</span></span>
-<span id="cb19-12"><a></a><span class="co">#&gt; &lt;Analysis/Assess/Total&gt;</span></span>
-<span id="cb19-13"><a></a><span class="co">#&gt; &lt;720/80/800&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a aria-label="1"></a>cls_folds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(cls_train)</span>
+<span id="cb19-2"><a aria-label="2"></a>cls_folds<span class="sc">$</span>splits[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>]</span>
+<span id="cb19-3"><a aria-label="3"></a><span class="co">#&gt; [[1]]</span></span>
+<span id="cb19-4"><a aria-label="4"></a><span class="co">#&gt; &lt;Analysis/Assess/Total&gt;</span></span>
+<span id="cb19-5"><a aria-label="5"></a><span class="co">#&gt; &lt;720/80/800&gt;</span></span>
+<span id="cb19-6"><a aria-label="6"></a><span class="co">#&gt; </span></span>
+<span id="cb19-7"><a aria-label="7"></a><span class="co">#&gt; [[2]]</span></span>
+<span id="cb19-8"><a aria-label="8"></a><span class="co">#&gt; &lt;Analysis/Assess/Total&gt;</span></span>
+<span id="cb19-9"><a aria-label="9"></a><span class="co">#&gt; &lt;720/80/800&gt;</span></span>
+<span id="cb19-10"><a aria-label="10"></a><span class="co">#&gt; </span></span>
+<span id="cb19-11"><a aria-label="11"></a><span class="co">#&gt; [[3]]</span></span>
+<span id="cb19-12"><a aria-label="12"></a><span class="co">#&gt; &lt;Analysis/Assess/Total&gt;</span></span>
+<span id="cb19-13"><a aria-label="13"></a><span class="co">#&gt; &lt;720/80/800&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <aside class="notes">
 <p>Talk about a list column, storing non-atomic types in dataframe</p>
@@ -722,39 +725,39 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <section id="cross-validation-4" class="slide level2">
 <h2>Cross-validation <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a></a><span class="fu">vfold_cv</span>(cls_train, <span class="at">v =</span> <span class="dv">5</span>)</span>
-<span id="cb20-2"><a></a><span class="co">#&gt; #  5-fold cross-validation </span></span>
-<span id="cb20-3"><a></a><span class="co">#&gt; # A tibble: 5 × 2</span></span>
-<span id="cb20-4"><a></a><span class="co">#&gt;   splits            id   </span></span>
-<span id="cb20-5"><a></a><span class="co">#&gt;   &lt;list&gt;            &lt;chr&gt;</span></span>
-<span id="cb20-6"><a></a><span class="co">#&gt; 1 &lt;split [640/160]&gt; Fold1</span></span>
-<span id="cb20-7"><a></a><span class="co">#&gt; 2 &lt;split [640/160]&gt; Fold2</span></span>
-<span id="cb20-8"><a></a><span class="co">#&gt; 3 &lt;split [640/160]&gt; Fold3</span></span>
-<span id="cb20-9"><a></a><span class="co">#&gt; 4 &lt;split [640/160]&gt; Fold4</span></span>
-<span id="cb20-10"><a></a><span class="co">#&gt; 5 &lt;split [640/160]&gt; Fold5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a aria-label="1"></a><span class="fu">vfold_cv</span>(cls_train, <span class="at">v =</span> <span class="dv">5</span>)</span>
+<span id="cb20-2"><a aria-label="2"></a><span class="co">#&gt; #  5-fold cross-validation </span></span>
+<span id="cb20-3"><a aria-label="3"></a><span class="co">#&gt; # A tibble: 5 × 2</span></span>
+<span id="cb20-4"><a aria-label="4"></a><span class="co">#&gt;   splits            id   </span></span>
+<span id="cb20-5"><a aria-label="5"></a><span class="co">#&gt;   &lt;list&gt;            &lt;chr&gt;</span></span>
+<span id="cb20-6"><a aria-label="6"></a><span class="co">#&gt; 1 &lt;split [640/160]&gt; Fold1</span></span>
+<span id="cb20-7"><a aria-label="7"></a><span class="co">#&gt; 2 &lt;split [640/160]&gt; Fold2</span></span>
+<span id="cb20-8"><a aria-label="8"></a><span class="co">#&gt; 3 &lt;split [640/160]&gt; Fold3</span></span>
+<span id="cb20-9"><a aria-label="9"></a><span class="co">#&gt; 4 &lt;split [640/160]&gt; Fold4</span></span>
+<span id="cb20-10"><a aria-label="10"></a><span class="co">#&gt; 5 &lt;split [640/160]&gt; Fold5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="cross-validation-5" class="slide level2">
 <h2>Cross-validation <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <p>We’ll use this setup:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a></a><span class="fu">set.seed</span>(<span class="dv">343</span>)</span>
-<span id="cb21-2"><a></a>cls_folds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(cls_train, <span class="at">v =</span> <span class="dv">10</span>)</span>
-<span id="cb21-3"><a></a>cls_folds</span>
-<span id="cb21-4"><a></a><span class="co">#&gt; #  10-fold cross-validation </span></span>
-<span id="cb21-5"><a></a><span class="co">#&gt; # A tibble: 10 × 2</span></span>
-<span id="cb21-6"><a></a><span class="co">#&gt;    splits           id    </span></span>
-<span id="cb21-7"><a></a><span class="co">#&gt;    &lt;list&gt;           &lt;chr&gt; </span></span>
-<span id="cb21-8"><a></a><span class="co">#&gt;  1 &lt;split [720/80]&gt; Fold01</span></span>
-<span id="cb21-9"><a></a><span class="co">#&gt;  2 &lt;split [720/80]&gt; Fold02</span></span>
-<span id="cb21-10"><a></a><span class="co">#&gt;  3 &lt;split [720/80]&gt; Fold03</span></span>
-<span id="cb21-11"><a></a><span class="co">#&gt;  4 &lt;split [720/80]&gt; Fold04</span></span>
-<span id="cb21-12"><a></a><span class="co">#&gt;  5 &lt;split [720/80]&gt; Fold05</span></span>
-<span id="cb21-13"><a></a><span class="co">#&gt;  6 &lt;split [720/80]&gt; Fold06</span></span>
-<span id="cb21-14"><a></a><span class="co">#&gt;  7 &lt;split [720/80]&gt; Fold07</span></span>
-<span id="cb21-15"><a></a><span class="co">#&gt;  8 &lt;split [720/80]&gt; Fold08</span></span>
-<span id="cb21-16"><a></a><span class="co">#&gt;  9 &lt;split [720/80]&gt; Fold09</span></span>
-<span id="cb21-17"><a></a><span class="co">#&gt; 10 &lt;split [720/80]&gt; Fold10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a aria-label="1"></a><span class="fu">set.seed</span>(<span class="dv">343</span>)</span>
+<span id="cb21-2"><a aria-label="2"></a>cls_folds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(cls_train, <span class="at">v =</span> <span class="dv">10</span>)</span>
+<span id="cb21-3"><a aria-label="3"></a>cls_folds</span>
+<span id="cb21-4"><a aria-label="4"></a><span class="co">#&gt; #  10-fold cross-validation </span></span>
+<span id="cb21-5"><a aria-label="5"></a><span class="co">#&gt; # A tibble: 10 × 2</span></span>
+<span id="cb21-6"><a aria-label="6"></a><span class="co">#&gt;    splits           id    </span></span>
+<span id="cb21-7"><a aria-label="7"></a><span class="co">#&gt;    &lt;list&gt;           &lt;chr&gt; </span></span>
+<span id="cb21-8"><a aria-label="8"></a><span class="co">#&gt;  1 &lt;split [720/80]&gt; Fold01</span></span>
+<span id="cb21-9"><a aria-label="9"></a><span class="co">#&gt;  2 &lt;split [720/80]&gt; Fold02</span></span>
+<span id="cb21-10"><a aria-label="10"></a><span class="co">#&gt;  3 &lt;split [720/80]&gt; Fold03</span></span>
+<span id="cb21-11"><a aria-label="11"></a><span class="co">#&gt;  4 &lt;split [720/80]&gt; Fold04</span></span>
+<span id="cb21-12"><a aria-label="12"></a><span class="co">#&gt;  5 &lt;split [720/80]&gt; Fold05</span></span>
+<span id="cb21-13"><a aria-label="13"></a><span class="co">#&gt;  6 &lt;split [720/80]&gt; Fold06</span></span>
+<span id="cb21-14"><a aria-label="14"></a><span class="co">#&gt;  7 &lt;split [720/80]&gt; Fold07</span></span>
+<span id="cb21-15"><a aria-label="15"></a><span class="co">#&gt;  8 &lt;split [720/80]&gt; Fold08</span></span>
+<span id="cb21-16"><a aria-label="16"></a><span class="co">#&gt;  9 &lt;split [720/80]&gt; Fold09</span></span>
+<span id="cb21-17"><a aria-label="17"></a><span class="co">#&gt; 10 &lt;split [720/80]&gt; Fold10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="fragment">
 <p>Set the seed when creating resamples</p>
@@ -768,38 +771,38 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <section id="fit-our-model-to-the-resamples" class="slide level2">
 <h2>Fit our model to the resamples</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22" data-code-line-numbers="1|3|4|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a></a>lr_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(class <span class="sc">~</span> ., <span class="fu">logistic_reg</span>())</span>
-<span id="cb22-2"><a></a></span>
-<span id="cb22-3"><a></a>cls_res <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(lr_wflow, cls_folds)</span>
-<span id="cb22-4"><a></a>cls_res</span>
-<span id="cb22-5"><a></a><span class="co">#&gt; # Resampling results</span></span>
-<span id="cb22-6"><a></a><span class="co">#&gt; # 10-fold cross-validation </span></span>
-<span id="cb22-7"><a></a><span class="co">#&gt; # A tibble: 10 × 4</span></span>
-<span id="cb22-8"><a></a><span class="co">#&gt;    splits           id     .metrics         .notes          </span></span>
-<span id="cb22-9"><a></a><span class="co">#&gt;    &lt;list&gt;           &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;          </span></span>
-<span id="cb22-10"><a></a><span class="co">#&gt;  1 &lt;split [720/80]&gt; Fold01 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
-<span id="cb22-11"><a></a><span class="co">#&gt;  2 &lt;split [720/80]&gt; Fold02 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
-<span id="cb22-12"><a></a><span class="co">#&gt;  3 &lt;split [720/80]&gt; Fold03 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
-<span id="cb22-13"><a></a><span class="co">#&gt;  4 &lt;split [720/80]&gt; Fold04 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
-<span id="cb22-14"><a></a><span class="co">#&gt;  5 &lt;split [720/80]&gt; Fold05 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
-<span id="cb22-15"><a></a><span class="co">#&gt;  6 &lt;split [720/80]&gt; Fold06 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
-<span id="cb22-16"><a></a><span class="co">#&gt;  7 &lt;split [720/80]&gt; Fold07 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
-<span id="cb22-17"><a></a><span class="co">#&gt;  8 &lt;split [720/80]&gt; Fold08 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
-<span id="cb22-18"><a></a><span class="co">#&gt;  9 &lt;split [720/80]&gt; Fold09 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
-<span id="cb22-19"><a></a><span class="co">#&gt; 10 &lt;split [720/80]&gt; Fold10 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22" data-code-line-numbers="1|3|4|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a aria-label="1"></a>lr_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(class <span class="sc">~</span> ., <span class="fu">logistic_reg</span>())</span>
+<span id="cb22-2"><a aria-label="2"></a></span>
+<span id="cb22-3"><a aria-label="3"></a>cls_res <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(lr_wflow, cls_folds)</span>
+<span id="cb22-4"><a aria-label="4"></a>cls_res</span>
+<span id="cb22-5"><a aria-label="5"></a><span class="co">#&gt; # Resampling results</span></span>
+<span id="cb22-6"><a aria-label="6"></a><span class="co">#&gt; # 10-fold cross-validation </span></span>
+<span id="cb22-7"><a aria-label="7"></a><span class="co">#&gt; # A tibble: 10 × 4</span></span>
+<span id="cb22-8"><a aria-label="8"></a><span class="co">#&gt;    splits           id     .metrics         .notes          </span></span>
+<span id="cb22-9"><a aria-label="9"></a><span class="co">#&gt;    &lt;list&gt;           &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;          </span></span>
+<span id="cb22-10"><a aria-label="10"></a><span class="co">#&gt;  1 &lt;split [720/80]&gt; Fold01 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
+<span id="cb22-11"><a aria-label="11"></a><span class="co">#&gt;  2 &lt;split [720/80]&gt; Fold02 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
+<span id="cb22-12"><a aria-label="12"></a><span class="co">#&gt;  3 &lt;split [720/80]&gt; Fold03 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
+<span id="cb22-13"><a aria-label="13"></a><span class="co">#&gt;  4 &lt;split [720/80]&gt; Fold04 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
+<span id="cb22-14"><a aria-label="14"></a><span class="co">#&gt;  5 &lt;split [720/80]&gt; Fold05 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
+<span id="cb22-15"><a aria-label="15"></a><span class="co">#&gt;  6 &lt;split [720/80]&gt; Fold06 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
+<span id="cb22-16"><a aria-label="16"></a><span class="co">#&gt;  7 &lt;split [720/80]&gt; Fold07 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
+<span id="cb22-17"><a aria-label="17"></a><span class="co">#&gt;  8 &lt;split [720/80]&gt; Fold08 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
+<span id="cb22-18"><a aria-label="18"></a><span class="co">#&gt;  9 &lt;split [720/80]&gt; Fold09 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span>
+<span id="cb22-19"><a aria-label="19"></a><span class="co">#&gt; 10 &lt;split [720/80]&gt; Fold10 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="evaluating-model-performance" class="slide level2">
 <h2>Evaluating model performance <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a></a>cls_res <span class="sc">|&gt;</span></span>
-<span id="cb23-2"><a></a>  <span class="fu">collect_metrics</span>()</span>
-<span id="cb23-3"><a></a><span class="co">#&gt; # A tibble: 3 × 6</span></span>
-<span id="cb23-4"><a></a><span class="co">#&gt;   .metric     .estimator   mean     n std_err .config        </span></span>
-<span id="cb23-5"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;          </span></span>
-<span id="cb23-6"><a></a><span class="co">#&gt; 1 accuracy    binary     0.911     10 0.0124  pre0_mod0_post0</span></span>
-<span id="cb23-7"><a></a><span class="co">#&gt; 2 brier_class binary     0.0680    10 0.00663 pre0_mod0_post0</span></span>
-<span id="cb23-8"><a></a><span class="co">#&gt; 3 roc_auc     binary     0.966     10 0.00505 pre0_mod0_post0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a aria-label="1"></a>cls_res <span class="sc">|&gt;</span></span>
+<span id="cb23-2"><a aria-label="2"></a>  <span class="fu">collect_metrics</span>()</span>
+<span id="cb23-3"><a aria-label="3"></a><span class="co">#&gt; # A tibble: 3 × 6</span></span>
+<span id="cb23-4"><a aria-label="4"></a><span class="co">#&gt;   .metric     .estimator   mean     n std_err .config        </span></span>
+<span id="cb23-5"><a aria-label="5"></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;          </span></span>
+<span id="cb23-6"><a aria-label="6"></a><span class="co">#&gt; 1 accuracy    binary     0.911     10 0.0124  pre0_mod0_post0</span></span>
+<span id="cb23-7"><a aria-label="7"></a><span class="co">#&gt; 2 brier_class binary     0.0680    10 0.00663 pre0_mod0_post0</span></span>
+<span id="cb23-8"><a aria-label="8"></a><span class="co">#&gt; 3 roc_auc     binary     0.966     10 0.00505 pre0_mod0_post0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <aside class="notes">
 <p><code>collect_metrics()</code> is one of a suite of <code>collect_*()</code> functions that can be used to work with columns of tuning results. Most columns in a tuning result prefixed with <code>.</code> have a corresponding <code>collect_*()</code> function with options for common summaries.</p>
@@ -824,15 +827,15 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <div class="columns">
 <div class="column" style="width:50%;">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a></a>cls_res <span class="sc">|&gt;</span></span>
-<span id="cb24-2"><a></a>  <span class="fu">collect_metrics</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb24-3"><a></a>  <span class="fu">select</span>(.metric, mean, std_err, n)</span>
-<span id="cb24-4"><a></a><span class="co">#&gt; # A tibble: 3 × 4</span></span>
-<span id="cb24-5"><a></a><span class="co">#&gt;   .metric       mean std_err     n</span></span>
-<span id="cb24-6"><a></a><span class="co">#&gt;   &lt;chr&gt;        &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt;</span></span>
-<span id="cb24-7"><a></a><span class="co">#&gt; 1 accuracy    0.911  0.0124     10</span></span>
-<span id="cb24-8"><a></a><span class="co">#&gt; 2 brier_class 0.0680 0.00663    10</span></span>
-<span id="cb24-9"><a></a><span class="co">#&gt; 3 roc_auc     0.966  0.00505    10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a aria-label="1"></a>cls_res <span class="sc">|&gt;</span></span>
+<span id="cb24-2"><a aria-label="2"></a>  <span class="fu">collect_metrics</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb24-3"><a aria-label="3"></a>  <span class="fu">select</span>(.metric, mean, std_err, n)</span>
+<span id="cb24-4"><a aria-label="4"></a><span class="co">#&gt; # A tibble: 3 × 4</span></span>
+<span id="cb24-5"><a aria-label="5"></a><span class="co">#&gt;   .metric       mean std_err     n</span></span>
+<span id="cb24-6"><a aria-label="6"></a><span class="co">#&gt;   &lt;chr&gt;        &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt;</span></span>
+<span id="cb24-7"><a aria-label="7"></a><span class="co">#&gt; 1 accuracy    0.911  0.0124     10</span></span>
+<span id="cb24-8"><a aria-label="8"></a><span class="co">#&gt; 2 brier_class 0.0680 0.00663    10</span></span>
+<span id="cb24-9"><a aria-label="9"></a><span class="co">#&gt; 3 roc_auc     0.966  0.00505    10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div><div class="column" style="width:50%;">
 <p>The Brier score previously was</p>
@@ -862,100 +865,100 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <section id="evaluating-model-performance-1" class="slide level2">
 <h2>Evaluating model performance <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25" data-code-line-numbers="1-2|3|5|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a></a><span class="co"># Save the assessment set results</span></span>
-<span id="cb25-2"><a></a>ctrl_rs <span class="ot">&lt;-</span> <span class="fu">control_resamples</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb25-3"><a></a>cls_res <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(lr_wflow, cls_folds, <span class="at">control =</span> ctrl_rs)</span>
-<span id="cb25-4"><a></a></span>
-<span id="cb25-5"><a></a>cls_res</span>
-<span id="cb25-6"><a></a><span class="co">#&gt; # Resampling results</span></span>
-<span id="cb25-7"><a></a><span class="co">#&gt; # 10-fold cross-validation </span></span>
-<span id="cb25-8"><a></a><span class="co">#&gt; # A tibble: 10 × 5</span></span>
-<span id="cb25-9"><a></a><span class="co">#&gt;    splits           id     .metrics         .notes           .predictions     </span></span>
-<span id="cb25-10"><a></a><span class="co">#&gt;    &lt;list&gt;           &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;           &lt;list&gt;           </span></span>
-<span id="cb25-11"><a></a><span class="co">#&gt;  1 &lt;split [720/80]&gt; Fold01 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb25-12"><a></a><span class="co">#&gt;  2 &lt;split [720/80]&gt; Fold02 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb25-13"><a></a><span class="co">#&gt;  3 &lt;split [720/80]&gt; Fold03 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb25-14"><a></a><span class="co">#&gt;  4 &lt;split [720/80]&gt; Fold04 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb25-15"><a></a><span class="co">#&gt;  5 &lt;split [720/80]&gt; Fold05 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb25-16"><a></a><span class="co">#&gt;  6 &lt;split [720/80]&gt; Fold06 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb25-17"><a></a><span class="co">#&gt;  7 &lt;split [720/80]&gt; Fold07 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb25-18"><a></a><span class="co">#&gt;  8 &lt;split [720/80]&gt; Fold08 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb25-19"><a></a><span class="co">#&gt;  9 &lt;split [720/80]&gt; Fold09 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb25-20"><a></a><span class="co">#&gt; 10 &lt;split [720/80]&gt; Fold10 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25" data-code-line-numbers="1-2|3|5|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a aria-label="1"></a><span class="co"># Save the assessment set results</span></span>
+<span id="cb25-2"><a aria-label="2"></a>ctrl_rs <span class="ot">&lt;-</span> <span class="fu">control_resamples</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb25-3"><a aria-label="3"></a>cls_res <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(lr_wflow, cls_folds, <span class="at">control =</span> ctrl_rs)</span>
+<span id="cb25-4"><a aria-label="4"></a></span>
+<span id="cb25-5"><a aria-label="5"></a>cls_res</span>
+<span id="cb25-6"><a aria-label="6"></a><span class="co">#&gt; # Resampling results</span></span>
+<span id="cb25-7"><a aria-label="7"></a><span class="co">#&gt; # 10-fold cross-validation </span></span>
+<span id="cb25-8"><a aria-label="8"></a><span class="co">#&gt; # A tibble: 10 × 5</span></span>
+<span id="cb25-9"><a aria-label="9"></a><span class="co">#&gt;    splits           id     .metrics         .notes           .predictions     </span></span>
+<span id="cb25-10"><a aria-label="10"></a><span class="co">#&gt;    &lt;list&gt;           &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;           &lt;list&gt;           </span></span>
+<span id="cb25-11"><a aria-label="11"></a><span class="co">#&gt;  1 &lt;split [720/80]&gt; Fold01 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb25-12"><a aria-label="12"></a><span class="co">#&gt;  2 &lt;split [720/80]&gt; Fold02 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb25-13"><a aria-label="13"></a><span class="co">#&gt;  3 &lt;split [720/80]&gt; Fold03 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb25-14"><a aria-label="14"></a><span class="co">#&gt;  4 &lt;split [720/80]&gt; Fold04 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb25-15"><a aria-label="15"></a><span class="co">#&gt;  5 &lt;split [720/80]&gt; Fold05 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb25-16"><a aria-label="16"></a><span class="co">#&gt;  6 &lt;split [720/80]&gt; Fold06 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb25-17"><a aria-label="17"></a><span class="co">#&gt;  7 &lt;split [720/80]&gt; Fold07 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb25-18"><a aria-label="18"></a><span class="co">#&gt;  8 &lt;split [720/80]&gt; Fold08 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb25-19"><a aria-label="19"></a><span class="co">#&gt;  9 &lt;split [720/80]&gt; Fold09 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb25-20"><a aria-label="20"></a><span class="co">#&gt; 10 &lt;split [720/80]&gt; Fold10 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="evaluating-model-performance-2" class="slide level2">
 <h2>Evaluating model performance <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a></a><span class="co"># Save the assessment set results</span></span>
-<span id="cb26-2"><a></a>cls_preds <span class="ot">&lt;-</span> <span class="fu">collect_predictions</span>(cls_res)</span>
-<span id="cb26-3"><a></a>cls_preds</span>
-<span id="cb26-4"><a></a><span class="co">#&gt; # A tibble: 800 × 7</span></span>
-<span id="cb26-5"><a></a><span class="co">#&gt;    .pred_class .pred_class_1 .pred_class_2 id     class    .row .config        </span></span>
-<span id="cb26-6"><a></a><span class="co">#&gt;    &lt;fct&gt;               &lt;dbl&gt;         &lt;dbl&gt; &lt;chr&gt;  &lt;fct&gt;   &lt;int&gt; &lt;chr&gt;          </span></span>
-<span id="cb26-7"><a></a><span class="co">#&gt;  1 class_1             1.000      0.000371 Fold01 class_1    14 pre0_mod0_post0</span></span>
-<span id="cb26-8"><a></a><span class="co">#&gt;  2 class_2             0.267      0.733    Fold01 class_1    24 pre0_mod0_post0</span></span>
-<span id="cb26-9"><a></a><span class="co">#&gt;  3 class_1             0.997      0.00253  Fold01 class_1    32 pre0_mod0_post0</span></span>
-<span id="cb26-10"><a></a><span class="co">#&gt;  4 class_1             0.748      0.252    Fold01 class_1    41 pre0_mod0_post0</span></span>
-<span id="cb26-11"><a></a><span class="co">#&gt;  5 class_1             1.000      0.000323 Fold01 class_1    42 pre0_mod0_post0</span></span>
-<span id="cb26-12"><a></a><span class="co">#&gt;  6 class_1             0.998      0.00221  Fold01 class_1    45 pre0_mod0_post0</span></span>
-<span id="cb26-13"><a></a><span class="co">#&gt;  7 class_2             0.281      0.719    Fold01 class_2    52 pre0_mod0_post0</span></span>
-<span id="cb26-14"><a></a><span class="co">#&gt;  8 class_1             1.000      0.000246 Fold01 class_1    53 pre0_mod0_post0</span></span>
-<span id="cb26-15"><a></a><span class="co">#&gt;  9 class_1             1.000      0.000388 Fold01 class_1    69 pre0_mod0_post0</span></span>
-<span id="cb26-16"><a></a><span class="co">#&gt; 10 class_1             0.979      0.0209   Fold01 class_1    77 pre0_mod0_post0</span></span>
-<span id="cb26-17"><a></a><span class="co">#&gt; # ℹ 790 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a aria-label="1"></a><span class="co"># Save the assessment set results</span></span>
+<span id="cb26-2"><a aria-label="2"></a>cls_preds <span class="ot">&lt;-</span> <span class="fu">collect_predictions</span>(cls_res)</span>
+<span id="cb26-3"><a aria-label="3"></a>cls_preds</span>
+<span id="cb26-4"><a aria-label="4"></a><span class="co">#&gt; # A tibble: 800 × 7</span></span>
+<span id="cb26-5"><a aria-label="5"></a><span class="co">#&gt;    .pred_class .pred_class_1 .pred_class_2 id     class    .row .config        </span></span>
+<span id="cb26-6"><a aria-label="6"></a><span class="co">#&gt;    &lt;fct&gt;               &lt;dbl&gt;         &lt;dbl&gt; &lt;chr&gt;  &lt;fct&gt;   &lt;int&gt; &lt;chr&gt;          </span></span>
+<span id="cb26-7"><a aria-label="7"></a><span class="co">#&gt;  1 class_1             1.000      0.000371 Fold01 class_1    14 pre0_mod0_post0</span></span>
+<span id="cb26-8"><a aria-label="8"></a><span class="co">#&gt;  2 class_2             0.267      0.733    Fold01 class_1    24 pre0_mod0_post0</span></span>
+<span id="cb26-9"><a aria-label="9"></a><span class="co">#&gt;  3 class_1             0.997      0.00253  Fold01 class_1    32 pre0_mod0_post0</span></span>
+<span id="cb26-10"><a aria-label="10"></a><span class="co">#&gt;  4 class_1             0.748      0.252    Fold01 class_1    41 pre0_mod0_post0</span></span>
+<span id="cb26-11"><a aria-label="11"></a><span class="co">#&gt;  5 class_1             1.000      0.000323 Fold01 class_1    42 pre0_mod0_post0</span></span>
+<span id="cb26-12"><a aria-label="12"></a><span class="co">#&gt;  6 class_1             0.998      0.00221  Fold01 class_1    45 pre0_mod0_post0</span></span>
+<span id="cb26-13"><a aria-label="13"></a><span class="co">#&gt;  7 class_2             0.281      0.719    Fold01 class_2    52 pre0_mod0_post0</span></span>
+<span id="cb26-14"><a aria-label="14"></a><span class="co">#&gt;  8 class_1             1.000      0.000246 Fold01 class_1    53 pre0_mod0_post0</span></span>
+<span id="cb26-15"><a aria-label="15"></a><span class="co">#&gt;  9 class_1             1.000      0.000388 Fold01 class_1    69 pre0_mod0_post0</span></span>
+<span id="cb26-16"><a aria-label="16"></a><span class="co">#&gt; 10 class_1             0.979      0.0209   Fold01 class_1    77 pre0_mod0_post0</span></span>
+<span id="cb26-17"><a aria-label="17"></a><span class="co">#&gt; # ℹ 790 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="evaluating-model-performance-3" class="slide level2">
 <h2>Evaluating model performance <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a></a>cls_preds <span class="sc">|&gt;</span> </span>
-<span id="cb27-2"><a></a>  <span class="fu">group_by</span>(id) <span class="sc">|&gt;</span></span>
-<span id="cb27-3"><a></a>  <span class="fu">cls_metrics</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class, .pred_class_1)</span>
-<span id="cb27-4"><a></a><span class="co">#&gt; # A tibble: 20 × 4</span></span>
-<span id="cb27-5"><a></a><span class="co">#&gt;    id     .metric     .estimator .estimate</span></span>
-<span id="cb27-6"><a></a><span class="co">#&gt;    &lt;chr&gt;  &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb27-7"><a></a><span class="co">#&gt;  1 Fold01 accuracy    binary        0.862 </span></span>
-<span id="cb27-8"><a></a><span class="co">#&gt;  2 Fold02 accuracy    binary        0.85  </span></span>
-<span id="cb27-9"><a></a><span class="co">#&gt;  3 Fold03 accuracy    binary        0.988 </span></span>
-<span id="cb27-10"><a></a><span class="co">#&gt;  4 Fold04 accuracy    binary        0.925 </span></span>
-<span id="cb27-11"><a></a><span class="co">#&gt;  5 Fold05 accuracy    binary        0.888 </span></span>
-<span id="cb27-12"><a></a><span class="co">#&gt;  6 Fold06 accuracy    binary        0.925 </span></span>
-<span id="cb27-13"><a></a><span class="co">#&gt;  7 Fold07 accuracy    binary        0.925 </span></span>
-<span id="cb27-14"><a></a><span class="co">#&gt;  8 Fold08 accuracy    binary        0.938 </span></span>
-<span id="cb27-15"><a></a><span class="co">#&gt;  9 Fold09 accuracy    binary        0.912 </span></span>
-<span id="cb27-16"><a></a><span class="co">#&gt; 10 Fold10 accuracy    binary        0.9   </span></span>
-<span id="cb27-17"><a></a><span class="co">#&gt; 11 Fold01 brier_class binary        0.0891</span></span>
-<span id="cb27-18"><a></a><span class="co">#&gt; 12 Fold02 brier_class binary        0.0908</span></span>
-<span id="cb27-19"><a></a><span class="co">#&gt; 13 Fold03 brier_class binary        0.0245</span></span>
-<span id="cb27-20"><a></a><span class="co">#&gt; 14 Fold04 brier_class binary        0.0647</span></span>
-<span id="cb27-21"><a></a><span class="co">#&gt; 15 Fold05 brier_class binary        0.0974</span></span>
-<span id="cb27-22"><a></a><span class="co">#&gt; 16 Fold06 brier_class binary        0.0588</span></span>
-<span id="cb27-23"><a></a><span class="co">#&gt; 17 Fold07 brier_class binary        0.0573</span></span>
-<span id="cb27-24"><a></a><span class="co">#&gt; 18 Fold08 brier_class binary        0.0659</span></span>
-<span id="cb27-25"><a></a><span class="co">#&gt; 19 Fold09 brier_class binary        0.0634</span></span>
-<span id="cb27-26"><a></a><span class="co">#&gt; 20 Fold10 brier_class binary        0.0678</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a aria-label="1"></a>cls_preds <span class="sc">|&gt;</span> </span>
+<span id="cb27-2"><a aria-label="2"></a>  <span class="fu">group_by</span>(id) <span class="sc">|&gt;</span></span>
+<span id="cb27-3"><a aria-label="3"></a>  <span class="fu">cls_metrics</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class, .pred_class_1)</span>
+<span id="cb27-4"><a aria-label="4"></a><span class="co">#&gt; # A tibble: 20 × 4</span></span>
+<span id="cb27-5"><a aria-label="5"></a><span class="co">#&gt;    id     .metric     .estimator .estimate</span></span>
+<span id="cb27-6"><a aria-label="6"></a><span class="co">#&gt;    &lt;chr&gt;  &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb27-7"><a aria-label="7"></a><span class="co">#&gt;  1 Fold01 accuracy    binary        0.862 </span></span>
+<span id="cb27-8"><a aria-label="8"></a><span class="co">#&gt;  2 Fold02 accuracy    binary        0.85  </span></span>
+<span id="cb27-9"><a aria-label="9"></a><span class="co">#&gt;  3 Fold03 accuracy    binary        0.988 </span></span>
+<span id="cb27-10"><a aria-label="10"></a><span class="co">#&gt;  4 Fold04 accuracy    binary        0.925 </span></span>
+<span id="cb27-11"><a aria-label="11"></a><span class="co">#&gt;  5 Fold05 accuracy    binary        0.888 </span></span>
+<span id="cb27-12"><a aria-label="12"></a><span class="co">#&gt;  6 Fold06 accuracy    binary        0.925 </span></span>
+<span id="cb27-13"><a aria-label="13"></a><span class="co">#&gt;  7 Fold07 accuracy    binary        0.925 </span></span>
+<span id="cb27-14"><a aria-label="14"></a><span class="co">#&gt;  8 Fold08 accuracy    binary        0.938 </span></span>
+<span id="cb27-15"><a aria-label="15"></a><span class="co">#&gt;  9 Fold09 accuracy    binary        0.912 </span></span>
+<span id="cb27-16"><a aria-label="16"></a><span class="co">#&gt; 10 Fold10 accuracy    binary        0.9   </span></span>
+<span id="cb27-17"><a aria-label="17"></a><span class="co">#&gt; 11 Fold01 brier_class binary        0.0891</span></span>
+<span id="cb27-18"><a aria-label="18"></a><span class="co">#&gt; 12 Fold02 brier_class binary        0.0908</span></span>
+<span id="cb27-19"><a aria-label="19"></a><span class="co">#&gt; 13 Fold03 brier_class binary        0.0245</span></span>
+<span id="cb27-20"><a aria-label="20"></a><span class="co">#&gt; 14 Fold04 brier_class binary        0.0647</span></span>
+<span id="cb27-21"><a aria-label="21"></a><span class="co">#&gt; 15 Fold05 brier_class binary        0.0974</span></span>
+<span id="cb27-22"><a aria-label="22"></a><span class="co">#&gt; 16 Fold06 brier_class binary        0.0588</span></span>
+<span id="cb27-23"><a aria-label="23"></a><span class="co">#&gt; 17 Fold07 brier_class binary        0.0573</span></span>
+<span id="cb27-24"><a aria-label="24"></a><span class="co">#&gt; 18 Fold08 brier_class binary        0.0659</span></span>
+<span id="cb27-25"><a aria-label="25"></a><span class="co">#&gt; 19 Fold09 brier_class binary        0.0634</span></span>
+<span id="cb27-26"><a aria-label="26"></a><span class="co">#&gt; 20 Fold10 brier_class binary        0.0678</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="where-are-the-fitted-models" class="slide level2 annotation">
 <h2>Where are the fitted models? <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a></a>cls_res</span>
-<span id="cb28-2"><a></a><span class="co">#&gt; # Resampling results</span></span>
-<span id="cb28-3"><a></a><span class="co">#&gt; # 10-fold cross-validation </span></span>
-<span id="cb28-4"><a></a><span class="co">#&gt; # A tibble: 10 × 5</span></span>
-<span id="cb28-5"><a></a><span class="co">#&gt;    splits           id     .metrics         .notes           .predictions     </span></span>
-<span id="cb28-6"><a></a><span class="co">#&gt;    &lt;list&gt;           &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;           &lt;list&gt;           </span></span>
-<span id="cb28-7"><a></a><span class="co">#&gt;  1 &lt;split [720/80]&gt; Fold01 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb28-8"><a></a><span class="co">#&gt;  2 &lt;split [720/80]&gt; Fold02 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb28-9"><a></a><span class="co">#&gt;  3 &lt;split [720/80]&gt; Fold03 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb28-10"><a></a><span class="co">#&gt;  4 &lt;split [720/80]&gt; Fold04 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb28-11"><a></a><span class="co">#&gt;  5 &lt;split [720/80]&gt; Fold05 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb28-12"><a></a><span class="co">#&gt;  6 &lt;split [720/80]&gt; Fold06 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb28-13"><a></a><span class="co">#&gt;  7 &lt;split [720/80]&gt; Fold07 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb28-14"><a></a><span class="co">#&gt;  8 &lt;split [720/80]&gt; Fold08 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb28-15"><a></a><span class="co">#&gt;  9 &lt;split [720/80]&gt; Fold09 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
-<span id="cb28-16"><a></a><span class="co">#&gt; 10 &lt;split [720/80]&gt; Fold10 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a aria-label="1"></a>cls_res</span>
+<span id="cb28-2"><a aria-label="2"></a><span class="co">#&gt; # Resampling results</span></span>
+<span id="cb28-3"><a aria-label="3"></a><span class="co">#&gt; # 10-fold cross-validation </span></span>
+<span id="cb28-4"><a aria-label="4"></a><span class="co">#&gt; # A tibble: 10 × 5</span></span>
+<span id="cb28-5"><a aria-label="5"></a><span class="co">#&gt;    splits           id     .metrics         .notes           .predictions     </span></span>
+<span id="cb28-6"><a aria-label="6"></a><span class="co">#&gt;    &lt;list&gt;           &lt;chr&gt;  &lt;list&gt;           &lt;list&gt;           &lt;list&gt;           </span></span>
+<span id="cb28-7"><a aria-label="7"></a><span class="co">#&gt;  1 &lt;split [720/80]&gt; Fold01 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb28-8"><a aria-label="8"></a><span class="co">#&gt;  2 &lt;split [720/80]&gt; Fold02 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb28-9"><a aria-label="9"></a><span class="co">#&gt;  3 &lt;split [720/80]&gt; Fold03 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb28-10"><a aria-label="10"></a><span class="co">#&gt;  4 &lt;split [720/80]&gt; Fold04 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb28-11"><a aria-label="11"></a><span class="co">#&gt;  5 &lt;split [720/80]&gt; Fold05 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb28-12"><a aria-label="12"></a><span class="co">#&gt;  6 &lt;split [720/80]&gt; Fold06 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb28-13"><a aria-label="13"></a><span class="co">#&gt;  7 &lt;split [720/80]&gt; Fold07 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb28-14"><a aria-label="14"></a><span class="co">#&gt;  8 &lt;split [720/80]&gt; Fold08 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb28-15"><a aria-label="15"></a><span class="co">#&gt;  9 &lt;split [720/80]&gt; Fold09 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span>
+<span id="cb28-16"><a aria-label="16"></a><span class="co">#&gt; 10 &lt;split [720/80]&gt; Fold10 &lt;tibble [3 × 4]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble [80 × 6]&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="fragment">
 <p>🗑️</p>
@@ -987,35 +990,35 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <section id="create-a-random-forest-model" class="slide level2">
 <h2>Create a random forest model <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a></a>rf_spec <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(<span class="at">trees =</span> <span class="dv">1000</span>, <span class="at">mode =</span> <span class="st">"classification"</span>)</span>
-<span id="cb29-2"><a></a>rf_spec</span>
-<span id="cb29-3"><a></a><span class="co">#&gt; Random Forest Model Specification (classification)</span></span>
-<span id="cb29-4"><a></a><span class="co">#&gt; </span></span>
-<span id="cb29-5"><a></a><span class="co">#&gt; Main Arguments:</span></span>
-<span id="cb29-6"><a></a><span class="co">#&gt;   trees = 1000</span></span>
-<span id="cb29-7"><a></a><span class="co">#&gt; </span></span>
-<span id="cb29-8"><a></a><span class="co">#&gt; Computational engine: ranger</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a aria-label="1"></a>rf_spec <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(<span class="at">trees =</span> <span class="dv">1000</span>, <span class="at">mode =</span> <span class="st">"classification"</span>)</span>
+<span id="cb29-2"><a aria-label="2"></a>rf_spec</span>
+<span id="cb29-3"><a aria-label="3"></a><span class="co">#&gt; Random Forest Model Specification (classification)</span></span>
+<span id="cb29-4"><a aria-label="4"></a><span class="co">#&gt; </span></span>
+<span id="cb29-5"><a aria-label="5"></a><span class="co">#&gt; Main Arguments:</span></span>
+<span id="cb29-6"><a aria-label="6"></a><span class="co">#&gt;   trees = 1000</span></span>
+<span id="cb29-7"><a aria-label="7"></a><span class="co">#&gt; </span></span>
+<span id="cb29-8"><a aria-label="8"></a><span class="co">#&gt; Computational engine: ranger</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="create-a-random-forest-model-1" class="slide level2">
 <h2>Create a random forest model <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a></a>rf_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(class <span class="sc">~</span> ., rf_spec)</span>
-<span id="cb30-2"><a></a>rf_wflow</span>
-<span id="cb30-3"><a></a><span class="co">#&gt; ══ Workflow ══════════════════════════════════════════════════════════</span></span>
-<span id="cb30-4"><a></a><span class="co">#&gt; Preprocessor: Formula</span></span>
-<span id="cb30-5"><a></a><span class="co">#&gt; Model: rand_forest()</span></span>
-<span id="cb30-6"><a></a><span class="co">#&gt; </span></span>
-<span id="cb30-7"><a></a><span class="co">#&gt; ── Preprocessor ──────────────────────────────────────────────────────</span></span>
-<span id="cb30-8"><a></a><span class="co">#&gt; class ~ .</span></span>
-<span id="cb30-9"><a></a><span class="co">#&gt; </span></span>
-<span id="cb30-10"><a></a><span class="co">#&gt; ── Model ─────────────────────────────────────────────────────────────</span></span>
-<span id="cb30-11"><a></a><span class="co">#&gt; Random Forest Model Specification (classification)</span></span>
-<span id="cb30-12"><a></a><span class="co">#&gt; </span></span>
-<span id="cb30-13"><a></a><span class="co">#&gt; Main Arguments:</span></span>
-<span id="cb30-14"><a></a><span class="co">#&gt;   trees = 1000</span></span>
-<span id="cb30-15"><a></a><span class="co">#&gt; </span></span>
-<span id="cb30-16"><a></a><span class="co">#&gt; Computational engine: ranger</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a aria-label="1"></a>rf_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(class <span class="sc">~</span> ., rf_spec)</span>
+<span id="cb30-2"><a aria-label="2"></a>rf_wflow</span>
+<span id="cb30-3"><a aria-label="3"></a><span class="co">#&gt; ══ Workflow ══════════════════════════════════════════════════════════</span></span>
+<span id="cb30-4"><a aria-label="4"></a><span class="co">#&gt; Preprocessor: Formula</span></span>
+<span id="cb30-5"><a aria-label="5"></a><span class="co">#&gt; Model: rand_forest()</span></span>
+<span id="cb30-6"><a aria-label="6"></a><span class="co">#&gt; </span></span>
+<span id="cb30-7"><a aria-label="7"></a><span class="co">#&gt; ── Preprocessor ──────────────────────────────────────────────────────</span></span>
+<span id="cb30-8"><a aria-label="8"></a><span class="co">#&gt; class ~ .</span></span>
+<span id="cb30-9"><a aria-label="9"></a><span class="co">#&gt; </span></span>
+<span id="cb30-10"><a aria-label="10"></a><span class="co">#&gt; ── Model ─────────────────────────────────────────────────────────────</span></span>
+<span id="cb30-11"><a aria-label="11"></a><span class="co">#&gt; Random Forest Model Specification (classification)</span></span>
+<span id="cb30-12"><a aria-label="12"></a><span class="co">#&gt; </span></span>
+<span id="cb30-13"><a aria-label="13"></a><span class="co">#&gt; Main Arguments:</span></span>
+<span id="cb30-14"><a aria-label="14"></a><span class="co">#&gt;   trees = 1000</span></span>
+<span id="cb30-15"><a aria-label="15"></a><span class="co">#&gt; </span></span>
+<span id="cb30-16"><a aria-label="16"></a><span class="co">#&gt; Computational engine: ranger</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="your-turn-3" class="slide level2" data-transition="slide-in">
@@ -1035,26 +1038,27 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <section id="evaluating-model-performance-4" class="slide level2">
 <h2>Evaluating model performance <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31" data-code-line-numbers="1|3|5-7|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a></a>ctrl_rs <span class="ot">&lt;-</span> <span class="fu">control_resamples</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb31-2"><a></a></span>
-<span id="cb31-3"><a></a><span class="co"># Random forest uses random numbers so set the seed first</span></span>
-<span id="cb31-4"><a></a></span>
-<span id="cb31-5"><a></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
-<span id="cb31-6"><a></a>rf_res <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(rf_wflow, cls_folds, <span class="at">control =</span> ctrl_rs)</span>
-<span id="cb31-7"><a></a><span class="fu">collect_metrics</span>(rf_res)</span>
-<span id="cb31-8"><a></a><span class="co">#&gt; # A tibble: 3 × 6</span></span>
-<span id="cb31-9"><a></a><span class="co">#&gt;   .metric     .estimator   mean     n std_err .config        </span></span>
-<span id="cb31-10"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;          </span></span>
-<span id="cb31-11"><a></a><span class="co">#&gt; 1 accuracy    binary     0.929     10 0.00561 pre0_mod0_post0</span></span>
-<span id="cb31-12"><a></a><span class="co">#&gt; 2 brier_class binary     0.0526    10 0.00370 pre0_mod0_post0</span></span>
-<span id="cb31-13"><a></a><span class="co">#&gt; 3 roc_auc     binary     0.976     10 0.00416 pre0_mod0_post0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31" data-code-line-numbers="1|3|5-7|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a aria-label="1"></a>ctrl_rs <span class="ot">&lt;-</span> <span class="fu">control_resamples</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb31-2"><a aria-label="2"></a></span>
+<span id="cb31-3"><a aria-label="3"></a><span class="co"># Random forest uses random numbers so set the seed first</span></span>
+<span id="cb31-4"><a aria-label="4"></a></span>
+<span id="cb31-5"><a aria-label="5"></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
+<span id="cb31-6"><a aria-label="6"></a>rf_res <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(rf_wflow, cls_folds, <span class="at">control =</span> ctrl_rs)</span>
+<span id="cb31-7"><a aria-label="7"></a><span class="fu">collect_metrics</span>(rf_res)</span>
+<span id="cb31-8"><a aria-label="8"></a><span class="co">#&gt; # A tibble: 3 × 6</span></span>
+<span id="cb31-9"><a aria-label="9"></a><span class="co">#&gt;   .metric     .estimator   mean     n std_err .config        </span></span>
+<span id="cb31-10"><a aria-label="10"></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;       &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt; &lt;chr&gt;          </span></span>
+<span id="cb31-11"><a aria-label="11"></a><span class="co">#&gt; 1 accuracy    binary     0.929     10 0.00561 pre0_mod0_post0</span></span>
+<span id="cb31-12"><a aria-label="12"></a><span class="co">#&gt; 2 brier_class binary     0.0526    10 0.00370 pre0_mod0_post0</span></span>
+<span id="cb31-13"><a aria-label="13"></a><span class="co">#&gt; 3 roc_auc     binary     0.976     10 0.00416 pre0_mod0_post0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="evaluating-model-performance-5" class="slide level2">
 <h2>Evaluating model performance <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/probably.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <p>probably has a nice interface for calibration curves:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a></a><span class="fu">cal_plot_windowed</span>(rf_res, <span class="at">step_size =</span> <span class="fl">0.03</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a aria-label="1"></a><span class="fu">library</span>(probably)</span>
+<span id="cb32-2"><a aria-label="2"></a><span class="fu">cal_plot_windowed</span>(rf_res, <span class="at">step_size =</span> <span class="fl">0.03</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure>
@@ -1069,7 +1073,7 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <section id="your-turn-4" class="slide level2" data-transition="slide-in">
 <h2>Your turn</h2>
 <p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
-<p>Repredict the training set using <code>final_fit</code>.</p>
+<p>Fit <code>rf_wflow</code> to the training set and repredict it.</p>
 <p>Does the random forest model give overly optimistic results on the training set?</p>
 <div class="cell">
 <div class="cell-output-display">
@@ -1077,10 +1081,10 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 </div>
 </div>
 </section>
-<section id="the-whole-game" class="slide level2">
-<h2>The whole game</h2>
+<section id="the-whole-game---status-update" class="slide level2">
+<h2>The whole game - status update</h2>
 
-<img data-src="images/whole-game-transparent-select.jpg" class="quarto-figure quarto-figure-center r-stretch" width="3543"></section></section>
+<img data-src="images/whole-game-transparent-resamples.jpg" class="quarto-figure quarto-figure-center r-stretch" width="3543"></section></section>
 <section>
 <section id="backup-slides" class="title-slide slide level1 center" data-background-color="#BDE9C9FF">
 <h1>Backup Slides</h1>
@@ -1091,12 +1095,12 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <div class="columns">
 <div class="column" style="width:60%;">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a></a>lr_re_pred <span class="sc">|&gt;</span></span>
-<span id="cb33-2"><a></a>  <span class="fu">sensitivity</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class)</span>
-<span id="cb33-3"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
-<span id="cb33-4"><a></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
-<span id="cb33-5"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb33-6"><a></a><span class="co">#&gt; 1 sensitivity binary         0.936</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a aria-label="1"></a>lr_re_pred <span class="sc">|&gt;</span></span>
+<span id="cb33-2"><a aria-label="2"></a>  <span class="fu">sensitivity</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb33-3"><a aria-label="3"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb33-4"><a aria-label="4"></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
+<span id="cb33-5"><a aria-label="5"></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb33-6"><a aria-label="6"></a><span class="co">#&gt; 1 sensitivity binary         0.936</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div><div class="column" style="width:40%;">
 <p><img data-src="images/confusion-matrix-sensitivity.png"></p>
@@ -1110,21 +1114,21 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <div class="columns">
 <div class="column" style="width:60%;">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34" data-code-line-numbers="3-6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a></a>lr_re_pred <span class="sc">|&gt;</span></span>
-<span id="cb34-2"><a></a>  <span class="fu">sensitivity</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class)</span>
-<span id="cb34-3"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
-<span id="cb34-4"><a></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
-<span id="cb34-5"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb34-6"><a></a><span class="co">#&gt; 1 sensitivity binary         0.936</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34" data-code-line-numbers="3-6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a aria-label="1"></a>lr_re_pred <span class="sc">|&gt;</span></span>
+<span id="cb34-2"><a aria-label="2"></a>  <span class="fu">sensitivity</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb34-3"><a aria-label="3"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb34-4"><a aria-label="4"></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
+<span id="cb34-5"><a aria-label="5"></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb34-6"><a aria-label="6"></a><span class="co">#&gt; 1 sensitivity binary         0.936</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p><br></p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a></a>lr_re_pred <span class="sc">|&gt;</span></span>
-<span id="cb35-2"><a></a>  <span class="fu">specificity</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class)</span>
-<span id="cb35-3"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
-<span id="cb35-4"><a></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
-<span id="cb35-5"><a></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb35-6"><a></a><span class="co">#&gt; 1 specificity binary         0.865</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a aria-label="1"></a>lr_re_pred <span class="sc">|&gt;</span></span>
+<span id="cb35-2"><a aria-label="2"></a>  <span class="fu">specificity</span>(<span class="at">truth =</span> class, <span class="at">estimate =</span> .pred_class)</span>
+<span id="cb35-3"><a aria-label="3"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb35-4"><a aria-label="4"></a><span class="co">#&gt;   .metric     .estimator .estimate</span></span>
+<span id="cb35-5"><a aria-label="5"></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb35-6"><a aria-label="6"></a><span class="co">#&gt; 1 specificity binary         0.865</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div><div class="column" style="width:40%;">
 <p><img data-src="images/confusion-matrix-specificity.png"></p>
@@ -1213,34 +1217,34 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <section id="roc-curves-2" class="slide level2">
 <h2>ROC curves <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a></a><span class="co"># Assumes _first_ factor level is event; there are options to change that</span></span>
-<span id="cb36-2"><a></a>lr_re_pred <span class="sc">|&gt;</span> </span>
-<span id="cb36-3"><a></a>  <span class="fu">roc_curve</span>(<span class="at">truth =</span> class, .pred_class_1) <span class="sc">|&gt;</span></span>
-<span id="cb36-4"><a></a>  <span class="fu">slice</span>(<span class="dv">1</span>, <span class="dv">20</span>, <span class="dv">50</span>)</span>
-<span id="cb36-5"><a></a><span class="co">#&gt; # A tibble: 3 × 3</span></span>
-<span id="cb36-6"><a></a><span class="co">#&gt;   .threshold specificity sensitivity</span></span>
-<span id="cb36-7"><a></a><span class="co">#&gt;        &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;</span></span>
-<span id="cb36-8"><a></a><span class="co">#&gt; 1 -Inf            0            1    </span></span>
-<span id="cb36-9"><a></a><span class="co">#&gt; 2    0.00619      0.0677       1    </span></span>
-<span id="cb36-10"><a></a><span class="co">#&gt; 3    0.0154       0.177        0.998</span></span>
-<span id="cb36-11"><a></a></span>
-<span id="cb36-12"><a></a>lr_re_pred <span class="sc">|&gt;</span> </span>
-<span id="cb36-13"><a></a>  <span class="fu">roc_auc</span>(<span class="at">truth =</span> class, .pred_class_1)</span>
-<span id="cb36-14"><a></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
-<span id="cb36-15"><a></a><span class="co">#&gt;   .metric .estimator .estimate</span></span>
-<span id="cb36-16"><a></a><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;</span></span>
-<span id="cb36-17"><a></a><span class="co">#&gt; 1 roc_auc binary         0.968</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a aria-label="1"></a><span class="co"># Assumes _first_ factor level is event; there are options to change that</span></span>
+<span id="cb36-2"><a aria-label="2"></a>lr_re_pred <span class="sc">|&gt;</span> </span>
+<span id="cb36-3"><a aria-label="3"></a>  <span class="fu">roc_curve</span>(<span class="at">truth =</span> class, .pred_class_1) <span class="sc">|&gt;</span></span>
+<span id="cb36-4"><a aria-label="4"></a>  <span class="fu">slice</span>(<span class="dv">1</span>, <span class="dv">20</span>, <span class="dv">50</span>)</span>
+<span id="cb36-5"><a aria-label="5"></a><span class="co">#&gt; # A tibble: 3 × 3</span></span>
+<span id="cb36-6"><a aria-label="6"></a><span class="co">#&gt;   .threshold specificity sensitivity</span></span>
+<span id="cb36-7"><a aria-label="7"></a><span class="co">#&gt;        &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;</span></span>
+<span id="cb36-8"><a aria-label="8"></a><span class="co">#&gt; 1 -Inf            0            1    </span></span>
+<span id="cb36-9"><a aria-label="9"></a><span class="co">#&gt; 2    0.00619      0.0677       1    </span></span>
+<span id="cb36-10"><a aria-label="10"></a><span class="co">#&gt; 3    0.0154       0.177        0.998</span></span>
+<span id="cb36-11"><a aria-label="11"></a></span>
+<span id="cb36-12"><a aria-label="12"></a>lr_re_pred <span class="sc">|&gt;</span> </span>
+<span id="cb36-13"><a aria-label="13"></a>  <span class="fu">roc_auc</span>(<span class="at">truth =</span> class, .pred_class_1)</span>
+<span id="cb36-14"><a aria-label="14"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb36-15"><a aria-label="15"></a><span class="co">#&gt;   .metric .estimator .estimate</span></span>
+<span id="cb36-16"><a aria-label="16"></a><span class="co">#&gt;   &lt;chr&gt;   &lt;chr&gt;          &lt;dbl&gt;</span></span>
+<span id="cb36-17"><a aria-label="17"></a><span class="co">#&gt; 1 roc_auc binary         0.968</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="roc-curve-plot" class="slide level2">
 <h2>ROC curve plot <img data-src="hexes/yardstick.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell columns column-output-location">
 <div class="column">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a></a><span class="fu">augment</span>(lr_fit, </span>
-<span id="cb37-2"><a></a>        <span class="at">new_data =</span> cls_train) <span class="sc">|&gt;</span> </span>
-<span id="cb37-3"><a></a>  <span class="fu">roc_curve</span>(<span class="at">truth =</span> class, </span>
-<span id="cb37-4"><a></a>            .pred_class_1) <span class="sc">|&gt;</span></span>
-<span id="cb37-5"><a></a>  <span class="fu">autoplot</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a aria-label="1"></a><span class="fu">augment</span>(lr_fit, </span>
+<span id="cb37-2"><a aria-label="2"></a>        <span class="at">new_data =</span> cls_train) <span class="sc">|&gt;</span> </span>
+<span id="cb37-3"><a aria-label="3"></a>  <span class="fu">roc_curve</span>(<span class="at">truth =</span> class, </span>
+<span id="cb37-4"><a aria-label="4"></a>            .pred_class_1) <span class="sc">|&gt;</span></span>
+<span id="cb37-5"><a aria-label="5"></a>  <span class="fu">autoplot</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div><div class="column">
 <div class="cell-output-display">
 <div>
@@ -1274,23 +1278,23 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <section id="bootstrapping-1" class="slide level2">
 <h2>Bootstrapping <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a></a><span class="fu">set.seed</span>(<span class="dv">3214</span>)</span>
-<span id="cb38-2"><a></a><span class="fu">bootstraps</span>(cls_train)</span>
-<span id="cb38-3"><a></a><span class="co">#&gt; # Bootstrap sampling </span></span>
-<span id="cb38-4"><a></a><span class="co">#&gt; # A tibble: 25 × 2</span></span>
-<span id="cb38-5"><a></a><span class="co">#&gt;    splits            id         </span></span>
-<span id="cb38-6"><a></a><span class="co">#&gt;    &lt;list&gt;            &lt;chr&gt;      </span></span>
-<span id="cb38-7"><a></a><span class="co">#&gt;  1 &lt;split [800/287]&gt; Bootstrap01</span></span>
-<span id="cb38-8"><a></a><span class="co">#&gt;  2 &lt;split [800/294]&gt; Bootstrap02</span></span>
-<span id="cb38-9"><a></a><span class="co">#&gt;  3 &lt;split [800/292]&gt; Bootstrap03</span></span>
-<span id="cb38-10"><a></a><span class="co">#&gt;  4 &lt;split [800/293]&gt; Bootstrap04</span></span>
-<span id="cb38-11"><a></a><span class="co">#&gt;  5 &lt;split [800/279]&gt; Bootstrap05</span></span>
-<span id="cb38-12"><a></a><span class="co">#&gt;  6 &lt;split [800/287]&gt; Bootstrap06</span></span>
-<span id="cb38-13"><a></a><span class="co">#&gt;  7 &lt;split [800/297]&gt; Bootstrap07</span></span>
-<span id="cb38-14"><a></a><span class="co">#&gt;  8 &lt;split [800/291]&gt; Bootstrap08</span></span>
-<span id="cb38-15"><a></a><span class="co">#&gt;  9 &lt;split [800/307]&gt; Bootstrap09</span></span>
-<span id="cb38-16"><a></a><span class="co">#&gt; 10 &lt;split [800/296]&gt; Bootstrap10</span></span>
-<span id="cb38-17"><a></a><span class="co">#&gt; # ℹ 15 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a aria-label="1"></a><span class="fu">set.seed</span>(<span class="dv">3214</span>)</span>
+<span id="cb38-2"><a aria-label="2"></a><span class="fu">bootstraps</span>(cls_train)</span>
+<span id="cb38-3"><a aria-label="3"></a><span class="co">#&gt; # Bootstrap sampling </span></span>
+<span id="cb38-4"><a aria-label="4"></a><span class="co">#&gt; # A tibble: 25 × 2</span></span>
+<span id="cb38-5"><a aria-label="5"></a><span class="co">#&gt;    splits            id         </span></span>
+<span id="cb38-6"><a aria-label="6"></a><span class="co">#&gt;    &lt;list&gt;            &lt;chr&gt;      </span></span>
+<span id="cb38-7"><a aria-label="7"></a><span class="co">#&gt;  1 &lt;split [800/287]&gt; Bootstrap01</span></span>
+<span id="cb38-8"><a aria-label="8"></a><span class="co">#&gt;  2 &lt;split [800/294]&gt; Bootstrap02</span></span>
+<span id="cb38-9"><a aria-label="9"></a><span class="co">#&gt;  3 &lt;split [800/292]&gt; Bootstrap03</span></span>
+<span id="cb38-10"><a aria-label="10"></a><span class="co">#&gt;  4 &lt;split [800/293]&gt; Bootstrap04</span></span>
+<span id="cb38-11"><a aria-label="11"></a><span class="co">#&gt;  5 &lt;split [800/279]&gt; Bootstrap05</span></span>
+<span id="cb38-12"><a aria-label="12"></a><span class="co">#&gt;  6 &lt;split [800/287]&gt; Bootstrap06</span></span>
+<span id="cb38-13"><a aria-label="13"></a><span class="co">#&gt;  7 &lt;split [800/297]&gt; Bootstrap07</span></span>
+<span id="cb38-14"><a aria-label="14"></a><span class="co">#&gt;  8 &lt;split [800/291]&gt; Bootstrap08</span></span>
+<span id="cb38-15"><a aria-label="15"></a><span class="co">#&gt;  9 &lt;split [800/307]&gt; Bootstrap09</span></span>
+<span id="cb38-16"><a aria-label="16"></a><span class="co">#&gt; 10 &lt;split [800/296]&gt; Bootstrap10</span></span>
+<span id="cb38-17"><a aria-label="17"></a><span class="co">#&gt; # ℹ 15 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="section-3" class="slide level2" data-background-iframe="https://rsample.tidymodels.org/reference/index.html">
@@ -1299,10 +1303,6 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 
 </div>
 </section>
-<section id="the-whole-game---status-update" class="slide level2">
-<h2>The whole game - status update</h2>
-
-<img data-src="images/whole-game-transparent-resamples.jpg" class="quarto-figure quarto-figure-center r-stretch" width="3543"></section>
 <section id="your-turn-6" class="slide level2" data-transition="slide-in">
 <h2>Your turn</h2>
 <p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
@@ -1322,34 +1322,34 @@ Brier = \frac{1}{NC}\sum_{i=1}^N\sum_{k=1}^C (y_{ik} - \hat{p}_{ik})^2
 <section id="monte-carlo-cross-validation" class="slide level2">
 <h2>Monte Carlo Cross-Validation <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a></a><span class="fu">set.seed</span>(<span class="dv">322</span>)</span>
-<span id="cb39-2"><a></a><span class="fu">mc_cv</span>(cls_train, <span class="at">times =</span> <span class="dv">10</span>)</span>
-<span id="cb39-3"><a></a><span class="co">#&gt; # Monte Carlo cross-validation (0.75/0.25) with 10 resamples </span></span>
-<span id="cb39-4"><a></a><span class="co">#&gt; # A tibble: 10 × 2</span></span>
-<span id="cb39-5"><a></a><span class="co">#&gt;    splits            id        </span></span>
-<span id="cb39-6"><a></a><span class="co">#&gt;    &lt;list&gt;            &lt;chr&gt;     </span></span>
-<span id="cb39-7"><a></a><span class="co">#&gt;  1 &lt;split [600/200]&gt; Resample01</span></span>
-<span id="cb39-8"><a></a><span class="co">#&gt;  2 &lt;split [600/200]&gt; Resample02</span></span>
-<span id="cb39-9"><a></a><span class="co">#&gt;  3 &lt;split [600/200]&gt; Resample03</span></span>
-<span id="cb39-10"><a></a><span class="co">#&gt;  4 &lt;split [600/200]&gt; Resample04</span></span>
-<span id="cb39-11"><a></a><span class="co">#&gt;  5 &lt;split [600/200]&gt; Resample05</span></span>
-<span id="cb39-12"><a></a><span class="co">#&gt;  6 &lt;split [600/200]&gt; Resample06</span></span>
-<span id="cb39-13"><a></a><span class="co">#&gt;  7 &lt;split [600/200]&gt; Resample07</span></span>
-<span id="cb39-14"><a></a><span class="co">#&gt;  8 &lt;split [600/200]&gt; Resample08</span></span>
-<span id="cb39-15"><a></a><span class="co">#&gt;  9 &lt;split [600/200]&gt; Resample09</span></span>
-<span id="cb39-16"><a></a><span class="co">#&gt; 10 &lt;split [600/200]&gt; Resample10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a aria-label="1"></a><span class="fu">set.seed</span>(<span class="dv">322</span>)</span>
+<span id="cb39-2"><a aria-label="2"></a><span class="fu">mc_cv</span>(cls_train, <span class="at">times =</span> <span class="dv">10</span>)</span>
+<span id="cb39-3"><a aria-label="3"></a><span class="co">#&gt; # Monte Carlo cross-validation (0.75/0.25) with 10 resamples </span></span>
+<span id="cb39-4"><a aria-label="4"></a><span class="co">#&gt; # A tibble: 10 × 2</span></span>
+<span id="cb39-5"><a aria-label="5"></a><span class="co">#&gt;    splits            id        </span></span>
+<span id="cb39-6"><a aria-label="6"></a><span class="co">#&gt;    &lt;list&gt;            &lt;chr&gt;     </span></span>
+<span id="cb39-7"><a aria-label="7"></a><span class="co">#&gt;  1 &lt;split [600/200]&gt; Resample01</span></span>
+<span id="cb39-8"><a aria-label="8"></a><span class="co">#&gt;  2 &lt;split [600/200]&gt; Resample02</span></span>
+<span id="cb39-9"><a aria-label="9"></a><span class="co">#&gt;  3 &lt;split [600/200]&gt; Resample03</span></span>
+<span id="cb39-10"><a aria-label="10"></a><span class="co">#&gt;  4 &lt;split [600/200]&gt; Resample04</span></span>
+<span id="cb39-11"><a aria-label="11"></a><span class="co">#&gt;  5 &lt;split [600/200]&gt; Resample05</span></span>
+<span id="cb39-12"><a aria-label="12"></a><span class="co">#&gt;  6 &lt;split [600/200]&gt; Resample06</span></span>
+<span id="cb39-13"><a aria-label="13"></a><span class="co">#&gt;  7 &lt;split [600/200]&gt; Resample07</span></span>
+<span id="cb39-14"><a aria-label="14"></a><span class="co">#&gt;  8 &lt;split [600/200]&gt; Resample08</span></span>
+<span id="cb39-15"><a aria-label="15"></a><span class="co">#&gt;  9 &lt;split [600/200]&gt; Resample09</span></span>
+<span id="cb39-16"><a aria-label="16"></a><span class="co">#&gt; 10 &lt;split [600/200]&gt; Resample10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="validation-set" class="slide level2">
 <h2>Validation set <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a></a><span class="fu">set.seed</span>(<span class="dv">853</span>)</span>
-<span id="cb40-2"><a></a>cls_val_split <span class="ot">&lt;-</span> <span class="fu">initial_validation_split</span>(cls_data_2026)</span>
-<span id="cb40-3"><a></a><span class="fu">validation_set</span>(cls_val_split)</span>
-<span id="cb40-4"><a></a><span class="co">#&gt; # A tibble: 1 × 2</span></span>
-<span id="cb40-5"><a></a><span class="co">#&gt;   splits            id        </span></span>
-<span id="cb40-6"><a></a><span class="co">#&gt;   &lt;list&gt;            &lt;chr&gt;     </span></span>
-<span id="cb40-7"><a></a><span class="co">#&gt; 1 &lt;split [600/200]&gt; validation</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a aria-label="1"></a><span class="fu">set.seed</span>(<span class="dv">853</span>)</span>
+<span id="cb40-2"><a aria-label="2"></a>cls_val_split <span class="ot">&lt;-</span> <span class="fu">initial_validation_split</span>(cls_data_2026)</span>
+<span id="cb40-3"><a aria-label="3"></a><span class="fu">validation_set</span>(cls_val_split)</span>
+<span id="cb40-4"><a aria-label="4"></a><span class="co">#&gt; # A tibble: 1 × 2</span></span>
+<span id="cb40-5"><a aria-label="5"></a><span class="co">#&gt;   splits            id        </span></span>
+<span id="cb40-6"><a aria-label="6"></a><span class="co">#&gt;   &lt;list&gt;            &lt;chr&gt;     </span></span>
+<span id="cb40-7"><a aria-label="7"></a><span class="co">#&gt; 1 &lt;split [600/200]&gt; validation</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="fragment">
 <p>A validation set is just another type of resample</p>

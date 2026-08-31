@@ -7,8 +7,8 @@
 <script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../../../site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.9.36">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.10.18">
 
   <title>Machine learning with tidymodels – 6 - Postprocessing</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,10 +20,13 @@
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
@@ -215,59 +218,59 @@
 <section id="startup" class="slide level2">
 <h2>Startup! <img data-src="hexes/tidymodels.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/tailor.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/probably.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">library</span>(tidymodels)</span>
-<span id="cb1-2"><a></a><span class="fu">library</span>(desirability2)</span>
-<span id="cb1-3"><a></a><span class="fu">library</span>(probably)</span>
-<span id="cb1-4"><a></a><span class="fu">library</span>(mirai)</span>
-<span id="cb1-5"><a></a></span>
-<span id="cb1-6"><a></a><span class="co"># check torch:</span></span>
-<span id="cb1-7"><a></a><span class="cf">if</span> (torch<span class="sc">::</span><span class="fu">torch_is_installed</span>()) {</span>
-<span id="cb1-8"><a></a>  <span class="fu">library</span>(torch)</span>
-<span id="cb1-9"><a></a>}</span>
-<span id="cb1-10"><a></a></span>
-<span id="cb1-11"><a></a><span class="fu">tidymodels_prefer</span>()</span>
-<span id="cb1-12"><a></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
-<span id="cb1-13"><a></a><span class="fu">options</span>(<span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span>)</span>
-<span id="cb1-14"><a></a><span class="fu">daemons</span>(parallel<span class="sc">::</span><span class="fu">detectCores</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a aria-label="1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb1-2"><a aria-label="2"></a><span class="fu">library</span>(desirability2)</span>
+<span id="cb1-3"><a aria-label="3"></a><span class="fu">library</span>(probably)</span>
+<span id="cb1-4"><a aria-label="4"></a><span class="fu">library</span>(mirai)</span>
+<span id="cb1-5"><a aria-label="5"></a></span>
+<span id="cb1-6"><a aria-label="6"></a><span class="co"># check torch:</span></span>
+<span id="cb1-7"><a aria-label="7"></a><span class="cf">if</span> (torch<span class="sc">::</span><span class="fu">torch_is_installed</span>()) {</span>
+<span id="cb1-8"><a aria-label="8"></a>  <span class="fu">library</span>(torch)</span>
+<span id="cb1-9"><a aria-label="9"></a>}</span>
+<span id="cb1-10"><a aria-label="10"></a></span>
+<span id="cb1-11"><a aria-label="11"></a><span class="fu">tidymodels_prefer</span>()</span>
+<span id="cb1-12"><a aria-label="12"></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
+<span id="cb1-13"><a aria-label="13"></a><span class="fu">options</span>(<span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span>)</span>
+<span id="cb1-14"><a aria-label="14"></a><span class="fu">daemons</span>(parallel<span class="sc">::</span><span class="fu">detectCores</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="more-startup" class="slide level2">
 <h2>More startup! <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="co"># Load our example data for this section</span></span>
-<span id="cb2-2"><a></a><span class="st">"https://raw.githubusercontent.com/tidymodels/"</span> <span class="sc">|&gt;</span> </span>
-<span id="cb2-3"><a></a>  <span class="fu">paste0</span>(<span class="st">"workshops/main/slides/class_data.RData"</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb2-4"><a></a>  <span class="fu">url</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb2-5"><a></a>  <span class="fu">load</span>()</span>
-<span id="cb2-6"><a></a></span>
-<span id="cb2-7"><a></a><span class="fu">set.seed</span>(<span class="dv">429</span>)</span>
-<span id="cb2-8"><a></a>sim_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(class_data, <span class="at">prop =</span> <span class="fl">0.75</span>, <span class="at">strata =</span> class)</span>
-<span id="cb2-9"><a></a>sim_train <span class="ot">&lt;-</span> <span class="fu">training</span>(sim_split)</span>
-<span id="cb2-10"><a></a>sim_test  <span class="ot">&lt;-</span> <span class="fu">testing</span>(sim_split)</span>
-<span id="cb2-11"><a></a></span>
-<span id="cb2-12"><a></a><span class="fu">set.seed</span>(<span class="dv">523</span>)</span>
-<span id="cb2-13"><a></a>sim_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(sim_train, <span class="at">v =</span> <span class="dv">10</span>, <span class="at">strata =</span> class)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a aria-label="1"></a><span class="co"># Load our example data for this section</span></span>
+<span id="cb2-2"><a aria-label="2"></a><span class="st">"https://raw.githubusercontent.com/tidymodels/"</span> <span class="sc">|&gt;</span> </span>
+<span id="cb2-3"><a aria-label="3"></a>  <span class="fu">paste0</span>(<span class="st">"workshops/main/slides/class_data.RData"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb2-4"><a aria-label="4"></a>  <span class="fu">url</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb2-5"><a aria-label="5"></a>  <span class="fu">load</span>()</span>
+<span id="cb2-6"><a aria-label="6"></a></span>
+<span id="cb2-7"><a aria-label="7"></a><span class="fu">set.seed</span>(<span class="dv">429</span>)</span>
+<span id="cb2-8"><a aria-label="8"></a>sim_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(class_data, <span class="at">prop =</span> <span class="fl">0.75</span>, <span class="at">strata =</span> class)</span>
+<span id="cb2-9"><a aria-label="9"></a>sim_train <span class="ot">&lt;-</span> <span class="fu">training</span>(sim_split)</span>
+<span id="cb2-10"><a aria-label="10"></a>sim_test  <span class="ot">&lt;-</span> <span class="fu">testing</span>(sim_split)</span>
+<span id="cb2-11"><a aria-label="11"></a></span>
+<span id="cb2-12"><a aria-label="12"></a><span class="fu">set.seed</span>(<span class="dv">523</span>)</span>
+<span id="cb2-13"><a aria-label="13"></a>sim_rs <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(sim_train, <span class="at">v =</span> <span class="dv">10</span>, <span class="at">strata =</span> class)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="our-neural-network-model" class="slide level2">
 <h2>Our neural network model <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/parsnip.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/brulee.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a>rec <span class="ot">&lt;-</span> </span>
-<span id="cb3-2"><a></a>  <span class="fu">recipe</span>(class <span class="sc">~</span> ., <span class="at">data =</span> sim_train) <span class="sc">|&gt;</span> </span>
-<span id="cb3-3"><a></a>  <span class="fu">step_normalize</span>(<span class="fu">all_numeric_predictors</span>())</span>
-<span id="cb3-4"><a></a></span>
-<span id="cb3-5"><a></a>nnet_spec <span class="ot">&lt;-</span> </span>
-<span id="cb3-6"><a></a>  <span class="fu">mlp</span>(<span class="at">hidden_units =</span> <span class="fu">tune</span>(), <span class="at">penalty =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>(), </span>
-<span id="cb3-7"><a></a>      <span class="at">epochs =</span> <span class="dv">100</span>, <span class="at">activation =</span> <span class="fu">tune</span>()) <span class="sc">|&gt;</span> </span>
-<span id="cb3-8"><a></a>  <span class="co"># Remove the class_weights argument</span></span>
-<span id="cb3-9"><a></a>  <span class="fu">set_engine</span>(<span class="st">"brulee"</span>, <span class="at">stop_iter =</span> <span class="dv">10</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb3-10"><a></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
-<span id="cb3-11"><a></a>  </span>
-<span id="cb3-12"><a></a>nnet_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(rec, nnet_spec)</span>
-<span id="cb3-13"><a></a></span>
-<span id="cb3-14"><a></a>nnet_param <span class="ot">&lt;-</span> </span>
-<span id="cb3-15"><a></a>  nnet_wflow <span class="sc">|&gt;</span> </span>
-<span id="cb3-16"><a></a>  <span class="fu">extract_parameter_set_dials</span>()   </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a aria-label="1"></a>rec <span class="ot">&lt;-</span> </span>
+<span id="cb3-2"><a aria-label="2"></a>  <span class="fu">recipe</span>(class <span class="sc">~</span> ., <span class="at">data =</span> sim_train) <span class="sc">|&gt;</span> </span>
+<span id="cb3-3"><a aria-label="3"></a>  <span class="fu">step_normalize</span>(<span class="fu">all_numeric_predictors</span>())</span>
+<span id="cb3-4"><a aria-label="4"></a></span>
+<span id="cb3-5"><a aria-label="5"></a>nnet_spec <span class="ot">&lt;-</span> </span>
+<span id="cb3-6"><a aria-label="6"></a>  <span class="fu">mlp</span>(<span class="at">hidden_units =</span> <span class="fu">tune</span>(), <span class="at">penalty =</span> <span class="fu">tune</span>(), <span class="at">learn_rate =</span> <span class="fu">tune</span>(), </span>
+<span id="cb3-7"><a aria-label="7"></a>      <span class="at">epochs =</span> <span class="dv">100</span>, <span class="at">activation =</span> <span class="fu">tune</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb3-8"><a aria-label="8"></a>  <span class="co"># Remove the class_weights argument</span></span>
+<span id="cb3-9"><a aria-label="9"></a>  <span class="fu">set_engine</span>(<span class="st">"brulee"</span>, <span class="at">stop_iter =</span> <span class="dv">10</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb3-10"><a aria-label="10"></a>  <span class="fu">set_mode</span>(<span class="st">"classification"</span>)</span>
+<span id="cb3-11"><a aria-label="11"></a>  </span>
+<span id="cb3-12"><a aria-label="12"></a>nnet_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(rec, nnet_spec)</span>
+<span id="cb3-13"><a aria-label="13"></a></span>
+<span id="cb3-14"><a aria-label="14"></a>nnet_param <span class="ot">&lt;-</span> </span>
+<span id="cb3-15"><a aria-label="15"></a>  nnet_wflow <span class="sc">|&gt;</span> </span>
+<span id="cb3-16"><a aria-label="16"></a>  <span class="fu">extract_parameter_set_dials</span>()   </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section>
@@ -303,11 +306,11 @@
 <p>The tailor package is similar to recipes but specifies how to adjust predictions.</p>
 <p>A simple example:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4" data-code-line-numbers="|2|3|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a>thrsh_tlr <span class="ot">&lt;-</span></span>
-<span id="cb4-2"><a></a>  <span class="fu">tailor</span>() <span class="sc">|&gt;</span></span>
-<span id="cb4-3"><a></a>  <span class="fu">adjust_probability_threshold</span>(<span class="at">threshold =</span> <span class="dv">1</span> <span class="sc">/</span> <span class="dv">3</span>)</span>
-<span id="cb4-4"><a></a></span>
-<span id="cb4-5"><a></a>thrsh_tlr</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4" data-code-line-numbers="|2|3|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a aria-label="1"></a>thrsh_tlr <span class="ot">&lt;-</span></span>
+<span id="cb4-2"><a aria-label="2"></a>  <span class="fu">tailor</span>() <span class="sc">|&gt;</span></span>
+<span id="cb4-3"><a aria-label="3"></a>  <span class="fu">adjust_probability_threshold</span>(<span class="at">threshold =</span> <span class="dv">1</span> <span class="sc">/</span> <span class="dv">3</span>)</span>
+<span id="cb4-4"><a aria-label="4"></a></span>
+<span id="cb4-5"><a aria-label="5"></a>thrsh_tlr</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ul>
 <li><p>Like a recipe, this initial call doesn’t do anything but declare intent.</p></li>
@@ -321,38 +324,38 @@
 <h2>Manual use of a tailor <img data-src="hexes/tailor.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <p>There is a <code>fit()</code> method that requires data and the names of the prediction columns:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5" data-code-line-numbers="|5|14|15|16-17|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a>three_rows <span class="ot">&lt;-</span> </span>
-<span id="cb5-2"><a></a>  <span class="fu">tribble</span>(</span>
-<span id="cb5-3"><a></a>     <span class="sc">~</span> class, <span class="sc">~</span> .pred_class, <span class="sc">~</span>.pred_event, <span class="sc">~</span>.pred_nonevent,</span>
-<span id="cb5-4"><a></a>     <span class="st">"event"</span>,       <span class="st">"event"</span>,          <span class="fl">0.6</span>,             <span class="fl">0.4</span>,</span>
-<span id="cb5-5"><a></a>     <span class="st">"event"</span>,    <span class="st">"nonevent"</span>,          <span class="fl">0.4</span>,             <span class="fl">0.6</span>, </span>
-<span id="cb5-6"><a></a>  <span class="st">"nonevent"</span>,    <span class="st">"nonevent"</span>,          <span class="fl">0.1</span>,             <span class="fl">0.9</span>  </span>
-<span id="cb5-7"><a></a>  ) <span class="sc">|&gt;</span> </span>
-<span id="cb5-8"><a></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.character), factor))</span>
-<span id="cb5-9"><a></a></span>
-<span id="cb5-10"><a></a>thrsh_fit <span class="ot">&lt;-</span></span>
-<span id="cb5-11"><a></a>  thrsh_tlr <span class="sc">|&gt;</span></span>
-<span id="cb5-12"><a></a>  <span class="fu">fit</span>(</span>
-<span id="cb5-13"><a></a>    three_rows,</span>
-<span id="cb5-14"><a></a>    <span class="at">outcome =</span> class,</span>
-<span id="cb5-15"><a></a>    <span class="at">estimate =</span> .pred_class,</span>
-<span id="cb5-16"><a></a>    .pred_event<span class="sc">:</span>.pred_nonevent  <span class="co"># No argument name and order matches factor levels</span></span>
-<span id="cb5-17"><a></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5" data-code-line-numbers="|5|14|15|16-17|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a aria-label="1"></a>three_rows <span class="ot">&lt;-</span> </span>
+<span id="cb5-2"><a aria-label="2"></a>  <span class="fu">tribble</span>(</span>
+<span id="cb5-3"><a aria-label="3"></a>     <span class="sc">~</span> class, <span class="sc">~</span> .pred_class, <span class="sc">~</span>.pred_event, <span class="sc">~</span>.pred_nonevent,</span>
+<span id="cb5-4"><a aria-label="4"></a>     <span class="st">"event"</span>,       <span class="st">"event"</span>,          <span class="fl">0.6</span>,             <span class="fl">0.4</span>,</span>
+<span id="cb5-5"><a aria-label="5"></a>     <span class="st">"event"</span>,    <span class="st">"nonevent"</span>,          <span class="fl">0.4</span>,             <span class="fl">0.6</span>, </span>
+<span id="cb5-6"><a aria-label="6"></a>  <span class="st">"nonevent"</span>,    <span class="st">"nonevent"</span>,          <span class="fl">0.1</span>,             <span class="fl">0.9</span>  </span>
+<span id="cb5-7"><a aria-label="7"></a>  ) <span class="sc">|&gt;</span> </span>
+<span id="cb5-8"><a aria-label="8"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.character), factor))</span>
+<span id="cb5-9"><a aria-label="9"></a></span>
+<span id="cb5-10"><a aria-label="10"></a>thrsh_fit <span class="ot">&lt;-</span></span>
+<span id="cb5-11"><a aria-label="11"></a>  thrsh_tlr <span class="sc">|&gt;</span></span>
+<span id="cb5-12"><a aria-label="12"></a>  <span class="fu">fit</span>(</span>
+<span id="cb5-13"><a aria-label="13"></a>    three_rows,</span>
+<span id="cb5-14"><a aria-label="14"></a>    <span class="at">outcome =</span> class,</span>
+<span id="cb5-15"><a aria-label="15"></a>    <span class="at">estimate =</span> .pred_class,</span>
+<span id="cb5-16"><a aria-label="16"></a>    .pred_event<span class="sc">:</span>.pred_nonevent  <span class="co"># No argument name and order matches factor levels</span></span>
+<span id="cb5-17"><a aria-label="17"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="manual-use-of-a-tailor-1" class="slide level2">
 <h2>Manual use of a tailor <img data-src="hexes/tailor.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <p><code>predict()</code> applies the adjustments:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6" data-code-line-numbers="|3|8|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a>thrsh_fit</span>
-<span id="cb6-2"><a></a></span>
-<span id="cb6-3"><a></a><span class="fu">predict</span>(thrsh_fit, three_rows)</span>
-<span id="cb6-4"><a></a><span class="co">#&gt; # A tibble: 3 × 4</span></span>
-<span id="cb6-5"><a></a><span class="co">#&gt;   class    .pred_class .pred_event .pred_nonevent</span></span>
-<span id="cb6-6"><a></a><span class="co">#&gt;   &lt;fct&gt;    &lt;fct&gt;             &lt;dbl&gt;          &lt;dbl&gt;</span></span>
-<span id="cb6-7"><a></a><span class="co">#&gt; 1 event    event               0.6            0.4</span></span>
-<span id="cb6-8"><a></a><span class="co">#&gt; 2 event    event               0.4            0.6</span></span>
-<span id="cb6-9"><a></a><span class="co">#&gt; 3 nonevent nonevent            0.1            0.9</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6" data-code-line-numbers="|3|8|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a aria-label="1"></a>thrsh_fit</span>
+<span id="cb6-2"><a aria-label="2"></a></span>
+<span id="cb6-3"><a aria-label="3"></a><span class="fu">predict</span>(thrsh_fit, three_rows)</span>
+<span id="cb6-4"><a aria-label="4"></a><span class="co">#&gt; # A tibble: 3 × 4</span></span>
+<span id="cb6-5"><a aria-label="5"></a><span class="co">#&gt;   class    .pred_class .pred_event .pred_nonevent</span></span>
+<span id="cb6-6"><a aria-label="6"></a><span class="co">#&gt;   &lt;fct&gt;    &lt;fct&gt;             &lt;dbl&gt;          &lt;dbl&gt;</span></span>
+<span id="cb6-7"><a aria-label="7"></a><span class="co">#&gt; 1 event    event               0.6            0.4</span></span>
+<span id="cb6-8"><a aria-label="8"></a><span class="co">#&gt; 2 event    event               0.4            0.6</span></span>
+<span id="cb6-9"><a aria-label="9"></a><span class="co">#&gt; 3 nonevent nonevent            0.1            0.9</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p><br></p>
 </section>
@@ -361,7 +364,7 @@
 <p>In practice, we would add the tailor to a workflow to make it easier to use:</p>
 <p><br></p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a>nnet_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(rec, nnet_spec, thrsh_tlr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a aria-label="1"></a>nnet_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(rec, nnet_spec, thrsh_tlr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p><br></p>
 <ul>
@@ -423,16 +426,16 @@
 <section id="tuning-the-probability-threshold" class="slide level2">
 <h2>Tuning the probability threshold <img data-src="hexes/workflows.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/tailor.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "> <img data-src="hexes/dials.png" class="absolute" style="top: -20px; right: 192px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8" data-code-line-numbers="|3|5|10|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a>thrsh_tlr <span class="ot">&lt;-</span></span>
-<span id="cb8-2"><a></a>  <span class="fu">tailor</span>() <span class="sc">|&gt;</span></span>
-<span id="cb8-3"><a></a>  <span class="fu">adjust_probability_threshold</span>(<span class="at">threshold =</span> <span class="fu">tune</span>())</span>
-<span id="cb8-4"><a></a></span>
-<span id="cb8-5"><a></a>nnet_thrsh_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(rec, nnet_spec, thrsh_tlr)</span>
-<span id="cb8-6"><a></a>  </span>
-<span id="cb8-7"><a></a>nnet_thrsh_param <span class="ot">&lt;-</span> </span>
-<span id="cb8-8"><a></a>  nnet_thrsh_wflow <span class="sc">|&gt;</span> </span>
-<span id="cb8-9"><a></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb8-10"><a></a>  <span class="fu">update</span>(<span class="at">threshold =</span> <span class="fu">threshold</span>(<span class="fu">c</span>(<span class="fl">0.001</span>, <span class="fl">0.5</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8" data-code-line-numbers="|3|5|10|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a aria-label="1"></a>thrsh_tlr <span class="ot">&lt;-</span></span>
+<span id="cb8-2"><a aria-label="2"></a>  <span class="fu">tailor</span>() <span class="sc">|&gt;</span></span>
+<span id="cb8-3"><a aria-label="3"></a>  <span class="fu">adjust_probability_threshold</span>(<span class="at">threshold =</span> <span class="fu">tune</span>())</span>
+<span id="cb8-4"><a aria-label="4"></a></span>
+<span id="cb8-5"><a aria-label="5"></a>nnet_thrsh_wflow <span class="ot">&lt;-</span> <span class="fu">workflow</span>(rec, nnet_spec, thrsh_tlr)</span>
+<span id="cb8-6"><a aria-label="6"></a>  </span>
+<span id="cb8-7"><a aria-label="7"></a>nnet_thrsh_param <span class="ot">&lt;-</span> </span>
+<span id="cb8-8"><a aria-label="8"></a>  nnet_thrsh_wflow <span class="sc">|&gt;</span> </span>
+<span id="cb8-9"><a aria-label="9"></a>  <span class="fu">extract_parameter_set_dials</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb8-10"><a aria-label="10"></a>  <span class="fu">update</span>(<span class="at">threshold =</span> <span class="fu">threshold</span>(<span class="fu">c</span>(<span class="fl">0.001</span>, <span class="fl">0.5</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="tuning-the-probability-threshold-1" class="slide level2">
@@ -440,25 +443,25 @@
 <p>Nearly the same code as before:</p>
 <p><br></p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a>ctrl <span class="ot">&lt;-</span> <span class="fu">control_grid</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>, <span class="at">save_workflow =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb9-2"><a></a>cls_mtr <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(brier_class, roc_auc, sensitivity, specificity)</span>
-<span id="cb9-3"><a></a></span>
-<span id="cb9-4"><a></a><span class="fu">set.seed</span>(<span class="dv">12</span>)</span>
-<span id="cb9-5"><a></a>nnet_thrsh_res <span class="ot">&lt;-</span></span>
-<span id="cb9-6"><a></a>  nnet_thrsh_wflow <span class="sc">|&gt;</span></span>
-<span id="cb9-7"><a></a>  <span class="fu">tune_grid</span>(</span>
-<span id="cb9-8"><a></a>    <span class="at">resamples =</span> sim_rs,</span>
-<span id="cb9-9"><a></a>    <span class="at">grid =</span> <span class="dv">25</span>,</span>
-<span id="cb9-10"><a></a>    <span class="at">param_info =</span> nnet_thrsh_param, </span>
-<span id="cb9-11"><a></a>    <span class="at">control =</span> ctrl,</span>
-<span id="cb9-12"><a></a>    <span class="at">metrics =</span> cls_mtr</span>
-<span id="cb9-13"><a></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a aria-label="1"></a>ctrl <span class="ot">&lt;-</span> <span class="fu">control_grid</span>(<span class="at">save_pred =</span> <span class="cn">TRUE</span>, <span class="at">save_workflow =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb9-2"><a aria-label="2"></a>cls_mtr <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(brier_class, roc_auc, sensitivity, specificity)</span>
+<span id="cb9-3"><a aria-label="3"></a></span>
+<span id="cb9-4"><a aria-label="4"></a><span class="fu">set.seed</span>(<span class="dv">12</span>)</span>
+<span id="cb9-5"><a aria-label="5"></a>nnet_thrsh_res <span class="ot">&lt;-</span></span>
+<span id="cb9-6"><a aria-label="6"></a>  nnet_thrsh_wflow <span class="sc">|&gt;</span></span>
+<span id="cb9-7"><a aria-label="7"></a>  <span class="fu">tune_grid</span>(</span>
+<span id="cb9-8"><a aria-label="8"></a>    <span class="at">resamples =</span> sim_rs,</span>
+<span id="cb9-9"><a aria-label="9"></a>    <span class="at">grid =</span> <span class="dv">25</span>,</span>
+<span id="cb9-10"><a aria-label="10"></a>    <span class="at">param_info =</span> nnet_thrsh_param, </span>
+<span id="cb9-11"><a aria-label="11"></a>    <span class="at">control =</span> ctrl,</span>
+<span id="cb9-12"><a aria-label="12"></a>    <span class="at">metrics =</span> cls_mtr</span>
+<span id="cb9-13"><a aria-label="13"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="grid-results" class="slide level2">
 <h2>Grid results <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a><span class="fu">autoplot</span>(nnet_thrsh_res)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a aria-label="1"></a><span class="fu">autoplot</span>(nnet_thrsh_res)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure>
@@ -480,48 +483,48 @@
 <section id="multimetric-optimization" class="slide level2">
 <h2>Multimetric optimization <img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11" data-code-line-numbers="|1|3|4|5|11|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a></a>nnet_thrsh_res <span class="sc">|&gt;</span></span>
-<span id="cb11-2"><a></a>  <span class="fu">show_best_desirability</span>(</span>
-<span id="cb11-3"><a></a>    <span class="fu">maximize</span>(sensitivity),</span>
-<span id="cb11-4"><a></a>    <span class="fu">minimize</span>(brier_class),</span>
-<span id="cb11-5"><a></a>    <span class="fu">constrain</span>(specificity, <span class="at">low =</span> <span class="fl">0.8</span>, <span class="at">high =</span> <span class="fl">1.0</span>)</span>
-<span id="cb11-6"><a></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb11-7"><a></a>  <span class="fu">relocate</span>(threshold, sensitivity, specificity, brier_class, .d_overall)</span>
-<span id="cb11-8"><a></a><span class="co">#&gt; # A tibble: 5 × 14</span></span>
-<span id="cb11-9"><a></a><span class="co">#&gt;   threshold sensitivity specificity brier_class .d_overall hidden_units  penalty</span></span>
-<span id="cb11-10"><a></a><span class="co">#&gt;       &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;      &lt;dbl&gt;        &lt;int&gt;    &lt;dbl&gt;</span></span>
-<span id="cb11-11"><a></a><span class="co">#&gt; 1     0.250       0.853       0.947      0.0422      0.940           28 2.61e-10</span></span>
-<span id="cb11-12"><a></a><span class="co">#&gt; 2     0.292       0.817       0.953      0.0403      0.937           38 1   e- 5</span></span>
-<span id="cb11-13"><a></a><span class="co">#&gt; 3     0.105       0.882       0.899      0.0470      0.923           48 1.78e- 9</span></span>
-<span id="cb11-14"><a></a><span class="co">#&gt; 4     0.209       0.833       0.933      0.0473      0.904            8 1   e-10</span></span>
-<span id="cb11-15"><a></a><span class="co">#&gt; 5     0.126       0.852       0.901      0.0522      0.882           42 3.16e- 3</span></span>
-<span id="cb11-16"><a></a><span class="co">#&gt; # ℹ 7 more variables: activation &lt;chr&gt;, learn_rate &lt;dbl&gt;, .config &lt;chr&gt;,</span></span>
-<span id="cb11-17"><a></a><span class="co">#&gt; #   roc_auc &lt;dbl&gt;, .d_max_sensitivity &lt;dbl&gt;, .d_min_brier_class &lt;dbl&gt;,</span></span>
-<span id="cb11-18"><a></a><span class="co">#&gt; #   .d_box_specificity &lt;dbl&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11" data-code-line-numbers="|1|3|4|5|11|"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a aria-label="1"></a>nnet_thrsh_res <span class="sc">|&gt;</span></span>
+<span id="cb11-2"><a aria-label="2"></a>  <span class="fu">show_best_desirability</span>(</span>
+<span id="cb11-3"><a aria-label="3"></a>    <span class="fu">maximize</span>(sensitivity),</span>
+<span id="cb11-4"><a aria-label="4"></a>    <span class="fu">minimize</span>(brier_class),</span>
+<span id="cb11-5"><a aria-label="5"></a>    <span class="fu">constrain</span>(specificity, <span class="at">low =</span> <span class="fl">0.8</span>, <span class="at">high =</span> <span class="fl">1.0</span>)</span>
+<span id="cb11-6"><a aria-label="6"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb11-7"><a aria-label="7"></a>  <span class="fu">relocate</span>(threshold, sensitivity, specificity, brier_class, .d_overall)</span>
+<span id="cb11-8"><a aria-label="8"></a><span class="co">#&gt; # A tibble: 5 × 14</span></span>
+<span id="cb11-9"><a aria-label="9"></a><span class="co">#&gt;   threshold sensitivity specificity brier_class .d_overall hidden_units  penalty</span></span>
+<span id="cb11-10"><a aria-label="10"></a><span class="co">#&gt;       &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;      &lt;dbl&gt;        &lt;int&gt;    &lt;dbl&gt;</span></span>
+<span id="cb11-11"><a aria-label="11"></a><span class="co">#&gt; 1     0.250       0.853       0.947      0.0422      0.940           28 2.61e-10</span></span>
+<span id="cb11-12"><a aria-label="12"></a><span class="co">#&gt; 2     0.292       0.817       0.953      0.0403      0.937           38 1   e- 5</span></span>
+<span id="cb11-13"><a aria-label="13"></a><span class="co">#&gt; 3     0.105       0.882       0.899      0.0470      0.923           48 1.78e- 9</span></span>
+<span id="cb11-14"><a aria-label="14"></a><span class="co">#&gt; 4     0.209       0.833       0.933      0.0473      0.904            8 1   e-10</span></span>
+<span id="cb11-15"><a aria-label="15"></a><span class="co">#&gt; 5     0.126       0.852       0.901      0.0522      0.882           42 3.16e- 3</span></span>
+<span id="cb11-16"><a aria-label="16"></a><span class="co">#&gt; # ℹ 7 more variables: activation &lt;chr&gt;, learn_rate &lt;dbl&gt;, .config &lt;chr&gt;,</span></span>
+<span id="cb11-17"><a aria-label="17"></a><span class="co">#&gt; #   roc_auc &lt;dbl&gt;, .d_max_sensitivity &lt;dbl&gt;, .d_min_brier_class &lt;dbl&gt;,</span></span>
+<span id="cb11-18"><a aria-label="18"></a><span class="co">#&gt; #   .d_box_specificity &lt;dbl&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="calibration" class="slide level2">
 <h2>Calibration<img data-src="hexes/tune.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/probably.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell columns column-output-location">
 <div class="column">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a></a>more_sens <span class="ot">&lt;-</span></span>
-<span id="cb12-2"><a></a>  nnet_thrsh_res <span class="sc">|&gt;</span></span>
-<span id="cb12-3"><a></a>  <span class="fu">select_best_desirability</span>(</span>
-<span id="cb12-4"><a></a>    <span class="fu">maximize</span>(sensitivity),</span>
-<span id="cb12-5"><a></a>    <span class="fu">minimize</span>(brier_class),</span>
-<span id="cb12-6"><a></a>    <span class="fu">constrain</span>(specificity, <span class="at">low =</span> <span class="fl">0.8</span>, <span class="at">high =</span> <span class="fl">1.0</span>)</span>
-<span id="cb12-7"><a></a>  )</span>
-<span id="cb12-8"><a></a></span>
-<span id="cb12-9"><a></a>nnet_thrsh_res <span class="sc">|&gt;</span></span>
-<span id="cb12-10"><a></a>  <span class="fu">collect_predictions</span>(</span>
-<span id="cb12-11"><a></a>    <span class="at">parameters =</span> more_sens</span>
-<span id="cb12-12"><a></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb12-13"><a></a>  <span class="fu">cal_plot_windowed</span>(</span>
-<span id="cb12-14"><a></a>    <span class="at">truth =</span> class,</span>
-<span id="cb12-15"><a></a>    <span class="at">estimate =</span> .pred_event,</span>
-<span id="cb12-16"><a></a>    <span class="at">window_size =</span> <span class="fl">0.2</span>,</span>
-<span id="cb12-17"><a></a>    <span class="at">step_size =</span> <span class="fl">0.025</span>,</span>
-<span id="cb12-18"><a></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a aria-label="1"></a>more_sens <span class="ot">&lt;-</span></span>
+<span id="cb12-2"><a aria-label="2"></a>  nnet_thrsh_res <span class="sc">|&gt;</span></span>
+<span id="cb12-3"><a aria-label="3"></a>  <span class="fu">select_best_desirability</span>(</span>
+<span id="cb12-4"><a aria-label="4"></a>    <span class="fu">maximize</span>(sensitivity),</span>
+<span id="cb12-5"><a aria-label="5"></a>    <span class="fu">minimize</span>(brier_class),</span>
+<span id="cb12-6"><a aria-label="6"></a>    <span class="fu">constrain</span>(specificity, <span class="at">low =</span> <span class="fl">0.8</span>, <span class="at">high =</span> <span class="fl">1.0</span>)</span>
+<span id="cb12-7"><a aria-label="7"></a>  )</span>
+<span id="cb12-8"><a aria-label="8"></a></span>
+<span id="cb12-9"><a aria-label="9"></a>nnet_thrsh_res <span class="sc">|&gt;</span></span>
+<span id="cb12-10"><a aria-label="10"></a>  <span class="fu">collect_predictions</span>(</span>
+<span id="cb12-11"><a aria-label="11"></a>    <span class="at">parameters =</span> more_sens</span>
+<span id="cb12-12"><a aria-label="12"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb12-13"><a aria-label="13"></a>  <span class="fu">cal_plot_windowed</span>(</span>
+<span id="cb12-14"><a aria-label="14"></a>    <span class="at">truth =</span> class,</span>
+<span id="cb12-15"><a aria-label="15"></a>    <span class="at">estimate =</span> .pred_event,</span>
+<span id="cb12-16"><a aria-label="16"></a>    <span class="at">window_size =</span> <span class="fl">0.2</span>,</span>
+<span id="cb12-17"><a aria-label="17"></a>    <span class="at">step_size =</span> <span class="fl">0.025</span>,</span>
+<span id="cb12-18"><a aria-label="18"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div><div class="column">
 <div class="cell-output-display">
 <div>

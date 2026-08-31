@@ -1,19 +1,14 @@
 # packages needed to make the slides, but not needed for participants
-dev_pkgs <- c(
-  "countdown",
-  "forcats",
-  "hadley/emo",
-  "sessioninfo",
-  "svglite",
-  "leaflet"
-)
+# fmt: skip
+dev_pkgs <- c("countdown", "fontawesome", "forcats", "hadley/emo", "leaflet",
+  "patchwork", "rmarkdown", "sessioninfo", "svglite")
 
 # pak::pak(dev_pkgs)
 
 #   ----------------------------------------------------------------------
 # temp check for correct package versions
 
-rlang::check_installed("modeldata", version = "1.5.1.9000")
+rlang::check_installed("modeldata", version = "1.6.0")
 
 #   ----------------------------------------------------------------------
 

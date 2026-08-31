@@ -7,8 +7,8 @@
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.9.36">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.10.18">
 
   <title>Machine learning with tidymodels – 2 - Your data budget</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,10 +20,13 @@
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
@@ -220,17 +223,17 @@
 <p>We’ve created an simulated data set (based on real data) that has</p>
 <ul>
 <li>Two numeric predictors (<code>pred_1</code> and <code>pred_2</code>)</li>
-<li>A factor column (<code>class</code>) with levels <code>"class_1"</code> and <code>"class_1"</code></li>
+<li>A factor column (<code>class</code>) with levels <code>"class_1"</code> and <code>"class_2"</code></li>
 </ul>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">library</span>(tidymodels)</span>
-<span id="cb1-2"><a></a><span class="co"># cls_data_2026 is already loaded from the modeldata package</span></span>
-<span id="cb1-3"><a></a><span class="fu">glimpse</span>(cls_data_2026)</span>
-<span id="cb1-4"><a></a><span class="co">#&gt; Rows: 1,000</span></span>
-<span id="cb1-5"><a></a><span class="co">#&gt; Columns: 3</span></span>
-<span id="cb1-6"><a></a><span class="co">#&gt; $ pred_1 &lt;dbl&gt; 0.4304422, -1.2983697, 1.1479129, 1.7931431, -0.8016918, 1.1603…</span></span>
-<span id="cb1-7"><a></a><span class="co">#&gt; $ pred_2 &lt;dbl&gt; -0.7325339, -0.9398467, 1.6149989, 1.2296319, 0.4030618, 1.5732…</span></span>
-<span id="cb1-8"><a></a><span class="co">#&gt; $ class  &lt;fct&gt; class_1, class_1, class_2, class_1, class_2, class_2, class_1, …</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a aria-label="1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb1-2"><a aria-label="2"></a><span class="co"># cls_data_2026 is already loaded from the modeldata package</span></span>
+<span id="cb1-3"><a aria-label="3"></a><span class="fu">glimpse</span>(cls_data_2026)</span>
+<span id="cb1-4"><a aria-label="4"></a><span class="co">#&gt; Rows: 1,000</span></span>
+<span id="cb1-5"><a aria-label="5"></a><span class="co">#&gt; Columns: 3</span></span>
+<span id="cb1-6"><a aria-label="6"></a><span class="co">#&gt; $ pred_1 &lt;dbl&gt; 0.4304422, -1.2983697, 1.1479129, 1.7931431, -0.8016918, 1.1603…</span></span>
+<span id="cb1-7"><a aria-label="7"></a><span class="co">#&gt; $ pred_2 &lt;dbl&gt; -0.7325339, -0.9398467, 1.6149989, 1.2296319, 0.4030618, 1.5732…</span></span>
+<span id="cb1-8"><a aria-label="8"></a><span class="co">#&gt; $ class  &lt;fct&gt; class_1, class_1, class_2, class_1, class_2, class_2, class_1, …</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="your-turn" class="slide level2" data-transition="slide-in">
@@ -317,11 +320,11 @@
 <section id="the-initial-split" class="slide level2">
 <h2>The initial split <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb2-2"><a></a>cls_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(cls_data_2026)</span>
-<span id="cb2-3"><a></a>cls_split</span>
-<span id="cb2-4"><a></a><span class="co">#&gt; &lt;Training/Testing/Total&gt;</span></span>
-<span id="cb2-5"><a></a><span class="co">#&gt; &lt;750/250/1000&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a aria-label="1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb2-2"><a aria-label="2"></a>cls_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(cls_data_2026)</span>
+<span id="cb2-3"><a aria-label="3"></a>cls_split</span>
+<span id="cb2-4"><a aria-label="4"></a><span class="co">#&gt; &lt;Training/Testing/Total&gt;</span></span>
+<span id="cb2-5"><a aria-label="5"></a><span class="co">#&gt; &lt;750/250/1000&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <aside class="notes">
 <p>How much data in training vs testing? This function uses a good default, but this depends on your specific goal/data</p>
@@ -346,28 +349,28 @@
 <section id="accessing-the-data" class="slide level2">
 <h2>Accessing the data <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a>cls_train <span class="ot">&lt;-</span> <span class="fu">training</span>(cls_split)</span>
-<span id="cb3-2"><a></a>cls_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(cls_split)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a aria-label="1"></a>cls_train <span class="ot">&lt;-</span> <span class="fu">training</span>(cls_split)</span>
+<span id="cb3-2"><a aria-label="2"></a>cls_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(cls_split)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="the-training-set" class="slide level2">
 <h2>The training set<img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a>cls_train</span>
-<span id="cb4-2"><a></a><span class="co">#&gt; # A tibble: 750 × 3</span></span>
-<span id="cb4-3"><a></a><span class="co">#&gt;     pred_1  pred_2 class  </span></span>
-<span id="cb4-4"><a></a><span class="co">#&gt;      &lt;dbl&gt;   &lt;dbl&gt; &lt;fct&gt;  </span></span>
-<span id="cb4-5"><a></a><span class="co">#&gt;  1 -1.35   -0.446  class_1</span></span>
-<span id="cb4-6"><a></a><span class="co">#&gt;  2 -0.354  -0.181  class_1</span></span>
-<span id="cb4-7"><a></a><span class="co">#&gt;  3  0.105   1.12   class_2</span></span>
-<span id="cb4-8"><a></a><span class="co">#&gt;  4  0.0203 -1.20   class_1</span></span>
-<span id="cb4-9"><a></a><span class="co">#&gt;  5 -0.831  -0.607  class_1</span></span>
-<span id="cb4-10"><a></a><span class="co">#&gt;  6  0.150   0.904  class_2</span></span>
-<span id="cb4-11"><a></a><span class="co">#&gt;  7  0.441  -0.642  class_1</span></span>
-<span id="cb4-12"><a></a><span class="co">#&gt;  8  1.56   -0.0182 class_1</span></span>
-<span id="cb4-13"><a></a><span class="co">#&gt;  9  0.200  -0.898  class_1</span></span>
-<span id="cb4-14"><a></a><span class="co">#&gt; 10 -0.0455 -0.478  class_1</span></span>
-<span id="cb4-15"><a></a><span class="co">#&gt; # ℹ 740 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a aria-label="1"></a>cls_train</span>
+<span id="cb4-2"><a aria-label="2"></a><span class="co">#&gt; # A tibble: 750 × 3</span></span>
+<span id="cb4-3"><a aria-label="3"></a><span class="co">#&gt;     pred_1  pred_2 class  </span></span>
+<span id="cb4-4"><a aria-label="4"></a><span class="co">#&gt;      &lt;dbl&gt;   &lt;dbl&gt; &lt;fct&gt;  </span></span>
+<span id="cb4-5"><a aria-label="5"></a><span class="co">#&gt;  1 -1.35   -0.446  class_1</span></span>
+<span id="cb4-6"><a aria-label="6"></a><span class="co">#&gt;  2 -0.354  -0.181  class_1</span></span>
+<span id="cb4-7"><a aria-label="7"></a><span class="co">#&gt;  3  0.105   1.12   class_2</span></span>
+<span id="cb4-8"><a aria-label="8"></a><span class="co">#&gt;  4  0.0203 -1.20   class_1</span></span>
+<span id="cb4-9"><a aria-label="9"></a><span class="co">#&gt;  5 -0.831  -0.607  class_1</span></span>
+<span id="cb4-10"><a aria-label="10"></a><span class="co">#&gt;  6  0.150   0.904  class_2</span></span>
+<span id="cb4-11"><a aria-label="11"></a><span class="co">#&gt;  7  0.441  -0.642  class_1</span></span>
+<span id="cb4-12"><a aria-label="12"></a><span class="co">#&gt;  8  1.56   -0.0182 class_1</span></span>
+<span id="cb4-13"><a aria-label="13"></a><span class="co">#&gt;  9  0.200  -0.898  class_1</span></span>
+<span id="cb4-14"><a aria-label="14"></a><span class="co">#&gt; 10 -0.0455 -0.478  class_1</span></span>
+<span id="cb4-15"><a aria-label="15"></a><span class="co">#&gt; # ℹ 740 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="the-test-set" class="slide level2">
@@ -393,15 +396,15 @@
 <section id="data-splitting-and-spending-3" class="slide level2">
 <h2>Data splitting and spending <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb5-2"><a></a>cls_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(cls_data_2026, <span class="at">prop =</span> <span class="fl">0.8</span>)</span>
-<span id="cb5-3"><a></a>cls_train <span class="ot">&lt;-</span> <span class="fu">training</span>(cls_split)</span>
-<span id="cb5-4"><a></a>cls_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(cls_split)</span>
-<span id="cb5-5"><a></a></span>
-<span id="cb5-6"><a></a><span class="fu">nrow</span>(cls_train)</span>
-<span id="cb5-7"><a></a><span class="co">#&gt; [1] 800</span></span>
-<span id="cb5-8"><a></a><span class="fu">nrow</span>(cls_test)</span>
-<span id="cb5-9"><a></a><span class="co">#&gt; [1] 200</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a aria-label="1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb5-2"><a aria-label="2"></a>cls_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(cls_data_2026, <span class="at">prop =</span> <span class="fl">0.8</span>)</span>
+<span id="cb5-3"><a aria-label="3"></a>cls_train <span class="ot">&lt;-</span> <span class="fu">training</span>(cls_split)</span>
+<span id="cb5-4"><a aria-label="4"></a>cls_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(cls_split)</span>
+<span id="cb5-5"><a aria-label="5"></a></span>
+<span id="cb5-6"><a aria-label="6"></a><span class="fu">nrow</span>(cls_train)</span>
+<span id="cb5-7"><a aria-label="7"></a><span class="co">#&gt; [1] 800</span></span>
+<span id="cb5-8"><a aria-label="8"></a><span class="fu">nrow</span>(cls_test)</span>
+<span id="cb5-9"><a aria-label="9"></a><span class="co">#&gt; [1] 200</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="your-turn-3" class="slide level2" data-transition="slide-in">
@@ -413,7 +416,7 @@
 </ul>
 <div class="cell">
 <div class="cell-output-display">
-<countdown-timer class="countdown" id="explore-forested" minutes="8" seconds="0" update-every="1" tabindex="0" style="right:0;bottom:0;"></countdown-timer>
+<countdown-timer class="countdown" id="explore-train" minutes="8" seconds="0" update-every="1" tabindex="0" style="right:0;bottom:0;"></countdown-timer>
 </div>
 </div>
 <aside class="notes">

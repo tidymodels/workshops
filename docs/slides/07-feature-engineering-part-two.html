@@ -7,10 +7,10 @@
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.9.36">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.10.18">
 
-  <title>Machine learning with tidymodels – 5 - Feature engineering: splines, target encoding and dates</title>
+  <title>Machine learning with tidymodels – 7 - Feature engineering: splines, target encoding and dates</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -20,10 +20,13 @@
     /* Default styles provided by pandoc.
     ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
     */
-    code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
@@ -192,10 +195,10 @@
   </style>
   <link href="../site_libs/countdown-0.6.0/countdown.css" rel="stylesheet">
   <script src="../site_libs/countdown-0.6.0/countdown.js"></script>
-<meta property="og:title" content="5 - Feature engineering: splines, target encoding and dates – Machine learning with tidymodels">
+<meta property="og:title" content="7 - Feature engineering: splines, target encoding and dates – Machine learning with tidymodels">
 <meta property="og:description" content="Practical Machine Learning with tidymodels">
 <meta property="og:site_name" content="Machine learning with tidymodels">
-<meta name="twitter:title" content="5 - Feature engineering: splines, target encoding and dates – Machine learning with tidymodels">
+<meta name="twitter:title" content="7 - Feature engineering: splines, target encoding and dates – Machine learning with tidymodels">
 <meta name="twitter:description" content="Practical Machine Learning with tidymodels">
 <meta name="twitter:card" content="summary">
 </head>
@@ -205,7 +208,7 @@
     <div class="slides">
 
 <section id="title-slide" class="quarto-title-block center">
-  <h1 class="title">5 - Feature engineering: splines, target encoding and dates</h1>
+  <h1 class="title">7 - Feature engineering: splines, target encoding and dates</h1>
   <p class="subtitle">Practical Machine Learning with tidymodels</p>
 
 <div class="quarto-title-authors">
@@ -215,13 +218,13 @@
 <section id="getting-set-up" class="slide level2">
 <h2>Getting set up <img data-src="hexes/tidymodels.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 128px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a></a><span class="fu">library</span>(tidymodels)</span>
-<span id="cb1-2"><a></a><span class="fu">library</span>(embed)</span>
-<span id="cb1-3"><a></a><span class="fu">library</span>(extrasteps)</span>
-<span id="cb1-4"><a></a></span>
-<span id="cb1-5"><a></a><span class="fu">tidymodels_prefer</span>()</span>
-<span id="cb1-6"><a></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
-<span id="cb1-7"><a></a><span class="fu">options</span>(<span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a aria-label="1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb1-2"><a aria-label="2"></a><span class="fu">library</span>(embed)</span>
+<span id="cb1-3"><a aria-label="3"></a><span class="fu">library</span>(extrasteps)</span>
+<span id="cb1-4"><a aria-label="4"></a></span>
+<span id="cb1-5"><a aria-label="5"></a><span class="fu">tidymodels_prefer</span>()</span>
+<span id="cb1-6"><a aria-label="6"></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span>
+<span id="cb1-7"><a aria-label="7"></a><span class="fu">options</span>(<span class="at">pillar.advice =</span> <span class="cn">FALSE</span>, <span class="at">pillar.min_title_chars =</span> <span class="cn">Inf</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section>
@@ -233,37 +236,37 @@
 <h2>Hotel rates data set</h2>
 <p>Regression data set for predicting the average daily rate for a room, for “Resort Hotel”. The <code>agent</code> and <code>company</code> use random names.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a></a><span class="fu">glimpse</span>(hotel_rates)</span>
-<span id="cb2-2"><a></a><span class="co">#&gt; Rows: 15,402</span></span>
-<span id="cb2-3"><a></a><span class="co">#&gt; Columns: 28</span></span>
-<span id="cb2-4"><a></a><span class="co">#&gt; $ avg_price_per_room             &lt;dbl&gt; 110.00, 74.00, 81.90, 81.00, 112.20, 90…</span></span>
-<span id="cb2-5"><a></a><span class="co">#&gt; $ lead_time                      &lt;dbl&gt; 241, 273, 248, 236, 243, 267, 94, 10, 1…</span></span>
-<span id="cb2-6"><a></a><span class="co">#&gt; $ stays_in_weekend_nights        &lt;dbl&gt; 0, 2, 2, 2, 4, 2, 4, 0, 0, 0, 0, 0, 0, …</span></span>
-<span id="cb2-7"><a></a><span class="co">#&gt; $ stays_in_week_nights           &lt;dbl&gt; 1, 5, 5, 5, 10, 5, 7, 1, 1, 1, 1, 1, 1,…</span></span>
-<span id="cb2-8"><a></a><span class="co">#&gt; $ adults                         &lt;dbl&gt; 2, 2, 2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, …</span></span>
-<span id="cb2-9"><a></a><span class="co">#&gt; $ children                       &lt;dbl&gt; 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, …</span></span>
-<span id="cb2-10"><a></a><span class="co">#&gt; $ babies                         &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</span></span>
-<span id="cb2-11"><a></a><span class="co">#&gt; $ meal                           &lt;fct&gt; bed_and_breakfast, bed_and_breakfast, b…</span></span>
-<span id="cb2-12"><a></a><span class="co">#&gt; $ country                        &lt;fct&gt; prt, aus, gbr, prt, gbr, null, prt, esp…</span></span>
-<span id="cb2-13"><a></a><span class="co">#&gt; $ market_segment                 &lt;fct&gt; online_travel_agent, offline_travel_age…</span></span>
-<span id="cb2-14"><a></a><span class="co">#&gt; $ distribution_channel           &lt;fct&gt; ta_to, ta_to, ta_to, ta_to, ta_to, ta_t…</span></span>
-<span id="cb2-15"><a></a><span class="co">#&gt; $ is_repeated_guest              &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, …</span></span>
-<span id="cb2-16"><a></a><span class="co">#&gt; $ previous_cancellations         &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</span></span>
-<span id="cb2-17"><a></a><span class="co">#&gt; $ previous_bookings_not_canceled &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, …</span></span>
-<span id="cb2-18"><a></a><span class="co">#&gt; $ reserved_room_type             &lt;fct&gt; a, a, a, a, a, a, f, e, h, a, a, g, a, …</span></span>
-<span id="cb2-19"><a></a><span class="co">#&gt; $ assigned_room_type             &lt;fct&gt; c, a, c, a, a, a, f, f, h, e, e, g, e, …</span></span>
-<span id="cb2-20"><a></a><span class="co">#&gt; $ booking_changes                &lt;dbl&gt; 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, …</span></span>
-<span id="cb2-21"><a></a><span class="co">#&gt; $ agent                          &lt;fct&gt; devin_rivera_borrego, lia_nauth, jawhar…</span></span>
-<span id="cb2-22"><a></a><span class="co">#&gt; $ company                        &lt;fct&gt; not_applicable, not_applicable, not_app…</span></span>
-<span id="cb2-23"><a></a><span class="co">#&gt; $ days_in_waiting_list           &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</span></span>
-<span id="cb2-24"><a></a><span class="co">#&gt; $ customer_type                  &lt;fct&gt; transient, transient_party, transient, …</span></span>
-<span id="cb2-25"><a></a><span class="co">#&gt; $ required_car_parking_spaces    &lt;dbl&gt; 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, …</span></span>
-<span id="cb2-26"><a></a><span class="co">#&gt; $ total_of_special_requests      &lt;dbl&gt; 1, 0, 0, 2, 0, 0, 1, 1, 0, 2, 2, 0, 2, …</span></span>
-<span id="cb2-27"><a></a><span class="co">#&gt; $ arrival_date                   &lt;date&gt; 2016-07-02, 2016-07-02, 2016-07-02, 20…</span></span>
-<span id="cb2-28"><a></a><span class="co">#&gt; $ arrival_date_num               &lt;dbl&gt; 2016.5, 2016.5, 2016.5, 2016.5, 2016.5,…</span></span>
-<span id="cb2-29"><a></a><span class="co">#&gt; $ near_christmas                 &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</span></span>
-<span id="cb2-30"><a></a><span class="co">#&gt; $ near_new_years                 &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</span></span>
-<span id="cb2-31"><a></a><span class="co">#&gt; $ historical_adr                 &lt;dbl&gt; 104.9811, 104.9811, 104.9811, 104.9811,…</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a aria-label="1"></a><span class="fu">glimpse</span>(hotel_rates)</span>
+<span id="cb2-2"><a aria-label="2"></a><span class="co">#&gt; Rows: 15,402</span></span>
+<span id="cb2-3"><a aria-label="3"></a><span class="co">#&gt; Columns: 28</span></span>
+<span id="cb2-4"><a aria-label="4"></a><span class="co">#&gt; $ avg_price_per_room             &lt;dbl&gt; 110.00, 74.00, 81.90, 81.00, 112.20, 90…</span></span>
+<span id="cb2-5"><a aria-label="5"></a><span class="co">#&gt; $ lead_time                      &lt;dbl&gt; 241, 273, 248, 236, 243, 267, 94, 10, 1…</span></span>
+<span id="cb2-6"><a aria-label="6"></a><span class="co">#&gt; $ stays_in_weekend_nights        &lt;dbl&gt; 0, 2, 2, 2, 4, 2, 4, 0, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb2-7"><a aria-label="7"></a><span class="co">#&gt; $ stays_in_week_nights           &lt;dbl&gt; 1, 5, 5, 5, 10, 5, 7, 1, 1, 1, 1, 1, 1,…</span></span>
+<span id="cb2-8"><a aria-label="8"></a><span class="co">#&gt; $ adults                         &lt;dbl&gt; 2, 2, 2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, …</span></span>
+<span id="cb2-9"><a aria-label="9"></a><span class="co">#&gt; $ children                       &lt;dbl&gt; 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, …</span></span>
+<span id="cb2-10"><a aria-label="10"></a><span class="co">#&gt; $ babies                         &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb2-11"><a aria-label="11"></a><span class="co">#&gt; $ meal                           &lt;fct&gt; bed_and_breakfast, bed_and_breakfast, b…</span></span>
+<span id="cb2-12"><a aria-label="12"></a><span class="co">#&gt; $ country                        &lt;fct&gt; prt, aus, gbr, prt, gbr, null, prt, esp…</span></span>
+<span id="cb2-13"><a aria-label="13"></a><span class="co">#&gt; $ market_segment                 &lt;fct&gt; online_travel_agent, offline_travel_age…</span></span>
+<span id="cb2-14"><a aria-label="14"></a><span class="co">#&gt; $ distribution_channel           &lt;fct&gt; ta_to, ta_to, ta_to, ta_to, ta_to, ta_t…</span></span>
+<span id="cb2-15"><a aria-label="15"></a><span class="co">#&gt; $ is_repeated_guest              &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb2-16"><a aria-label="16"></a><span class="co">#&gt; $ previous_cancellations         &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb2-17"><a aria-label="17"></a><span class="co">#&gt; $ previous_bookings_not_canceled &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb2-18"><a aria-label="18"></a><span class="co">#&gt; $ reserved_room_type             &lt;fct&gt; a, a, a, a, a, a, f, e, h, a, a, g, a, …</span></span>
+<span id="cb2-19"><a aria-label="19"></a><span class="co">#&gt; $ assigned_room_type             &lt;fct&gt; c, a, c, a, a, a, f, f, h, e, e, g, e, …</span></span>
+<span id="cb2-20"><a aria-label="20"></a><span class="co">#&gt; $ booking_changes                &lt;dbl&gt; 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb2-21"><a aria-label="21"></a><span class="co">#&gt; $ agent                          &lt;fct&gt; devin_rivera_borrego, lia_nauth, jawhar…</span></span>
+<span id="cb2-22"><a aria-label="22"></a><span class="co">#&gt; $ company                        &lt;fct&gt; not_applicable, not_applicable, not_app…</span></span>
+<span id="cb2-23"><a aria-label="23"></a><span class="co">#&gt; $ days_in_waiting_list           &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb2-24"><a aria-label="24"></a><span class="co">#&gt; $ customer_type                  &lt;fct&gt; transient, transient_party, transient, …</span></span>
+<span id="cb2-25"><a aria-label="25"></a><span class="co">#&gt; $ required_car_parking_spaces    &lt;dbl&gt; 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, …</span></span>
+<span id="cb2-26"><a aria-label="26"></a><span class="co">#&gt; $ total_of_special_requests      &lt;dbl&gt; 1, 0, 0, 2, 0, 0, 1, 1, 0, 2, 2, 0, 2, …</span></span>
+<span id="cb2-27"><a aria-label="27"></a><span class="co">#&gt; $ arrival_date                   &lt;date&gt; 2016-07-02, 2016-07-02, 2016-07-02, 20…</span></span>
+<span id="cb2-28"><a aria-label="28"></a><span class="co">#&gt; $ arrival_date_num               &lt;dbl&gt; 2016.5, 2016.5, 2016.5, 2016.5, 2016.5,…</span></span>
+<span id="cb2-29"><a aria-label="29"></a><span class="co">#&gt; $ near_christmas                 &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb2-30"><a aria-label="30"></a><span class="co">#&gt; $ near_new_years                 &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …</span></span>
+<span id="cb2-31"><a aria-label="31"></a><span class="co">#&gt; $ historical_adr                 &lt;dbl&gt; 104.9811, 104.9811, 104.9811, 104.9811,…</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="footer">
 <p>Antonio, N., de Almeida, A., and Nunes, L. (2019). Hotel booking demand datasets. Data in Brief, 22, 41-49.</p>
@@ -273,10 +276,10 @@
 <h2>Hotel data splitting <img data-src="hexes/rsample.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <p>Generally, you should always do data splitting. We are doing it here explicitly because some artifacts of splitting data become useful later on.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
-<span id="cb3-2"><a></a>hotel_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(hotel_rates)</span>
-<span id="cb3-3"><a></a>hotel_train <span class="ot">&lt;-</span> <span class="fu">training</span>(hotel_split)</span>
-<span id="cb3-4"><a></a>hotel_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(hotel_split)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a aria-label="1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb3-2"><a aria-label="2"></a>hotel_split <span class="ot">&lt;-</span> <span class="fu">initial_split</span>(hotel_rates)</span>
+<span id="cb3-3"><a aria-label="3"></a>hotel_train <span class="ot">&lt;-</span> <span class="fu">training</span>(hotel_split)</span>
+<span id="cb3-4"><a aria-label="4"></a>hotel_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(hotel_split)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="your-turn" class="slide level2">
@@ -470,60 +473,60 @@
 <div class="columns">
 <div class="column" style="width:30%;">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
-<span id="cb4-2"><a></a>  <span class="fu">count</span>(country)</span>
-<span id="cb4-3"><a></a><span class="co">#&gt; # A tibble: 88 × 2</span></span>
-<span id="cb4-4"><a></a><span class="co">#&gt;    country     n</span></span>
-<span id="cb4-5"><a></a><span class="co">#&gt;    &lt;fct&gt;   &lt;int&gt;</span></span>
-<span id="cb4-6"><a></a><span class="co">#&gt;  1 ago         7</span></span>
-<span id="cb4-7"><a></a><span class="co">#&gt;  2 and         1</span></span>
-<span id="cb4-8"><a></a><span class="co">#&gt;  3 are         3</span></span>
-<span id="cb4-9"><a></a><span class="co">#&gt;  4 arg        14</span></span>
-<span id="cb4-10"><a></a><span class="co">#&gt;  5 aus        31</span></span>
-<span id="cb4-11"><a></a><span class="co">#&gt;  6 aut        76</span></span>
-<span id="cb4-12"><a></a><span class="co">#&gt;  7 aze         2</span></span>
-<span id="cb4-13"><a></a><span class="co">#&gt;  8 bel       184</span></span>
-<span id="cb4-14"><a></a><span class="co">#&gt;  9 bgr         2</span></span>
-<span id="cb4-15"><a></a><span class="co">#&gt; 10 bhs         1</span></span>
-<span id="cb4-16"><a></a><span class="co">#&gt; # ℹ 78 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a aria-label="1"></a>hotel_train <span class="sc">|&gt;</span></span>
+<span id="cb4-2"><a aria-label="2"></a>  <span class="fu">count</span>(country)</span>
+<span id="cb4-3"><a aria-label="3"></a><span class="co">#&gt; # A tibble: 88 × 2</span></span>
+<span id="cb4-4"><a aria-label="4"></a><span class="co">#&gt;    country     n</span></span>
+<span id="cb4-5"><a aria-label="5"></a><span class="co">#&gt;    &lt;fct&gt;   &lt;int&gt;</span></span>
+<span id="cb4-6"><a aria-label="6"></a><span class="co">#&gt;  1 ago         7</span></span>
+<span id="cb4-7"><a aria-label="7"></a><span class="co">#&gt;  2 and         1</span></span>
+<span id="cb4-8"><a aria-label="8"></a><span class="co">#&gt;  3 are         3</span></span>
+<span id="cb4-9"><a aria-label="9"></a><span class="co">#&gt;  4 arg        14</span></span>
+<span id="cb4-10"><a aria-label="10"></a><span class="co">#&gt;  5 aus        31</span></span>
+<span id="cb4-11"><a aria-label="11"></a><span class="co">#&gt;  6 aut        76</span></span>
+<span id="cb4-12"><a aria-label="12"></a><span class="co">#&gt;  7 aze         2</span></span>
+<span id="cb4-13"><a aria-label="13"></a><span class="co">#&gt;  8 bel       184</span></span>
+<span id="cb4-14"><a aria-label="14"></a><span class="co">#&gt;  9 bgr         2</span></span>
+<span id="cb4-15"><a aria-label="15"></a><span class="co">#&gt; 10 bhs         1</span></span>
+<span id="cb4-16"><a aria-label="16"></a><span class="co">#&gt; # ℹ 78 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div><div class="column" style="width:35%;">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
-<span id="cb5-2"><a></a>  <span class="fu">count</span>(company)</span>
-<span id="cb5-3"><a></a><span class="co">#&gt; # A tibble: 157 × 2</span></span>
-<span id="cb5-4"><a></a><span class="co">#&gt;    company                 n</span></span>
-<span id="cb5-5"><a></a><span class="co">#&gt;    &lt;fct&gt;               &lt;int&gt;</span></span>
-<span id="cb5-6"><a></a><span class="co">#&gt;  1 abdou_llc               2</span></span>
-<span id="cb5-7"><a></a><span class="co">#&gt;  2 afework_llc             5</span></span>
-<span id="cb5-8"><a></a><span class="co">#&gt;  3 alston_pbc              3</span></span>
-<span id="cb5-9"><a></a><span class="co">#&gt;  4 battle_llc             23</span></span>
-<span id="cb5-10"><a></a><span class="co">#&gt;  5 bennett_and_company     3</span></span>
-<span id="cb5-11"><a></a><span class="co">#&gt;  6 berhanu_pbc            53</span></span>
-<span id="cb5-12"><a></a><span class="co">#&gt;  7 biggers_llc             4</span></span>
-<span id="cb5-13"><a></a><span class="co">#&gt;  8 blasingime_llc          1</span></span>
-<span id="cb5-14"><a></a><span class="co">#&gt;  9 boddy_llc              16</span></span>
-<span id="cb5-15"><a></a><span class="co">#&gt; 10 boles_pbc               3</span></span>
-<span id="cb5-16"><a></a><span class="co">#&gt; # ℹ 147 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a aria-label="1"></a>hotel_train <span class="sc">|&gt;</span></span>
+<span id="cb5-2"><a aria-label="2"></a>  <span class="fu">count</span>(company)</span>
+<span id="cb5-3"><a aria-label="3"></a><span class="co">#&gt; # A tibble: 157 × 2</span></span>
+<span id="cb5-4"><a aria-label="4"></a><span class="co">#&gt;    company                 n</span></span>
+<span id="cb5-5"><a aria-label="5"></a><span class="co">#&gt;    &lt;fct&gt;               &lt;int&gt;</span></span>
+<span id="cb5-6"><a aria-label="6"></a><span class="co">#&gt;  1 abdou_llc               2</span></span>
+<span id="cb5-7"><a aria-label="7"></a><span class="co">#&gt;  2 afework_llc             5</span></span>
+<span id="cb5-8"><a aria-label="8"></a><span class="co">#&gt;  3 alston_pbc              3</span></span>
+<span id="cb5-9"><a aria-label="9"></a><span class="co">#&gt;  4 battle_llc             23</span></span>
+<span id="cb5-10"><a aria-label="10"></a><span class="co">#&gt;  5 bennett_and_company     3</span></span>
+<span id="cb5-11"><a aria-label="11"></a><span class="co">#&gt;  6 berhanu_pbc            53</span></span>
+<span id="cb5-12"><a aria-label="12"></a><span class="co">#&gt;  7 biggers_llc             4</span></span>
+<span id="cb5-13"><a aria-label="13"></a><span class="co">#&gt;  8 blasingime_llc          1</span></span>
+<span id="cb5-14"><a aria-label="14"></a><span class="co">#&gt;  9 boddy_llc              16</span></span>
+<span id="cb5-15"><a aria-label="15"></a><span class="co">#&gt; 10 boles_pbc               3</span></span>
+<span id="cb5-16"><a aria-label="16"></a><span class="co">#&gt; # ℹ 147 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div><div class="column" style="width:35%;">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
-<span id="cb6-2"><a></a>  <span class="fu">count</span>(agent)</span>
-<span id="cb6-3"><a></a><span class="co">#&gt; # A tibble: 119 × 2</span></span>
-<span id="cb6-4"><a></a><span class="co">#&gt;    agent                 n</span></span>
-<span id="cb6-5"><a></a><span class="co">#&gt;    &lt;fct&gt;             &lt;int&gt;</span></span>
-<span id="cb6-6"><a></a><span class="co">#&gt;  1 aaron_marquez         2</span></span>
-<span id="cb6-7"><a></a><span class="co">#&gt;  2 alexander_drake    1117</span></span>
-<span id="cb6-8"><a></a><span class="co">#&gt;  3 allen_her             1</span></span>
-<span id="cb6-9"><a></a><span class="co">#&gt;  4 anas_el_bashir        1</span></span>
-<span id="cb6-10"><a></a><span class="co">#&gt;  5 araseli_billy         1</span></span>
-<span id="cb6-11"><a></a><span class="co">#&gt;  6 arhab_al_islam        7</span></span>
-<span id="cb6-12"><a></a><span class="co">#&gt;  7 audray_tucker        38</span></span>
-<span id="cb6-13"><a></a><span class="co">#&gt;  8 bernice_baltierra    35</span></span>
-<span id="cb6-14"><a></a><span class="co">#&gt;  9 betzy_rodriguez      66</span></span>
-<span id="cb6-15"><a></a><span class="co">#&gt; 10 brayan_guerrero       2</span></span>
-<span id="cb6-16"><a></a><span class="co">#&gt; # ℹ 109 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a aria-label="1"></a>hotel_train <span class="sc">|&gt;</span></span>
+<span id="cb6-2"><a aria-label="2"></a>  <span class="fu">count</span>(agent)</span>
+<span id="cb6-3"><a aria-label="3"></a><span class="co">#&gt; # A tibble: 119 × 2</span></span>
+<span id="cb6-4"><a aria-label="4"></a><span class="co">#&gt;    agent                 n</span></span>
+<span id="cb6-5"><a aria-label="5"></a><span class="co">#&gt;    &lt;fct&gt;             &lt;int&gt;</span></span>
+<span id="cb6-6"><a aria-label="6"></a><span class="co">#&gt;  1 aaron_marquez         2</span></span>
+<span id="cb6-7"><a aria-label="7"></a><span class="co">#&gt;  2 alexander_drake    1117</span></span>
+<span id="cb6-8"><a aria-label="8"></a><span class="co">#&gt;  3 allen_her             1</span></span>
+<span id="cb6-9"><a aria-label="9"></a><span class="co">#&gt;  4 anas_el_bashir        1</span></span>
+<span id="cb6-10"><a aria-label="10"></a><span class="co">#&gt;  5 araseli_billy         1</span></span>
+<span id="cb6-11"><a aria-label="11"></a><span class="co">#&gt;  6 arhab_al_islam        7</span></span>
+<span id="cb6-12"><a aria-label="12"></a><span class="co">#&gt;  7 audray_tucker        38</span></span>
+<span id="cb6-13"><a aria-label="13"></a><span class="co">#&gt;  8 bernice_baltierra    35</span></span>
+<span id="cb6-14"><a aria-label="14"></a><span class="co">#&gt;  9 betzy_rodriguez      66</span></span>
+<span id="cb6-15"><a aria-label="15"></a><span class="co">#&gt; 10 brayan_guerrero       2</span></span>
+<span id="cb6-16"><a aria-label="16"></a><span class="co">#&gt; # ℹ 109 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div></div>
 </section>
@@ -575,25 +578,25 @@
 </div>
 </div><div class="column">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
-<span id="cb7-2"><a></a>  <span class="fu">summarise</span>(</span>
-<span id="cb7-3"><a></a>    <span class="at">mean =</span> <span class="fu">mean</span>(avg_price_per_room),</span>
-<span id="cb7-4"><a></a>    <span class="at">.by =</span> agent</span>
-<span id="cb7-5"><a></a>  )</span>
-<span id="cb7-6"><a></a><span class="co">#&gt; # A tibble: 119 × 2</span></span>
-<span id="cb7-7"><a></a><span class="co">#&gt;    agent                 mean</span></span>
-<span id="cb7-8"><a></a><span class="co">#&gt;    &lt;fct&gt;                &lt;dbl&gt;</span></span>
-<span id="cb7-9"><a></a><span class="co">#&gt;  1 alexander_drake      144. </span></span>
-<span id="cb7-10"><a></a><span class="co">#&gt;  2 kaylae_maxedon        62.5</span></span>
-<span id="cb7-11"><a></a><span class="co">#&gt;  3 michael_mcdole        60.9</span></span>
-<span id="cb7-12"><a></a><span class="co">#&gt;  4 devin_rivera_borrego 126. </span></span>
-<span id="cb7-13"><a></a><span class="co">#&gt;  5 james_richards        78.6</span></span>
-<span id="cb7-14"><a></a><span class="co">#&gt;  6 estela_bonilla        41.9</span></span>
-<span id="cb7-15"><a></a><span class="co">#&gt;  7 charles_najera       109. </span></span>
-<span id="cb7-16"><a></a><span class="co">#&gt;  8 reema_el_tamer       118. </span></span>
-<span id="cb7-17"><a></a><span class="co">#&gt;  9 jawhara_al_azad       90.1</span></span>
-<span id="cb7-18"><a></a><span class="co">#&gt; 10 not_applicable        84.1</span></span>
-<span id="cb7-19"><a></a><span class="co">#&gt; # ℹ 109 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a aria-label="1"></a>hotel_train <span class="sc">|&gt;</span></span>
+<span id="cb7-2"><a aria-label="2"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb7-3"><a aria-label="3"></a>    <span class="at">mean =</span> <span class="fu">mean</span>(avg_price_per_room),</span>
+<span id="cb7-4"><a aria-label="4"></a>    <span class="at">.by =</span> agent</span>
+<span id="cb7-5"><a aria-label="5"></a>  )</span>
+<span id="cb7-6"><a aria-label="6"></a><span class="co">#&gt; # A tibble: 119 × 2</span></span>
+<span id="cb7-7"><a aria-label="7"></a><span class="co">#&gt;    agent                 mean</span></span>
+<span id="cb7-8"><a aria-label="8"></a><span class="co">#&gt;    &lt;fct&gt;                &lt;dbl&gt;</span></span>
+<span id="cb7-9"><a aria-label="9"></a><span class="co">#&gt;  1 alexander_drake      144. </span></span>
+<span id="cb7-10"><a aria-label="10"></a><span class="co">#&gt;  2 kaylae_maxedon        62.5</span></span>
+<span id="cb7-11"><a aria-label="11"></a><span class="co">#&gt;  3 michael_mcdole        60.9</span></span>
+<span id="cb7-12"><a aria-label="12"></a><span class="co">#&gt;  4 devin_rivera_borrego 126. </span></span>
+<span id="cb7-13"><a aria-label="13"></a><span class="co">#&gt;  5 james_richards        78.6</span></span>
+<span id="cb7-14"><a aria-label="14"></a><span class="co">#&gt;  6 estela_bonilla        41.9</span></span>
+<span id="cb7-15"><a aria-label="15"></a><span class="co">#&gt;  7 charles_najera       109. </span></span>
+<span id="cb7-16"><a aria-label="16"></a><span class="co">#&gt;  8 reema_el_tamer       118. </span></span>
+<span id="cb7-17"><a aria-label="17"></a><span class="co">#&gt;  9 jawhara_al_azad       90.1</span></span>
+<span id="cb7-18"><a aria-label="18"></a><span class="co">#&gt; 10 not_applicable        84.1</span></span>
+<span id="cb7-19"><a aria-label="19"></a><span class="co">#&gt; # ℹ 109 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div></div>
 </div>
@@ -616,41 +619,41 @@
 <div class="columns">
 <div class="column">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
-<span id="cb8-2"><a></a>  <span class="fu">count</span>(agent, <span class="at">.drop =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb8-3"><a></a><span class="co">#&gt; # A tibble: 174 × 2</span></span>
-<span id="cb8-4"><a></a><span class="co">#&gt;    agent                   n</span></span>
-<span id="cb8-5"><a></a><span class="co">#&gt;    &lt;fct&gt;               &lt;int&gt;</span></span>
-<span id="cb8-6"><a></a><span class="co">#&gt;  1 aaron_marquez           2</span></span>
-<span id="cb8-7"><a></a><span class="co">#&gt;  2 aayaat_al_farran        0</span></span>
-<span id="cb8-8"><a></a><span class="co">#&gt;  3 alanah_cook             0</span></span>
-<span id="cb8-9"><a></a><span class="co">#&gt;  4 alexander_drake      1117</span></span>
-<span id="cb8-10"><a></a><span class="co">#&gt;  5 allen_her               1</span></span>
-<span id="cb8-11"><a></a><span class="co">#&gt;  6 amirah_christian        0</span></span>
-<span id="cb8-12"><a></a><span class="co">#&gt;  7 anas_el_bashir          1</span></span>
-<span id="cb8-13"><a></a><span class="co">#&gt;  8 anna_beltran_moreno     0</span></span>
-<span id="cb8-14"><a></a><span class="co">#&gt;  9 anna_choi               0</span></span>
-<span id="cb8-15"><a></a><span class="co">#&gt; 10 araseli_billy           1</span></span>
-<span id="cb8-16"><a></a><span class="co">#&gt; # ℹ 164 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a aria-label="1"></a>hotel_train <span class="sc">|&gt;</span></span>
+<span id="cb8-2"><a aria-label="2"></a>  <span class="fu">count</span>(agent, <span class="at">.drop =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb8-3"><a aria-label="3"></a><span class="co">#&gt; # A tibble: 174 × 2</span></span>
+<span id="cb8-4"><a aria-label="4"></a><span class="co">#&gt;    agent                   n</span></span>
+<span id="cb8-5"><a aria-label="5"></a><span class="co">#&gt;    &lt;fct&gt;               &lt;int&gt;</span></span>
+<span id="cb8-6"><a aria-label="6"></a><span class="co">#&gt;  1 aaron_marquez           2</span></span>
+<span id="cb8-7"><a aria-label="7"></a><span class="co">#&gt;  2 aayaat_al_farran        0</span></span>
+<span id="cb8-8"><a aria-label="8"></a><span class="co">#&gt;  3 alanah_cook             0</span></span>
+<span id="cb8-9"><a aria-label="9"></a><span class="co">#&gt;  4 alexander_drake      1117</span></span>
+<span id="cb8-10"><a aria-label="10"></a><span class="co">#&gt;  5 allen_her               1</span></span>
+<span id="cb8-11"><a aria-label="11"></a><span class="co">#&gt;  6 amirah_christian        0</span></span>
+<span id="cb8-12"><a aria-label="12"></a><span class="co">#&gt;  7 anas_el_bashir          1</span></span>
+<span id="cb8-13"><a aria-label="13"></a><span class="co">#&gt;  8 anna_beltran_moreno     0</span></span>
+<span id="cb8-14"><a aria-label="14"></a><span class="co">#&gt;  9 anna_choi               0</span></span>
+<span id="cb8-15"><a aria-label="15"></a><span class="co">#&gt; 10 araseli_billy           1</span></span>
+<span id="cb8-16"><a aria-label="16"></a><span class="co">#&gt; # ℹ 164 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div><div class="column">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a></a>hotel_test <span class="sc">|&gt;</span></span>
-<span id="cb9-2"><a></a>  <span class="fu">count</span>(agent, <span class="at">.drop =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb9-3"><a></a><span class="co">#&gt; # A tibble: 174 × 2</span></span>
-<span id="cb9-4"><a></a><span class="co">#&gt;    agent                   n</span></span>
-<span id="cb9-5"><a></a><span class="co">#&gt;    &lt;fct&gt;               &lt;int&gt;</span></span>
-<span id="cb9-6"><a></a><span class="co">#&gt;  1 aaron_marquez           1</span></span>
-<span id="cb9-7"><a></a><span class="co">#&gt;  2 aayaat_al_farran        0</span></span>
-<span id="cb9-8"><a></a><span class="co">#&gt;  3 alanah_cook             0</span></span>
-<span id="cb9-9"><a></a><span class="co">#&gt;  4 alexander_drake       367</span></span>
-<span id="cb9-10"><a></a><span class="co">#&gt;  5 allen_her               1</span></span>
-<span id="cb9-11"><a></a><span class="co">#&gt;  6 amirah_christian        0</span></span>
-<span id="cb9-12"><a></a><span class="co">#&gt;  7 anas_el_bashir          0</span></span>
-<span id="cb9-13"><a></a><span class="co">#&gt;  8 anna_beltran_moreno     0</span></span>
-<span id="cb9-14"><a></a><span class="co">#&gt;  9 anna_choi               0</span></span>
-<span id="cb9-15"><a></a><span class="co">#&gt; 10 araseli_billy           1</span></span>
-<span id="cb9-16"><a></a><span class="co">#&gt; # ℹ 164 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a aria-label="1"></a>hotel_test <span class="sc">|&gt;</span></span>
+<span id="cb9-2"><a aria-label="2"></a>  <span class="fu">count</span>(agent, <span class="at">.drop =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb9-3"><a aria-label="3"></a><span class="co">#&gt; # A tibble: 174 × 2</span></span>
+<span id="cb9-4"><a aria-label="4"></a><span class="co">#&gt;    agent                   n</span></span>
+<span id="cb9-5"><a aria-label="5"></a><span class="co">#&gt;    &lt;fct&gt;               &lt;int&gt;</span></span>
+<span id="cb9-6"><a aria-label="6"></a><span class="co">#&gt;  1 aaron_marquez           1</span></span>
+<span id="cb9-7"><a aria-label="7"></a><span class="co">#&gt;  2 aayaat_al_farran        0</span></span>
+<span id="cb9-8"><a aria-label="8"></a><span class="co">#&gt;  3 alanah_cook             0</span></span>
+<span id="cb9-9"><a aria-label="9"></a><span class="co">#&gt;  4 alexander_drake       367</span></span>
+<span id="cb9-10"><a aria-label="10"></a><span class="co">#&gt;  5 allen_her               1</span></span>
+<span id="cb9-11"><a aria-label="11"></a><span class="co">#&gt;  6 amirah_christian        0</span></span>
+<span id="cb9-12"><a aria-label="12"></a><span class="co">#&gt;  7 anas_el_bashir          0</span></span>
+<span id="cb9-13"><a aria-label="13"></a><span class="co">#&gt;  8 anna_beltran_moreno     0</span></span>
+<span id="cb9-14"><a aria-label="14"></a><span class="co">#&gt;  9 anna_choi               0</span></span>
+<span id="cb9-15"><a aria-label="15"></a><span class="co">#&gt; 10 araseli_billy           1</span></span>
+<span id="cb9-16"><a aria-label="16"></a><span class="co">#&gt; # ℹ 164 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div></div>
 </section>
@@ -661,30 +664,30 @@
 <p>Calculate the global mean of the outcome and use it for cases that aren’t seen in the training data set.</p>
 <p><br></p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a></a><span class="fu">mean</span>(hotel_train<span class="sc">$</span>avg_price_per_room)</span>
-<span id="cb10-2"><a></a><span class="co">#&gt; [1] 104.6039</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a aria-label="1"></a><span class="fu">mean</span>(hotel_train<span class="sc">$</span>avg_price_per_room)</span>
+<span id="cb10-2"><a aria-label="2"></a><span class="co">#&gt; [1] 104.6039</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div><div class="column">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
-<span id="cb11-2"><a></a>  <span class="fu">summarise</span>(</span>
-<span id="cb11-3"><a></a>    <span class="at">mean =</span> <span class="fu">mean</span>(avg_price_per_room),</span>
-<span id="cb11-4"><a></a>    <span class="at">.by =</span> agent</span>
-<span id="cb11-5"><a></a>  )</span>
-<span id="cb11-6"><a></a><span class="co">#&gt; # A tibble: 119 × 2</span></span>
-<span id="cb11-7"><a></a><span class="co">#&gt;    agent                 mean</span></span>
-<span id="cb11-8"><a></a><span class="co">#&gt;    &lt;fct&gt;                &lt;dbl&gt;</span></span>
-<span id="cb11-9"><a></a><span class="co">#&gt;  1 alexander_drake      144. </span></span>
-<span id="cb11-10"><a></a><span class="co">#&gt;  2 kaylae_maxedon        62.5</span></span>
-<span id="cb11-11"><a></a><span class="co">#&gt;  3 michael_mcdole        60.9</span></span>
-<span id="cb11-12"><a></a><span class="co">#&gt;  4 devin_rivera_borrego 126. </span></span>
-<span id="cb11-13"><a></a><span class="co">#&gt;  5 james_richards        78.6</span></span>
-<span id="cb11-14"><a></a><span class="co">#&gt;  6 estela_bonilla        41.9</span></span>
-<span id="cb11-15"><a></a><span class="co">#&gt;  7 charles_najera       109. </span></span>
-<span id="cb11-16"><a></a><span class="co">#&gt;  8 reema_el_tamer       118. </span></span>
-<span id="cb11-17"><a></a><span class="co">#&gt;  9 jawhara_al_azad       90.1</span></span>
-<span id="cb11-18"><a></a><span class="co">#&gt; 10 not_applicable        84.1</span></span>
-<span id="cb11-19"><a></a><span class="co">#&gt; # ℹ 109 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a aria-label="1"></a>hotel_train <span class="sc">|&gt;</span></span>
+<span id="cb11-2"><a aria-label="2"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb11-3"><a aria-label="3"></a>    <span class="at">mean =</span> <span class="fu">mean</span>(avg_price_per_room),</span>
+<span id="cb11-4"><a aria-label="4"></a>    <span class="at">.by =</span> agent</span>
+<span id="cb11-5"><a aria-label="5"></a>  )</span>
+<span id="cb11-6"><a aria-label="6"></a><span class="co">#&gt; # A tibble: 119 × 2</span></span>
+<span id="cb11-7"><a aria-label="7"></a><span class="co">#&gt;    agent                 mean</span></span>
+<span id="cb11-8"><a aria-label="8"></a><span class="co">#&gt;    &lt;fct&gt;                &lt;dbl&gt;</span></span>
+<span id="cb11-9"><a aria-label="9"></a><span class="co">#&gt;  1 alexander_drake      144. </span></span>
+<span id="cb11-10"><a aria-label="10"></a><span class="co">#&gt;  2 kaylae_maxedon        62.5</span></span>
+<span id="cb11-11"><a aria-label="11"></a><span class="co">#&gt;  3 michael_mcdole        60.9</span></span>
+<span id="cb11-12"><a aria-label="12"></a><span class="co">#&gt;  4 devin_rivera_borrego 126. </span></span>
+<span id="cb11-13"><a aria-label="13"></a><span class="co">#&gt;  5 james_richards        78.6</span></span>
+<span id="cb11-14"><a aria-label="14"></a><span class="co">#&gt;  6 estela_bonilla        41.9</span></span>
+<span id="cb11-15"><a aria-label="15"></a><span class="co">#&gt;  7 charles_najera       109. </span></span>
+<span id="cb11-16"><a aria-label="16"></a><span class="co">#&gt;  8 reema_el_tamer       118. </span></span>
+<span id="cb11-17"><a aria-label="17"></a><span class="co">#&gt;  9 jawhara_al_azad       90.1</span></span>
+<span id="cb11-18"><a aria-label="18"></a><span class="co">#&gt; 10 not_applicable        84.1</span></span>
+<span id="cb11-19"><a aria-label="19"></a><span class="co">#&gt; # ℹ 109 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div></div>
 </section>
@@ -696,27 +699,27 @@
 <p>We use the global mean to account for 0 occurrences. Let us adjust the calculated mean by the global mean depending on the counts.</p>
 </div><div class="column">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a></a>hotel_train <span class="sc">|&gt;</span></span>
-<span id="cb12-2"><a></a>  <span class="fu">summarise</span>(</span>
-<span id="cb12-3"><a></a>    <span class="at">mean =</span> <span class="fu">mean</span>(avg_price_per_room),</span>
-<span id="cb12-4"><a></a>    <span class="at">n =</span> <span class="fu">n</span>(),</span>
-<span id="cb12-5"><a></a>    <span class="at">.by =</span> agent</span>
-<span id="cb12-6"><a></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb12-7"><a></a>  <span class="fu">arrange</span>(agent)</span>
-<span id="cb12-8"><a></a><span class="co">#&gt; # A tibble: 119 × 3</span></span>
-<span id="cb12-9"><a></a><span class="co">#&gt;    agent              mean     n</span></span>
-<span id="cb12-10"><a></a><span class="co">#&gt;    &lt;fct&gt;             &lt;dbl&gt; &lt;int&gt;</span></span>
-<span id="cb12-11"><a></a><span class="co">#&gt;  1 aaron_marquez     118.      2</span></span>
-<span id="cb12-12"><a></a><span class="co">#&gt;  2 alexander_drake   144.   1117</span></span>
-<span id="cb12-13"><a></a><span class="co">#&gt;  3 allen_her          65       1</span></span>
-<span id="cb12-14"><a></a><span class="co">#&gt;  4 anas_el_bashir     99       1</span></span>
-<span id="cb12-15"><a></a><span class="co">#&gt;  5 araseli_billy      40       1</span></span>
-<span id="cb12-16"><a></a><span class="co">#&gt;  6 arhab_al_islam     35       7</span></span>
-<span id="cb12-17"><a></a><span class="co">#&gt;  7 audray_tucker      76.0    38</span></span>
-<span id="cb12-18"><a></a><span class="co">#&gt;  8 bernice_baltierra  71.3    35</span></span>
-<span id="cb12-19"><a></a><span class="co">#&gt;  9 betzy_rodriguez    84.0    66</span></span>
-<span id="cb12-20"><a></a><span class="co">#&gt; 10 brayan_guerrero    37.5     2</span></span>
-<span id="cb12-21"><a></a><span class="co">#&gt; # ℹ 109 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a aria-label="1"></a>hotel_train <span class="sc">|&gt;</span></span>
+<span id="cb12-2"><a aria-label="2"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb12-3"><a aria-label="3"></a>    <span class="at">mean =</span> <span class="fu">mean</span>(avg_price_per_room),</span>
+<span id="cb12-4"><a aria-label="4"></a>    <span class="at">n =</span> <span class="fu">n</span>(),</span>
+<span id="cb12-5"><a aria-label="5"></a>    <span class="at">.by =</span> agent</span>
+<span id="cb12-6"><a aria-label="6"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb12-7"><a aria-label="7"></a>  <span class="fu">arrange</span>(agent)</span>
+<span id="cb12-8"><a aria-label="8"></a><span class="co">#&gt; # A tibble: 119 × 3</span></span>
+<span id="cb12-9"><a aria-label="9"></a><span class="co">#&gt;    agent              mean     n</span></span>
+<span id="cb12-10"><a aria-label="10"></a><span class="co">#&gt;    &lt;fct&gt;             &lt;dbl&gt; &lt;int&gt;</span></span>
+<span id="cb12-11"><a aria-label="11"></a><span class="co">#&gt;  1 aaron_marquez     118.      2</span></span>
+<span id="cb12-12"><a aria-label="12"></a><span class="co">#&gt;  2 alexander_drake   144.   1117</span></span>
+<span id="cb12-13"><a aria-label="13"></a><span class="co">#&gt;  3 allen_her          65       1</span></span>
+<span id="cb12-14"><a aria-label="14"></a><span class="co">#&gt;  4 anas_el_bashir     99       1</span></span>
+<span id="cb12-15"><a aria-label="15"></a><span class="co">#&gt;  5 araseli_billy      40       1</span></span>
+<span id="cb12-16"><a aria-label="16"></a><span class="co">#&gt;  6 arhab_al_islam     35       7</span></span>
+<span id="cb12-17"><a aria-label="17"></a><span class="co">#&gt;  7 audray_tucker      76.0    38</span></span>
+<span id="cb12-18"><a aria-label="18"></a><span class="co">#&gt;  8 bernice_baltierra  71.3    35</span></span>
+<span id="cb12-19"><a aria-label="19"></a><span class="co">#&gt;  9 betzy_rodriguez    84.0    66</span></span>
+<span id="cb12-20"><a aria-label="20"></a><span class="co">#&gt; 10 brayan_guerrero    37.5     2</span></span>
+<span id="cb12-21"><a aria-label="21"></a><span class="co">#&gt; # ℹ 109 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div></div>
 </section>
@@ -728,8 +731,8 @@
 <h2>Partial pooling results</h2>
 
 <img data-src="07-feature-engineering-part-two_files/figure-revealjs/partial-pooling-1.svg" class="r-stretch"></section>
-<section id="implentations" class="slide level2">
-<h2>Implentations</h2>
+<section id="implementations" class="slide level2">
+<h2>Implementations</h2>
 <p>We have described this method solely based on analytical calculations (<a href="https://embed.tidymodels.org/reference/step_lencode.html"><code>step_lencode()</code></a>), but you could arrive at similar numbers using a model-based approach by fitting a no-intercept generalized linear model. A hierarchical version would induce partial pooling.</p>
 <ul>
 <li><a href="https://embed.tidymodels.org/reference/step_lencode_glm.html"><code>step_lencode_glm()</code></a></li>
@@ -740,28 +743,28 @@
 <section id="target-encoding-in-recipes" class="slide level2">
 <h2>Target encoding in recipes <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "> <img data-src="hexes/embed.png" class="absolute" style="top: -20px; right: 64px; width: 64px; height: 74.24px; "></h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a></a><span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">|&gt;</span></span>
-<span id="cb13-2"><a></a>  <span class="fu">step_lencode</span>(</span>
-<span id="cb13-3"><a></a>    agent, country, company,</span>
-<span id="cb13-4"><a></a>    <span class="at">outcome =</span> <span class="fu">vars</span>(<span class="st">"avg_price_per_room"</span>), <span class="at">smooth =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb13-5"><a></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb13-6"><a></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
-<span id="cb13-7"><a></a>  <span class="fu">bake</span>(<span class="cn">NULL</span>) <span class="sc">|&gt;</span></span>
-<span id="cb13-8"><a></a>  <span class="fu">select</span>(agent, country, company)</span>
-<span id="cb13-9"><a></a><span class="co">#&gt; # A tibble: 11,551 × 3</span></span>
-<span id="cb13-10"><a></a><span class="co">#&gt;    agent country company</span></span>
-<span id="cb13-11"><a></a><span class="co">#&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span></span>
-<span id="cb13-12"><a></a><span class="co">#&gt;  1 144.    108.     109.</span></span>
-<span id="cb13-13"><a></a><span class="co">#&gt;  2  77.2    83.4    109.</span></span>
-<span id="cb13-14"><a></a><span class="co">#&gt;  3  61.5    99.9    109.</span></span>
-<span id="cb13-15"><a></a><span class="co">#&gt;  4 126.    108.     109.</span></span>
-<span id="cb13-16"><a></a><span class="co">#&gt;  5 144.    108.     109.</span></span>
-<span id="cb13-17"><a></a><span class="co">#&gt;  6  79.9    73.8    109.</span></span>
-<span id="cb13-18"><a></a><span class="co">#&gt;  7 126.     99.9    109.</span></span>
-<span id="cb13-19"><a></a><span class="co">#&gt;  8  69.8   108.     109.</span></span>
-<span id="cb13-20"><a></a><span class="co">#&gt;  9 126.     99.9    109.</span></span>
-<span id="cb13-21"><a></a><span class="co">#&gt; 10 144.    108.     109.</span></span>
-<span id="cb13-22"><a></a><span class="co">#&gt; # ℹ 11,541 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a aria-label="1"></a><span class="fu">recipe</span>(avg_price_per_room <span class="sc">~</span> ., <span class="at">data =</span> hotel_train) <span class="sc">|&gt;</span></span>
+<span id="cb13-2"><a aria-label="2"></a>  <span class="fu">step_lencode</span>(</span>
+<span id="cb13-3"><a aria-label="3"></a>    agent, country, company,</span>
+<span id="cb13-4"><a aria-label="4"></a>    <span class="at">outcome =</span> <span class="fu">vars</span>(<span class="st">"avg_price_per_room"</span>), <span class="at">smooth =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb13-5"><a aria-label="5"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb13-6"><a aria-label="6"></a>  <span class="fu">prep</span>() <span class="sc">|&gt;</span></span>
+<span id="cb13-7"><a aria-label="7"></a>  <span class="fu">bake</span>(<span class="cn">NULL</span>) <span class="sc">|&gt;</span></span>
+<span id="cb13-8"><a aria-label="8"></a>  <span class="fu">select</span>(agent, country, company)</span>
+<span id="cb13-9"><a aria-label="9"></a><span class="co">#&gt; # A tibble: 11,551 × 3</span></span>
+<span id="cb13-10"><a aria-label="10"></a><span class="co">#&gt;    agent country company</span></span>
+<span id="cb13-11"><a aria-label="11"></a><span class="co">#&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;</span></span>
+<span id="cb13-12"><a aria-label="12"></a><span class="co">#&gt;  1 144.    108.     109.</span></span>
+<span id="cb13-13"><a aria-label="13"></a><span class="co">#&gt;  2  77.2    83.4    109.</span></span>
+<span id="cb13-14"><a aria-label="14"></a><span class="co">#&gt;  3  61.5    99.9    109.</span></span>
+<span id="cb13-15"><a aria-label="15"></a><span class="co">#&gt;  4 126.    108.     109.</span></span>
+<span id="cb13-16"><a aria-label="16"></a><span class="co">#&gt;  5 144.    108.     109.</span></span>
+<span id="cb13-17"><a aria-label="17"></a><span class="co">#&gt;  6  79.9    73.8    109.</span></span>
+<span id="cb13-18"><a aria-label="18"></a><span class="co">#&gt;  7 126.     99.9    109.</span></span>
+<span id="cb13-19"><a aria-label="19"></a><span class="co">#&gt;  8  69.8   108.     109.</span></span>
+<span id="cb13-20"><a aria-label="20"></a><span class="co">#&gt;  9 126.     99.9    109.</span></span>
+<span id="cb13-21"><a aria-label="21"></a><span class="co">#&gt; 10 144.    108.     109.</span></span>
+<span id="cb13-22"><a aria-label="22"></a><span class="co">#&gt; # ℹ 11,541 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="your-turn-2" class="slide level2">
@@ -823,7 +826,7 @@
 <h2>Your turn</h2>
 <p><img data-src="images/parsnip-flagger.jpg" class="absolute" style="top: 0px; right: 0px; width: 150px; height: 150px; "></p>
 <p><em>Explore the <code>arrival_date</code> variable and its relation to <code>avg_price_per_room</code></em></p>
-<p><em>The lubridate package might provide helpful</em></p>
+<p><em>The lubridate package might be helpful</em></p>
 <div class="cell">
 <div class="cell-output-display">
 <countdown-timer class="countdown" id="explore-arrival_date" minutes="5" seconds="0" update-every="1" tabindex="0" style="right:0;bottom:0;"></countdown-timer>
@@ -1064,29 +1067,29 @@
 <h2>time events</h2>
 <p>Using <code>extrasteps::step_time_event()</code> and the <a href="https://davisvaughan.github.io/almanac/index.html">almanac</a> package, we can create useful time features.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a></a><span class="fu">library</span>(almanac)</span>
-<span id="cb14-2"><a></a></span>
-<span id="cb14-3"><a></a>rule_1 <span class="ot">&lt;-</span> <span class="fu">weekly</span>() <span class="sc">|&gt;</span></span>
-<span id="cb14-4"><a></a>  <span class="fu">recur_on_weekdays</span>() <span class="sc">|&gt;</span></span>
-<span id="cb14-5"><a></a>  <span class="fu">rsetdiff</span>(<span class="fu">hol_christmas</span>())</span>
-<span id="cb14-6"><a></a></span>
-<span id="cb14-7"><a></a>rule_2 <span class="ot">&lt;-</span> <span class="fu">monthly</span>(<span class="at">since =</span> <span class="st">"2000-01-01"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb14-8"><a></a>  <span class="fu">recur_on_interval</span>(<span class="dv">3</span>) <span class="sc">|&gt;</span></span>
-<span id="cb14-9"><a></a>  <span class="fu">recur_on_day_of_month</span>(<span class="dv">1</span>)</span>
-<span id="cb14-10"><a></a></span>
-<span id="cb14-11"><a></a>rule_3 <span class="ot">&lt;-</span> <span class="fu">yearly</span>(<span class="st">"1997-06-05"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb14-12"><a></a>  <span class="fu">recur_on_day_of_week</span>(<span class="st">"Thursday"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb14-13"><a></a>  <span class="fu">recur_on_month_of_year</span>(<span class="fu">c</span>(<span class="st">"Jun"</span>, <span class="st">"July"</span>, <span class="st">"Aug"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a aria-label="1"></a><span class="fu">library</span>(almanac)</span>
+<span id="cb14-2"><a aria-label="2"></a></span>
+<span id="cb14-3"><a aria-label="3"></a>rule_1 <span class="ot">&lt;-</span> <span class="fu">weekly</span>() <span class="sc">|&gt;</span></span>
+<span id="cb14-4"><a aria-label="4"></a>  <span class="fu">recur_on_weekdays</span>() <span class="sc">|&gt;</span></span>
+<span id="cb14-5"><a aria-label="5"></a>  <span class="fu">rsetdiff</span>(<span class="fu">hol_christmas</span>())</span>
+<span id="cb14-6"><a aria-label="6"></a></span>
+<span id="cb14-7"><a aria-label="7"></a>rule_2 <span class="ot">&lt;-</span> <span class="fu">monthly</span>(<span class="at">since =</span> <span class="st">"2000-01-01"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb14-8"><a aria-label="8"></a>  <span class="fu">recur_on_interval</span>(<span class="dv">3</span>) <span class="sc">|&gt;</span></span>
+<span id="cb14-9"><a aria-label="9"></a>  <span class="fu">recur_on_day_of_month</span>(<span class="dv">1</span>)</span>
+<span id="cb14-10"><a aria-label="10"></a></span>
+<span id="cb14-11"><a aria-label="11"></a>rule_3 <span class="ot">&lt;-</span> <span class="fu">yearly</span>(<span class="st">"1997-06-05"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb14-12"><a aria-label="12"></a>  <span class="fu">recur_on_day_of_week</span>(<span class="st">"Thursday"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb14-13"><a aria-label="13"></a>  <span class="fu">recur_on_month_of_year</span>(<span class="fu">c</span>(<span class="st">"Jun"</span>, <span class="st">"July"</span>, <span class="st">"Aug"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="step_time_event" class="slide level2">
 <h2><code>step_time_event()</code> <img data-src="hexes/recipes.png" class="absolute" style="top: -20px; right: 0px; width: 64px; height: 74.24px; "></h2>
 <p>Create a list of rules (last slide) and pass them to the <code>rules</code> argument of <a href="https://emilhvitfeldt.github.io/extrasteps/reference/step_time_event.html"><code>extrasteps::step_time_event()</code></a></p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a></a>rules <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">rule_1 =</span> rule_1, <span class="at">rule_2 =</span> rule_2, <span class="at">rule_3 =</span> rule_3)</span>
-<span id="cb15-2"><a></a></span>
-<span id="cb15-3"><a></a><span class="fu">recipe</span>(<span class="sc">~</span>arrival_date, <span class="at">data =</span> hotel_rates) <span class="sc">|&gt;</span></span>
-<span id="cb15-4"><a></a>  <span class="fu">step_time_event</span>(arrival_date, <span class="at">rules =</span> rules)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a aria-label="1"></a>rules <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">rule_1 =</span> rule_1, <span class="at">rule_2 =</span> rule_2, <span class="at">rule_3 =</span> rule_3)</span>
+<span id="cb15-2"><a aria-label="2"></a></span>
+<span id="cb15-3"><a aria-label="3"></a><span class="fu">recipe</span>(<span class="sc">~</span>arrival_date, <span class="at">data =</span> hotel_rates) <span class="sc">|&gt;</span></span>
+<span id="cb15-4"><a aria-label="4"></a>  <span class="fu">step_time_event</span>(arrival_date, <span class="at">rules =</span> rules)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="absolute" style="bottom: 0px; right: 0px; ">
 <p><a href="https://feaz-book.com/datetime-advanced">FEAZ</a></p>
