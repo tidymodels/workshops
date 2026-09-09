@@ -20,7 +20,7 @@ source("setup.R")
 
 <hr size="5">
 
-# Introduction 1 - Introduction
+# Introduction
 
 ## `r emo::ji("eyes")`
 
@@ -32,7 +32,7 @@ We've added sections to this document with longer explanations and links to othe
 
 <hr size="5">
 
-# Introduction 2 - Data Budget
+# Data Budget
 
 ## Data splitting and spending
 
@@ -84,7 +84,7 @@ cat(paste0("set.seed(", sample.int(10000, 5), ")", collapse = "\n"))
 
 <hr size="5">
 
-# Introduction 3 - What Makes A Model?
+# What Makes A Model?
 
 ## What is wrong with this? 
 
@@ -140,7 +140,7 @@ tree_fit |>
 
 <hr size="5">
 
-# Introduction 4 - Evaluating Models
+# Evaluating Models
 
 ## Brier score 
 
@@ -165,57 +165,13 @@ For more advanced use cases, you can extract and save them. See:
 
 <hr size="5">
 
-# Advanced 2 - Model optimization by tuning
+# Tuning models
 
 ## Different types of grids
 
 More on space-filling designs in Chapters [4](https://bookdown.org/rbg/surrogates/chap4.html)  and [5](https://bookdown.org/rbg/surrogates/chap5.html) of _Surrogates: Gaussian process modeling, design, and optimization for the applied sciences_.
 
 These designs also scale well as the number of tuning parameters grows. They are designed to fill the predictor space efficiently.  
-
-## Extract and update parameters
-
-In about 90% of the cases, the dials function that you use to update the parameter range has the same name as the argument. For example, if you were to update the `mtry` parameter in a random forest model, the code would look like
-
-```{r}
-#| eval: false
-
-parameter_object |> 
-  update(mtry = mtry(c(1, 100)))
-```
-
-In some cases, the parameter function or its associated values differ from the argument name. 
-
-For example, with `step_spline_naturall()`, we might want to tune the `deg_free` argument (for the degrees of freedom of a spline function). In this case, the argument name is `deg_free`, but we update it with `spline_degree()`. 
-
-`deg_free` represents the general concept of degrees of freedom and could be associated with many different things. For example, if we ever had an argument that was the number of degrees of freedom for a $t$ distribution, we would call that argument `deg_free`. 
-
-We probably want a wider range of degrees of freedom for splines. To this end, we created a specialized function called `spline_degree()`. 
-
-How can you tell when this happens? There is a helper function called `tunable()`, and that gives information on how we make the default ranges for parameters. There is a column in these objects names `call_info`:
-
-```{r}
-library(tidymodels)
-ns_tunable <- 
-  recipe(mpg ~ ., data = mtcars) |> 
-  step_spline_natural(dis, deg_free = tune()) |> 
-  tunable()
-
-ns_tunable
-ns_tunable$call_info
-```
-
-## Neural network tuning
-
-There might be some warnings that 
-
-> "Early stopping occurred at epoch 3 due to numerical overflow of the loss function."
-
-torch can be very aggressive about moving in the direction of the gradient. In some cases, it moves to a space where the gradient is not well-behaved (e.g., flat in multiple directions, saddle point, etc). 
-
-This can cause abnormally large parameter values with magnitudes larger than double precision variables can hold. 
-
-In this case, brulee stops the optimization and returns the parameters from the last best iteration. 
 
 ## Running in parallel
 
@@ -231,11 +187,9 @@ Comparing these methods:
  - future is more mature and is geared towards users and developers. 
  - mirai contains its own queuing system and can be more efficient in allocating work. 
 
-<hr size="5">
+# Feature Engineering: dummies and embeddings
 
-# Advanced 4 - Feature Engineering: dummies and embeddings
-
-## isomap with recipes
+## Isomap with recipes
 
 The results from Isomap, unlike UMAP, cannot be distorted in the same way. Here, the number of neighbors changes between the charts. Each of the charts is an application of Isomap on the same completely random data. The points are in different locations, but none of the charts appear to show any patterns. 
 
@@ -283,30 +237,7 @@ isomap_all |>
   theme_minimal()
 ```
 
-# Advanced Extras - Effect Encodings
-
-## Per-agent statistics
-
-The effect encoding method essentially takes the effect of a variable, like an agent, and creates a data column for that effect. In our example, the agent's effect on the ADR is quantified by a model and then added as a data column to be used in the model. 
-
-Suppose agent Max has a single reservation in the data, with an ADR of €200. If we use a naive estimate for Max’s effect, the model is told that Max should always produce an effect of €200. That’s a very poor estimate since it is from a single data point. 
-
-Contrast this with seasoned agent Davis, who has taken 250 reservations with an average ADR of €100. Davis’s mean is more predictive because it is estimated with better data (i.e., more total reservations). 
-Partial pooling leverages the entire data set and can borrow strength from all of the agents. It is a common tool in Bayesian estimation and non-Bayesian mixed models. If an agent’s data is of good quality, the partial pooling effect estimate is closer to the raw mean. Max’s data is not great and is "shrunk" towards the center of the overall average. Since there is so little known about Max’s reservation history, this is a better effect estimate (until more data is available for him). 
-
-The Stan documentation has a pretty good vignette on this:  <https://cran.r-project.org/web/packages/rstanarm/vignettes/pooling.html>
-
-Also, _Bayes Rules!_ has a nice section on this: <https://www.bayesrulesbook.com/chapter-15.html>
-
-Since this example has a numeric outcome, partial pooling is very similar to the James–Stein estimator: <https://en.wikipedia.org/wiki/James–Stein_estimator>
-
-## Agent effects
-
-Effect encoding might result in a somewhat circular argument: the column is more likely to be important to the model since it is the output of a separate model. The risk here is that we might overfit the effect to the data. For this reason, it is super important to verify that we aren’t overfitting by checking with resampling (or a validation set). 
-
-Partial pooling somewhat lowers the risk of overfitting since it tends to correct for agents with small sample sizes. However, it can’t correct for improper data usage or data leakage. 
-
-# Advanced Extras - Case Study on Transportation
+# Extras - Case Study on Transportation
 
 ## A recipe - handle correlations
 
@@ -327,8 +258,7 @@ The vector lives in our global workspace, and if we are in parallel, the worker 
 
 This means that the parallel process workers have a copy of the data in their reach, and the code will run without error. 
 
-
-# Advanced extras - Iterative Search
+# Extras - Iterative Search
 
 ## Gaussian Processes and Optimization
 
