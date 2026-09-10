@@ -1,0 +1,84 @@
+<script>
+/* ---- tidy-animations shared infrastructure ----
+ * Ported from the anime.js + RevealJS lessons. Kept deliberately small:
+ * coordinate conversion, slide lookup, and a fragment/slide gating helper
+ * that drives a single idempotent render(stage) per animation.
+ */
+window.TM = window.TM || {};
+
+/* Register listeners as soon as Reveal exists — do NOT wait for 'ready',
+ * because include-after-body scripts often load after Reveal initialises. */
+TM.onReveal = function (cb) {
+  (function go() {
+    if (typeof Reveal === 'undefined' || !Reveal.on) { setTimeout(go, 50); return; }
+    cb();
+  })();
+};
+
+/* ---- activity tracking (so a recorder can wait for "idle" instead of guessing
+ * delays). Every animation goes through TM.anime; intentional pauses use
+ * TM.busyInc/busyDec so they count as busy too. TM.idle() is true only when
+ * nothing is animating and no pause is pending. */
+TM._busy = 0;
+TM.busyInc = function () { TM._busy++; };
+TM.busyDec = function () { TM._busy = Math.max(0, TM._busy - 1); };
+TM.idle = function () { return TM._busy === 0; };
+TM.anime = function (params) {
+  TM.busyInc();
+  const inst = anime(params);
+  inst.finished.then(TM.busyDec, TM.busyDec);  // decrement when it settles (or errors)
+  return inst;
+};
+/* a tracked timed gap: stays "busy" for `ms`, then runs fn. Increment the next
+ * step before this decrements (do that inside fn) to avoid a momentary idle dip. */
+TM.pause = function (ms, fn) {
+  TM.busyInc();
+  setTimeout(function () { if (fn) fn(); TM.busyDec(); }, ms);
+};
+
+/* screen pixels -> slide internal coordinate units */
+TM.cssToSlide = function (px, section) {
+  const w = section.getBoundingClientRect().width;
+  return px * (Reveal.getConfig().width / w);
+};
+
+/* find the <section> carrying a marker class (querySelector won't match self) */
+TM.sectionFor = function (markerClass) {
+  const el = document.querySelector('.' + markerClass);
+  return el ? el.closest('section') : null;
+};
+
+/* Gate an animation behind a slide + ordered fragment ids.
+ *   markerClass : class on the slide section
+ *   fragmentIds : array of fragment element ids, in advancing order
+ *   render(stage): called with the number of those fragments currently visible
+ * Fires on fragmentshown/hidden and on slidechanged (forward, back, and
+ * direct-link arrival all resolve to the same stage number). */
+TM.gate = function ({ markerClass, fragmentIds, render }) {
+  function visibleStage() {
+    let n = 0;
+    for (const id of fragmentIds) {
+      const f = document.getElementById(id);
+      if (f && f.classList.contains('visible')) n++; else break;
+    }
+    return n;
+  }
+  function onThisSlide(slide) {
+    return slide && (slide.classList.contains(markerClass) ||
+                     slide.querySelector('.' + markerClass));
+  }
+  TM.onReveal(function () {
+    Reveal.on('fragmentshown',  () => { if (onThisSlide(Reveal.getCurrentSlide())) render(visibleStage()); });
+    Reveal.on('fragmenthidden', () => { if (onThisSlide(Reveal.getCurrentSlide())) render(visibleStage()); });
+    Reveal.on('slidechanged', ({ currentSlide }) => {
+      if (onThisSlide(currentSlide)) render(visibleStage());
+    });
+    // direct-link / reload arrival: render once Reveal can report the slide
+    (function boot() {
+      const cur = Reveal.getCurrentSlide && Reveal.getCurrentSlide();
+      if (!cur) { setTimeout(boot, 60); return; }
+      if (onThisSlide(cur)) render(visibleStage());
+    })();
+  });
+};
+</script>

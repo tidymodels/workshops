@@ -1,0 +1,224 @@
+<script>
+/* ---- Train / validation / test split (random) ----
+ * Marker slide: .tvt-slide   Stage container: #tvt-stage
+ * render(stage) is idempotent (stage = number of visible gating fragments).
+ *
+ * Same idea as the train/test split, but a three-way random split: each
+ * observation is rolled into training (60%), validation (20%), or testing
+ * (20%). The points drop into three rows (keeping their x position, so the
+ * scatter shows as gaps), then compact, then the *test* set is locked in a
+ * vault — the validation set you may use while tuning, the test set you may not.
+ */
+(function () {
+  const N = 20;                                 // observations in the data
+  const BOX = 36, GAP = 8, STEP = BOX + GAP;    // 44px pitch
+  const START_X = 200;                          // left gutter holds the row labels
+  const LABEL_X = 14;
+
+  const ROW_DATA_Y  = 48;                        // the original row (stays put)
+  const ROW_TRAIN_Y = 175;
+  const ROW_VAL_Y   = 300;
+  const ROW_TEST_Y  = 425;
+  const ROW_Y = [ROW_TRAIN_Y, ROW_VAL_Y, ROW_TEST_Y];
+
+  // Set membership: 0 = train, 1 = validation, 2 = test. Rolled once, hardcoded
+  // (runtime Math.random() would break idempotence). 12 / 4 / 4 (60/20/20),
+  // scattered across the row.
+  const ASSIGN = [0,2,0,1,0,0,2,0,1,0,0,1,2,0,0,1,0,2,0,0];
+
+  // Colours are configurable from the .qmd via `window.TVT_COLORS`.
+  const C = window.TVT_COLORS || {};
+  const DATA   = C.data  || '#c8ccd4';
+  const COLORS = [C.train || '#6aa9e0', C.val || '#6cbf84', C.test || '#e8853a'];
+  const TEST = 2;
+
+  function setOf(i)      { return ASSIGN[i]; }
+  function isTest(i)     { return ASSIGN[i] === TEST; }
+  function topX(i)       { return START_X + i * STEP; }
+  function rowY(i)       { return ROW_Y[ASSIGN[i]]; }
+  function classColor(i) { return COLORS[ASSIGN[i]]; }
+
+  // packed slot for the compact stage: each set fills left-to-right in its row.
+  const packX = (function () {
+    const xs = new Array(N), k = [0, 0, 0];
+    for (let i = 0; i < N; i++) xs[i] = START_X + (k[ASSIGN[i]]++) * STEP;
+    return xs;
+  })();
+  const TEST_COUNT = ASSIGN.filter(a => a === TEST).length;
+
+  let boxes = [];
+  let copies = [];
+  let labels = {};
+  let vault;
+  let copyMode = 'none';
+  let coloured = false;
+  let built = false;
+
+  function mkBox(cls) { const b = document.createElement('div'); b.className = cls; return b; }
+
+  function mkLabel(text, y) {
+    const l = mkBox('tvt-label');
+    l.textContent = text;
+    l.style.opacity = 0;
+    anime.set(l, { translateX: LABEL_X, translateY: y + (BOX - 30) / 2 });
+    return l;
+  }
+
+  function build() {
+    const stage = document.getElementById('tvt-stage');
+    if (!stage || built) return !!stage;
+    built = true;
+
+    for (let i = 0; i < N; i++) {
+      const b = mkBox('tvt-box');
+      b.style.backgroundColor = DATA;
+      anime.set(b, { translateX: topX(i), translateY: ROW_DATA_Y });
+      stage.appendChild(b);
+      boxes.push(b);
+    }
+
+    labels.train = mkLabel('Training', ROW_TRAIN_Y);
+    labels.val   = mkLabel('Validation', ROW_VAL_Y);
+    labels.test  = mkLabel('Testing', ROW_TEST_Y);
+    stage.appendChild(labels.train); stage.appendChild(labels.val); stage.appendChild(labels.test);
+
+    vault = mkBox('tvt-vault');
+    vault.style.opacity = 0;
+    vault.innerHTML = '<div class="tvt-lock">🔒</div>' +
+                      '<div class="tvt-lock-text">Locked away until the end</div>';
+    stage.appendChild(vault);
+
+    return true;
+  }
+
+  function ensureCopies() {
+    if (copies.length) return;
+    const stage = document.getElementById('tvt-stage');
+    for (let i = 0; i < N; i++) {
+      const b = mkBox('tvt-box');
+      b.style.backgroundColor = classColor(i);
+      b.style.opacity = 0;
+      anime.set(b, { translateX: topX(i), translateY: ROW_DATA_Y });
+      stage.appendChild(b);
+      copies.push(b);
+    }
+  }
+
+  function clearCopies() {
+    if (!copies.length) return;
+    const dying = copies;
+    copies = [];
+    TM.anime({
+      targets: dying, opacity: 0, duration: 250, easing: 'easeInOutQuad',
+      complete: () => dying.forEach(b => b.remove()),
+    });
+  }
+
+  function layoutCopies(compact) {
+    copies.forEach((b, i) => {
+      TM.anime({
+        targets: b,
+        opacity: 1,
+        translateX: compact ? packX[i] : topX(i),
+        translateY: rowY(i),
+        duration: 700,
+        easing: 'easeInOutCubic',
+        delay: anime.stagger(18),
+      });
+    });
+  }
+
+  // "Roll the dice": tumble through the three set colours, then settle on the
+  // assigned one with a little pop. Cascaded left-to-right.
+  function rollColour(b, i, delay) {
+    const order = [COLORS[(i) % 3], COLORS[(i + 1) % 3], COLORS[(i + 2) % 3]];
+    const final = classColor(i);
+    TM.anime({
+      targets: b,
+      backgroundColor: [
+        { value: order[0], duration: 60 }, { value: order[1], duration: 60 },
+        { value: order[2], duration: 60 }, { value: order[0], duration: 60 },
+        { value: order[1], duration: 60 }, { value: final, duration: 150 },
+      ],
+      delay,
+      easing: 'linear',
+    });
+    TM.anime({
+      targets: b,
+      scale: [{ value: 1.22, duration: 120 }, { value: 1, duration: 200 }],
+      delay: delay + 330,
+      easing: 'easeOutBack',
+    });
+  }
+
+  function applyColour(on) {
+    if (on === coloured) return;
+    coloured = on;
+    if (!on) {
+      boxes.forEach(b => { anime.remove(b); anime.set(b, { scale: 1 }); b.style.backgroundColor = DATA; });
+      return;
+    }
+    boxes.forEach((b, i) => rollColour(b, i, i * 55));
+  }
+
+  function applyCopyMode(mode) {
+    if (mode === copyMode) return;
+    copyMode = mode;
+    if (mode === 'none') { clearCopies(); return; }
+    ensureCopies();
+    layoutCopies(mode === 'compact');
+  }
+
+  function render(stage) {
+    if (!build()) return;
+
+    applyColour(stage >= 1);
+    applyCopyMode(stage >= 3 ? 'compact' : stage >= 2 ? 'gap' : 'none');
+
+    const labelled = stage >= 2;
+    TM.anime({
+      targets: [labels.train, labels.val, labels.test],
+      opacity: labelled ? 1 : 0,
+      duration: 400, easing: 'easeInOutQuad',
+    });
+
+    // stage >= 4: lock the (compact) test set in the vault; hide its points
+    const locked = stage >= 4;
+    const VAULT_W = 300, VAULT_H = BOX + 28;
+    const testSpan = (TEST_COUNT - 1) * STEP + BOX;
+    vault.style.width = VAULT_W + 'px';
+    vault.style.height = VAULT_H + 'px';
+    anime.set(vault, {
+      translateX: START_X + testSpan / 2 - VAULT_W / 2,
+      translateY: ROW_TEST_Y - (VAULT_H - BOX) / 2,
+    });
+    TM.anime({
+      targets: vault, opacity: locked ? 1 : 0, scale: locked ? 1 : 0.92,
+      duration: 500, easing: 'easeOutBack',
+    });
+    if (copies.length) {
+      TM.anime({
+        targets: copies.filter((_, i) => isTest(i)),
+        opacity: locked ? 0 : 1, duration: 400, easing: 'easeInOutQuad',
+      });
+    }
+
+    const title = document.getElementById('tvt-title');
+    if (title) {
+      const text = stage >= 4 ? "Don't touch the test set until the end!"
+                 : stage >= 3 ? 'Training, validation & testing sets'
+                 : stage >= 2 ? 'Split into three sets'
+                 : stage >= 1 ? 'Randomly label each observation'
+                 : 'Your data';
+      title.textContent = text;
+      TM.anime({ targets: title, opacity: text ? 1 : 0, duration: 350, easing: 'easeInOutQuad' });
+    }
+  }
+
+  TM.gate({
+    markerClass: 'tvt-slide',
+    fragmentIds: ['tvt-color', 'tvt-split', 'tvt-compact', 'tvt-vault'],
+    render,
+  });
+})();
+</script>
