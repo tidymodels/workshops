@@ -1,0 +1,225 @@
+<script>
+/* ---- Bootstrap resampling animation ----
+ * Marker slide: .bs-slide   Stage container: #bs-stage
+ * render(stage) is idempotent (stage = number of visible gating fragments).
+ *
+ * Story: 30 original rows on the left. Each resample draws 30 rows *with
+ * replacement*, ONE AT A TIME in a random order: the drawn source row pulses
+ * (and stays put — replacement), and a copy flies to the analysis grid. Rows
+ * picked more than once pile up as a stack of offset copies. After all 30
+ * draws, the rows that were never picked fall out as the assessment / OOB set.
+ */
+(function () {
+  const COLS = 6, ROWS = 5, N = COLS * ROWS;   // 30 source rows
+  const BOX = 56, GAP = 14;
+  const START_X = 40;
+  const GRID_H = ROWS * BOX + (ROWS - 1) * GAP;
+  const START_Y = (520 - GRID_H) / 2;          // vertically centred on the left
+
+  const C = window.BS_COLORS || { analysis: '#6aa9e0', oob: '#e8853a', neutral: '#c8ccd4' };
+
+  // How many times each source row (0..29) is drawn, per resample. Each row is
+  // a genuine sample-with-replacement of 30 draws, so the out-of-bag count
+  // varies run to run (here 14 / 10 / 7) the way real bootstrap does — not a
+  // fixed split. Rolled once and hardcoded because idempotence requires the
+  // layout be stable across reloads / back-nav (no runtime Math.random()).
+  const COUNTS = [
+    [1, 3, 3, 2, 1, 1, 1, 2, 0, 0, 1, 1, 1, 3, 0, 0, 1, 2, 2, 0, 2, 0, 0, 0, 0, 0, 2, 0, 0, 1],
+    [0, 0, 2, 0, 0, 1, 0, 2, 0, 3, 2, 1, 0, 1, 3, 2, 1, 1, 2, 1, 0, 1, 1, 1, 2, 1, 0, 0, 1, 1],
+    [1, 1, 0, 1, 1, 1, 1, 1, 0, 2, 0, 2, 3, 0, 2, 2, 0, 0, 1, 1, 1, 2, 1, 1, 1, 0, 1, 1, 1, 1],
+  ];
+
+  // The *order* in which the 30 draws happen, per resample — a shuffle of the
+  // multiset implied by COUNTS (so a row picked 3× appears 3× here). We draw one
+  // at a time in this order so the random sampling-with-replacement is visible.
+  // Hardcoded (rolled once) to keep the sequence stable across reloads/back-nav.
+  const ORDER = [
+    [6, 0, 1, 17, 26, 20, 10, 5, 1, 2, 12, 18, 3, 2, 26, 20, 2, 16, 11, 1, 13, 13, 17, 3, 29, 18, 7, 4, 13, 7],
+    [2, 7, 18, 29, 15, 14, 14, 15, 28, 19, 9, 16, 5, 18, 14, 9, 2, 23, 7, 17, 21, 9, 22, 24, 11, 10, 10, 25, 24, 13],
+    [21, 24, 27, 9, 29, 19, 22, 3, 20, 1, 11, 26, 6, 15, 18, 23, 12, 12, 0, 4, 7, 12, 11, 14, 28, 15, 14, 5, 9, 21],
+  ];
+
+  // ms between successive draws (the per-draw cadence of the sequential pick).
+  const PACE = window.BS_DRAW_PACE || 130;
+
+  // right-hand split grids (5 cols each). Analysis on top, OOB beneath.
+  const RIGHT_X = 620;
+  const ANALYSIS = { x: RIGHT_X, y: 50,  cols: 6, label: 'Analysis (in-bag)',     labelY: 6   };
+  const OOB      = { x: RIGHT_X, y: 372, cols: 6, label: 'Assessment (out-of-bag)', labelY: 330 };
+
+  let boxes = [];          // 30 source rows on the left
+  let labels = [];         // the two right-hand grid labels
+  let clones = [];         // copies that fly into the right grids
+  let placedResample = 0;  // which resample's copies are shown (0 = none)
+  let runToken = 0;        // bumped on every swap so stale scheduled draws abort
+  let built = false;
+
+  function cellXY(i) {
+    const c = i % COLS, r = Math.floor(i / COLS);
+    return { x: START_X + c * (BOX + GAP), y: START_Y + r * (BOX + GAP) };
+  }
+  function slotXY(spec, i) {
+    const c = i % spec.cols, r = Math.floor(i / spec.cols);
+    return { x: spec.x + c * (BOX + GAP), y: spec.y + r * (BOX + GAP) };
+  }
+
+  function makeLabel(stage, spec) {
+    const lab = document.createElement('div');
+    lab.className = 'bs-label';
+    lab.textContent = spec.label;
+    lab.style.opacity = 0;
+    lab.style.transform = `translate(${spec.x}px, ${spec.labelY}px)`;
+    stage.appendChild(lab);
+    labels.push(lab);
+  }
+
+  function build() {
+    const stage = document.getElementById('bs-stage');
+    if (!stage || built) return !!stage;
+    built = true;
+    for (let i = 0; i < N; i++) {
+      const b = document.createElement('div');
+      b.className = 'bs-box';
+      b.textContent = i + 1;          // number the source rows 1..30
+      const { x, y } = cellXY(i);
+      stage.appendChild(b);
+      // position via anime (not a style transform) so the draw-pulse can add
+      // `scale` on top without clobbering the translate.
+      anime.set(b, { translateX: x, translateY: y });
+      boxes.push(b);
+    }
+    makeLabel(stage, ANALYSIS);
+    makeLabel(stage, OOB);
+    return true;
+  }
+
+  function render(stage) {
+    if (!build()) return;
+
+    // stage 1: reveal the (empty) analysis + OOB grid labels on the right
+    const shown = stage >= 1;
+    TM.anime({
+      targets: labels,
+      opacity: shown ? 1 : 0,
+      duration: 400,
+      easing: 'easeInOutQuad',
+      delay: shown ? anime.stagger(80) : 0,
+    });
+
+    // stages 2+: one bootstrap resample each
+    const title = document.getElementById('bs-title');
+    if (stage >= 2) {
+      const r = stage - 1;             // stage 2 -> resample 1, ...
+      if (title) {
+        title.textContent = `Resample ${r}`;
+        TM.anime({ targets: title, opacity: 1, duration: 400, easing: 'easeInOutQuad' });
+      }
+      ensureResample(r);
+    } else {
+      if (title) TM.anime({ targets: title, opacity: 0, duration: 400, easing: 'easeInOutQuad' });
+      placedResample = 0;
+      runToken++;            // abort any in-flight draw sequence
+      clearClones();
+    }
+  }
+
+  // Swap to a given resample: old copies vanish, then a fresh draw sequence
+  // plays. Bumping runToken aborts any draws still scheduled from the old one.
+  function ensureResample(r) {
+    if (placedResample === r) return;
+    placedResample = r;
+    const myRun = ++runToken;
+    if (clones.length) clearClones(() => TM.pause(300, () => placeClones(r, myRun)));
+    else placeClones(r, myRun);
+  }
+
+  // flash a source row when it's drawn: a quick scale-pop plus a border flash to
+  // the analysis colour. The original stays in place — that's what shows the
+  // draw is *with replacement* (the same row can be picked again next tick).
+  function pulse(b) {
+    TM.anime({ targets: b, scale: [1, 1.22, 1], duration: 340, easing: 'easeOutQuad' });
+    TM.anime({ targets: b, borderColor: [C.analysis, '#1d2433'], duration: 340, easing: 'easeOutQuad' });
+  }
+
+  // spawn a copy at a source row and fly it to a destination slot.
+  function flyCopy(idx, dest, layer, stacked, color, delay) {
+    const stage = document.getElementById('bs-stage');
+    const s = cellXY(idx);
+    const b = document.createElement('div');
+    b.className = stacked ? 'bs-box bs-stacked' : 'bs-box';
+    b.textContent = idx + 1;
+    b.style.backgroundColor = color;
+    b.style.zIndex = String(10 + layer);
+    stage.appendChild(b);
+    clones.push(b);
+    anime.set(b, { translateX: s.x, translateY: s.y });
+    TM.anime({
+      targets: b,
+      translateX: dest.x + layer * 6,
+      translateY: dest.y - layer * 6,
+      duration: 600,
+      easing: 'easeInOutCubic',
+      delay: delay || 0,
+    });
+  }
+
+  // Draw the 30 rows one at a time, in ORDER (random, with replacement).
+  function placeClones(r, myRun) {
+    if (myRun !== runToken) return;     // a newer swap superseded this one
+    const counts = COUNTS[r - 1];
+    const order = ORDER[r - 1];
+    const title = document.getElementById('bs-title');
+
+    // analysis slot assigned to each unique row on its *first* draw, and the
+    // current stack height for that row (so repeats pile onto the same slot).
+    const slotOf = {}, layerOf = {};
+    let nextSlot = 0;
+
+    order.forEach((idx, k) => {
+      TM.pause(k * PACE, () => {
+        if (myRun !== runToken) return;
+        if (title) title.textContent = `Resample ${r} — draw ${k + 1} / ${N}`;
+        pulse(boxes[idx]);
+        if (slotOf[idx] === undefined) { slotOf[idx] = nextSlot++; layerOf[idx] = 0; }
+        const layer = layerOf[idx]++;
+        flyCopy(idx, slotXY(ANALYSIS, slotOf[idx]), layer, counts[idx] > 1, C.analysis, 80);
+
+        if (k === N - 1) {
+          // after the last draw, the never-picked rows fall out as out-of-bag
+          TM.pause(450, () => {
+            if (myRun !== runToken) return;
+            if (title) title.textContent = `Resample ${r}`;
+            revealOOB(counts);
+          });
+        }
+      });
+    });
+  }
+
+  function revealOOB(counts) {
+    let k = 0;
+    for (let i = 0; i < N; i++) {
+      if (counts[i] === 0) { flyCopy(i, slotXY(OOB, k), 0, false, C.oob, k * 60); k++; }
+    }
+  }
+
+  function clearClones(cb) {
+    if (!clones.length) { if (cb) cb(); return; }
+    const dying = clones;
+    clones = [];
+    TM.anime({
+      targets: dying,
+      opacity: 0,
+      duration: 250,
+      easing: 'easeInOutQuad',
+      complete: () => { dying.forEach(b => b.remove()); if (cb) cb(); },
+    });
+  }
+
+  TM.gate({
+    markerClass: 'bs-slide',
+    fragmentIds: ['bs-split', 'bs-r1', 'bs-r2', 'bs-r3'],
+    render,
+  });
+})();
+</script>

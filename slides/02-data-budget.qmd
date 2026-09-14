@@ -2,12 +2,18 @@
 title: "2 - Your data budget"
 subtitle: "Practical Machine Learning with tidymodels"
 format:
-  revealjs: 
+  revealjs:
     slide-number: true
     footer: <https://workshops.tidymodels.org>
     include-before-body: header.html
-    include-after-body: footer-annotations.html
-    theme: [default, tidymodels.scss]
+    include-after-body:
+      - animations/js/infra.html
+      - animations/js/train-test-split.html
+      - footer-annotations.html
+    include-in-header:
+      text: |
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+    theme: [default, tidymodels.scss, animations/css/demos.css]
     width: 1280
     height: 720
 knitr:
@@ -77,39 +83,22 @@ For machine learning, we typically split data into training and test sets:
 
 Do not 🚫 use the test set during training.
 
-## Data splitting and spending
-
-```{r test-train-split}
-#| echo: false
-#| fig.width: 12
-#| fig.height: 3
-#| 
-set.seed(123)
-library(forcats)
-one_split <- tibble(x = 1:30) |> 
-  initial_split() |> 
-  tidy() |> 
-  add_row(Row = 1:30, Data = "Original") |> 
-  mutate(Data = case_when(
-    Data == "Analysis" ~ "Training",
-    Data == "Assessment" ~ "Testing",
-    TRUE ~ Data
-  )) |> 
-  mutate(Data = factor(Data, levels = c("Original", "Training", "Testing")))
-all_split <-
-  ggplot(one_split, aes(x = Row, y = fct_rev(Data), fill = Data)) + 
-  geom_tile(color = "white",
-            linewidth = 1) + 
-  scale_fill_manual(values = splits_pal, guide = "none") +
-  theme_minimal() +
-  theme(axis.text.y = element_text(size = rel(2)),
-        axis.text.x = element_blank(),
-        legend.position = "top",
-        panel.grid = element_blank()) +
-  coord_equal(ratio = 1) +
-  labs(x = NULL, y = NULL)
-all_split
+```{=html}
+<!-- Configure the three set colours here. -->
+<script>window.TTS_COLORS = { data: '#c8ccd4', train: '#6aa9e0', test: '#e8853a' };</script>
 ```
+
+## {.tts-slide}
+
+::: {.tts-stage-wrap}
+<div id="tts-title" class="tts-title"></div>
+<div id="tts-stage"></div>
+:::
+
+[]{.fragment .tts-frag id="tts-color"}
+[]{.fragment .tts-frag id="tts-split"}
+[]{.fragment .tts-frag id="tts-compact"}
+[]{.fragment .tts-frag id="tts-vault"}
 
 # The more data<br>we spend 🤑<br><br>the better estimates<br>we'll get.
 

@@ -1,0 +1,248 @@
+<script>
+/* ---- Initial train/test split animation ----
+ * Marker slide: .tts-slide   Stage container: #tts-stage
+ * render(stage) is idempotent (stage = number of visible gating fragments).
+ *
+ * All observations start in a single row at the top. A *random* 25% are labelled
+ * for the testing set, the rest for training — revealed by colouring the row
+ * left-to-right. The points then drop straight down into a training row and a
+ * testing row, keeping their horizontal position (so each row shows the random
+ * scatter as gaps). They then compact into tidy packed blocks. Finally the test
+ * set is locked in a vault "until the end". The original row stays put on top
+ * throughout — the lower rows are copies.
+ */
+(function () {
+  const N = 20;                                 // observations in the data
+  const BOX = 36, GAP = 8, STEP = BOX + GAP;    // 44px pitch
+  const START_X = 200;                          // left gutter holds the row labels
+  const LABEL_X = 14;
+
+  const ROW_DATA_Y  = 70;                        // the original row (stays put)
+  const ROW_TRAIN_Y = 255;
+  const ROW_TEST_Y  = 420;
+
+  // Which observations are *testing*: rolled the dice once, then hardcoded
+  // (runtime Math.random() would differ on every reload and break idempotence).
+  // Exactly 5 of 20 (25%), scattered — not a tidy stretch.
+  const IS_TEST = [0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0,1,0,0];
+
+  // Colours are configurable from the .qmd via `window.TTS_COLORS`.
+  const C = window.TTS_COLORS || {};
+  const DATA  = C.data  || '#c8ccd4';   // unlabelled data (neutral gray)
+  const TRAIN = C.train || '#6aa9e0';   // training set (blue)
+  const TEST  = C.test  || '#e8853a';   // testing set (orange)
+
+  function isTest(i) { return IS_TEST[i] === 1; }
+  function topX(i)   { return START_X + i * STEP; }
+  function rowY(i)   { return isTest(i) ? ROW_TEST_Y : ROW_TRAIN_Y; }
+  function classColor(i) { return isTest(i) ? TEST : TRAIN; }
+
+  // packed slot for the compact stage: each set fills left-to-right in its row.
+  const packX = (function () {
+    const xs = new Array(N);
+    let kt = 0, kr = 0;
+    for (let i = 0; i < N; i++) xs[i] = START_X + (isTest(i) ? kt++ : kr++) * STEP;
+    return xs;
+  })();
+
+  let boxes = [];          // the original top row
+  let copies = [];         // the dropped copies (train + test rows)
+  let trainLabel, testLabel, vault;
+  let copyMode = 'none';   // 'none' | 'gap' | 'compact' — stable across re-renders
+  let coloured = false;    // has the dice-roll colour reveal played? (stable)
+  let built = false;
+
+  function mkBox(cls) {
+    const b = document.createElement('div');
+    b.className = cls;
+    return b;
+  }
+
+  function build() {
+    const stage = document.getElementById('tts-stage');
+    if (!stage || built) return !!stage;
+    built = true;
+
+    for (let i = 0; i < N; i++) {
+      const b = mkBox('tts-box');
+      b.style.backgroundColor = DATA;            // unlabelled data starts gray
+      anime.set(b, { translateX: topX(i), translateY: ROW_DATA_Y });
+      stage.appendChild(b);
+      boxes.push(b);
+    }
+
+    trainLabel = mkBox('tts-label');
+    trainLabel.textContent = 'Training';
+    trainLabel.style.opacity = 0;
+    anime.set(trainLabel, { translateX: LABEL_X, translateY: ROW_TRAIN_Y + (BOX - 30) / 2 });
+    stage.appendChild(trainLabel);
+
+    testLabel = mkBox('tts-label');
+    testLabel.textContent = 'Testing';
+    testLabel.style.opacity = 0;
+    anime.set(testLabel, { translateX: LABEL_X, translateY: ROW_TEST_Y + (BOX - 30) / 2 });
+    stage.appendChild(testLabel);
+
+    vault = mkBox('tts-vault');
+    vault.style.opacity = 0;
+    vault.innerHTML = '<div class="tts-lock">🔒</div>' +
+                      '<div class="tts-lock-text">Locked away until the end</div>';
+    stage.appendChild(vault);
+
+    return true;
+  }
+
+  // copies live for stages >= 2; they animate between the "gap" and "compact"
+  // layouts. Built lazily and torn down on back-nav past the split.
+  function ensureCopies() {
+    if (copies.length) return;
+    const stage = document.getElementById('tts-stage');
+    for (let i = 0; i < N; i++) {
+      const b = mkBox('tts-box');
+      b.style.backgroundColor = classColor(i);
+      b.style.opacity = 0;
+      anime.set(b, { translateX: topX(i), translateY: ROW_DATA_Y });  // start at the top
+      stage.appendChild(b);
+      copies.push(b);
+    }
+  }
+
+  function clearCopies() {
+    if (!copies.length) return;
+    const dying = copies;
+    copies = [];
+    TM.anime({
+      targets: dying,
+      opacity: 0,
+      duration: 250,
+      easing: 'easeInOutQuad',
+      complete: () => dying.forEach(b => b.remove()),
+    });
+  }
+
+  function layoutCopies(compact) {
+    copies.forEach((b, i) => {
+      TM.anime({
+        targets: b,
+        opacity: 1,
+        translateX: compact ? packX[i] : topX(i),
+        translateY: rowY(i),
+        duration: 700,
+        easing: 'easeInOutCubic',
+        delay: anime.stagger(20),
+      });
+    });
+  }
+
+  // "Roll the dice" on a box: tumble between the two class colours a few times,
+  // then land on its assigned colour with a little settle-pop. Cascaded across
+  // the row by delay so the dice settle left-to-right.
+  function rollColour(b, i, delay) {
+    const a = (i % 2) ? TRAIN : TEST;
+    const c = (i % 2) ? TEST : TRAIN;
+    const final = classColor(i);
+    TM.anime({
+      targets: b,
+      backgroundColor: [
+        { value: a, duration: 65 }, { value: c, duration: 65 },
+        { value: a, duration: 65 }, { value: c, duration: 65 },
+        { value: a, duration: 65 }, { value: final, duration: 150 },
+      ],
+      delay,
+      easing: 'linear',
+    });
+    TM.anime({
+      targets: b,
+      scale: [{ value: 1.22, duration: 120 }, { value: 1, duration: 200 }],
+      delay: delay + 330,
+      easing: 'easeOutBack',
+    });
+  }
+
+  function applyColour(on) {
+    if (on === coloured) return;
+    coloured = on;
+    if (!on) {                                   // back-nav: reset the row to gray
+      boxes.forEach(b => {
+        anime.remove(b);
+        anime.set(b, { scale: 1 });
+        b.style.backgroundColor = DATA;
+      });
+      return;
+    }
+    boxes.forEach((b, i) => rollColour(b, i, i * 55));
+  }
+
+  function applyCopyMode(mode) {
+    if (mode === copyMode) return;
+    copyMode = mode;
+    if (mode === 'none') { clearCopies(); return; }
+    ensureCopies();
+    layoutCopies(mode === 'compact');
+  }
+
+  function render(stage) {
+    if (!build()) return;
+
+    // stage >= 1: "roll the dice" to label each observation, left-to-right
+    applyColour(stage >= 1);
+
+    // stage >= 2: drop into train/test rows (gaps); stage >= 3: compact them
+    applyCopyMode(stage >= 3 ? 'compact' : stage >= 2 ? 'gap' : 'none');
+
+    // labels accompany the split
+    const labelled = stage >= 2;
+    TM.anime({
+      targets: [trainLabel, testLabel],
+      opacity: labelled ? 1 : 0,
+      duration: 400,
+      easing: 'easeInOutQuad',
+    });
+
+    // stage >= 4: lock the (now compact) test set in the vault. The points
+    // vanish behind the closed door — you can't see (or touch) them anymore.
+    const locked = stage >= 4;
+    const VAULT_W = 320, VAULT_H = BOX + 28;
+    const testSpan = (5 - 1) * STEP + BOX;          // packed test block width
+    vault.style.width = VAULT_W + 'px';
+    vault.style.height = VAULT_H + 'px';
+    anime.set(vault, {
+      translateX: START_X + testSpan / 2 - VAULT_W / 2,   // centred over the test set
+      translateY: ROW_TEST_Y - (VAULT_H - BOX) / 2,
+    });
+    TM.anime({
+      targets: vault,
+      opacity: locked ? 1 : 0,
+      scale: locked ? 1 : 0.92,
+      duration: 500,
+      easing: 'easeOutBack',
+    });
+    if (copies.length) {
+      TM.anime({
+        targets: copies.filter((_, i) => isTest(i)),
+        opacity: locked ? 0 : 1,
+        duration: 400,
+        easing: 'easeInOutQuad',
+      });
+    }
+
+    // title narrates each stage
+    const title = document.getElementById('tts-title');
+    if (title) {
+      const text = stage >= 4 ? "Don't touch the test set until the end!"
+                 : stage >= 3 ? 'Your training and testing sets'
+                 : stage >= 2 ? 'Split into two sets'
+                 : stage >= 1 ? 'Randomly label each observation'
+                 : 'Your data';
+      title.textContent = text;
+      TM.anime({ targets: title, opacity: text ? 1 : 0, duration: 350, easing: 'easeInOutQuad' });
+    }
+  }
+
+  TM.gate({
+    markerClass: 'tts-slide',
+    fragmentIds: ['tts-color', 'tts-split', 'tts-compact', 'tts-vault'],
+    render,
+  });
+})();
+</script>

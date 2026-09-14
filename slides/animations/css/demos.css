@@ -1,0 +1,3044 @@
+/* ---- tidy-animations shared styles ---- */
+
+/*-- scss:rules --*/
+
+:root {
+  --tm-analysis: #6aa9e0;     /* analysis / training set  (blue) */
+  --tm-validation: #6cbf84;   /* validation set (green) */
+  --tm-assessment: #e8853a;   /* assessment / testing set (orange) */
+  --tm-neutral: #c8ccd4;      /* unsplit data (gray) */
+  --tm-ink: #1d2433;
+  --oc-pink: #d6336c;         /* orbital-codegen highlight */
+}
+
+/* ---- cross-validation ---- */
+section:has(.cv-slide) { overflow: hidden; }
+
+.cv-stage-wrap { position: relative; margin-top: 10px; }
+
+.cv-title {
+  text-align: center;
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 52px;   /* reserve space so revealing the text causes no layout shift */
+  opacity: 0;
+}
+
+/* fixed-size coordinate box; JS positions children in this same space */
+#cv-stage {
+  position: relative;
+  width: 1100px;
+  height: 520px;
+  margin: 0 auto;
+}
+
+/* invisible markers — they only exist to advance Reveal fragments */
+.cv-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.cv-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--tm-ink);
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+
+.cv-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  border: 2px solid var(--tm-ink);
+  background: transparent;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--tm-ink);
+  will-change: transform, opacity, background-color;
+}
+
+/* ---- SMOTE ---- */
+section:has(.smote-slide) { overflow: hidden; }
+
+.smote-stage-wrap { position: relative; margin-top: 10px; }
+
+.smote-title {
+  text-align: center;
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 46px;   /* reserve space so revealing the text causes no layout shift */
+  opacity: 0;
+}
+
+/* fixed-size coordinate box; JS positions children in this same space */
+#smote-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+  overflow: hidden;   /* clip the scene when zoomed onto the cluster */
+}
+
+/* inner group that holds every element; zoom pans + scales this */
+.smote-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+/* invisible markers — they only exist to advance Reveal fragments */
+.smote-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+/* a data point (circle). JS owns transform / opacity / background-color. */
+.smote-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;   /* centre on its (x, y) */
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+  will-change: transform, opacity, background-color;
+}
+
+/* selection ring drawn around the sampled minority point */
+.smote-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border-radius: 50%;
+  border: 3px solid var(--tm-ink);
+  box-sizing: border-box;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* neighbour connector line (a thin rotated bar); JS sets width + rotation */
+.smote-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--tm-ink);
+  transform-origin: 0 50%;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+/* ---- Borderline-SMOTE (bl1 + bl2 share the same structure) ---- */
+section:has(.bl1-slide),
+section:has(.bl2-slide) { overflow: hidden; }
+
+.bl1-stage-wrap, .bl2-stage-wrap { position: relative; margin-top: 10px; }
+
+.bl1-title, .bl2-title {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 46px;
+  opacity: 0;
+}
+
+#bl1-stage, #bl2-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.bl1-world, .bl2-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.bl1-frag, .bl2-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.bl1-dot, .bl2-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+  will-change: transform, opacity, background-color;
+}
+
+.bl1-ring, .bl2-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border-radius: 50%;
+  border: 3px solid var(--tm-ink);
+  box-sizing: border-box;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.bl1-line, .bl2-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--tm-ink);
+  transform-origin: 0 50%;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+/* legend chips (SAFE / DANGER / NOISE), positioned in the stage box by JS */
+.bl1-legend, .bl2-legend {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 26px;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--tm-ink);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+.bl1-legend .chip, .bl2-legend .chip { display: flex; align-items: center; gap: 8px; }
+.bl1-legend .swatch, .bl2-legend .swatch {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid var(--tm-ink); box-sizing: border-box;
+}
+
+/* ---- ADASYN (same structure as SMOTE, plus per-point count badges) ---- */
+section:has(.adasyn-slide) { overflow: hidden; }
+
+.adasyn-stage-wrap { position: relative; margin-top: 10px; }
+
+.adasyn-title {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 46px;
+  opacity: 0;
+}
+
+#adasyn-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.adasyn-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.adasyn-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.adasyn-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+  will-change: transform, opacity, background-color;
+}
+
+.adasyn-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border-radius: 50%;
+  border: 3px solid var(--tm-ink);
+  box-sizing: border-box;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.adasyn-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--tm-ink);
+  transform-origin: 0 50%;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+/* count badge above a minority point: how many synthetic points it gets */
+.adasyn-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  border-radius: 50%;
+  background: var(--tm-ink);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 30px;
+  text-align: center;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* ---- bootstrap ---- */
+section:has(.bs-slide) { overflow: hidden; }
+
+.bs-stage-wrap { position: relative; margin-top: 10px; }
+
+.bs-title {
+  text-align: center;
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 52px;   /* reserve space so revealing the text causes no layout shift */
+  opacity: 0;
+}
+
+/* fixed-size coordinate box; JS positions children in this same space */
+#bs-stage {
+  position: relative;
+  width: 1100px;
+  height: 520px;
+  margin: 0 auto;
+}
+
+/* invisible markers — they only exist to advance Reveal fragments */
+.bs-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.bs-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--tm-ink);
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+
+.bs-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  border: 2px solid var(--tm-ink);
+  background: transparent;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--tm-ink);
+  will-change: transform, opacity, background-color;
+}
+
+/* stacked duplicate copies get a drop shadow so the depth reads as a pile */
+.bs-box.bs-stacked { box-shadow: 2px 2px 0 rgba(29, 36, 51, 0.25); }
+
+/* ---- train/test split ---- */
+section:has(.tts-slide) { overflow: hidden; }
+
+.tts-stage-wrap { position: relative; margin-top: 10px; }
+
+.tts-title {
+  text-align: center;
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 52px;   /* reserve space so revealing the text causes no layout shift */
+  opacity: 0;
+}
+
+/* fixed-size coordinate box; JS positions children in this same space */
+#tts-stage {
+  position: relative;
+  width: 1100px;
+  height: 520px;
+  margin: 0 auto;
+}
+
+/* invisible markers — they only exist to advance Reveal fragments */
+.tts-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.tts-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 30px;
+  color: var(--tm-ink);
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+
+.tts-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 7px;
+  border: 2px solid var(--tm-ink);
+  background: transparent;
+  box-sizing: border-box;
+  will-change: transform, opacity, background-color;
+}
+
+/* the "vault" that locks the test set away until the very end */
+.tts-vault {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 10px;
+  border: 3px solid #5a6477;
+  background: rgba(45, 52, 68, 0.92);
+  box-shadow: inset 0 0 0 4px #3a4254, 0 6px 18px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  will-change: transform, opacity;
+}
+
+.tts-vault .tts-lock { font-size: 32px; line-height: 1; }
+
+.tts-vault .tts-lock-text {
+  color: #e8ecf3;
+  font-size: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---- time-based (sliding-window) resampling ---- */
+section:has(.sw-slide) { overflow: hidden; }
+
+.sw-stage-wrap { position: relative; margin-top: 10px; }
+
+.sw-title {
+  text-align: center;
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 52px;   /* reserve space so revealing the text causes no layout shift */
+  opacity: 0;
+}
+
+/* fixed-size coordinate box; JS positions children in this same space */
+#sw-stage {
+  position: relative;
+  width: 1100px;
+  height: 520px;
+  margin: 0 auto;
+}
+
+/* invisible markers — they only exist to advance Reveal fragments */
+.sw-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.sw-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 40px;
+  color: var(--tm-ink);
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+
+/* the time-ordered data cells along the top */
+.sw-cell {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 7px;
+  border: 2px solid var(--tm-ink);
+  background: var(--tm-neutral);
+  box-sizing: border-box;
+  will-change: transform;
+}
+
+/* the "time →" axis under the data row */
+.sw-axis {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+/* the sliding window overlaying the data row (analysis + assessment) */
+.sw-window {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 10px;
+  border: 3px solid var(--tm-ink);
+  box-sizing: border-box;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.sw-seg {
+  position: absolute;
+  top: 6px;
+  height: 40px;
+  border-radius: 6px;
+}
+.sw-seg-a { background: rgba(106, 169, 224, 0.55); }   /* analysis (blue) */
+.sw-seg-s { background: rgba(232, 133, 58, 0.55); }    /* assessment (orange) */
+
+/* staircase points: one filed resample per row, as individual observations */
+.sw-pt {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 5px;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+  will-change: transform, opacity;
+}
+.sw-bar-a { background: var(--tm-analysis); }
+.sw-bar-s { background: var(--tm-assessment); }
+
+/* ---- train / validation / test split (random) ---- */
+section:has(.tvt-slide) { overflow: hidden; }
+
+.tvt-stage-wrap { position: relative; margin-top: 10px; }
+
+.tvt-title {
+  text-align: center;
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 52px;
+  opacity: 0;
+}
+
+#tvt-stage {
+  position: relative;
+  width: 1100px;
+  height: 520px;
+  margin: 0 auto;
+}
+
+.tvt-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.tvt-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 30px;
+  color: var(--tm-ink);
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+
+.tvt-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 7px;
+  border: 2px solid var(--tm-ink);
+  background: transparent;
+  box-sizing: border-box;
+  will-change: transform, opacity, background-color;
+}
+
+.tvt-vault {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 10px;
+  border: 3px solid #5a6477;
+  background: rgba(45, 52, 68, 0.92);
+  box-shadow: inset 0 0 0 4px #3a4254, 0 6px 18px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  will-change: transform, opacity;
+}
+.tvt-vault .tvt-lock { font-size: 32px; line-height: 1; }
+.tvt-vault .tvt-lock-text {
+  color: #e8ecf3;
+  font-size: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---- time-based train / validation / test split ---- */
+section:has(.tvs-slide) { overflow: hidden; }
+
+.tvs-stage-wrap { position: relative; margin-top: 10px; }
+
+.tvs-title {
+  text-align: center;
+  font-size: 38px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 52px;
+  opacity: 0;
+}
+
+#tvs-stage {
+  position: relative;
+  width: 1100px;
+  height: 520px;
+  margin: 0 auto;
+}
+
+.tvs-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.tvs-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--tm-ink);
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+
+.tvs-cell {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 7px;
+  border: 2px solid var(--tm-ink);
+  background: var(--tm-neutral);
+  box-sizing: border-box;
+  will-change: transform;
+}
+
+.tvs-axis {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.tvs-window {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 10px;
+  border: 3px solid var(--tm-ink);
+  box-sizing: border-box;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.tvs-seg { position: absolute; top: 6px; border-radius: 6px; }
+.tvs-seg-a { background: rgba(106, 169, 224, 0.55); }   /* train (blue) */
+.tvs-seg-v { background: rgba(108, 191, 132, 0.55); }   /* validation (green) */
+.tvs-seg-s { background: rgba(232, 133, 58, 0.55); }    /* test (orange) */
+
+.tvs-pt {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 5px;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+  will-change: transform, opacity;
+}
+.tvs-c-a { background: var(--tm-analysis); }
+.tvs-c-v { background: var(--tm-validation); }
+.tvs-c-s { background: var(--tm-assessment); }
+
+/* ---- recipe pipeline ---- */
+section:has(.rec-slide) { overflow: hidden; }
+
+.rec-stage-wrap { position: relative; margin-top: 10px; }
+
+.rec-title {
+  text-align: center;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 48px;   /* reserve space so revealing the text causes no layout shift */
+  opacity: 0;
+}
+
+/* fixed-size coordinate box; JS positions children in this same space */
+#rec-stage {
+  position: relative;
+  width: 1220px;
+  height: 560px;
+  margin: 0 auto;
+  overflow: hidden;   /* clip snapshots that have scrolled out of the conveyor */
+}
+
+/* the vertical conveyor holding every dataset snapshot */
+.rec-scroll {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}
+
+/* SVG overlay carrying the per-column connector arrows between snapshots */
+.rec-arrows {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.rec-arrow-line {
+  stroke: #2b6cb0;
+  stroke-width: 2;
+}
+/* dense many-to-many bundle (PCA): thin, translucent so it reads as a mesh */
+.rec-arrow-line.rec-arrow-faint {
+  stroke-width: 1;
+  stroke-opacity: 0.35;
+}
+
+/* invisible markers — they only exist to advance Reveal fragments */
+.rec-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+/* ---- the recipe code panel (left) ---- */
+.rec-code {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 540px;
+  font-family: "Fira Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 16px;
+  line-height: 1.35;
+  color: #58607080;   /* dimmed by default */
+}
+
+.rec-line {
+  padding: 4px 10px;
+  border-radius: 8px;
+  white-space: pre;
+  color: #6b7280;     /* dimmed */
+  transition: color 0.3s, background-color 0.3s;
+}
+
+/* the step currently "running" */
+.rec-line.rec-active {
+  color: var(--tm-ink);
+  background: rgba(106, 169, 224, 0.18);
+  font-weight: 600;
+}
+
+/* steps already applied */
+.rec-line.rec-done { color: #3f4655; }
+
+.rec-fn { color: #2b6cb0; }       /* function name */
+.rec-sel { color: #b45309; }      /* selector */
+
+/* ---- the data table (right) ---- */
+.rec-head {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  text-align: center;
+  box-sizing: border-box;
+  padding: 0 4px 6px;
+  line-height: 1.15;
+  border-bottom: 2px solid var(--tm-ink);   /* the header rule */
+  will-change: transform, opacity;
+}
+
+/* outcome column header gets a badge look */
+.rec-head.rec-outcome {
+  color: #166534;
+  border-bottom-color: #166534;
+}
+.rec-head .rec-badge {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #16653499;
+}
+
+.rec-cell {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #e3e7ee;   /* hairline row separator */
+  background: transparent;
+  box-sizing: border-box;
+  font-size: 14px;
+  color: var(--tm-ink);
+  will-change: transform, opacity, background-color;
+}
+
+/* cells are uncolored; only NA is called out, with red text */
+.rec-cell.rec-na  { color: #c0392b; font-weight: 700; }
+
+/* the "more rows" ellipsis row */
+.rec-cell.rec-dots {
+  color: #9aa1ad;
+  font-size: 20px;
+  font-weight: 700;
+  border-bottom: none;
+  align-items: flex-start;
+}
+
+/* ---- orbital-codegen ---- */
+section:has(.oc-slide) { overflow: hidden; }
+
+.oc-stage-wrap { position: relative; margin-top: 4px; }
+
+.oc-title {
+  text-align: center;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 42px;   /* reserve space so revealing text causes no layout shift */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+/* fixed-size coordinate box; JS positions children in this same space */
+#oc-stage {
+  position: relative;
+  width: 1220px;
+  height: 640px;
+  margin: 0 auto;
+}
+
+/* invisible markers — they only exist to advance Reveal fragments */
+.oc-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+/* ---- the recipe pipeline as code (left) ---- */
+.oc-code-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  white-space: pre;
+  font-family: "Fira Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: #6b7280;                 /* dimmed by default */
+  padding: 3px 10px;
+  border-radius: 8px;
+  will-change: transform, opacity;
+  transition: color 0.3s, background-color 0.3s;
+}
+/* the step currently emitting its generated code */
+.oc-code-line.oc-active {
+  color: var(--tm-ink);
+  background: rgba(214, 51, 108, 0.16);
+  font-weight: 600;
+}
+/* steps already emitted */
+.oc-code-line.oc-done { color: #3f4655; }
+
+.oc-fn  { color: #2b6cb0; }        /* function name */
+.oc-sel { color: #b45309; }        /* selector */
+
+/* ---- phase-2 "terms to account for" panel (left) ---- */
+.oc-terms {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 340px;
+  will-change: opacity;
+}
+.oc-term-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  margin-bottom: 15px;
+}
+.oc-term-list {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.oc-term {
+  box-sizing: border-box;
+  font-family: "Fira Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 13.5px;
+  font-weight: 700;
+  border: 2px solid;   /* colour set inline per term */
+  border-radius: 10px;
+  padding: 11px 16px;
+}
+
+/* ---- the generated code panel (right) ---- */
+.oc-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: pre;
+  font-family: "Fira Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 15px;
+  color: #2b3244;
+  padding: 0 8px;
+  border-radius: 6px;
+  will-change: transform, opacity;
+  transition: color 0.35s, background-color 0.35s, opacity 0.35s;
+}
+/* a line on the dependency path (phase 2): neutral band, tokens carry colour */
+.oc-line.oc-pink {
+  color: #2b3244;
+  background: rgba(120, 130, 150, 0.10);
+}
+/* a line the prediction does NOT depend on (phase 2) */
+.oc-line.oc-dim { color: #aeb4c0; }
+
+/* a tracked-term token inside a traced line (colour set inline per term).
+ * NOT bold — bold monospace is wider and would shift the code. */
+.oc-tok {
+  border-radius: 4px;
+  padding: 1px 0;   /* vertical only, so highlighting never shifts glyphs sideways */
+}
+
+/* a term pill flying from its code token into the list (colour set inline) */
+.oc-fly {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  white-space: nowrap;
+  font-family: "Fira Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 2px 6px;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* connector arrow chip -> its emitted code block */
+.oc-arrows {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.oc-arrow-line {
+  stroke: var(--oc-pink);
+  stroke-width: 2.5;
+  fill: none;
+}
+
+/* ---- ggplot2-deconstructed ---- */
+section:has(.gd-slide) { overflow: hidden; }
+
+.gd-stage-wrap { position: relative; margin-top: 10px; }
+
+/* fixed-size coordinate box; JS positions children in this same space */
+#gd-stage {
+  position: relative;
+  width: 1200px;
+  height: 600px;
+  margin: 0 auto;
+}
+
+/* invisible markers — they only exist to advance Reveal fragments */
+.gd-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+/* left-hand code listing */
+.gd-code {
+  position: absolute;
+  left: 0;
+  top: 150px;
+  width: 590px;
+  font-family: "Source Code Pro", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--tm-ink);
+  white-space: pre;
+}
+/* the focused code block when a slice is highlighted */
+.gd-code [data-blk] { border-radius: 4px; transition: background-color 0.3s ease; }
+.gd-code [data-blk].gd-hot {
+  background: rgba(255, 214, 84, 0.32);
+  box-shadow: 0 0 0 4px rgba(255, 214, 84, 0.32);
+}
+
+.gd-code .gd-fn   { color: #2563c9; }   /* function names */
+.gd-code .gd-str  { color: #2e8b57; }   /* strings */
+.gd-code .gd-arg  { color: #8a6d00; }   /* argument names */
+.gd-code .gd-num  { color: #b5651d; }   /* numbers */
+.gd-code .gd-mut  { color: #9aa1ad; }   /* punctuation / muted */
+
+/* right-hand plot lives in its own coordinate sub-box, built from SVG planes */
+#gd-plot {
+  position: absolute;
+  left: 600px;
+  top: 110px;
+  width: 600px;
+  height: 380px;
+}
+
+/* outer plane: only moved vertically (screen space) for the explode fan.
+   Each carries its own perspective so the tilt projects through a vanishing
+   point centered on this card — keeping every card's edges aligned. */
+.gd-plane { perspective: 1600px; }
+
+/* inner: the element that actually tilts */
+.gd-tilt {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* card backing — hidden while flat, fades in as the planes explode */
+.gd-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(160, 168, 184, 0.6);
+  border-radius: 6px;
+  box-shadow: 0 14px 34px rgba(20, 28, 45, 0.14);
+  opacity: 0;
+}
+
+/* ---- ggplot2-deconstructed-2 (variant) ---- */
+section:has(.gd2-slide) { overflow: hidden; }
+
+.gd2-stage-wrap { position: relative; margin-top: 10px; }
+
+/* fixed-size coordinate box; JS positions children in this same space */
+#gd2-stage {
+  position: relative;
+  width: 1200px;
+  height: 600px;
+  margin: 0 auto;
+}
+
+/* invisible markers — they only exist to advance Reveal fragments */
+.gd2-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+/* left-hand code listing */
+.gd2-code {
+  position: absolute;
+  left: 0;
+  top: 150px;
+  width: 590px;
+  font-family: "Source Code Pro", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--tm-ink);
+  white-space: pre;
+}
+/* the focused code block when a slice is highlighted */
+.gd2-code [data-blk] { border-radius: 4px; transition: background-color 0.3s ease; }
+.gd2-code [data-blk].gd2-hot {
+  background: rgba(255, 214, 84, 0.32);
+  box-shadow: 0 0 0 4px rgba(255, 214, 84, 0.32);
+}
+
+.gd2-code .gd2-fn   { color: #2563c9; }   /* function names */
+.gd2-code .gd2-str  { color: #2e8b57; }   /* strings */
+.gd2-code .gd2-arg  { color: #8a6d00; }   /* argument names */
+.gd2-code .gd2-num  { color: #b5651d; }   /* numbers */
+.gd2-code .gd2-mut  { color: #9aa1ad; }   /* punctuation / muted */
+
+/* right-hand plot lives in its own coordinate sub-box, built from SVG planes */
+#gd2-plot {
+  position: absolute;
+  left: 600px;
+  top: 110px;
+  width: 600px;
+  height: 380px;
+}
+
+/* outer plane: only moved vertically (screen space) for the explode fan.
+   Each carries its own perspective so the tilt projects through a vanishing
+   point centered on this card — keeping every card's edges aligned. */
+.gd2-plane { perspective: 1600px; }
+
+/* inner: the element that actually tilts */
+.gd2-tilt {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* card backing — hidden while flat, fades in as the planes explode */
+.gd2-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(160, 168, 184, 0.6);
+  border-radius: 6px;
+  box-shadow: 0 14px 34px rgba(20, 28, 45, 0.14);
+  opacity: 0;
+}
+
+/* ---- ggplot2-deconstructed (mobile / phone-shaped) ---- */
+section:has(.gdm-slide) { overflow: hidden; }
+
+.gdm-stage-wrap { position: relative; margin-top: 10px; }
+
+/* portrait phone-aspect (9:16) box — captures cropped to this come out as a
+   phone-shaped gif/mp4. JS positions children in this same coordinate space. */
+#gdm-stage {
+  position: relative;
+  width: 405px;
+  height: 720px;
+  margin: 0 auto;
+  background: #fff;
+  overflow: hidden;
+}
+
+/* invisible markers — they only exist to advance Reveal fragments */
+.gdm-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+/* code listing across the top of the screen */
+.gdm-code {
+  position: absolute;
+  left: 22px;
+  top: 30px;
+  width: 360px;
+  font-family: "Source Code Pro", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--tm-ink);
+  white-space: pre;
+  z-index: 2;
+}
+.gdm-code [data-blk] { border-radius: 4px; transition: background-color 0.3s ease; }
+.gdm-code [data-blk].gdm-hot {
+  background: rgba(255, 214, 84, 0.32);
+  box-shadow: 0 0 0 3px rgba(255, 214, 84, 0.32);
+}
+
+.gdm-code .gdm-fn   { color: #2563c9; }
+.gdm-code .gdm-str  { color: #2e8b57; }
+.gdm-code .gdm-arg  { color: #8a6d00; }
+.gdm-code .gdm-num  { color: #b5651d; }
+.gdm-code .gdm-mut  { color: #9aa1ad; }
+
+/* plot lives in the lower part of the screen */
+#gdm-plot {
+  position: absolute;
+  left: 50%;
+  top: 240px;
+  transform: translateX(-50%);
+  width: 348px;
+  height: 300px;
+}
+
+.gdm-plane { perspective: 1100px; }
+
+.gdm-tilt {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.gdm-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(160, 168, 184, 0.6);
+  border-radius: 6px;
+  box-shadow: 0 10px 26px rgba(20, 28, 45, 0.16);
+  opacity: 0;
+}
+
+
+/* ---- filter() ---- */
+section:has(.fr-slide) { overflow: hidden; }
+
+.fr-stage-wrap { position: relative; margin-top: 10px; }
+
+#fr-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+}
+
+.fr-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.fr-title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  font-family: "Source Code Pro", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 30px;
+  font-weight: 500;
+  color: var(--tm-ink);
+  white-space: nowrap;
+}
+
+/* a table row, absolutely positioned in stage coordinates */
+.fr-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  height: 44px;
+  border-radius: 6px;
+  background-color: rgba(74, 134, 197, 0);
+  will-change: transform, opacity, background-color;
+}
+
+.fr-cell {
+  font-size: 24px;
+  color: var(--tm-ink);
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+.fr-idx     { width: 52px;  text-align: right; color: #9aa0ac; }
+.fr-species {
+  width: 158px;
+  text-align: left;
+  border-radius: 8px;
+  background-color: rgba(74, 134, 197, 0);
+  will-change: background-color, color;
+}
+.fr-species.fr-hit { font-weight: 700; }
+.fr-value   {
+  width: 148px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  border-radius: 8px;
+  background-color: rgba(74, 134, 197, 0);
+  will-change: background-color, color;
+}
+.fr-value.fr-hit { font-weight: 700; }
+
+/* condition substrings inside the title code, highlighted per step */
+.fr-code-cond {
+  border-radius: 5px;
+  padding: 1px 4px;
+  background-color: rgba(74, 134, 197, 0);
+  will-change: background-color, color;
+}
+
+.fr-head .fr-cell {
+  font-size: 22px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* the bordered box drawn around the data column(s), like the screenshot */
+.fr-colbox {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 1.5px solid #4a86c5;
+  border-radius: 4px;
+  box-sizing: border-box;
+  will-change: opacity;
+}
+
+#fr-arrows-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1100px;
+  height: 560px;
+  pointer-events: none;
+  overflow: visible;
+}
+.fr-arrow {
+  fill: none;
+  stroke: #4a86c5;
+  stroke-width: 2;
+}
+
+/* ---- orbital-casewhen (flat -> nested case_when) ---- */
+section:has(.ocw-slide) { overflow: hidden; }
+
+.ocw-stage-wrap { position: relative; margin-top: 4px; }
+
+.ocw-title {
+  text-align: center;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 42px;   /* reserve space so revealing text causes no layout shift */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+/* fixed-size coordinate box; JS positions children in this same space */
+#ocw-stage {
+  position: relative;
+  width: 1220px;
+  height: 600px;
+  margin: 0 auto;
+}
+
+/* invisible markers — they only exist to advance Reveal fragments */
+.ocw-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+/* a single code line, positioned by JS in stage coordinates */
+.ocw-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: pre;
+  font-family: "Fira Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 23px;
+  line-height: 34px;
+  color: #2b3244;
+  padding: 1px 6px;
+  border-radius: 6px;
+  will-change: transform, opacity;
+}
+
+.ocw-fn  { color: #2b6cb0; }        /* case_when */
+.ocw-val { color: #b45309; }        /* result strings */
+.ocw-def { color: #7c3aed; }        /* .default */
+
+/* a condition fragment we can spotlight (e.g. the redundant `x <= 5`) */
+.ocw-cond {
+  border-radius: 5px;
+  padding: 1px 0;
+  transition: background-color 0.3s, color 0.3s;
+}
+.ocw-cond.ocw-hot {
+  background: rgba(214, 51, 108, 0.20);
+  color: var(--oc-pink);
+}
+.ocw-cond.ocw-ok {
+  background: rgba(56, 161, 105, 0.20);
+  color: #2f855a;
+}
+
+/* ---- orbital separate_trees ---- */
+section:has(.st-slide) { overflow: hidden; }
+
+.st-stage-wrap { position: relative; margin-top: 4px; }
+
+.st-title {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+  font-family: "Fira Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  color: var(--tm-ink);
+  min-height: 46px;   /* reserve space so revealing text causes no layout shift */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+/* fixed-size coordinate box; JS positions children in this same space.
+ * overflow:hidden matters here — the nesting staircase is meant to run off the
+ * bottom edge, and the clip is what sells "this expression does not fit". */
+#st-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+/* invisible markers — they only exist to advance Reveal fragments */
+.st-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+/* ---- one chip per tree ---- */
+.st-chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(29, 36, 51, 0.18);
+  will-change: transform, opacity;
+}
+
+.st-chip-label {
+  font-family: "Fira Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tm-ink);
+  white-space: nowrap;
+}
+
+/* the "⋯" stand-in for the trees we don't draw */
+.st-chip-dots {
+  justify-content: center;
+  background: transparent !important;
+  border-color: transparent;
+}
+/* a mono "⋯" draws as tiny midline specks, so the stand-in uses bullets */
+.st-chip-dots .st-chip-label {
+  font-family: inherit;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: 5px;
+  color: #9aa1ad;
+}
+
+.st-glyph {
+  width: 20px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+.st-glyph path {
+  stroke: rgba(29, 36, 51, 0.55);
+  stroke-width: 1.4;
+  fill: none;
+}
+.st-glyph circle { fill: rgba(29, 36, 51, 0.65); }
+
+/* Fades the staircase out at the bottom edge so it reads as "continues past
+ * here" rather than "stops here". An overlay, not a mask on #st-stage, because
+ * later stages put real content on the bottom row. */
+.st-fade {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 150px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff 82%);
+  will-change: opacity;
+}
+
+/* ---- stages 5-7: batch frames, result cards, connectors ---- */
+.st-batch-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  border: 2px dashed;
+  border-radius: 12px;
+  background: rgba(144, 190, 109, 0.07);
+  will-change: transform, opacity;
+}
+
+/* sits astride the frame's top edge, like a legend */
+.st-batch-label {
+  position: absolute;
+  top: -14px;
+  left: 14px;
+  padding: 2px 12px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* a named result: the batch sums and the final prediction */
+.st-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 2px solid;
+  border-radius: 10px;
+  background: #fff;
+  will-change: transform, opacity;
+}
+.st-card-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+.st-card-name {
+  font-family: "Fira Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--tm-ink);
+}
+
+/* connectors; one <g> per group so stages can fade them in independently */
+.st-wires {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.st-wires line {
+  stroke-width: 1.4;
+  opacity: 0.55;
+}
+/* the round-robin hand-off to cores necessarily crosses itself; dashing and
+ * fading it keeps it reading as routing rather than as structure */
+.st-wire-route line {
+  stroke-dasharray: 3 5;
+  opacity: 0.38;
+}
+
+/* ---- stage 4: one lane per core ---- */
+/* a tree's value in flight from its column to a core */
+.st-token {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(29, 36, 51, 0.25);
+  will-change: transform, opacity;
+}
+
+.st-lane {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 999px;
+  background: #eceef2;
+  will-change: transform, opacity;
+}
+.st-lane-name {
+  position: absolute;
+  right: calc(100% + 14px);
+  top: -3px;
+  font-family: "Fira Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: #5b6272;
+  white-space: nowrap;
+}
+/* full width, scaled in X by anime — no layout animation */
+.st-lane-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  transform-origin: left center;
+  will-change: transform;
+}
+.st-lane-done {
+  position: absolute;
+  left: calc(100% + 14px);
+  top: -3px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #3f7233;
+  white-space: nowrap;
+  will-change: opacity;
+}
+
+/* pill note; used by the stage-7 depth callback via .st-badge-quiet */
+.st-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  width: 300px;
+  padding: 9px 0;
+  text-align: center;
+  border-radius: 999px;
+  font-size: 21px;
+  font-weight: 700;
+  color: #3f7233;
+  background: rgba(144, 190, 109, 0.18);
+  border: 1px solid rgba(144, 190, 109, 0.65);
+  will-change: transform, opacity;
+}
+
+/* the stage-7 depth note: same pill, dialled down so .pred stays the focus */
+.st-badge-quiet {
+  width: auto;
+  padding: 7px 18px;
+  font-size: 18px;
+  color: #5b6272;
+  background: #f2f4f7;
+  border-color: rgba(29, 36, 51, 0.16);
+}
+
+/* ---- stage 3: one intermediate column per tree ---- */
+.st-col {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 0;
+  border-radius: 8px;
+  border: 1px solid rgba(29, 36, 51, 0.16);
+  background: #f7f8fa;
+  will-change: transform, opacity;
+}
+
+/* the column name, running down the card like a rotated table header */
+.st-col-name {
+  writing-mode: vertical-rl;
+  font-family: "Fira Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tm-ink);
+  white-space: nowrap;
+}
+
+/* the value the column holds */
+.st-col-cell {
+  margin-top: auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+}
+
+.st-col-dots {
+  background: transparent;
+  border-color: transparent;
+  justify-content: center;
+}
+/* the stand-in keeps its dots horizontal, unlike the rotated column names */
+.st-col-dots .st-col-name {
+  writing-mode: horizontal-tb;
+  margin: auto 0;
+  font-family: inherit;
+  font-size: 20px;
+  letter-spacing: 4px;
+  color: #9aa1ad;
+}
+
+/* ---- stage 2: the two problems + the depth meter ---- */
+.st-problem {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.st-callout {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  width: 270px;
+  padding: 9px 0;
+  text-align: center;
+  border-radius: 999px;
+  font-size: 21px;
+  font-weight: 700;
+  color: #a01f52;
+  background: rgba(214, 51, 108, 0.12);
+  border: 1px solid rgba(214, 51, 108, 0.45);
+  will-change: transform;
+}
+
+/* x axis is expression depth; the parser limit is a tick partway along */
+.st-meter {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 999px;
+  background: #eceef2;
+  will-change: transform;
+}
+.st-meter-fill,
+.st-meter-ghost {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 999px;
+}
+/* the depth this model actually reaches */
+.st-meter-fill { left: 0; }
+/* where more trees would take it — past the limit */
+.st-meter-ghost {
+  background: repeating-linear-gradient(
+    115deg, rgba(214, 51, 108, 0.30) 0 6px, rgba(214, 51, 108, 0.10) 6px 12px);
+}
+.st-meter-tick {
+  position: absolute;
+  top: -13px;
+  height: 38px;
+  border-left: 2px dashed;
+}
+/* tick label above the track, depth labels below — keeps everything inside the
+ * stage box, which clips (overflow:hidden) */
+.st-meter-tick-label {
+  position: absolute;
+  top: -32px;
+  transform: translateX(-50%);
+  font-size: 17px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.st-meter-label {
+  position: absolute;
+  top: 22px;
+  font-size: 17px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.st-meter-here { color: #4a6b80; }
+.st-meter-more { color: #a01f52; }
+
+/* the "+" operators joining the summed chips */
+.st-plus {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Fira Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 24px;
+  font-weight: 700;
+  color: #5b6272;
+  will-change: transform, opacity;
+}
+
+/* ---- the "1 expression" brace spanning the summed block ---- */
+.st-brace {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  will-change: transform, opacity;
+}
+.st-brace path {
+  stroke: #9aa1ad;
+  stroke-width: 2;
+  fill: none;
+}
+.st-brace-label {
+  writing-mode: vertical-rl;
+  font-size: 20px;
+  font-weight: 600;
+  color: #5b6272;
+  white-space: nowrap;
+}
+
+.st-caption {
+  position: absolute;
+  top: 0;
+  left: 0;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 600;
+  color: #5b6272;
+  will-change: transform, opacity;
+}
+
+/* ---- Tomek links (base chrome for the under-sampling decks) ---- */
+section:has(.tomek-slide) { overflow: hidden; }
+
+.tomek-stage-wrap { position: relative; margin-top: 10px; }
+
+.tomek-title {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 46px;
+  opacity: 0;
+}
+
+#tomek-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.tomek-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.tomek-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.tomek-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+  will-change: transform, opacity;
+}
+
+/* nearest-neighbour arrow; .is-link thickens the ones that survive filtering */
+.tomek-arrow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: #8a9099;
+  transform-origin: 0 50%;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.tomek-arrow::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform: translateY(-50%);
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-left: 11px solid #8a9099;
+}
+
+.tomek-arrow.is-link,
+.tomek-arrow.is-link::after { background: var(--tm-ink); }
+.tomek-arrow.is-link { height: 4px; }
+.tomek-arrow.is-link::after {
+  background: none;
+  border-left-color: var(--tm-ink);
+}
+
+.tomek-halo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 50%;
+  border: 3px solid var(--tm-ink);
+  box-sizing: border-box;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* live class counter, shared by the under-sampling decks */
+.tomek-legend {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #5b6272;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.tomek-legend-item { display: flex; align-items: center; gap: 8px; }
+
+.tomek-swatch {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+}
+
+.tomek-count {
+  display: inline-block;
+  min-width: 2ch;
+  color: var(--tm-ink);
+  will-change: transform;
+}
+
+/* ---- ENN (edited nearest neighbours) ---- */
+section:has(.enn-slide) { overflow: hidden; }
+
+.enn-stage-wrap { position: relative; margin-top: 10px; }
+
+.enn-title {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 46px;
+  opacity: 0;
+}
+
+#enn-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.enn-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.enn-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.enn-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+  will-change: transform, opacity;
+}
+
+.enn-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--tm-ink);
+  transform-origin: 0 50%;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.enn-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 42px;
+  height: 42px;
+  margin: -21px 0 0 -21px;
+  border-radius: 50%;
+  border: 3px solid var(--tm-ink);
+  box-sizing: border-box;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* the "your neighbourhood contradicts you" mark */
+.enn-mark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: 50%;
+  border: 3px solid #b3261e;
+  color: #b3261e;
+  background: rgba(255, 255, 255, 0.72);
+  box-sizing: border-box;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 28px;
+  text-align: center;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.enn-tally {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 50% 50%;
+  margin-left: -160px;
+  width: 320px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  white-space: nowrap;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.enn-legend {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #5b6272;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.enn-legend-item { display: flex; align-items: center; gap: 8px; }
+
+.enn-swatch {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+}
+
+.enn-count {
+  display: inline-block;
+  min-width: 2ch;
+  color: var(--tm-ink);
+  will-change: transform;
+}
+
+/* ---- NearMiss-1 ---- */
+section:has(.nm-slide) { overflow: hidden; }
+
+.nm-stage-wrap { position: relative; margin-top: 10px; }
+
+.nm-title {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 46px;
+  opacity: 0;
+}
+
+#nm-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.nm-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.nm-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.nm-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+  will-change: transform, opacity, background-color;
+}
+
+.nm-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--tm-ink);
+  transform-origin: 0 50%;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.nm-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 50%;
+  border: 3px solid var(--tm-ink);
+  box-sizing: border-box;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.nm-caption {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin-left: -180px;
+  width: 360px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  white-space: nowrap;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.nm-legend {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #5b6272;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.nm-legend-item { display: flex; align-items: center; gap: 8px; }
+
+.nm-swatch {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+}
+
+.nm-count {
+  display: inline-block;
+  min-width: 2ch;
+  color: var(--tm-ink);
+  will-change: transform;
+}
+
+/* score ramp key */
+.nm-ramp {
+  position: absolute;
+  bottom: 10px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 19px;
+  font-weight: 600;
+  color: #5b6272;
+  pointer-events: none;
+}
+
+.nm-ramp-bar {
+  display: inline-block;
+  width: 150px;
+  height: 14px;
+  border-radius: 7px;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+}
+
+/* ---- cluster centroids ---- */
+section:has(.cc-slide) { overflow: hidden; }
+
+.cc-stage-wrap { position: relative; margin-top: 10px; }
+
+.cc-title {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 46px;
+  opacity: 0;
+}
+
+#cc-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.cc-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.cc-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.cc-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+  will-change: transform, opacity;
+}
+
+/* centroid: dashed while it is just a summary, solid once it IS the class */
+.cc-centroid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border-radius: 50%;
+  border: 3px dashed var(--tm-ink);
+  box-sizing: border-box;
+  will-change: transform, opacity, background-color;
+}
+
+.cc-centroid.is-class {
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border: 2px solid var(--tm-ink);
+}
+
+.cc-spoke {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: #9aa2af;
+  transform-origin: 0 50%;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.cc-legend {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #5b6272;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.cc-legend-item { display: flex; align-items: center; gap: 8px; }
+
+.cc-swatch {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+}
+
+.cc-count {
+  display: inline-block;
+  min-width: 2ch;
+  color: var(--tm-ink);
+  will-change: transform;
+}
+
+/* ---- ROSE ---- */
+section:has(.rose-slide) { overflow: hidden; }
+
+.rose-stage-wrap { position: relative; margin-top: 10px; }
+
+.rose-title {
+  text-align: center;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 46px;
+  opacity: 0;
+}
+
+#rose-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.rose-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.rose-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.rose-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+  will-change: transform, opacity;
+}
+
+/* a drawn point: same colour, lighter outline, so it reads as new */
+.rose-dot.is-syn {
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #6d7480;
+}
+
+/* the Gaussian smoothing kernel */
+.rose-kernel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  border: 3px dashed #b06a86;
+  background: rgba(214, 51, 108, 0.10);
+  box-sizing: border-box;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.rose-legend {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #5b6272;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.rose-legend-item { display: flex; align-items: center; gap: 8px; }
+
+.rose-swatch {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+}
+
+.rose-count {
+  display: inline-block;
+  min-width: 2ch;
+  color: var(--tm-ink);
+  will-change: transform;
+}
+
+/* ---- k-means SMOTE ---- */
+section:has(.ks-slide) { overflow: hidden; }
+
+.ks-stage-wrap { position: relative; margin-top: 10px; }
+
+.ks-title {
+  text-align: center;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 46px;
+  opacity: 0;
+}
+
+#ks-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.ks-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.ks-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.ks-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+  will-change: transform, opacity;
+}
+
+.ks-centroid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border-radius: 50%;
+  border: 3px dashed var(--tm-ink);
+  box-sizing: border-box;
+  will-change: transform, opacity;
+}
+
+.ks-spoke {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: #9aa2af;
+  transform-origin: 0 50%;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+/* per-cluster verdict chip */
+.ks-chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin-left: -90px;
+  width: 180px;
+  text-align: center;
+  padding: 4px 0;
+  border-radius: 14px;
+  border: 2px solid var(--tm-ink);
+  background: #fff;
+  color: var(--tm-ink);
+  font-size: 19px;
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.ks-chip.is-rejected {
+  border-style: dashed;
+  border-color: #9aa2af;
+  color: #9aa2af;
+}
+
+.ks-legend {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #5b6272;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.ks-legend-item { display: flex; align-items: center; gap: 8px; }
+
+.ks-swatch {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+}
+
+.ks-count {
+  display: inline-block;
+  min-width: 2ch;
+  color: var(--tm-ink);
+  will-change: transform;
+}
+
+/* ---- SVM-SMOTE ---- */
+section:has(.svms-slide) { overflow: hidden; }
+
+.svms-stage-wrap { position: relative; margin-top: 10px; }
+
+.svms-title {
+  text-align: center;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 46px;
+  opacity: 0;
+}
+
+#svms-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.svms-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.svms-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.svms-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+  will-change: transform, opacity;
+}
+
+.svms-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border-radius: 50%;
+  border: 4px solid #343a40;
+  box-sizing: border-box;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.svms-boundary {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 4px;
+  background: var(--tm-ink);
+  transform-origin: 0 50%;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.svms-margin {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 0;
+  border-top: 3px dashed #9aa2af;
+  transform-origin: 0 50%;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.svms-legend {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #5b6272;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.svms-legend-item { display: flex; align-items: center; gap: 8px; }
+
+.svms-swatch {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+}
+
+.svms-count {
+  display: inline-block;
+  min-width: 2ch;
+  color: var(--tm-ink);
+  will-change: transform;
+}
+
+/* noise / danger / safety key */
+.svms-key {
+  position: absolute;
+  bottom: 10px;
+  left: 8px;
+  font-size: 19px;
+  font-weight: 600;
+  color: #5b6272;
+  line-height: 1.6;
+  pointer-events: none;
+}
+
+.svms-key-item { display: flex; align-items: center; gap: 8px; }
+
+.svms-key-ring {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 4px solid #343a40;
+  box-sizing: border-box;
+}
+
+/* ---- neighbourhood cleaning rule ---- */
+section:has(.ncl-slide) { overflow: hidden; }
+
+.ncl-stage-wrap { position: relative; margin-top: 10px; }
+
+.ncl-title {
+  text-align: center;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 46px;
+  opacity: 0;
+}
+
+#ncl-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.ncl-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.ncl-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.ncl-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+  will-change: transform, opacity;
+}
+
+.ncl-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--tm-ink);
+  transform-origin: 0 50%;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.ncl-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 42px;
+  height: 42px;
+  margin: -21px 0 0 -21px;
+  border-radius: 50%;
+  border: 3px solid var(--tm-ink);
+  box-sizing: border-box;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.ncl-mark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: 50%;
+  border: 3px solid #b3261e;
+  color: #b3261e;
+  background: rgba(255, 255, 255, 0.72);
+  box-sizing: border-box;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 28px;
+  text-align: center;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.ncl-legend {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #5b6272;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.ncl-legend-item { display: flex; align-items: center; gap: 8px; }
+
+.ncl-swatch {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+}
+
+.ncl-count {
+  display: inline-block;
+  min-width: 2ch;
+  color: var(--tm-ink);
+  will-change: transform;
+}
+
+/* ---- instance hardness ---- */
+section:has(.ih-slide) { overflow: hidden; }
+
+.ih-stage-wrap { position: relative; margin-top: 10px; }
+
+.ih-title {
+  text-align: center;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  min-height: 46px;
+  opacity: 0;
+}
+
+#ih-stage {
+  position: relative;
+  width: 1100px;
+  height: 560px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.ih-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.ih-frag {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0 !important;
+}
+
+.ih-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+  will-change: transform, opacity, background-color;
+}
+
+.ih-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--tm-ink);
+  transform-origin: 0 50%;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.ih-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 50%;
+  border: 3px solid var(--tm-ink);
+  box-sizing: border-box;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.ih-caption {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin-left: -190px;
+  width: 380px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--tm-ink);
+  white-space: nowrap;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.ih-legend {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #5b6272;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.ih-legend-item { display: flex; align-items: center; gap: 8px; }
+
+.ih-swatch {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+}
+
+.ih-count {
+  display: inline-block;
+  min-width: 2ch;
+  color: var(--tm-ink);
+  will-change: transform;
+}
+
+.ih-ramp {
+  position: absolute;
+  bottom: 10px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 19px;
+  font-weight: 600;
+  color: #5b6272;
+  pointer-events: none;
+}
+
+.ih-ramp-bar {
+  display: inline-block;
+  width: 150px;
+  height: 14px;
+  border-radius: 7px;
+  border: 2px solid var(--tm-ink);
+  box-sizing: border-box;
+}
