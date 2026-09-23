@@ -1,0 +1,147 @@
+
+R version 4.5.1 (2025-06-13) -- "Great Square Root"
+Copyright (C) 2025 The R Foundation for Statistical Computing
+Platform: aarch64-apple-darwin20
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(tidymodels)
+── Attaching packages ────────────────────────────────────── tidymodels 1.4.0 ──
+✔ broom        1.0.9          ✔ recipes      1.3.1     
+✔ dials        1.4.2          ✔ rsample      1.3.1     
+✔ dplyr        1.1.4          ✔ tibble       3.3.0     
+✔ ggplot2      3.5.2          ✔ tidyr        1.3.1     
+✔ infer        1.0.9          ✔ tune         2.0.0     
+✔ modeldata    1.5.1          ✔ workflows    1.3.0     
+✔ parsnip      1.3.2.9000     ✔ workflowsets 1.1.1     
+✔ purrr        1.1.0          ✔ yardstick    1.3.2     
+── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
+✖ purrr::discard() masks scales::discard()
+✖ dplyr::filter()  masks stats::filter()
+✖ dplyr::lag()     masks stats::lag()
+✖ recipes::step()  masks stats::step()
+> library(finetune)
+> library(bonsai)
+> 
+> # Load our example data for this section
+> "https://github.com/tidymodels/workshops/raw/refs/heads/2025-GMOFETML/slides/class_data.RData" |>
++   url() |>
++   load()
+> 
+> set.seed(429)
+> sim_split <- initial_split(class_data, prop = 0.75, strata = class)
+> sim_train <- training(sim_split)
+> sim_test <- testing(sim_split)
+> 
+> set.seed(523)
+> sim_rs <- vfold_cv(sim_train, v = 10, strata = class)
+> 
+> rec <-
++   recipe(class ~ ., data = sim_train) |>
++   step_normalize(all_numeric_predictors())
+> 
+> lgbm_spec <-
++   boost_tree(
++     trees = tune(),
++     learn_rate = tune(),
++     mtry = tune(),
++     min_n = tune(),
++     stop_iter = tune()
++   ) |>
++   set_mode("classification") |>
++   set_engine("lightgbm", num_threads = 1)
+> 
+> lgbm_wflow <- workflow(class ~ ., lgbm_spec)
+> 
+> cls_mtr <- metric_set(brier_class, roc_auc, sensitivity, specificity)
+> 
+> # ------------------------------------------------------------------------------
+> 
+> ctrl <- control_grid(save_pred = TRUE, save_workflow = TRUE)
+> 
+> set.seed(321)
+> 
+> seq_time <-
++   system.time({
++     lgbm_res <-
++       lgbm_wflow |>
++       tune_grid(
++         resamples = sim_rs,
++         # Let's use a larger grid
++         grid = 50,
++         control = ctrl,
++         metrics = cls_mtr
++       )
++   })
+i Creating pre-processing data to finalize 1 unknown parameter: "mtry"
+> 
+> # ------------------------------------------------------------------------------
+> 
+> library(mirai)
+> daemons(parallel::detectCores())
+[1] 10
+> 
+> set.seed(321)
+> 
+> par_time <-
++   system.time({
++     lgbm_res <-
++       lgbm_wflow |>
++       tune_grid(
++         resamples = sim_rs,
++         # Let's use a larger grid
++         grid = 50,
++         control = ctrl,
++         metrics = cls_mtr
++       )
++   })
+i Creating pre-processing data to finalize 1 unknown parameter: "mtry"
+> 
+> # ------------------------------------------------------------------------------
+> 
+> ctrl <- control_race(verbose_elim = FALSE)
+> 
+> set.seed(321)
+> 
+> race_time <-
++   system.time({
++     lgbm_res <-
++       lgbm_wflow |>
++       tune_race_anova(
++         resamples = sim_rs,
++         # Let's use a larger grid
++         grid = 50,
++         control = ctrl,
++         metrics = cls_mtr
++       )
++   })
+i Creating pre-processing data to finalize 1 unknown parameter: "mtry"
+> 
+> # ------------------------------------------------------------------------------
+> 
+> lgbm_times = c(seq_time[3], par_time[3], race_time[3])
+> names(lgbm_times) <- c("sequential", "parallel", "racing")
+> print(lgbm_times)
+sequential   parallel     racing 
+   604.936     91.311     49.379 
+> 
+> save(lgbm_times, file = "lgbm_times.RData")
+> 
+> # ------------------------------------------------------------------------------
+> 
+> q("no")
+> proc.time()
+   user  system elapsed 
+604.079   3.926 748.200 
